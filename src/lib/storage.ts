@@ -41,9 +41,24 @@ interface GameState {
   won: boolean;
 }
 
+// Game version - increment this to force reset for all users
+export const GAME_VERSION = "2.0.0"; // Modern English Only update
+
 const STATS_KEY = "morphchain_stats";
 const SETTINGS_KEY = "morphchain_settings";
 const STATE_KEY = "morphchain_state";
+const VERSION_KEY = "morphchain_version";
+
+// Check version and auto-reset if game was updated
+const checkVersionAndReset = () => {
+  const storedVersion = localStorage.getItem(VERSION_KEY);
+  
+  if (storedVersion !== GAME_VERSION) {
+    console.log(`Game updated from ${storedVersion || 'unknown'} to ${GAME_VERSION}. Resetting data...`);
+    resetAllData();
+    localStorage.setItem(VERSION_KEY, GAME_VERSION);
+  }
+};
 
 const createEmptyLengthStats = (): LengthStats => ({
   played: 0,
@@ -54,6 +69,8 @@ const createEmptyLengthStats = (): LengthStats => ({
 });
 
 export const loadStats = (): GameStats => {
+  checkVersionAndReset(); // Auto-reset if version changed
+  
   try {
     const stored = localStorage.getItem(STATS_KEY);
     if (!stored) {
@@ -150,6 +167,8 @@ export const saveSettings = (settings: GameSettings): void => {
 };
 
 export const loadGameState = (wordLength: number): GameState | null => {
+  checkVersionAndReset(); // Auto-reset if version changed
+  
   try {
     const key = `${STATE_KEY}_${wordLength}`;
     const stored = localStorage.getItem(key);
@@ -185,8 +204,9 @@ export const resetAllData = (): void => {
     localStorage.removeItem(`${STATE_KEY}_4`);
     localStorage.removeItem(`${STATE_KEY}_5`);
     localStorage.removeItem(`${STATE_KEY}_6`);
-    // Also clear disputes
     localStorage.removeItem("morphchain_word_disputes");
+    localStorage.setItem(VERSION_KEY, GAME_VERSION);
+    console.log(`All game data reset to version ${GAME_VERSION}`);
   } catch (error) {
     console.error("Failed to reset data:", error);
   }
