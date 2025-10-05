@@ -1,5 +1,5 @@
 import { HintTile, TileState } from "./HintTile";
-import { ArrowRight, CircleDot, TrendingDown } from "lucide-react";
+import { ArrowRight, ArrowUp, ArrowDown, ArrowLeftRight, Check } from "lucide-react";
 
 export interface Move {
   id: string;
@@ -7,6 +7,8 @@ export interface Move {
   to: string;
   hints: TileState[];
   closerToGoal: boolean;
+  isComplete?: boolean;
+  isWorse?: boolean;
   timestamp: Date;
 }
 
@@ -57,14 +59,24 @@ export const MoveLog = ({ moves, showHints, colorblindMode }: MoveLogProps) => {
           )}
 
           <div className="flex items-center gap-1">
-            {move.closerToGoal ? (
+            {move.isComplete ? (
+              <div className="flex items-center gap-1 px-2 py-1 bg-success/20 text-success rounded text-xs font-medium">
+                <Check className="h-3 w-3" />
+                Complete
+              </div>
+            ) : move.closerToGoal ? (
               <div className="flex items-center gap-1 px-2 py-1 bg-success/10 text-success rounded text-xs font-medium">
-                <TrendingDown className="h-3 w-3" />
+                <ArrowUp className="h-3 w-3" />
                 Closer
+              </div>
+            ) : move.isWorse ? (
+              <div className="flex items-center gap-1 px-2 py-1 bg-destructive/10 text-destructive rounded text-xs font-medium">
+                <ArrowDown className="h-3 w-3" />
+                Worse
               </div>
             ) : (
               <div className="flex items-center gap-1 px-2 py-1 bg-warning/10 text-warning rounded text-xs font-medium">
-                <CircleDot className="h-3 w-3" />
+                <ArrowLeftRight className="h-3 w-3" />
                 Sideways
               </div>
             )}

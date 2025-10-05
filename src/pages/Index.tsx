@@ -52,16 +52,20 @@ const Index = () => {
     const savedState = loadGameState();
     if (savedState && savedState.date === puzzle.date) {
       // Restore game state
-      const restoredMoves: Move[] = savedState.moves.map((m, i) => ({
-        id: `move-${i}`,
-        from: m.from,
-        to: m.to,
-        hints: getHints(m.to, puzzle.goalWord),
-        closerToGoal:
-          calculateDistance(m.to, puzzle.goalWord) <
-          calculateDistance(m.from, puzzle.goalWord),
-        timestamp: new Date(m.timestamp),
-      }));
+      const restoredMoves: Move[] = savedState.moves.map((m, i) => {
+        const moveDistance = calculateDistance(m.to, puzzle.goalWord);
+        const prevDistance = calculateDistance(m.from, puzzle.goalWord);
+        return {
+          id: `move-${i}`,
+          from: m.from,
+          to: m.to,
+          hints: getHints(m.to, puzzle.goalWord),
+          closerToGoal: moveDistance < prevDistance,
+          isComplete: m.to === puzzle.goalWord,
+          isWorse: moveDistance > prevDistance,
+          timestamp: new Date(m.timestamp),
+        };
+      });
 
       setMoves(restoredMoves);
       setCurrentWord(savedState.moves[savedState.moves.length - 1]?.to || puzzle.startWord);
@@ -99,6 +103,8 @@ const Index = () => {
       const currentDistance = calculateDistance(currentWord, puzzle.goalWord);
       const newDistance = calculateDistance(word, puzzle.goalWord);
       const closerToGoal = newDistance < currentDistance;
+      const isComplete = word === puzzle.goalWord;
+      const isWorse = newDistance > currentDistance;
 
       // Hard mode check
       if (settings.hardMode && !closerToGoal && newDistance !== 0) {
@@ -114,6 +120,8 @@ const Index = () => {
         to: word,
         hints: getHints(word, puzzle.goalWord),
         closerToGoal,
+        isComplete,
+        isWorse,
         timestamp: new Date(),
       };
 
