@@ -38,28 +38,47 @@ export interface Puzzle {
   minDistance: number;
 }
 
-export const getDailyPuzzle = (): Puzzle => {
+export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle => {
   const today = new Date().toISOString().split("T")[0];
   
-  // For demo, rotate through a few puzzles
-  const puzzles = [
-    { start: "COLD", goal: "WARM", minDistance: 4 },
-    { start: "HEAD", goal: "TAIL", minDistance: 5 },
-    { start: "DARK", goal: "FIRE", minDistance: 6 },
-  ];
+  // Puzzle sets by length
+  const puzzlesByLength = {
+    4: [
+      { start: "COLD", goal: "WARM", minDistance: 4 },
+      { start: "HEAD", goal: "TAIL", minDistance: 5 },
+      { start: "DARK", goal: "FIRE", minDistance: 6 },
+      { start: "FARE", goal: "SEED", minDistance: 5 },
+      { start: "LOVE", goal: "HATE", minDistance: 4 },
+    ],
+    5: [
+      { start: "STONE", goal: "BREAD", minDistance: 5 },
+      { start: "NIGHT", goal: "LIGHT", minDistance: 1 },
+      { start: "FLOUR", goal: "DOUGH", minDistance: 5 },
+      { start: "SMALL", goal: "LARGE", minDistance: 5 },
+      { start: "BLACK", goal: "WHITE", minDistance: 5 },
+    ],
+    6: [
+      { start: "SPRING", goal: "WINTER", minDistance: 6 },
+      { start: "CASTLE", goal: "BRIDGE", minDistance: 6 },
+      { start: "SIMPLE", goal: "HARDER", minDistance: 6 },
+      { start: "FOREST", goal: "DESERT", minDistance: 5 },
+      { start: "SMOOTH", goal: "JAGGED", minDistance: 6 },
+    ],
+  };
   
   const dayOfYear = Math.floor(
     (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) /
       (1000 * 60 * 60 * 24)
   );
   
+  const puzzles = puzzlesByLength[wordLength];
   const puzzle = puzzles[dayOfYear % puzzles.length];
   
   return {
     date: today,
     startWord: puzzle.start,
     goalWord: puzzle.goal,
-    wordLength: puzzle.start.length,
+    wordLength,
     maxMoves: 12,
     minDistance: puzzle.minDistance,
   };

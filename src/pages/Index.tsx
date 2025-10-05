@@ -7,6 +7,7 @@ import { MoveLog, Move } from "@/components/MoveLog";
 import { ResultPanel } from "@/components/ResultPanel";
 import { SettingsModal } from "@/components/SettingsModal";
 import { StatsModal } from "@/components/StatsModal";
+import { LengthSwitcher } from "@/components/LengthSwitcher";
 import { useToast } from "@/hooks/use-toast";
 import {
   getDailyPuzzle,
@@ -29,7 +30,8 @@ import {
 
 const Index = () => {
   const { toast } = useToast();
-  const [puzzle] = useState(getDailyPuzzle());
+  const [selectedLength, setSelectedLength] = useState<4 | 5 | 6>(4);
+  const [puzzle, setPuzzle] = useState(getDailyPuzzle(4));
   const [moves, setMoves] = useState<Move[]>([]);
   const [currentWord, setCurrentWord] = useState(puzzle.startWord);
   const [usedWords, setUsedWords] = useState(new Set([puzzle.startWord]));
@@ -47,33 +49,50 @@ const Index = () => {
   const [settings, setSettings] = useState(loadSettings());
   const [stats, setStats] = useState(loadStats());
 
-  // Load saved game state
-  useEffect(() => {
-    const savedState = loadGameState();
-    if (savedState && savedState.date === puzzle.date) {
-      // Restore game state
+  // Handle length change
+  const handleLengthChange = (newLength: 4 | 5 | 6) => {
+    setSelectedLength(newLength);
+    const newPuzzle = getDailyPuzzle(newLength);
+    setPuzzle(newPuzzle);
+    
+    // Load saved state for this length
+    const savedState = loadGameState(newLength);
+    if (savedState && savedState.date === newPuzzle.date && savedState.wordLength === newLength) {
       const restoredMoves: Move[] = savedState.moves.map((m, i) => {
-        const moveDistance = calculateDistance(m.to, puzzle.goalWord);
-        const prevDistance = calculateDistance(m.from, puzzle.goalWord);
+        const moveDistance = calculateDistance(m.to, newPuzzle.goalWord);
+        const prevDistance = calculateDistance(m.from, newPuzzle.goalWord);
         return {
           id: `move-${i}`,
           from: m.from,
           to: m.to,
-          hints: getHints(m.to, puzzle.goalWord),
+          hints: getHints(m.to, newPuzzle.goalWord),
           closerToGoal: moveDistance < prevDistance,
-          isComplete: m.to === puzzle.goalWord,
+          isComplete: m.to === newPuzzle.goalWord,
           isWorse: moveDistance > prevDistance,
           timestamp: new Date(m.timestamp),
         };
       });
 
       setMoves(restoredMoves);
-      setCurrentWord(savedState.moves[savedState.moves.length - 1]?.to || puzzle.startWord);
-      setUsedWords(new Set([puzzle.startWord, ...savedState.moves.map((m) => m.to)]));
+      setCurrentWord(savedState.moves[savedState.moves.length - 1]?.to || newPuzzle.startWord);
+      setUsedWords(new Set([newPuzzle.startWord, ...savedState.moves.map((m) => m.to)]));
       setGameCompleted(savedState.completed);
       setGameWon(savedState.won);
+    } else {
+      // Reset for new puzzle
+      setMoves([]);
+      setCurrentWord(newPuzzle.startWord);
+      setUsedWords(new Set([newPuzzle.startWord]));
+      setGameCompleted(false);
+      setGameWon(false);
     }
-  }, [puzzle]);
+    setError("");
+  };
+
+  // Load saved game state on mount
+  useEffect(() => {
+    handleLengthChange(selectedLength);
+  }, []);
 
   const handleSubmit = (word: string) => {
     setError("");
@@ -142,6 +161,7 @@ const Index = () => {
         updateStats(true, updatedMoves.length);
         saveGameState({
           date: puzzle.date,
+          wordLength: puzzle.wordLength,
           moves: updatedMoves.map((m) => ({
             from: m.from,
             to: m.to,
@@ -157,6 +177,7 @@ const Index = () => {
         updateStats(false, updatedMoves.length);
         saveGameState({
           date: puzzle.date,
+          wordLength: puzzle.wordLength,
           moves: updatedMoves.map((m) => ({
             from: m.from,
             to: m.to,
@@ -169,6 +190,7 @@ const Index = () => {
         // Save in-progress state
         saveGameState({
           date: puzzle.date,
+          wordLength: puzzle.wordLength,
           moves: updatedMoves.map((m) => ({
             from: m.from,
             to: m.to,
@@ -185,21 +207,58 @@ const Index = () => {
 
   const updateStats = (won: boolean, movesCount: number) => {
     const newStats = { ...stats };
-    newStats.played += 1;
+    const lengthKey = puzzle.wordLength as 4 | 5 | 6;
+    
+    // Update overall stats
+    newStats.overall.played += 1;
     if (won) {
-      newStats.won += 1;
-      newStats.distribution[movesCount - 1] += 1;
-      newStats.currentStreak += 1;
-      newStats.maxStreak = Math.max(newStats.maxStreak, newStats.currentStreak);
+      newStats.overall.won += 1;
+      newStats.overall.distribution[movesCount - 1] += 1;
       if (settings.hardMode) {
-        newStats.hardModeStreak += 1;
+        newStats.overall.hardModeStreak += 1;
       }
-    } else {
-      newStats.currentStreak = 0;
     }
-    newStats.lastPlayedDate = puzzle.date;
+    
+    // Update per-length stats
+    newStats.byLength[lengthKey].played += 1;
+    if (won) {
+      newStats.byLength[lengthKey].won += 1;
+      newStats.byLength[lengthKey].distribution[movesCount - 1] += 1;
+      newStats.byLength[lengthKey].currentStreak += 1;
+      newStats.byLength[lengthKey].maxStreak = Math.max(
+        newStats.byLength[lengthKey].maxStreak,
+        newStats.byLength[lengthKey].currentStreak
+      );
+    } else {
+      newStats.byLength[lengthKey].currentStreak = 0;
+    }
+    
+    // Update overall streak (win in ANY length counts)
+    const today = puzzle.date;
+    if (stats.lastPlayedDate !== today) {
+      // New day
+      if (won) {
+        newStats.overall.currentStreak += 1;
+        newStats.overall.maxStreak = Math.max(newStats.overall.maxStreak, newStats.overall.currentStreak);
+      } else if (!hasWonAnyLengthToday(today)) {
+        newStats.overall.currentStreak = 0;
+      }
+    } else if (won && newStats.overall.currentStreak === 0) {
+      // First win today after a loss
+      newStats.overall.currentStreak = 1;
+    }
+    
+    newStats.lastPlayedDate = today;
     setStats(newStats);
     saveStats(newStats);
+  };
+  
+  const hasWonAnyLengthToday = (date: string): boolean => {
+    const lengths: Array<4 | 5 | 6> = [4, 5, 6];
+    return lengths.some(length => {
+      const state = loadGameState(length);
+      return state?.date === date && state?.won;
+    });
   };
 
   const handlePlayAgain = () => {
@@ -210,7 +269,7 @@ const Index = () => {
     setGameCompleted(false);
     setGameWon(false);
     setError("");
-    clearGameState();
+    clearGameState(puzzle.wordLength);
   };
 
   const handleToggleSetting = (key: keyof typeof settings) => {
@@ -241,7 +300,13 @@ const Index = () => {
     moves.slice(0, 2).map((m) => m.hints)
   );
 
-  const winPercent = stats.played > 0 ? Math.round((stats.won / stats.played) * 100) : 0;
+  const getLengthStatus = (length: 4 | 5 | 6): "empty" | "won" | "failed" | "in-progress" => {
+    const state = loadGameState(length);
+    if (!state || state.date !== puzzle.date) return "empty";
+    if (state.completed) return state.won ? "won" : "failed";
+    if (state.moves.length > 0) return "in-progress";
+    return "empty";
+  };
 
   return (
     <div className="min-h-screen flex flex-col max-w-2xl mx-auto">
@@ -250,13 +315,25 @@ const Index = () => {
         onOpenStats={() => setStatsOpen(true)}
       />
 
-      <DailyBanner
-        date={puzzle.date}
-        wordLength={puzzle.wordLength}
-        maxMoves={puzzle.maxMoves}
-        hardMode={settings.hardMode}
-        onToggleHardMode={() => handleToggleSetting("hardMode")}
-      />
+      <div className="px-4 py-3 space-y-3">
+        <LengthSwitcher
+          selectedLength={selectedLength}
+          onLengthChange={handleLengthChange}
+          statuses={{
+            4: getLengthStatus(4),
+            5: getLengthStatus(5),
+            6: getLengthStatus(6),
+          }}
+        />
+
+        <DailyBanner
+          date={puzzle.date}
+          wordLength={puzzle.wordLength}
+          maxMoves={puzzle.maxMoves}
+          hardMode={settings.hardMode}
+          onToggleHardMode={() => handleToggleSetting("hardMode")}
+        />
+      </div>
 
       <main className="flex-1 pb-24">
         <PuzzleHero
@@ -330,14 +407,7 @@ const Index = () => {
       <StatsModal
         open={statsOpen}
         onOpenChange={setStatsOpen}
-        stats={{
-          played: stats.played,
-          winPercent,
-          currentStreak: stats.currentStreak,
-          maxStreak: stats.maxStreak,
-          distribution: stats.distribution,
-          hardModeStreak: stats.hardModeStreak,
-        }}
+        stats={stats}
       />
     </div>
   );
