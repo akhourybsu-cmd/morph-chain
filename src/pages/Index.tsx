@@ -372,9 +372,19 @@ const Index = () => {
         />
 
         {!gameCompleted && moves.length === 0 && (
-          <div className="px-4 mb-4">
-            <div className="bg-muted/50 border border-border rounded-lg p-3 text-sm text-muted-foreground animate-fade-in">
-              💡 <strong>Tip:</strong> Change ONE letter each step (e.g., COLD → CORD)
+          <div className="px-6 mb-4">
+            <div className="bg-card border border-primary/20 rounded-lg p-4 text-sm animate-slide-in">
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">💡</div>
+                <div className="space-y-1">
+                  <p className="font-medium text-foreground">
+                    Change <strong>ONE</strong> letter each step. Every step must be a real word.
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    Example: COLD → C<span className="text-warning">O</span>RD → C<span className="text-warning">A</span>RD → C<span className="text-warning">A</span>R<span className="text-warning">E</span>
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -386,6 +396,8 @@ const Index = () => {
             error={error}
             disabled={gameCompleted}
             isLoading={isLoading}
+            movesUsed={moves.length}
+            maxMoves={puzzle.maxMoves}
           />
         )}
 

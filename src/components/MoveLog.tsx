@@ -1,5 +1,5 @@
 import { HintTile, TileState } from "./HintTile";
-import { ArrowRight, ArrowUp, ArrowDown, ArrowLeftRight, Check } from "lucide-react";
+import { TrendingDown, TrendingUp, Minus } from "lucide-react";
 
 export interface Move {
   id: string;
@@ -28,66 +28,56 @@ export const MoveLog = ({ moves, simpleMode = false, colorblindMode }: MoveLogPr
   }
 
   return (
-    <div className="px-6 py-4 space-y-3 max-h-96 overflow-y-auto">
+    <div className="px-6 py-4 space-y-2 max-h-[45vh] overflow-y-auto">
       {moves.map((move, index) => (
         <div
           key={move.id}
-          className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg animate-slide-in"
+          className="bg-card border border-border rounded-lg p-3 animate-slide-in"
         >
-          <div className="flex items-center gap-2 flex-1">
-            <span className="font-mono font-semibold text-sm uppercase tracking-tiles">
-              {move.from}
-            </span>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            <span className="font-mono font-semibold text-sm uppercase tracking-tiles">
-              {move.to}
-            </span>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 font-mono text-sm">
+              <span className="text-muted-foreground">{move.from}</span>
+              <span className="text-muted-foreground">→</span>
+              <span className="font-semibold tracking-tiles">{move.to}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {move.isComplete ? (
+                <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs font-medium border border-success/30">
+                  Goal!
+                </span>
+              ) : move.closerToGoal ? (
+                <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs font-medium flex items-center gap-1 border border-success/30">
+                  <TrendingDown className="h-3 w-3" />
+                  Closer
+                </span>
+              ) : move.isWorse ? (
+                <span className="px-2 py-0.5 rounded-full bg-destructive/20 text-destructive text-xs font-medium flex items-center gap-1 border border-destructive/30">
+                  <TrendingUp className="h-3 w-3" />
+                  Farther
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full bg-warning/20 text-warning text-xs font-medium flex items-center gap-1 border border-warning/30">
+                  <Minus className="h-3 w-3" />
+                  Same
+                </span>
+              )}
+            </div>
           </div>
 
           {!simpleMode && (
-            <div className="flex gap-1">
+            <div className="flex gap-1 mt-2">
               {move.hints.map((state, i) => (
                 <HintTile
                   key={i}
                   letter={move.to[i]}
                   state={state}
-                  delay={i * 120}
+                  delay={i * 50}
                   colorblindMode={colorblindMode}
                 />
               ))}
             </div>
           )}
-
-          <div className="flex items-center gap-1">
-            {move.isComplete ? (
-              <div className="flex items-center gap-1 px-2 py-1 bg-success/20 text-success rounded text-xs font-medium">
-                <Check className="h-3 w-3" />
-                Complete
-              </div>
-            ) : move.closerToGoal ? (
-              <div className="flex items-center gap-1 px-2 py-1 bg-success/10 text-success rounded text-xs font-medium">
-                <ArrowUp className="h-3 w-3" />
-                Closer
-              </div>
-            ) : move.isWorse ? (
-              <div className="flex items-center gap-1 px-2 py-1 bg-destructive/10 text-destructive rounded text-xs font-medium">
-                <ArrowDown className="h-3 w-3" />
-                Worse
-              </div>
-            ) : (
-              <div className="flex items-center gap-1 px-2 py-1 bg-warning/10 text-warning rounded text-xs font-medium">
-                <ArrowLeftRight className="h-3 w-3" />
-                Sideways
-              </div>
-            )}
-          </div>
-
-          <time className="text-xs text-muted-foreground">
-            {move.timestamp.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </time>
         </div>
       ))}
     </div>
