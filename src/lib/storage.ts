@@ -185,6 +185,8 @@ export const resetAllData = (): void => {
     localStorage.removeItem(`${STATE_KEY}_4`);
     localStorage.removeItem(`${STATE_KEY}_5`);
     localStorage.removeItem(`${STATE_KEY}_6`);
+    // Also clear disputes
+    localStorage.removeItem("morphchain_word_disputes");
   } catch (error) {
     console.error("Failed to reset data:", error);
   }
