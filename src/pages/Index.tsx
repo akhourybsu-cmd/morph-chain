@@ -302,13 +302,15 @@ const Index = () => {
     }
   };
 
-  const shareText = generateShareText(
-    puzzle.date,
-    moves.length,
-    gameWon,
-    puzzle.wordLength,
-    moves.slice(0, 2).map((m) => m.hints)
-  );
+  const shareText = moves.length > 0 
+    ? generateShareText(
+        puzzle.date,
+        moves.length,
+        gameWon,
+        puzzle.wordLength,
+        moves.slice(0, 2).map((m) => m.hints)
+      )
+    : "";
 
   const getLengthStatus = (length: 4 | 5 | 6): "empty" | "won" | "failed" | "in-progress" => {
     const state = loadGameState(length);
