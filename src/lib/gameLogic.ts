@@ -1,28 +1,33 @@
 import { TileState } from "@/components/HintTile";
+import wordsAlphaText from "./words_alpha.txt?raw";
 
-// Sample word list for 4-letter words
-const VALID_WORDS_4 = new Set([
-  "COLD", "CORD", "CARD", "WARD", "WARM",
-  "WORD", "WORK", "FORK", "FORM", "WORM",
-  "BOLD", "HOLD", "HOLE", "HOPE", "ROPE",
-  "ROLE", "POLE", "POLL", "POOL", "COOL",
-  "COAL", "COAT", "BOAT", "BEAT", "HEAT",
-  "HEAD", "DEAD", "DEAR", "BEAR", "BEER",
-  "BEEN", "BEAN", "MEAN", "MEAT", "SEAT",
-  "SEAL", "REAL", "READ", "ROAD", "LOAD",
-  "LORD", "WORD", "WORE", "MORE", "CORE",
-  "CARE", "DARE", "DARK", "PARK", "PART",
-  "PORT", "POST", "COST", "CAST", "CASE",
-  "CAVE", "SAVE", "WAVE", "WAKE", "MAKE",
-  "MALE", "PALE", "PANE", "PINE", "MINE",
-  "WINE", "WISE", "RISE", "RICE", "NICE",
-  "MICE", "MACE", "RACE", "RATE", "GATE",
-  "GALE", "GAME", "SAME", "TAME", "TALE",
-  "TILE", "TIME", "TIDE", "HIDE", "SIDE",
-  "SITE", "KITE", "BITE", "BIKE", "LIKE",
-  "LINE", "FINE", "FIRE", "TIRE", "WIRE",
-  "WIPE", "PIPE", "RIPE", "RIDE", "WIDE",
-]);
+// Parse and filter the word list by length
+const parseWordList = () => {
+  const words4 = new Set<string>();
+  const words5 = new Set<string>();
+  const words6 = new Set<string>();
+  
+  const lines = wordsAlphaText.split("\n");
+  
+  for (const line of lines) {
+    const word = line.trim().toUpperCase();
+    if (word.length === 4) {
+      words4.add(word);
+    } else if (word.length === 5) {
+      words5.add(word);
+    } else if (word.length === 6) {
+      words6.add(word);
+    }
+  }
+  
+  return { words4, words5, words6 };
+};
+
+const { words4, words5, words6 } = parseWordList();
+
+const VALID_WORDS_4 = words4;
+const VALID_WORDS_5 = words5;
+const VALID_WORDS_6 = words6;
 
 export interface Puzzle {
   date: string;
@@ -60,8 +65,12 @@ export const getDailyPuzzle = (): Puzzle => {
   };
 };
 
-export const isValidWord = (word: string): boolean => {
-  return VALID_WORDS_4.has(word.toUpperCase());
+export const isValidWord = (word: string, wordLength: number = 4): boolean => {
+  const upperWord = word.toUpperCase();
+  if (wordLength === 4) return VALID_WORDS_4.has(upperWord);
+  if (wordLength === 5) return VALID_WORDS_5.has(upperWord);
+  if (wordLength === 6) return VALID_WORDS_6.has(upperWord);
+  return false;
 };
 
 export const isOneLetterDifferent = (word1: string, word2: string): boolean => {

@@ -84,7 +84,7 @@ const Index = () => {
         return;
       }
 
-      if (!isValidWord(word)) {
+      if (!isValidWord(word, puzzle.wordLength)) {
         setError("Not in word list.");
         setIsLoading(false);
         return;
