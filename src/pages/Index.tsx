@@ -332,6 +332,15 @@ const Index = () => {
     });
   };
 
+  // Define getLengthStatus before using it in useMemo
+  const getLengthStatus = (length: 4 | 5 | 6): "empty" | "won" | "failed" | "in-progress" => {
+    const state = loadGameState(length);
+    if (!state || state.date !== puzzle.date) return "empty";
+    if (state.completed) return state.won ? "won" : "failed";
+    if (state.moves.length > 0) return "in-progress";
+    return "empty";
+  };
+
   // Memoize expensive share text generation
   const shareText = useMemo(() => 
     moves.length > 0 
@@ -352,14 +361,6 @@ const Index = () => {
     5: getLengthStatus(5),
     6: getLengthStatus(6),
   }), [puzzle.date]);
-
-  const getLengthStatus = (length: 4 | 5 | 6): "empty" | "won" | "failed" | "in-progress" => {
-    const state = loadGameState(length);
-    if (!state || state.date !== puzzle.date) return "empty";
-    if (state.completed) return state.won ? "won" : "failed";
-    if (state.moves.length > 0) return "in-progress";
-    return "empty";
-  };
 
   return (
     <div className="min-h-screen flex flex-col max-w-2xl mx-auto">
