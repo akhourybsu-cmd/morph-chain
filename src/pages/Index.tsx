@@ -7,6 +7,7 @@ import { MoveLog, Move } from "@/components/MoveLog";
 import { ResultPanel } from "@/components/ResultPanel";
 import { SettingsModal } from "@/components/SettingsModal";
 import { StatsModal } from "@/components/StatsModal";
+import { HowToPlayModal } from "@/components/HowToPlayModal";
 import { LengthSwitcher } from "@/components/LengthSwitcher";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -44,6 +45,7 @@ const Index = () => {
   // Modals
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // Settings
   const [settings, setSettings] = useState(loadSettings());
@@ -92,6 +94,13 @@ const Index = () => {
   // Load saved game state on mount
   useEffect(() => {
     handleLengthChange(selectedLength);
+    
+    // Show help modal on first visit
+    const hasSeenHelp = localStorage.getItem("morphchain_seen_help");
+    if (!hasSeenHelp) {
+      setHelpOpen(true);
+      localStorage.setItem("morphchain_seen_help", "true");
+    }
   }, []);
 
   const handleSubmit = (word: string) => {
@@ -297,6 +306,7 @@ const Index = () => {
     puzzle.date,
     moves.length,
     gameWon,
+    puzzle.wordLength,
     moves.slice(0, 2).map((m) => m.hints)
   );
 
@@ -313,6 +323,7 @@ const Index = () => {
       <GameHeader
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenStats={() => setStatsOpen(true)}
+        onOpenHelp={() => setHelpOpen(true)}
       />
 
       <div className="px-4 py-3 space-y-3">
@@ -344,6 +355,14 @@ const Index = () => {
           onToggleHints={() => setShowHints(!showHints)}
           showHints={showHints}
         />
+
+        {!gameCompleted && moves.length === 0 && (
+          <div className="px-4 mb-4">
+            <div className="bg-muted/50 border border-border rounded-lg p-3 text-sm text-muted-foreground animate-fade-in">
+              💡 <strong>Tip:</strong> Change ONE letter each step (e.g., COLD → CORD)
+            </div>
+          </div>
+        )}
 
         {!gameCompleted && (
           <InputRow
@@ -403,6 +422,8 @@ const Index = () => {
         onToggleVibration={() => handleToggleSetting("vibration")}
         onResetData={handleResetData}
       />
+
+      <HowToPlayModal open={helpOpen} onOpenChange={setHelpOpen} />
 
       <StatsModal
         open={statsOpen}

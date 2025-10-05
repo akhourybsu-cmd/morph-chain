@@ -134,6 +134,7 @@ export const generateShareText = (
   date: string,
   movesUsed: number,
   won: boolean,
+  wordLength: number,
   sampleHints: TileState[][]
 ): string => {
   const emojiMap: Record<TileState, string> = {
@@ -147,7 +148,7 @@ export const generateShareText = (
     .map((hints) => hints.map((h) => emojiMap[h]).join(""))
     .join("\n");
   
-  return `Morph Chain #${date} ${won ? movesUsed : "X"}
+  return `Morph Chain #${date} ${won ? movesUsed : "X"} ${wordLength}L
 ${hintLines}
 https://play.morphchain.app`;
 };

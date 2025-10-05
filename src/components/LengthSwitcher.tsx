@@ -27,17 +27,17 @@ export const LengthSwitcher = ({ selectedLength, onLengthChange, statuses }: Len
   const lengths: Array<4 | 5 | 6> = [4, 5, 6];
 
   return (
-    <div className="flex items-center justify-center gap-1 p-1 bg-card/50 rounded-lg border border-border">
+    <div className="flex items-center justify-center gap-1 p-1 bg-card/50 rounded-lg border border-border transition-all">
       {lengths.map((length) => (
         <button
           key={length}
           onClick={() => onLengthChange(length)}
           className={`
-            relative px-4 py-2 rounded-md font-medium text-sm transition-all
+            relative px-4 py-2 rounded-md font-medium text-sm transition-all duration-200
             ${
               selectedLength === length
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "hover:bg-muted text-muted-foreground"
+                ? "bg-primary text-primary-foreground shadow-sm scale-105"
+                : "hover:bg-muted text-muted-foreground hover:scale-105"
             }
           `}
         >
