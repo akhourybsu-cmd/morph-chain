@@ -59,7 +59,16 @@ const Index = () => {
     
     // Load saved state for this length
     const savedState = loadGameState(newLength);
-    if (savedState && savedState.date === newPuzzle.date && savedState.wordLength === newLength) {
+    
+    // Validate saved state matches current puzzle (date, length, AND start word)
+    const isValidSavedState = 
+      savedState && 
+      savedState.date === newPuzzle.date && 
+      savedState.wordLength === newLength &&
+      savedState.moves.length > 0 &&
+      savedState.moves[0]?.from === newPuzzle.startWord;
+    
+    if (isValidSavedState) {
       const restoredMoves: Move[] = savedState.moves.map((m, i) => {
         const moveDistance = calculateDistance(m.to, newPuzzle.goalWord);
         const prevDistance = calculateDistance(m.from, newPuzzle.goalWord);
@@ -81,7 +90,11 @@ const Index = () => {
       setGameCompleted(savedState.completed);
       setGameWon(savedState.won);
     } else {
-      // Reset for new puzzle
+      // Reset for new puzzle or invalid saved state
+      if (savedState && savedState.date === newPuzzle.date && savedState.moves[0]?.from !== newPuzzle.startWord) {
+        // Clear outdated state from old puzzle configuration
+        clearGameState(newLength);
+      }
       setMoves([]);
       setCurrentWord(newPuzzle.startWord);
       setUsedWords(new Set([newPuzzle.startWord]));
