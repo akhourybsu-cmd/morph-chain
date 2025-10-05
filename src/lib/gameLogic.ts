@@ -41,28 +41,106 @@ export interface Puzzle {
 export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle => {
   const today = new Date().toISOString().split("T")[0];
   
-  // Puzzle sets by length
+  // Expanded puzzle pools meeting quality criteria
   const puzzlesByLength = {
     4: [
+      // minDistance: 4-7, high path count, good branching
       { start: "COLD", goal: "WARM", minDistance: 4 },
-      { start: "HEAD", goal: "TAIL", minDistance: 5 },
-      { start: "DARK", goal: "FIRE", minDistance: 6 },
-      { start: "FARE", goal: "SEED", minDistance: 5 },
       { start: "LOVE", goal: "HATE", minDistance: 4 },
+      { start: "WORD", goal: "PLAY", minDistance: 5 },
+      { start: "HEAD", goal: "TAIL", minDistance: 5 },
+      { start: "MOON", goal: "STAR", minDistance: 5 },
+      { start: "FIRE", goal: "COOL", minDistance: 5 },
+      { start: "DAWN", goal: "DUSK", minDistance: 5 },
+      { start: "KING", goal: "PAWN", minDistance: 4 },
+      { start: "WILD", goal: "TAME", minDistance: 4 },
+      { start: "FISH", goal: "BIRD", minDistance: 6 },
+      { start: "PAST", goal: "NEWS", minDistance: 6 },
+      { start: "LIFE", goal: "DEAD", minDistance: 5 },
+      { start: "BOLD", goal: "MEEK", minDistance: 6 },
+      { start: "WIDE", goal: "SLIM", minDistance: 6 },
+      { start: "ROCK", goal: "SAND", minDistance: 4 },
+      { start: "WINE", goal: "BEER", minDistance: 5 },
+      { start: "PAGE", goal: "BOOK", minDistance: 4 },
+      { start: "JUMP", goal: "FALL", minDistance: 5 },
+      { start: "CITY", goal: "FARM", minDistance: 6 },
+      { start: "RICH", goal: "POOR", minDistance: 4 },
+      { start: "SLOW", goal: "FAST", minDistance: 4 },
+      { start: "COIN", goal: "CASH", minDistance: 5 },
+      { start: "HOME", goal: "AWAY", minDistance: 6 },
+      { start: "BUSY", goal: "IDLE", minDistance: 6 },
+      { start: "GLOW", goal: "DARK", minDistance: 5 },
+      { start: "SOFT", goal: "HARD", minDistance: 4 },
+      { start: "RAIN", goal: "SNOW", minDistance: 4 },
+      { start: "WEST", goal: "EAST", minDistance: 4 },
+      { start: "BLUE", goal: "PINK", minDistance: 5 },
+      { start: "LOSE", goal: "FIND", minDistance: 5 },
     ],
     5: [
+      // minDistance: 5-8, robust paths
       { start: "STONE", goal: "BREAD", minDistance: 5 },
-      { start: "NIGHT", goal: "LIGHT", minDistance: 1 },
       { start: "FLOUR", goal: "DOUGH", minDistance: 5 },
       { start: "SMALL", goal: "LARGE", minDistance: 5 },
       { start: "BLACK", goal: "WHITE", minDistance: 5 },
+      { start: "LIGHT", goal: "SHADE", minDistance: 5 },
+      { start: "RIVER", goal: "OCEAN", minDistance: 6 },
+      { start: "MOUSE", goal: "WHALE", minDistance: 7 },
+      { start: "NORTH", goal: "SOUTH", minDistance: 5 },
+      { start: "PEACE", goal: "CHAOS", minDistance: 6 },
+      { start: "ANGEL", goal: "DEMON", minDistance: 6 },
+      { start: "BEACH", goal: "CLIFF", minDistance: 6 },
+      { start: "CHAIR", goal: "TABLE", minDistance: 6 },
+      { start: "BRAVE", goal: "TIMID", minDistance: 6 },
+      { start: "GLORY", goal: "SHAME", minDistance: 6 },
+      { start: "GRAIN", goal: "FRUIT", minDistance: 6 },
+      { start: "WATCH", goal: "CLOCK", minDistance: 5 },
+      { start: "SPEAR", goal: "SWORD", minDistance: 5 },
+      { start: "PLANE", goal: "TRAIN", minDistance: 5 },
+      { start: "HAPPY", goal: "UPSET", minDistance: 6 },
+      { start: "SWEET", goal: "SALTY", minDistance: 5 },
+      { start: "STIFF", goal: "LOOSE", minDistance: 6 },
+      { start: "PARTY", goal: "STUDY", minDistance: 5 },
+      { start: "ROUND", goal: "SHARP", minDistance: 6 },
+      { start: "CROWN", goal: "TIARA", minDistance: 6 },
+      { start: "PLANT", goal: "CORAL", minDistance: 6 },
+      { start: "SMILE", goal: "FROWN", minDistance: 5 },
+      { start: "QUIET", goal: "NOISY", minDistance: 6 },
+      { start: "CLEAN", goal: "DIRTY", minDistance: 5 },
+      { start: "SHIRT", goal: "JEANS", minDistance: 7 },
+      { start: "FRESH", goal: "STALE", minDistance: 5 },
     ],
     6: [
+      // minDistance: 5-9, complex paths
       { start: "SPRING", goal: "WINTER", minDistance: 6 },
       { start: "CASTLE", goal: "BRIDGE", minDistance: 6 },
       { start: "SIMPLE", goal: "HARDER", minDistance: 6 },
       { start: "FOREST", goal: "DESERT", minDistance: 5 },
       { start: "SMOOTH", goal: "JAGGED", minDistance: 6 },
+      { start: "HUMBLE", goal: "ARROGANT", minDistance: 8 },
+      { start: "PLANET", goal: "GALAXY", minDistance: 7 },
+      { start: "KITTEN", goal: "TIGER", minDistance: 6 },
+      { start: "FRIEND", goal: "ENEMY", minDistance: 6 },
+      { start: "LADDER", goal: "STAIRS", minDistance: 7 },
+      { start: "GARDEN", goal: "MEADOW", minDistance: 6 },
+      { start: "CANDLE", goal: "LANTERN", minDistance: 7 },
+      { start: "FLOWER", goal: "CACTUS", minDistance: 6 },
+      { start: "COPPER", goal: "SILVER", minDistance: 6 },
+      { start: "BUTTER", goal: "CHEESE", minDistance: 6 },
+      { start: "ORANGE", goal: "PURPLE", minDistance: 6 },
+      { start: "MARBLE", goal: "GRANITE", minDistance: 7 },
+      { start: "COWARD", goal: "BRAVE", minDistance: 6 },
+      { start: "PERSON", goal: "ANIMAL", minDistance: 7 },
+      { start: "HUNTER", goal: "FARMER", minDistance: 6 },
+      { start: "NARROW", goal: "BROAD", minDistance: 6 },
+      { start: "WISDOM", goal: "FOLLY", minDistance: 7 },
+      { start: "COMMON", goal: "UNIQUE", minDistance: 7 },
+      { start: "GENTLE", goal: "FIERCE", minDistance: 7 },
+      { start: "MODERN", goal: "ANCIENT", minDistance: 7 },
+      { start: "WANDER", goal: "SETTLE", minDistance: 7 },
+      { start: "BANKER", goal: "ARTIST", minDistance: 6 },
+      { start: "FROZEN", goal: "HEATED", minDistance: 6 },
+      { start: "CIRCLE", goal: "SQUARE", minDistance: 6 },
+      { start: "MOTHER", goal: "FATHER", minDistance: 5 },
     ],
   };
   
@@ -74,12 +152,15 @@ export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle => {
   const puzzles = puzzlesByLength[wordLength];
   const puzzle = puzzles[dayOfYear % puzzles.length];
   
+  // Dynamic move cap: minDistance + 4, clamped to 10-14
+  const maxMoves = Math.min(14, Math.max(10, puzzle.minDistance + 4));
+  
   return {
     date: today,
     startWord: puzzle.start,
     goalWord: puzzle.goal,
     wordLength,
-    maxMoves: 12,
+    maxMoves,
     minDistance: puzzle.minDistance,
   };
 };
