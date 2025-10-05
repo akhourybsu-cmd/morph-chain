@@ -27,13 +27,13 @@ export const LengthSwitcher = ({ selectedLength, onLengthChange, statuses }: Len
   const lengths: Array<4 | 5 | 6> = [4, 5, 6];
 
   return (
-    <div className="flex items-center justify-center gap-1 p-1 bg-card/50 rounded-lg border border-border transition-all">
+    <div className="flex items-center justify-center gap-0.5 md:gap-1 p-0.5 md:p-1 bg-card/50 rounded-lg border border-border transition-all">
       {lengths.map((length) => (
         <button
           key={length}
           onClick={() => onLengthChange(length)}
           className={`
-            relative px-4 py-2 rounded-md font-medium text-sm transition-all duration-200
+            relative px-3 py-1.5 md:px-4 md:py-2 rounded-md font-medium text-xs md:text-sm transition-all duration-200
             ${
               selectedLength === length
                 ? "bg-primary text-primary-foreground shadow-sm scale-105"
@@ -41,10 +41,10 @@ export const LengthSwitcher = ({ selectedLength, onLengthChange, statuses }: Len
             }
           `}
         >
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 md:gap-1.5">
             <span>{length}L</span>
             {statuses[length] !== "empty" && (
-              <span className="absolute -top-1 -right-1">
+              <span className="absolute -top-0.5 -right-0.5 md:-top-1 md:-right-1">
                 {getStatusIcon(statuses[length])}
               </span>
             )}

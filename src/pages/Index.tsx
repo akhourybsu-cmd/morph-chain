@@ -341,7 +341,7 @@ const Index = () => {
         onOpenHelp={() => setHelpOpen(true)}
       />
 
-      <div className="px-4 py-3 space-y-3">
+      <div className="px-3 py-2 space-y-2 md:px-4 md:py-3 md:space-y-3">
         <LengthSwitcher
           selectedLength={selectedLength}
           onLengthChange={handleLengthChange}
@@ -361,7 +361,7 @@ const Index = () => {
         />
       </div>
 
-      <main className="flex-1 pb-24">
+      <main className="flex-1 pb-16 md:pb-24">
         <PuzzleHero
           startWord={puzzle.startWord}
           goalWord={puzzle.goalWord}
@@ -372,15 +372,15 @@ const Index = () => {
         />
 
         {!gameCompleted && moves.length === 0 && (
-          <div className="px-6 mb-4">
-            <div className="bg-card border border-primary/20 rounded-lg p-4 text-sm animate-slide-in">
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">💡</div>
+          <div className="px-3 mb-3 md:px-6 md:mb-4">
+            <div className="bg-card border border-primary/20 rounded-lg p-3 text-sm animate-slide-in md:p-4">
+              <div className="flex items-start gap-2 md:gap-3">
+                <div className="text-xl md:text-2xl">💡</div>
                 <div className="space-y-1">
-                  <p className="font-medium text-foreground">
+                  <p className="font-medium text-foreground text-xs md:text-sm">
                     Change <strong>ONE</strong> letter each step. Every step must be a real word.
                   </p>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-muted-foreground text-[11px] md:text-xs">
                     Example: COLD → C<span className="text-warning">O</span>RD → C<span className="text-warning">A</span>RD → C<span className="text-warning">A</span>R<span className="text-warning">E</span>
                   </p>
                 </div>
@@ -419,22 +419,11 @@ const Index = () => {
         )}
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 bg-card border-t border-border py-4 px-6">
-        <div className="max-w-2xl mx-auto text-center space-y-2">
-          <p className="text-sm text-muted-foreground">
+      <footer className="fixed bottom-0 left-0 right-0 bg-card border-t border-border py-2 px-3 md:py-4 md:px-6">
+        <div className="max-w-2xl mx-auto text-center">
+          <p className="text-xs md:text-sm text-muted-foreground">
             New puzzle in {getTimeUntilMidnight()}
           </p>
-          <div className="flex justify-center gap-4 text-xs text-muted-foreground">
-            <a href="#" className="hover:text-primary transition-colors">
-              About
-            </a>
-            <a href="#" className="hover:text-primary transition-colors">
-              Privacy
-            </a>
-            <a href="#" className="hover:text-primary transition-colors">
-              Contact
-            </a>
-          </div>
         </div>
       </footer>
 
