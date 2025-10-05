@@ -1,24 +1,30 @@
 import { TileState } from "@/components/HintTile";
 import wordsAlphaText from "./words_alpha.txt?raw";
+import { filterModernEnglish } from "./wordFilters";
 
-// Parse and filter the word list by length
+// Parse and filter the word list by length with Modern English standards
 const parseWordList = () => {
-  const words4 = new Set<string>();
-  const words5 = new Set<string>();
-  const words6 = new Set<string>();
+  const words4Raw = new Set<string>();
+  const words5Raw = new Set<string>();
+  const words6Raw = new Set<string>();
   
   const lines = wordsAlphaText.split("\n");
   
   for (const line of lines) {
     const word = line.trim().toUpperCase();
     if (word.length === 4) {
-      words4.add(word);
+      words4Raw.add(word);
     } else if (word.length === 5) {
-      words5.add(word);
+      words5Raw.add(word);
     } else if (word.length === 6) {
-      words6.add(word);
+      words6Raw.add(word);
     }
   }
+  
+  // Apply Modern English filters
+  const words4 = filterModernEnglish(words4Raw);
+  const words5 = filterModernEnglish(words5Raw);
+  const words6 = filterModernEnglish(words6Raw);
   
   return { words4, words5, words6 };
 };

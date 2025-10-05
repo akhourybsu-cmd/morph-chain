@@ -8,6 +8,7 @@ import { ResultPanel } from "@/components/ResultPanel";
 import { SettingsModal } from "@/components/SettingsModal";
 import { StatsModal } from "@/components/StatsModal";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
+import { WordDisputeModal } from "@/components/WordDisputeModal";
 import { LengthSwitcher } from "@/components/LengthSwitcher";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -28,6 +29,7 @@ import {
   clearGameState,
   resetAllData,
 } from "@/lib/storage";
+import { saveDispute } from "@/lib/disputeStorage";
 
 const Index = () => {
   const { toast } = useToast();
@@ -46,6 +48,8 @@ const Index = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [disputeOpen, setDisputeOpen] = useState(false);
+  const [disputedWord, setDisputedWord] = useState<string | undefined>();
 
   // Settings
   const [settings, setSettings] = useState(loadSettings());
@@ -315,6 +319,19 @@ const Index = () => {
     }
   };
 
+  const handleDisputeWord = (word: string) => {
+    setDisputedWord(word);
+    setDisputeOpen(true);
+  };
+
+  const handleSubmitDispute = (word: string, reason: string) => {
+    saveDispute({ word, reason });
+    toast({ 
+      title: "Report Submitted", 
+      description: "Thank you for helping us improve word quality!" 
+    });
+  };
+
   const shareText = moves.length > 0 
     ? generateShareText(
         puzzle.date,
@@ -405,6 +422,7 @@ const Index = () => {
           moves={moves}
           simpleMode={simpleMode}
           colorblindMode={settings.colorblindMode}
+          onDisputeWord={handleDisputeWord}
         />
 
         {gameCompleted && (
@@ -440,6 +458,13 @@ const Index = () => {
       />
 
       <HowToPlayModal open={helpOpen} onOpenChange={setHelpOpen} />
+
+      <WordDisputeModal 
+        open={disputeOpen} 
+        onOpenChange={setDisputeOpen}
+        word={disputedWord}
+        onSubmitDispute={handleSubmitDispute}
+      />
 
       <StatsModal
         open={statsOpen}

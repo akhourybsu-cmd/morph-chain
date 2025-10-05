@@ -1,5 +1,6 @@
 import { HintTile, TileState } from "./HintTile";
-import { TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { TrendingDown, TrendingUp, Minus, Flag } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export interface Move {
   id: string;
@@ -16,9 +17,10 @@ interface MoveLogProps {
   moves: Move[];
   simpleMode?: boolean;
   colorblindMode?: boolean;
+  onDisputeWord?: (word: string) => void;
 }
 
-export const MoveLog = ({ moves, simpleMode = false, colorblindMode }: MoveLogProps) => {
+export const MoveLog = ({ moves, simpleMode = false, colorblindMode, onDisputeWord }: MoveLogProps) => {
   if (moves.length === 0) {
     return (
       <div className="px-6 py-8 text-center text-muted-foreground">
@@ -35,13 +37,24 @@ export const MoveLog = ({ moves, simpleMode = false, colorblindMode }: MoveLogPr
           className="bg-card border border-border rounded-lg p-3 animate-slide-in"
         >
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 font-mono text-sm">
+            <div className="flex items-center gap-2 font-mono text-sm flex-1 min-w-0">
               <span className="text-muted-foreground">{move.from}</span>
               <span className="text-muted-foreground">→</span>
               <span className="font-semibold tracking-tiles">{move.to}</span>
+              {onDisputeWord && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 w-5 p-0 ml-1 opacity-50 hover:opacity-100"
+                  onClick={() => onDisputeWord(move.to)}
+                  title="Report word issue"
+                >
+                  <Flag className="h-3 w-3" />
+                </Button>
+              )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               {move.isComplete ? (
                 <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs font-medium border border-success/30">
                   Goal!

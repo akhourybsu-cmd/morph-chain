@@ -20,6 +20,13 @@ export const HowToPlayModal = ({ open, onOpenChange }: HowToPlayModalProps) => {
         </DialogHeader>
 
         <div className="space-y-4 text-sm">
+          {/* Modern English Policy */}
+          <section className="bg-primary/10 border border-primary/30 rounded-lg p-3">
+            <p className="text-sm font-medium text-foreground">
+              Morph Chain uses <strong>standard, modern American English</strong>—no archaic, dialect, proper-noun, brand, texting, or highly technical words. If a word wouldn't appear in a contemporary general-audience newspaper or dictionary entry, it won't appear here.
+            </p>
+          </section>
+
           <section>
             <h3 className="font-semibold mb-2">Goal</h3>
             <p className="text-muted-foreground">
