@@ -14,11 +14,11 @@ export interface Move {
 
 interface MoveLogProps {
   moves: Move[];
-  showHints: boolean;
+  simpleMode?: boolean;
   colorblindMode?: boolean;
 }
 
-export const MoveLog = ({ moves, showHints, colorblindMode }: MoveLogProps) => {
+export const MoveLog = ({ moves, simpleMode = false, colorblindMode }: MoveLogProps) => {
   if (moves.length === 0) {
     return (
       <div className="px-6 py-8 text-center text-muted-foreground">
@@ -44,7 +44,7 @@ export const MoveLog = ({ moves, showHints, colorblindMode }: MoveLogProps) => {
             </span>
           </div>
 
-          {showHints && (
+          {!simpleMode && (
             <div className="flex gap-1">
               {move.hints.map((state, i) => (
                 <HintTile

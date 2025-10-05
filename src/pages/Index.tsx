@@ -40,7 +40,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [gameWon, setGameWon] = useState(false);
-  const [showHints, setShowHints] = useState(false);
+  const [simpleMode, setSimpleMode] = useState(false);
 
   // Modals
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -354,8 +354,8 @@ const Index = () => {
           goalWord={puzzle.goalWord}
           movesUsed={moves.length}
           maxMoves={puzzle.maxMoves}
-          onToggleHints={() => setShowHints(!showHints)}
-          showHints={showHints}
+          onToggleSimpleMode={() => setSimpleMode(!simpleMode)}
+          simpleMode={simpleMode}
         />
 
         {!gameCompleted && moves.length === 0 && (
@@ -378,7 +378,7 @@ const Index = () => {
 
         <MoveLog
           moves={moves}
-          showHints={showHints}
+          simpleMode={simpleMode}
           colorblindMode={settings.colorblindMode}
         />
 

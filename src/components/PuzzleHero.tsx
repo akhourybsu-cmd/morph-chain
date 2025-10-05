@@ -1,4 +1,4 @@
-import { ArrowRight, HelpCircle } from "lucide-react";
+import { ArrowRight, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PuzzleHeroProps {
@@ -6,8 +6,8 @@ interface PuzzleHeroProps {
   goalWord: string;
   movesUsed: number;
   maxMoves: number;
-  onToggleHints: () => void;
-  showHints: boolean;
+  onToggleSimpleMode: () => void;
+  simpleMode: boolean;
 }
 
 export const PuzzleHero = ({
@@ -15,8 +15,8 @@ export const PuzzleHero = ({
   goalWord,
   movesUsed,
   maxMoves,
-  onToggleHints,
-  showHints,
+  onToggleSimpleMode,
+  simpleMode,
 }: PuzzleHeroProps) => {
   const dots = Array(maxMoves).fill(0);
 
@@ -45,11 +45,11 @@ export const PuzzleHero = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={onToggleHints}
+          onClick={onToggleSimpleMode}
           className="h-6 px-2 text-xs"
         >
-          <HelpCircle className="h-3 w-3 mr-1" />
-          {showHints ? "Hide" : "Show"} hints
+          <Type className="h-3 w-3 mr-1" />
+          {simpleMode ? "Show tiles" : "Simple mode"}
         </Button>
       </div>
     </div>
