@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { GameHeader } from "@/components/GameHeader";
 import { DailyBanner } from "@/components/DailyBanner";
 import { PuzzleHero } from "@/components/PuzzleHero";
@@ -332,15 +332,26 @@ const Index = () => {
     });
   };
 
-  const shareText = moves.length > 0 
-    ? generateShareText(
-        puzzle.date,
-        moves.length,
-        gameWon,
-        puzzle.wordLength,
-        moves.slice(0, 2).map((m) => m.hints)
-      )
-    : "";
+  // Memoize expensive share text generation
+  const shareText = useMemo(() => 
+    moves.length > 0 
+      ? generateShareText(
+          puzzle.date,
+          moves.length,
+          gameWon,
+          puzzle.wordLength,
+          moves.slice(0, 2).map((m) => m.hints)
+        )
+      : "",
+    [moves.length, gameWon, puzzle.date, puzzle.wordLength, moves]
+  );
+
+  // Memoize length status checks to avoid repeated localStorage reads
+  const lengthStatuses = useMemo(() => ({
+    4: getLengthStatus(4),
+    5: getLengthStatus(5),
+    6: getLengthStatus(6),
+  }), [puzzle.date]);
 
   const getLengthStatus = (length: 4 | 5 | 6): "empty" | "won" | "failed" | "in-progress" => {
     const state = loadGameState(length);
@@ -362,11 +373,7 @@ const Index = () => {
         <LengthSwitcher
           selectedLength={selectedLength}
           onLengthChange={handleLengthChange}
-          statuses={{
-            4: getLengthStatus(4),
-            5: getLengthStatus(5),
-            6: getLengthStatus(6),
-          }}
+          statuses={lengthStatuses}
         />
 
         <DailyBanner

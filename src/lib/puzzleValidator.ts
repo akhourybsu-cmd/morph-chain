@@ -1,9 +1,27 @@
 // Puzzle validation to ensure solvability with Modern English word list
 
+// Cache word graphs to avoid rebuilding them repeatedly
+const graphCache = new Map<string, Map<string, Set<string>>>();
+
 /**
- * Build a graph of one-letter connections between words
+ * Get a cache key for a word set
+ */
+const getCacheKey = (words: Set<string>): string => {
+  // Use size as a simple cache key since we have 3 distinct word sets (4L, 5L, 6L)
+  return `graph_${words.size}`;
+};
+
+/**
+ * Build a graph of one-letter connections between words (cached)
  */
 const buildWordGraph = (words: Set<string>): Map<string, Set<string>> => {
+  const cacheKey = getCacheKey(words);
+  
+  // Return cached graph if available
+  if (graphCache.has(cacheKey)) {
+    return graphCache.get(cacheKey)!;
+  }
+  
   const graph = new Map<string, Set<string>>();
   const wordArray = Array.from(words);
   
@@ -23,6 +41,8 @@ const buildWordGraph = (words: Set<string>): Map<string, Set<string>> => {
     }
   }
   
+  // Cache the result
+  graphCache.set(cacheKey, graph);
   return graph;
 };
 
