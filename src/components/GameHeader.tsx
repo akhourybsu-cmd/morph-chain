@@ -40,20 +40,24 @@ export const GameHeader = ({ onOpenSettings, onOpenStats, onOpenHelp }: GameHead
   };
 
   return (
-    <header className="h-14 flex items-center justify-between px-4 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onOpenSettings}
-        aria-label="Open settings"
-        className="hover:bg-muted/50 h-9 w-9"
-      >
-        <Menu className="h-5 w-5" />
-      </Button>
+    <header className="h-14 grid grid-cols-3 items-center px-4 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      <div className="flex items-center gap-1 justify-start">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onOpenSettings}
+          aria-label="Open settings"
+          className="hover:bg-muted/50 h-9 w-9"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      </div>
       
-      <Logo />
+      <div className="flex justify-center">
+        <Logo />
+      </div>
       
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 justify-end">
         <Button
           variant="ghost"
           size="icon"
