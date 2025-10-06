@@ -38,8 +38,6 @@ export const MoveLog = ({ moves, simpleMode = false, colorblindMode, onDisputeWo
         >
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 font-mono text-sm flex-1 min-w-0">
-              <span className="text-muted-foreground">{move.from}</span>
-              <span className="text-muted-foreground">→</span>
               <span className="font-semibold tracking-tiles">{move.to}</span>
               {onDisputeWord && (
                 <Button

@@ -55,6 +55,12 @@ export const InputRow = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Prevent form submission on Enter - user must click Move button
+    if (e.key === "Enter") {
+      e.preventDefault();
+      return;
+    }
+    
     if (e.key === "Escape") {
       setNextWord("");
       setHistoryIndex(-1);
