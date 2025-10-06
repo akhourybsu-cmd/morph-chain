@@ -15,6 +15,7 @@ import {
   getDailyPuzzle,
   isValidWord,
   isOneLetterDifferent,
+  isTwoLettersDifferent,
   getHints,
   calculateDistance,
   generateShareText,
@@ -126,9 +127,20 @@ const Index = () => {
 
     // Simulate network delay
     setTimeout(() => {
-      // Validation
-      if (!isOneLetterDifferent(currentWord, word)) {
-        setError("Must change exactly one letter.");
+      // Validation - 5L/6L allow 2 letters on first move
+      const isFirstMove = moves.length === 0;
+      const allowTwoLetters = isFirstMove && (puzzle.wordLength === 5 || puzzle.wordLength === 6);
+      
+      const isValid = allowTwoLetters
+        ? (isOneLetterDifferent(currentWord, word) || isTwoLettersDifferent(currentWord, word))
+        : isOneLetterDifferent(currentWord, word);
+      
+      if (!isValid) {
+        if (allowTwoLetters) {
+          setError("Must change one or two letters.");
+        } else {
+          setError("Must change exactly one letter.");
+        }
         setIsLoading(false);
         return;
       }
@@ -403,7 +415,11 @@ const Index = () => {
                 <div className="text-xl md:text-2xl">💡</div>
                 <div className="space-y-1">
                   <p className="font-medium text-foreground text-xs md:text-sm">
-                    Change <strong>ONE</strong> letter each step. Every step must be a real word.
+                    {puzzle.wordLength === 4 ? (
+                      <>Change <strong>ONE</strong> letter each step. Every step must be a real word.</>
+                    ) : (
+                      <>Change <strong>ONE or TWO</strong> letters on your first move, then <strong>ONE</strong> letter each step. Every step must be a real word.</>
+                    )}
                   </p>
                   <p className="text-muted-foreground text-[11px] md:text-xs">
                     Example: COLD → C<span className="text-warning">O</span>RD → C<span className="text-warning">A</span>RD → C<span className="text-warning">A</span>R<span className="text-warning">E</span>
@@ -423,6 +439,7 @@ const Index = () => {
             isLoading={isLoading}
             movesUsed={moves.length}
             maxMoves={puzzle.maxMoves}
+            wordLength={puzzle.wordLength}
           />
         )}
 

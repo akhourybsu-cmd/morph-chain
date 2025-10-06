@@ -11,6 +11,7 @@ interface InputRowProps {
   isLoading?: boolean;
   movesUsed?: number;
   maxMoves?: number;
+  wordLength?: number;
 }
 
 export const InputRow = ({
@@ -21,6 +22,7 @@ export const InputRow = ({
   isLoading,
   movesUsed = 0,
   maxMoves = 12,
+  wordLength = 4,
 }: InputRowProps) => {
   const [nextWord, setNextWord] = useState("");
   const [shake, setShake] = useState(false);
@@ -139,7 +141,9 @@ export const InputRow = ({
       </form>
 
       <div id="input-hint" className="sr-only">
-        Change exactly one letter. Press Escape to clear, Arrow keys to cycle history.
+        {movesUsed === 0 && (wordLength === 5 || wordLength === 6)
+          ? "First move: change one or two letters. After that, change exactly one letter. Press Escape to clear, Arrow keys to cycle history."
+          : "Change exactly one letter. Press Escape to clear, Arrow keys to cycle history."}
       </div>
     </div>
   );

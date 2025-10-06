@@ -36,16 +36,21 @@ export const HowToPlayModal = ({ open, onOpenChange }: HowToPlayModalProps) => {
 
           <section>
             <h3 className="font-semibold mb-2">How</h3>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground mb-2">
               Change <strong>one letter</strong> each step—every step must be a real word.
             </p>
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mt-2">
+              <p className="text-sm text-foreground">
+                <strong>5L & 6L Special Rule:</strong> On your <strong>first move only</strong>, you may change <strong>one OR two letters</strong>. After that, change exactly one letter per step.
+              </p>
+            </div>
           </section>
 
           <section>
             <h3 className="font-semibold mb-2">Rules</h3>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
               <li><strong>No repeats:</strong> You can't use the same word twice</li>
-              <li><strong>Moves limit:</strong> You have up to 12 moves</li>
+              <li><strong>Moves limit:</strong> You have up to 14 moves (varies by puzzle difficulty)</li>
               <li><strong>Daily choice:</strong> Play today's 4-letter, 5-letter, or 6-letter puzzle (or all three!)</li>
             </ul>
           </section>

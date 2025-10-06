@@ -196,6 +196,17 @@ export const isOneLetterDifferent = (word1: string, word2: string): boolean => {
   return differences === 1;
 };
 
+export const isTwoLettersDifferent = (word1: string, word2: string): boolean => {
+  if (word1.length !== word2.length) return false;
+  
+  let differences = 0;
+  for (let i = 0; i < word1.length; i++) {
+    if (word1[i] !== word2[i]) differences++;
+  }
+  
+  return differences === 2;
+};
+
 export const getHints = (attempt: string, goal: string): TileState[] => {
   const hints: TileState[] = [];
   const goalLetters = goal.split("");
