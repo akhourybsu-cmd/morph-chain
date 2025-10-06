@@ -112,8 +112,8 @@ export function generatePuzzle(dateString: string, puzzleNumber: number): PrismP
     
     // Gates: minDistance ∈ [4..8] and pathCount ≥ 12
     if (minDistance >= 4 && minDistance <= 8 && pathCount >= 12) {
-      // Cap formula: clamp(minDistance + 4, 8..14)
-      const cap = Math.max(8, Math.min(14, minDistance + 4));
+      // Cap: 20 moves
+      const cap = 20;
       
       // Hints: Easy 2, Standard 1, Hard 1
       const hints = minDistance <= 5 ? 2 : 1;
@@ -151,7 +151,7 @@ export function getTodaysPuzzle(): PrismPuzzle {
     start: { H: 210, S: 55, L: 60 },
     goal: { H: 30, S: 40, L: 70 },
     minDistance: 6,
-    cap: 10,
+    cap: 20,
     hints: 1,
   };
 }
