@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,8 @@ export default function Dictionary() {
   const [words, setWords] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState<"all" | "banned" | "complained" | "unused">("all");
+  const [populateLoading, setPopulateLoading] = useState(false);
   const { toast } = useToast();
 
   const searchSchema = z.object({
@@ -30,24 +32,42 @@ export default function Dictionary() {
   });
 
   const searchWords = async () => {
-    const validation = searchSchema.safeParse({ term: searchTerm });
-    if (!validation.success) {
-      toast({
-        title: "Invalid search",
-        description: validation.error.errors[0].message,
-        variant: "destructive",
-      });
-      return;
+    if (searchTerm) {
+      const validation = searchSchema.safeParse({ term: searchTerm });
+      if (!validation.success) {
+        toast({
+          title: "Invalid search",
+          description: validation.error.errors[0].message,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("admin_dictionary")
-        .select("*")
-        .ilike("word", `${searchTerm}%`)
+        .select("*");
+
+      // Apply search filter
+      if (searchTerm) {
+        query = query.ilike("word", `${searchTerm}%`);
+      }
+
+      // Apply category filter
+      if (filter === "banned") {
+        query = query.eq("is_banned", true);
+      } else if (filter === "complained") {
+        query = query.gt("complaint_count", 0);
+      } else if (filter === "unused") {
+        query = query.is("last_seen", null);
+      }
+
+      const { data, error } = await query
+        .order("complaint_count", { ascending: false, nullsFirst: false })
         .order("word")
-        .limit(50);
+        .limit(100);
 
       if (error) throw error;
       setWords(data || []);
@@ -59,6 +79,43 @@ export default function Dictionary() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const populateDictionary = async () => {
+    setPopulateLoading(true);
+    try {
+      // Import puzzle data
+      const { CURATED_4L_PUZZLES } = await import("@/lib/curatedPuzzles4L");
+      const { CURATED_5L_PUZZLES } = await import("@/lib/curatedPuzzles5L");
+      const { CURATED_6L_PUZZLES } = await import("@/lib/curatedPuzzles6L");
+
+      const allPuzzles = [
+        ...CURATED_4L_PUZZLES,
+        ...CURATED_5L_PUZZLES,
+        ...CURATED_6L_PUZZLES,
+      ];
+
+      const { data, error } = await supabase.functions.invoke('populate-dictionary', {
+        body: { puzzles: allPuzzles }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Dictionary populated",
+        description: `${data.inserted} words inserted, ${data.skipped} skipped`,
+      });
+
+      searchWords();
+    } catch (error: any) {
+      toast({
+        title: "Error populating dictionary",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setPopulateLoading(false);
     }
   };
 
@@ -96,28 +153,81 @@ export default function Dictionary() {
         <p className="text-muted-foreground">Search and manage allowed/banned words</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Word Search</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search words..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && searchWords()}
-                className="pl-10"
-              />
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Word Search</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search words..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && searchWords()}
+                    className="pl-10"
+                  />
+                </div>
+                <Button onClick={searchWords} disabled={loading}>
+                  {loading ? "Searching..." : "Search"}
+                </Button>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={filter === "all" ? "default" : "outline"}
+                  onClick={() => setFilter("all")}
+                >
+                  All Words
+                </Button>
+                <Button
+                  size="sm"
+                  variant={filter === "banned" ? "default" : "outline"}
+                  onClick={() => setFilter("banned")}
+                >
+                  Banned
+                </Button>
+                <Button
+                  size="sm"
+                  variant={filter === "complained" ? "default" : "outline"}
+                  onClick={() => setFilter("complained")}
+                >
+                  Complaints
+                </Button>
+                <Button
+                  size="sm"
+                  variant={filter === "unused" ? "default" : "outline"}
+                  onClick={() => setFilter("unused")}
+                >
+                  Unused
+                </Button>
+              </div>
             </div>
-            <Button onClick={searchWords} disabled={loading}>
-              {loading ? "Searching..." : "Search"}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Database Tools</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={populateDictionary}
+              disabled={populateLoading}
+              className="w-full"
+            >
+              {populateLoading ? "Populating..." : "Populate from Puzzle Lists"}
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+            <p className="text-xs text-muted-foreground mt-2">
+              Imports all words from curated puzzle lists into the dictionary
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
       {words.length > 0 && (
         <Card>
