@@ -66,12 +66,10 @@ export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle => {
   const puzzleIndex = daysSinceEpoch % curatedPuzzles.length;
   const candidatePuzzle = curatedPuzzles[puzzleIndex];
   
-  // Calculate minDistance at runtime
-  const minDist = calculateMinDistance(
-    candidatePuzzle.start,
-    candidatePuzzle.goal,
-    wordSet
-  ) || (wordLength === 4 ? 4 : wordLength === 5 ? 5 : 6);
+  // Use pre-calculated minDist (fallback to runtime calculation if missing)
+  const minDist = candidatePuzzle.minDist || 
+    calculateMinDistance(candidatePuzzle.start, candidatePuzzle.goal, wordSet) || 
+    (wordLength === 4 ? 4 : wordLength === 5 ? 5 : 6);
   
   // Mark this puzzle as used
   markPuzzleAsUsed(candidatePuzzle.start, candidatePuzzle.goal, puzzleIndex, today, wordLength);
