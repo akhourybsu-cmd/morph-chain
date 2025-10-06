@@ -65,7 +65,7 @@ function filterModernEnglish(words: Set<string>): Set<string> {
   return filtered;
 }
 
-// BFS algorithm to find shortest path and verify solvability
+// Optimized BFS: generate neighbors instead of checking all words
 function findShortestPath(
   start: string,
   goal: string,
@@ -80,23 +80,51 @@ function findShortestPath(
   const visited = new Set<string>([start]);
   const wordLength = start.length;
 
+  // Generate all neighbors of a word by substituting letters
+  function getNeighbors(word: string): string[] {
+    const neighbors: string[] = [];
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    
+    // One-letter changes
+    for (let i = 0; i < wordLength; i++) {
+      for (const letter of letters) {
+        if (letter === word[i]) continue;
+        const candidate = word.substring(0, i) + letter + word.substring(i + 1);
+        if (validWords.has(candidate) && !visited.has(candidate)) {
+          neighbors.push(candidate);
+        }
+      }
+    }
+    
+    // Two-letter changes (if allowed)
+    if (allowTwoLetterChange) {
+      for (let i = 0; i < wordLength; i++) {
+        for (let j = i + 1; j < wordLength; j++) {
+          for (const letter1 of letters) {
+            if (letter1 === word[i]) continue;
+            for (const letter2 of letters) {
+              if (letter2 === word[j]) continue;
+              const candidate = 
+                word.substring(0, i) + letter1 + 
+                word.substring(i + 1, j) + letter2 + 
+                word.substring(j + 1);
+              if (validWords.has(candidate) && !visited.has(candidate)) {
+                neighbors.push(candidate);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    return neighbors;
+  }
+
   while (queue.length > 0) {
     const current = queue.shift()!;
+    const neighbors = getNeighbors(current.word);
     
-    // Generate all possible next words
-    for (const nextWord of validWords) {
-      if (visited.has(nextWord)) continue;
-      if (nextWord.length !== wordLength) continue;
-      
-      // Check if one letter different (or two if allowed)
-      let differences = 0;
-      for (let i = 0; i < wordLength; i++) {
-        if (current.word[i] !== nextWord[i]) differences++;
-      }
-      
-      const maxDiff = allowTwoLetterChange ? 2 : 1;
-      if (differences === 0 || differences > maxDiff) continue;
-      
+    for (const nextWord of neighbors) {
       const newPath = [...current.path, nextWord];
       
       // Found the goal!
