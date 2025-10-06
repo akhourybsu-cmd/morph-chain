@@ -12,8 +12,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export const backgroundThemes = {
   midnight: { name: "Midnight Canvas", bg: "218 18% 7%" },
-  deepOcean: { name: "Ocean Mist", bg: "210 30% 85%" },
-  cosmicVoid: { name: "Twilight Haze", bg: "250 25% 80%" },
+  oceanMist: { name: "Ocean Mist", bg: "210 25% 25%" },
+  twilightHaze: { name: "Twilight Haze", bg: "250 22% 28%" },
   charcoalMist: { name: "Charcoal Mist", bg: "200 15% 12%" },
 } as const;
 
