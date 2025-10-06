@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.import-puzzles-to-vault]
 verify_jwt = true
+
+[functions.check-puzzle-solvability]
+verify_jwt = true

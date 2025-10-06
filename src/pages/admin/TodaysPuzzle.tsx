@@ -1,190 +1,336 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Play, Lock, Unlock, RefreshCw } from "lucide-react";
-import { format } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
+import { supabase } from "@/integrations/supabase/client";
+import { Calendar, CheckCircle2, XCircle, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+interface PuzzleData {
+  id: string;
+  start_word: string;
+  goal_word: string;
+  word_length: number;
+  min_distance: number;
+  puzzle_index: number;
+  theme_tags?: string[];
+}
+
+interface SolvabilityResult {
+  solvable: boolean;
+  minMoves: number;
+  path: string[];
+  computeTime: number;
+  dictionarySize: number;
+}
 
 export default function TodaysPuzzle() {
-  const [puzzle, setPuzzle] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [checking, setChecking] = useState(false);
+  const [puzzles, setPuzzles] = useState<{
+    fourLetter: PuzzleData | null;
+    fiveLetter: PuzzleData | null;
+    sixLetter: PuzzleData | null;
+  }>({
+    fourLetter: null,
+    fiveLetter: null,
+    sixLetter: null
+  });
+  const [solvability, setSolvability] = useState<{
+    [key: number]: SolvabilityResult | null;
+  }>({
+    4: null,
+    5: null,
+    6: null
+  });
 
   useEffect(() => {
-    fetchTodaysPuzzle();
+    loadTodaysPuzzles();
   }, []);
 
-  const fetchTodaysPuzzle = async () => {
+  const loadTodaysPuzzles = async () => {
+    setLoading(true);
     try {
-      const today = format(toZonedTime(new Date(), "America/New_York"), "yyyy-MM-dd");
-      
-      const { data, error } = await supabase
-        .from("admin_puzzles")
-        .select("*")
-        .eq("scheduled_date", today)
-        .maybeSingle();
+      const today = new Date().toISOString().split('T')[0];
+      const daysSinceEpoch = Math.floor(new Date(today).getTime() / (1000 * 60 * 60 * 24));
 
-      if (error) throw error;
-      setPuzzle(data);
-    } catch (error: any) {
+      // Load puzzles for each word length
+      const puzzlePromises = [4, 5, 6].map(async (wordLength) => {
+        const { count } = await supabase
+          .from('admin_puzzle_vault')
+          .select('*', { count: 'exact', head: true })
+          .eq('word_length', wordLength)
+          .eq('is_active', true);
+
+        if (!count || count === 0) return null;
+
+        const puzzleIndex = daysSinceEpoch % count;
+
+        const { data, error } = await supabase
+          .from('admin_puzzle_vault')
+          .select('*')
+          .eq('word_length', wordLength)
+          .eq('puzzle_index', puzzleIndex)
+          .eq('is_active', true)
+          .single();
+
+        if (error) {
+          console.error(`Error loading ${wordLength}L puzzle:`, error);
+          return null;
+        }
+
+        return data as PuzzleData;
+      });
+
+      const [fourL, fiveL, sixL] = await Promise.all(puzzlePromises);
+
+      setPuzzles({
+        fourLetter: fourL,
+        fiveLetter: fiveL,
+        sixLetter: sixL
+      });
+
+    } catch (error) {
+      console.error('Error loading puzzles:', error);
       toast({
-        title: "Error fetching puzzle",
-        description: error.message,
-        variant: "destructive",
+        title: "Failed to load puzzles",
+        description: "Please try again",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const updateStatus = async (newStatus: "draft" | "preview" | "live" | "disabled" | "completed") => {
-    if (!puzzle) return;
-
+  const checkSolvability = async (puzzle: PuzzleData) => {
+    setChecking(true);
     try {
-      const { error } = await supabase
-        .from("admin_puzzles")
-        .update({ status: newStatus })
-        .eq("id", puzzle.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Status updated",
-        description: `Puzzle status changed to ${newStatus}`,
+      const { data, error } = await supabase.functions.invoke('check-puzzle-solvability', {
+        body: {
+          startWord: puzzle.start_word,
+          goalWord: puzzle.goal_word,
+          wordLength: puzzle.word_length,
+          allowTwoLetterChange: puzzle.word_length === 6
+        }
       });
 
-      fetchTodaysPuzzle();
+      if (error) {
+        throw error;
+      }
+
+      setSolvability(prev => ({
+        ...prev,
+        [puzzle.word_length]: data as SolvabilityResult
+      }));
+
+      if (data.solvable) {
+        toast({
+          title: "Puzzle is solvable! ✓",
+          description: `Minimum path: ${data.minMoves} moves (computed in ${data.computeTime}ms)`
+        });
+      } else {
+        toast({
+          title: "Puzzle is NOT solvable!",
+          description: "No valid path exists between these words",
+          variant: "destructive"
+        });
+      }
+
     } catch (error: any) {
+      console.error('Solvability check error:', error);
       toast({
-        title: "Error updating status",
-        description: error.message,
-        variant: "destructive",
+        title: "Solvability check failed",
+        description: error.message || "Please try again",
+        variant: "destructive"
       });
+    } finally {
+      setChecking(false);
     }
   };
 
-  if (loading) {
-    return <div className="flex items-center justify-center p-8">Loading...</div>;
-  }
+  const renderPuzzleCard = (puzzle: PuzzleData | null, label: string) => {
+    if (!puzzle) {
+      return (
+        <Card className="p-6">
+          <div className="text-center space-y-3">
+            <h3 className="text-lg font-semibold">{label}</h3>
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                No puzzle available. Import puzzles to the vault first.
+              </AlertDescription>
+            </Alert>
+          </div>
+        </Card>
+      );
+    }
 
-  if (!puzzle) {
+    const solvabilityResult = solvability[puzzle.word_length];
+    const maxMoves = Math.min(14, Math.max(10, puzzle.min_distance + (puzzle.word_length === 6 ? 5 : 4)));
+
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Today's Puzzle</CardTitle>
-          <CardDescription>No puzzle scheduled for today</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">Please schedule a puzzle for today in the Scheduler.</p>
-        </CardContent>
+      <Card className="p-6">
+        <div className="space-y-4">
+          {/* Header */}
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-lg font-semibold">{label}</h3>
+              <p className="text-sm text-muted-foreground">Puzzle #{puzzle.puzzle_index + 1}</p>
+            </div>
+            <Badge variant="outline" className="text-lg">
+              {puzzle.word_length}L
+            </Badge>
+          </div>
+
+          {/* Puzzle Details */}
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-muted-foreground">Start Word:</p>
+              <p className="font-mono font-semibold text-lg">{puzzle.start_word}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Goal Word:</p>
+              <p className="font-mono font-semibold text-lg">{puzzle.goal_word}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Min Distance:</p>
+              <p className="font-semibold">{puzzle.min_distance} moves</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Max Moves:</p>
+              <p className="font-semibold">{maxMoves} moves</p>
+            </div>
+          </div>
+
+          {/* Theme Tags */}
+          {puzzle.theme_tags && puzzle.theme_tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {puzzle.theme_tags.map((tag, idx) => (
+                <Badge key={idx} variant="secondary" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* Solvability Section */}
+          <div className="border-t pt-4 space-y-3">
+            <Button
+              onClick={() => checkSolvability(puzzle)}
+              disabled={checking}
+              variant="outline"
+              size="sm"
+              className="w-full"
+            >
+              {checking ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Checking...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Check Solvability
+                </>
+              )}
+            </Button>
+
+            {solvabilityResult && (
+              <div className="space-y-2">
+                {solvabilityResult.solvable ? (
+                  <>
+                    <Alert className="border-green-500/50 bg-green-500/10">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <AlertDescription className="text-green-700 dark:text-green-400">
+                        Puzzle is <strong>SOLVABLE</strong>
+                      </AlertDescription>
+                    </Alert>
+                    <div className="text-sm space-y-1">
+                      <p><strong>Shortest Path:</strong> {solvabilityResult.minMoves} moves</p>
+                      <p><strong>Compute Time:</strong> {solvabilityResult.computeTime}ms</p>
+                      <p><strong>Dictionary Size:</strong> {solvabilityResult.dictionarySize.toLocaleString()} words</p>
+                      {solvabilityResult.path.length > 0 && (
+                        <div className="mt-2">
+                          <p className="font-semibold mb-1">Solution Path:</p>
+                          <div className="flex flex-wrap gap-1 font-mono text-xs">
+                            {solvabilityResult.path.map((word, idx) => (
+                              <span key={idx} className="bg-primary/10 px-2 py-1 rounded">
+                                {word}
+                                {idx < solvabilityResult.path.length - 1 && " →"}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <Alert variant="destructive">
+                    <XCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Puzzle is <strong>NOT SOLVABLE</strong> - No valid path exists!
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </Card>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Today's Puzzle</h1>
-        <Badge variant={puzzle.status === "live" ? "default" : "secondary"}>
-          {puzzle.status}
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Calendar className="h-8 w-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold">Today&apos;s Puzzles</h1>
+            <p className="text-muted-foreground">
+              {new Date().toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </p>
+          </div>
+        </div>
+        <Button onClick={loadTodaysPuzzles} variant="outline" size="sm">
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Refresh
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Puzzle #{puzzle.puzzle_index || "TBD"}</CardTitle>
-          <CardDescription>
-            {format(new Date(puzzle.scheduled_date), "MMMM d, yyyy")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Start Word</p>
-              <p className="text-2xl font-bold uppercase">{puzzle.start_word}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Goal Word</p>
-              <p className="text-2xl font-bold uppercase">{puzzle.goal_word}</p>
-            </div>
-          </div>
+      {/* Puzzle Cards */}
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
+        {renderPuzzleCard(puzzles.fourLetter, "4-Letter Puzzle")}
+        {renderPuzzleCard(puzzles.fiveLetter, "5-Letter Puzzle")}
+        {renderPuzzleCard(puzzles.sixLetter, "6-Letter Puzzle")}
+      </div>
 
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Word Length</p>
-              <p className="text-xl font-semibold">{puzzle.word_length}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Min Distance</p>
-              <p className="text-xl font-semibold">{puzzle.min_distance}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Max Moves</p>
-              <p className="text-xl font-semibold">{puzzle.max_moves}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Variant</p>
-              <p className="text-xl font-semibold capitalize">{puzzle.variant.replace("_", " ")}</p>
-            </div>
-          </div>
-
-          {puzzle.shortest_path_count && (
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Shortest Paths</p>
-                <p className="text-lg font-semibold">{puzzle.shortest_path_count}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Avg Branching</p>
-                <p className="text-lg font-semibold">{puzzle.avg_branching_factor?.toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Health Score</p>
-                <p className="text-lg font-semibold">{puzzle.health_score}</p>
-              </div>
-            </div>
-          )}
-
-          {puzzle.theme_tags && puzzle.theme_tags.length > 0 && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Theme Tags</p>
-              <div className="flex gap-2 flex-wrap">
-                {puzzle.theme_tags.map((tag: string) => (
-                  <Badge key={tag} variant="outline">{tag}</Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-2 pt-4 border-t">
-            {puzzle.status === "preview" && (
-              <Button onClick={() => updateStatus("live")} className="gap-2">
-                <Play className="h-4 w-4" />
-                Push Live
-              </Button>
-            )}
-            {puzzle.status === "live" && (
-              <Button onClick={() => updateStatus("disabled")} variant="destructive" className="gap-2">
-                <Lock className="h-4 w-4" />
-                End Early
-              </Button>
-            )}
-            {puzzle.status === "disabled" && (
-              <Button onClick={() => updateStatus("live")} className="gap-2">
-                <Unlock className="h-4 w-4" />
-                Re-enable
-              </Button>
-            )}
-            <Button onClick={fetchTodaysPuzzle} variant="outline" className="gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Refresh
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Info Alert */}
+      <Alert>
+        <AlertDescription>
+          <strong>Solvability Check:</strong> Uses BFS algorithm to verify that a valid path exists 
+          between the start and goal words using the dictionary. For 6-letter puzzles, both 1-letter 
+          and 2-letter changes are allowed.
+        </AlertDescription>
+      </Alert>
     </div>
   );
 }
