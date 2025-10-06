@@ -168,7 +168,7 @@ export default function TodaysPuzzle() {
     }
 
     const solvabilityResult = solvability[puzzle.word_length];
-    const maxMoves = Math.min(14, Math.max(10, puzzle.min_distance + (puzzle.word_length === 6 ? 5 : 4)));
+    const maxMoves = Math.ceil(puzzle.min_distance * 1.5) + 3;
 
     return (
       <Card className="p-6">
