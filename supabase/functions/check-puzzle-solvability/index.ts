@@ -65,7 +65,7 @@ function filterModernEnglish(words: Set<string>): Set<string> {
   return filtered;
 }
 
-// Optimized BFS: generate neighbors instead of checking all words
+// Optimized BFS with bidirectional search for large puzzles
 function findShortestPath(
   start: string,
   goal: string,
@@ -76,14 +76,12 @@ function findShortestPath(
     return { solvable: true, minMoves: 0, path: [start] };
   }
 
-  const queue: Array<{ word: string; path: string[] }> = [{ word: start, path: [start] }];
-  const visited = new Set<string>([start]);
   const wordLength = start.length;
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-  // Generate all neighbors of a word by substituting letters
-  function getNeighbors(word: string): string[] {
+  // Generate neighbors efficiently
+  function getNeighbors(word: string, visited: Set<string>): string[] {
     const neighbors: string[] = [];
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     
     // One-letter changes
     for (let i = 0; i < wordLength; i++) {
@@ -96,7 +94,7 @@ function findShortestPath(
       }
     }
     
-    // Two-letter changes (if allowed)
+    // Two-letter changes (if allowed - enumerate all combinations)
     if (allowTwoLetterChange) {
       for (let i = 0; i < wordLength; i++) {
         for (let j = i + 1; j < wordLength; j++) {
@@ -120,24 +118,56 @@ function findShortestPath(
     return neighbors;
   }
 
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    const neighbors = getNeighbors(current.word);
-    
-    for (const nextWord of neighbors) {
-      const newPath = [...current.path, nextWord];
+  // Bidirectional BFS for better performance
+  const forwardQueue = [{ word: start, path: [start] }];
+  const backwardQueue = [{ word: goal, path: [goal] }];
+  const forwardVisited = new Map<string, string[]>([[start, [start]]]);
+  const backwardVisited = new Map<string, string[]>([[goal, [goal]]]);
+
+  while (forwardQueue.length > 0 && backwardQueue.length > 0) {
+    // Always expand the smaller frontier
+    if (forwardQueue.length <= backwardQueue.length) {
+      const current = forwardQueue.shift()!;
+      const neighbors = getNeighbors(current.word, new Set(forwardVisited.keys()));
       
-      // Found the goal!
-      if (nextWord === goal) {
-        return {
-          solvable: true,
-          minMoves: newPath.length - 1,
-          path: newPath
-        };
+      for (const nextWord of neighbors) {
+        const newPath = [...current.path, nextWord];
+        
+        // Check if we've met the backward search
+        if (backwardVisited.has(nextWord)) {
+          const backPath = backwardVisited.get(nextWord)!;
+          const fullPath = [...newPath, ...backPath.slice(1).reverse()];
+          return {
+            solvable: true,
+            minMoves: fullPath.length - 1,
+            path: fullPath
+          };
+        }
+        
+        forwardVisited.set(nextWord, newPath);
+        forwardQueue.push({ word: nextWord, path: newPath });
       }
+    } else {
+      const current = backwardQueue.shift()!;
+      const neighbors = getNeighbors(current.word, new Set(backwardVisited.keys()));
       
-      visited.add(nextWord);
-      queue.push({ word: nextWord, path: newPath });
+      for (const nextWord of neighbors) {
+        const newPath = [...current.path, nextWord];
+        
+        // Check if we've met the forward search
+        if (forwardVisited.has(nextWord)) {
+          const forwardPath = forwardVisited.get(nextWord)!;
+          const fullPath = [...forwardPath, ...newPath.slice(1).reverse()];
+          return {
+            solvable: true,
+            minMoves: fullPath.length - 1,
+            path: fullPath
+          };
+        }
+        
+        backwardVisited.set(nextWord, newPath);
+        backwardQueue.push({ word: nextWord, path: newPath });
+      }
     }
   }
   
