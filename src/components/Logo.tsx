@@ -1,13 +1,12 @@
-import morphChainLogo from "@/assets/morph-chain-logo.png";
-
 export const Logo = ({ className = "" }: { className?: string }) => {
   return (
     <div className={`flex items-center justify-center ${className}`}>
-      <img 
-        src={morphChainLogo} 
-        alt="Morph Chain" 
-        className="h-8 w-auto"
-      />
+      <span 
+        className="font-outfit font-semibold text-xl tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+        style={{ letterSpacing: '-0.02em' }}
+      >
+        MORPH CHAIN
+      </span>
     </div>
   );
 };
