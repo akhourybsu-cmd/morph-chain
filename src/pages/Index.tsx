@@ -417,6 +417,7 @@ const Index = () => {
           date={puzzle.date}
           wordLength={puzzle.wordLength}
           maxMoves={puzzle.maxMoves}
+          puzzleIndex={puzzle.puzzleIndex || 0}
           hardMode={settings.hardMode}
           onToggleHardMode={() => handleToggleSetting("hardMode")}
         />
