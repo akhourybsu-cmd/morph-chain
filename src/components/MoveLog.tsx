@@ -38,7 +38,24 @@ export const MoveLog = ({ moves, simpleMode = false, colorblindMode, onDisputeWo
         >
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 font-mono text-sm flex-1 min-w-0">
-              <span className="font-semibold tracking-tiles">{move.to}</span>
+              {simpleMode ? (
+                <span className="font-semibold tracking-tiles">
+                  {move.to.split('').map((letter, i) => {
+                    const hintState = move.hints[i];
+                    const colorClass = 
+                      hintState === 'match' ? 'text-success' :
+                      hintState === 'present' ? 'text-warning' :
+                      'text-muted-foreground';
+                    return (
+                      <span key={i} className={colorClass}>
+                        {letter}
+                      </span>
+                    );
+                  })}
+                </span>
+              ) : (
+                <span className="font-semibold tracking-tiles">{move.to}</span>
+              )}
               {onDisputeWord && (
                 <Button
                   variant="ghost"
