@@ -14,7 +14,7 @@ const getCacheKey = (words: Set<string>): string => {
 /**
  * Build a graph of one-letter connections between words (cached)
  */
-const buildWordGraph = (words: Set<string>): Map<string, Set<string>> => {
+export const buildWordGraph = (words: Set<string>): Map<string, Set<string>> => {
   const cacheKey = getCacheKey(words);
   
   // Return cached graph if available
@@ -128,4 +128,103 @@ export const getSolutionPath = (
   words: Set<string>
 ): string[] | null => {
   return findShortestPath(start, goal, words);
+};
+
+/**
+ * Find ALL shortest paths between two words (for robustness checks)
+ */
+export const findAllShortestPaths = (
+  start: string,
+  goal: string,
+  words: Set<string>
+): string[][] => {
+  if (!words.has(start) || !words.has(goal)) {
+    return [];
+  }
+  
+  if (start === goal) {
+    return [[start]];
+  }
+  
+  const graph = buildWordGraph(words);
+  const queue: Array<{ word: string; path: string[] }> = [{ word: start, path: [start] }];
+  const visited = new Map<string, number>(); // word -> shortest distance to it
+  visited.set(start, 0);
+  
+  const allPaths: string[][] = [];
+  let shortestLength = Infinity;
+  
+  while (queue.length > 0) {
+    const { word, path } = queue.shift()!;
+    
+    // Skip if we've already found shorter paths
+    if (path.length > shortestLength) {
+      continue;
+    }
+    
+    const neighbors = graph.get(word) || new Set();
+    
+    for (const neighbor of neighbors) {
+      const newPath = [...path, neighbor];
+      const newDistance = newPath.length - 1;
+      
+      if (neighbor === goal) {
+        if (newPath.length < shortestLength) {
+          // Found shorter path, clear previous paths
+          allPaths.length = 0;
+          allPaths.push(newPath);
+          shortestLength = newPath.length;
+        } else if (newPath.length === shortestLength) {
+          // Found another path of same length
+          allPaths.push(newPath);
+        }
+        continue;
+      }
+      
+      // Only continue if we haven't visited this word, or we're visiting via equally short path
+      if (!visited.has(neighbor) || visited.get(neighbor)! >= newDistance) {
+        visited.set(neighbor, newDistance);
+        queue.push({ word: neighbor, path: newPath });
+      }
+    }
+  }
+  
+  return allPaths;
+};
+
+/**
+ * Calculate average branching factor along shortest paths
+ */
+export const calculateAverageBranching = (
+  start: string,
+  goal: string,
+  words: Set<string>
+): number => {
+  const paths = findAllShortestPaths(start, goal, words);
+  if (paths.length === 0) return 0;
+  
+  const graph = buildWordGraph(words);
+  
+  // Calculate branching at each position along paths
+  const pathLength = paths[0].length;
+  let totalBranching = 0;
+  let positions = 0;
+  
+  for (let i = 0; i < pathLength - 1; i++) {
+    const wordsAtPosition = new Set(paths.map(p => p[i]));
+    
+    for (const word of wordsAtPosition) {
+      const neighbors = graph.get(word) || new Set();
+      // Count valid next steps (neighbors that appear in next position of any path)
+      const validNextSteps = paths
+        .filter(p => p[i] === word)
+        .map(p => p[i + 1]);
+      const uniqueNextSteps = new Set(validNextSteps);
+      
+      totalBranching += uniqueNextSteps.size;
+      positions++;
+    }
+  }
+  
+  return positions > 0 ? totalBranching / positions : 0;
 };

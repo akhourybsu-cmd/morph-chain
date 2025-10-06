@@ -161,7 +161,7 @@ export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle => {
   const puzzles = puzzlesByLength[wordLength];
   const candidatePuzzle = puzzles[dayOfYear % puzzles.length];
   
-  // Use pre-calculated minimum distance to avoid expensive validation on every load
+  // Use difficulty scaling: clamp(minDistance + 4, 10..14)
   const maxMoves = Math.min(14, Math.max(10, candidatePuzzle.minDist + 4));
   
   return {
