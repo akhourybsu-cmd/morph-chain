@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, HelpCircle } from "lucide-react";
+import { PrismLogo } from "@/components/PrismLogo";
 import { ColorSwatch } from "@/components/prism/ColorSwatch";
 import { ChannelControl } from "@/components/prism/ChannelControl";
 import { GameHUD } from "@/components/prism/GameHUD";
@@ -111,7 +112,9 @@ export default function MorphPrism() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         
-        <h1 className="flex-1 text-center font-bold text-lg">Morph Prism</h1>
+        <div className="flex-1 flex justify-center">
+          <PrismLogo />
+        </div>
         
         <Button
           variant="ghost"
