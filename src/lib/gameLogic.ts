@@ -63,8 +63,11 @@ export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle & { puzzleInde
                          wordLength === 5 ? CURATED_5L_PUZZLES : 
                          CURATED_6L_PUZZLES;
   
-  const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-  const puzzleIndex = daysSinceEpoch % curatedPuzzles.length;
+  // Start date: October 6, 2025 (Puzzle #1)
+  const startDate = new Date('2025-10-06');
+  const currentDate = new Date(today);
+  const daysSinceStart = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const puzzleIndex = daysSinceStart % curatedPuzzles.length;
   const candidatePuzzle = curatedPuzzles[puzzleIndex];
   
   // Use pre-calculated minDist (fallback to runtime calculation if missing)
