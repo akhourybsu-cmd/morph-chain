@@ -49,9 +49,10 @@ export interface Puzzle {
   wordLength: number;
   maxMoves: number;
   minDistance: number;
+  puzzleIndex?: number;
 }
 
-export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle => {
+export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle & { puzzleIndex: number } => {
   const today = new Date().toISOString().split("T")[0];
   
   // Get appropriate word set
@@ -83,6 +84,7 @@ export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle => {
     wordLength,
     maxMoves,
     minDistance: minDist,
+    puzzleIndex,
   };
 };
 
@@ -143,12 +145,60 @@ export const calculateDistance = (word: string, goal: string): number => {
   return distance;
 };
 
+export const hasValidNextMove = (
+  word: string, 
+  usedWords: Set<string>, 
+  wordLength: number,
+  allowTwoLetters: boolean = false
+): boolean => {
+  const wordSet = wordLength === 4 ? VALID_WORDS_4 : wordLength === 5 ? VALID_WORDS_5 : VALID_WORDS_6;
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  
+  // Check one-letter changes
+  for (let i = 0; i < word.length; i++) {
+    for (const letter of letters) {
+      if (letter === word[i]) continue;
+      const newWord = word.substring(0, i) + letter + word.substring(i + 1);
+      if (wordSet.has(newWord) && !usedWords.has(newWord)) {
+        return true;
+      }
+    }
+  }
+  
+  // Check two-letter changes if allowed
+  if (allowTwoLetters) {
+    for (let i = 0; i < word.length; i++) {
+      for (let j = i + 1; j < word.length; j++) {
+        for (const letter1 of letters) {
+          if (letter1 === word[i]) continue;
+          for (const letter2 of letters) {
+            if (letter2 === word[j]) continue;
+            const newWord = 
+              word.substring(0, i) + 
+              letter1 + 
+              word.substring(i + 1, j) + 
+              letter2 + 
+              word.substring(j + 1);
+            if (wordSet.has(newWord) && !usedWords.has(newWord)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return false;
+};
+
 export const generateShareText = (
   date: string,
   movesUsed: number,
   won: boolean,
   wordLength: number,
-  sampleHints: TileState[][]
+  sampleHints: TileState[][],
+  maxMoves: number,
+  puzzleIndex: number
 ): string => {
   const emojiMap: Record<TileState, string> = {
     match: "🟩",
@@ -156,12 +206,26 @@ export const generateShareText = (
     miss: "⬛",
   };
   
-  const hintLines = sampleHints
-    .slice(0, 2)
-    .map((hints) => hints.map((h) => emojiMap[h]).join(""))
-    .join("\n");
+  // Format date as "October 6, 2025"
+  const dateObj = new Date(date);
+  const formattedDate = dateObj.toLocaleDateString('en-US', { 
+    month: 'long', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
   
-  return `Morph Chain #${date} ${won ? movesUsed : "X"} ${wordLength}L
-${hintLines}
+  // Build the result line with boxes
+  let resultLine = "";
+  if (won) {
+    // Show green boxes equal to word length
+    resultLine = "🟩".repeat(wordLength) + ` ${movesUsed}`;
+  } else {
+    // Show the final attempt's hint pattern
+    const finalHints = sampleHints[sampleHints.length - 1] || [];
+    resultLine = finalHints.map((h) => emojiMap[h]).join("");
+  }
+  
+  return `Puzzle #${puzzleIndex + 1} - ${formattedDate} - ${maxMoves} Max Attempts
+${wordLength}L ${resultLine}
 https://play.morphchain.app`;
 };

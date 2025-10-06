@@ -19,6 +19,7 @@ import {
   getHints,
   calculateDistance,
   generateShareText,
+  hasValidNextMove,
 } from "@/lib/gameLogic";
 import {
   loadStats,
@@ -188,13 +189,29 @@ const Index = () => {
       };
 
       const updatedMoves = [...moves, newMove];
+      const updatedUsedWords = new Set([...usedWords, word]);
       setMoves(updatedMoves);
       setCurrentWord(word);
-      setUsedWords(new Set([...usedWords, word]));
+      setUsedWords(updatedUsedWords);
 
       // Vibration feedback
       if (settings.vibration && navigator.vibrate) {
         navigator.vibrate(closerToGoal ? 10 : 20);
+      }
+
+      // Check for dead-end (word with no valid next moves)
+      if (word !== puzzle.goalWord && updatedMoves.length < puzzle.maxMoves) {
+        const allowTwoLetters = puzzle.wordLength === 6;
+        const hasNext = hasValidNextMove(word, updatedUsedWords, puzzle.wordLength, allowTwoLetters);
+        
+        if (!hasNext) {
+          toast({
+            title: "Dead End!",
+            description: "This word has no valid next moves. You're stuck!",
+            variant: "destructive",
+            duration: 4000,
+          });
+        }
       }
 
       // Check win condition
@@ -366,10 +383,12 @@ const Index = () => {
           moves.length,
           gameWon,
           puzzle.wordLength,
-          moves.slice(0, 2).map((m) => m.hints)
+          moves.map((m) => m.hints),
+          puzzle.maxMoves,
+          puzzle.puzzleIndex || 0
         )
       : "",
-    [moves.length, gameWon, puzzle.date, puzzle.wordLength, moves]
+    [moves.length, gameWon, puzzle.date, puzzle.wordLength, puzzle.maxMoves, puzzle.puzzleIndex, moves]
   );
 
   // Memoize length status checks to avoid repeated localStorage reads
