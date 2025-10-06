@@ -236,5 +236,5 @@ export const generateShareText = (
   
   return `Puzzle #${puzzleIndex + 1} - ${formattedDate} - ${maxMoves} Max Attempts
 ${wordLength}L ${resultLine}
-https://play.morphchain.app`;
+morphchaingame.com`;
 };
