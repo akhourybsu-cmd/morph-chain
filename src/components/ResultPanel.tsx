@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Trophy, X, Share2, Copy } from "lucide-react";
+import { Trophy, X, Share2, Copy, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ResultPanelProps {
@@ -52,6 +52,34 @@ export const ResultPanel = ({
     }
   };
 
+  // Parse share text to make link clickable
+  const renderSharePreview = () => {
+    const lines = shareText.split('\n');
+    return (
+      <div className="bg-background/50 rounded-lg p-4 text-sm font-mono space-y-1">
+        {lines.map((line, index) => {
+          // Check if this line contains the URL
+          if (line.includes('morphchaingame.com')) {
+            return (
+              <div key={index} className="flex items-center gap-2">
+                <a 
+                  href="https://morphchaingame.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  {line}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            );
+          }
+          return <div key={index}>{line}</div>;
+        })}
+      </div>
+    );
+  };
+
   return (
     <div className="px-6 py-8 space-y-6 bg-card/50 border-y border-border">
       <div className="text-center space-y-2">
@@ -78,6 +106,12 @@ export const ResultPanel = ({
             </p>
           </>
         )}
+      </div>
+
+      {/* Share preview with clickable link */}
+      <div className="space-y-3">
+        <p className="text-xs text-muted-foreground text-center">Share your results:</p>
+        {renderSharePreview()}
       </div>
 
       <div className="flex gap-3">
