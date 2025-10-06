@@ -120,11 +120,11 @@ export const HowToPlayModal = ({ open, onOpenChange }: HowToPlayModalProps) => {
           <section className="pt-2 border-t border-border">
             <h3 className="font-semibold mb-2">Example</h3>
             <div className="bg-muted/30 p-3 rounded text-xs font-mono space-y-1">
-              <div>START: <strong>COLD</strong></div>
-              <div>Step 1: COLD → CORD (change L to R)</div>
-              <div>Step 2: CORD → WORD (change C to W)</div>
-              <div>Step 3: WORD → WARM (change D to M)</div>
-              <div>GOAL: <strong>WARM</strong> ✓</div>
+              <div>START: <strong>LAKE</strong></div>
+              <div>Step 1: LAKE → MAKE (change L to M)</div>
+              <div>Step 2: MAKE → MARE (change K to R)</div>
+              <div>Step 3: MARE → CARE (change M to C)</div>
+              <div>GOAL: <strong>CART</strong> ✓</div>
             </div>
           </section>
         </div>

@@ -5,7 +5,7 @@ import { PuzzleHero } from "@/components/PuzzleHero";
 import { InputRow } from "@/components/InputRow";
 import { MoveLog, Move } from "@/components/MoveLog";
 import { ResultPanel } from "@/components/ResultPanel";
-import { SettingsModal } from "@/components/SettingsModal";
+import { SettingsModal, backgroundThemes, BackgroundTheme } from "@/components/SettingsModal";
 import { StatsModal } from "@/components/StatsModal";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
 import { WordDisputeModal } from "@/components/WordDisputeModal";
@@ -380,6 +380,23 @@ const Index = () => {
     syncStatsToSupabase();
   };
 
+  const handleChangeBackgroundTheme = (theme: BackgroundTheme) => {
+    const newSettings = { ...settings, backgroundTheme: theme };
+    setSettings(newSettings);
+    saveSettings(newSettings);
+    
+    // Apply theme to document root
+    const themeColor = backgroundThemes[theme].bg;
+    document.documentElement.style.setProperty('--background', themeColor);
+  };
+
+  // Apply saved theme on mount
+  useEffect(() => {
+    const savedTheme = settings.backgroundTheme as BackgroundTheme || "midnight";
+    const themeColor = backgroundThemes[savedTheme].bg;
+    document.documentElement.style.setProperty('--background', themeColor);
+  }, []);
+
   const handleResetData = () => {
     if (confirm("Are you sure? This will erase all your stats and progress.")) {
       resetAllData();
@@ -548,6 +565,8 @@ const Index = () => {
         onToggleColorblindMode={() => handleToggleSetting("colorblindMode")}
         vibration={settings.vibration}
         onToggleVibration={() => handleToggleSetting("vibration")}
+        backgroundTheme={(settings.backgroundTheme as BackgroundTheme) || "midnight"}
+        onChangeBackgroundTheme={handleChangeBackgroundTheme}
         onResetData={handleResetData}
       />
 

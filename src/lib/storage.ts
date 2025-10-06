@@ -27,6 +27,7 @@ export interface GameSettings {
   hardMode: boolean;
   colorblindMode: boolean;
   vibration: boolean;
+  backgroundTheme?: string;
 }
 
 interface GameState {
@@ -150,14 +151,20 @@ export const loadSettings = (): GameSettings => {
         hardMode: false,
         colorblindMode: false,
         vibration: true,
+        backgroundTheme: "midnight",
       };
     }
-    return JSON.parse(stored);
+    const parsed = JSON.parse(stored);
+    return {
+      ...parsed,
+      backgroundTheme: parsed.backgroundTheme || "midnight",
+    };
   } catch {
     return {
       hardMode: false,
       colorblindMode: false,
       vibration: true,
+      backgroundTheme: "midnight",
     };
   }
 };

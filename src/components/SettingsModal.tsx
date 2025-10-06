@@ -8,6 +8,16 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+export const backgroundThemes = {
+  midnight: { name: "Midnight Canvas", bg: "218 18% 7%" },
+  deepOcean: { name: "Deep Ocean", bg: "220 26% 14%" },
+  cosmicVoid: { name: "Cosmic Void", bg: "270 20% 10%" },
+  charcoalMist: { name: "Charcoal Mist", bg: "200 15% 12%" },
+} as const;
+
+export type BackgroundTheme = keyof typeof backgroundThemes;
 
 interface SettingsModalProps {
   open: boolean;
@@ -18,6 +28,8 @@ interface SettingsModalProps {
   onToggleColorblindMode: () => void;
   vibration: boolean;
   onToggleVibration: () => void;
+  backgroundTheme: BackgroundTheme;
+  onChangeBackgroundTheme: (theme: BackgroundTheme) => void;
   onResetData: () => void;
 }
 
@@ -30,6 +42,8 @@ export const SettingsModal = ({
   onToggleColorblindMode,
   vibration,
   onToggleVibration,
+  backgroundTheme,
+  onChangeBackgroundTheme,
   onResetData,
 }: SettingsModalProps) => {
   return (
@@ -86,6 +100,22 @@ export const SettingsModal = ({
               checked={vibration}
               onCheckedChange={onToggleVibration}
             />
+          </div>
+
+          <Separator />
+
+          <div className="space-y-3">
+            <Label className="text-base">Background Theme</Label>
+            <RadioGroup value={backgroundTheme} onValueChange={onChangeBackgroundTheme}>
+              {Object.entries(backgroundThemes).map(([key, { name }]) => (
+                <div key={key} className="flex items-center space-x-2">
+                  <RadioGroupItem value={key} id={key} />
+                  <Label htmlFor={key} className="font-normal cursor-pointer">
+                    {name}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
           </div>
 
           <Separator />
