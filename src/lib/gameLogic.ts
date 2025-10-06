@@ -6,6 +6,8 @@ import { CURATED_4L_PUZZLES } from "./curatedPuzzles4L";
 import { CURATED_5L_PUZZLES } from "./curatedPuzzles5L";
 import { CURATED_6L_PUZZLES } from "./curatedPuzzles6L";
 import { markPuzzleAsUsed, getCurrentPuzzleIndex } from "./puzzleTracking";
+import { toZonedTime, formatInTimeZone } from "date-fns-tz";
+import { startOfDay, differenceInDays } from "date-fns";
 
 // Parse and filter the word list by length with Modern English standards
 const parseWordList = () => {
@@ -53,7 +55,12 @@ export interface Puzzle {
 }
 
 export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle & { puzzleIndex: number } => {
-  const today = new Date().toISOString().split("T")[0];
+  const timezone = "America/New_York";
+  
+  // Get current date in NY timezone
+  const nowNY = toZonedTime(new Date(), timezone);
+  const todayNY = startOfDay(nowNY);
+  const today = formatInTimeZone(nowNY, timezone, "yyyy-MM-dd");
   
   // Get appropriate word set
   const wordSet = wordLength === 4 ? VALID_WORDS_4 : wordLength === 5 ? VALID_WORDS_5 : VALID_WORDS_6;
@@ -63,10 +70,9 @@ export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle & { puzzleInde
                          wordLength === 5 ? CURATED_5L_PUZZLES : 
                          CURATED_6L_PUZZLES;
   
-  // Start date: October 5, 2025 is Puzzle #1, sequential from here
-  const startDate = new Date('2025-10-05');
-  const currentDate = new Date(today);
-  const daysSinceStart = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  // Launch date: October 6, 2025 (NY time) is Puzzle #1
+  const launchDateNY = startOfDay(toZonedTime(new Date('2025-10-06T00:00:00'), timezone));
+  const daysSinceStart = differenceInDays(todayNY, launchDateNY);
   const puzzleIndex = daysSinceStart % curatedPuzzles.length;
   const candidatePuzzle = curatedPuzzles[puzzleIndex];
   
@@ -209,13 +215,9 @@ export const generateShareText = (
     miss: "⬛",
   };
   
-  // Format date as "October 6, 2025"
-  const dateObj = new Date(date);
-  const formattedDate = dateObj.toLocaleDateString('en-US', { 
-    month: 'long', 
-    day: 'numeric', 
-    year: 'numeric' 
-  });
+  // Format date as "October 6, 2025" in NY timezone
+  const timezone = "America/New_York";
+  const formattedDate = formatInTimeZone(new Date(), timezone, 'MMMM d, yyyy');
   
   // Build the result line with boxes
   let resultLine = "";

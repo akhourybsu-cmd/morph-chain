@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { formatInTimeZone } from "date-fns-tz";
 
 interface DailyBannerProps {
   date: string;
@@ -17,12 +18,9 @@ export const DailyBanner = ({
   hardMode,
   onToggleHardMode,
 }: DailyBannerProps) => {
-  // Format date as "October 6, 2025"
-  const formattedDate = new Date(date).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
+  // Format date as "October 6, 2025" in NY timezone
+  const timezone = "America/New_York";
+  const formattedDate = formatInTimeZone(new Date(), timezone, 'MMMM d, yyyy');
   
   return (
     <div className="flex items-center justify-between px-3 py-2 md:px-6 md:py-3 bg-card border-b border-border sticky top-14 z-10">
