@@ -34,6 +34,7 @@ import {
 import { saveDispute } from "@/lib/disputeStorage";
 import { isRateLimited } from "@/lib/rateLimit";
 import { syncStatsToSupabase } from "@/lib/supabaseSync";
+import { saveSessionToSupabase } from "@/lib/sessionSync";
 
 const Index = () => {
   const { toast } = useToast();
@@ -58,16 +59,17 @@ const Index = () => {
   // Settings
   const [settings, setSettings] = useState(loadSettings());
   const [stats, setStats] = useState(loadStats());
+  const [invalidGuessCount, setInvalidGuessCount] = useState(0);
 
   // Handle length change
   const handleLengthChange = (newLength: 4 | 5 | 6) => {
     setSelectedLength(newLength);
     const newPuzzle = getDailyPuzzle(newLength);
     setPuzzle(newPuzzle);
+    setInvalidGuessCount(0);
     
     // Load saved state for this length
     const savedState = loadGameState(newLength);
-    
     // Validate saved state matches current puzzle (date, length, AND start word)
     const isValidSavedState = 
       savedState && 
@@ -151,6 +153,7 @@ const Index = () => {
         : isOneLetterDifferent(currentWord, word);
       
       if (!isValid) {
+        setInvalidGuessCount(prev => prev + 1);
         if (allowTwoLetters) {
           setError("Must change one or two letters.");
         } else {
@@ -161,12 +164,14 @@ const Index = () => {
       }
 
       if (!isValidWord(word, puzzle.wordLength)) {
+        setInvalidGuessCount(prev => prev + 1);
         setError("Not in word list.");
         setIsLoading(false);
         return;
       }
 
       if (usedWords.has(word)) {
+        setInvalidGuessCount(prev => prev + 1);
         setError("You already used that word.");
         setIsLoading(false);
         return;
@@ -180,6 +185,7 @@ const Index = () => {
 
       // Hard mode check
       if (settings.hardMode && !closerToGoal && newDistance !== 0) {
+        setInvalidGuessCount(prev => prev + 1);
         setError("Hard Mode: must get closer each step.");
         setIsLoading(false);
         return;
@@ -243,6 +249,16 @@ const Index = () => {
           completed: true,
           won: true,
         });
+        // Save session to backend
+        saveSessionToSupabase(
+          puzzle.date,
+          puzzle.wordLength,
+          updatedMoves,
+          true,
+          true,
+          0,
+          invalidGuessCount
+        );
       } else if (updatedMoves.length >= puzzle.maxMoves) {
         // Out of moves
         setGameCompleted(true);
@@ -259,6 +275,16 @@ const Index = () => {
           completed: true,
           won: false,
         });
+        // Save session to backend
+        saveSessionToSupabase(
+          puzzle.date,
+          puzzle.wordLength,
+          updatedMoves,
+          true,
+          false,
+          0,
+          invalidGuessCount
+        );
       } else {
         // Save in-progress state
         saveGameState({
@@ -343,6 +369,7 @@ const Index = () => {
     setGameCompleted(false);
     setGameWon(false);
     setError("");
+    setInvalidGuessCount(0);
     clearGameState(puzzle.wordLength);
   };
 
