@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AddToHomeScreen } from "@/components/AddToHomeScreen";
-import { useNavigate } from "react-router-dom";
 
 export const backgroundThemes = {
   midnight: { name: "Midnight Canvas", bg: "218 18% 7%" },
@@ -48,8 +47,6 @@ export const SettingsModal = ({
   onChangeBackgroundTheme,
   onResetData,
 }: SettingsModalProps) => {
-  const navigate = useNavigate();
-  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -120,25 +117,6 @@ export const SettingsModal = ({
                 </div>
               ))}
             </RadioGroup>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-2">
-            <Label className="text-base">More Games</Label>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => {
-                navigate('/prism');
-                onOpenChange(false);
-              }}
-            >
-              🎨 Try Morph Prism
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              A daily color transformation puzzle
-            </p>
           </div>
 
           <Separator />
