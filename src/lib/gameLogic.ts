@@ -63,8 +63,8 @@ export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle & { puzzleInde
                          wordLength === 5 ? CURATED_5L_PUZZLES : 
                          CURATED_6L_PUZZLES;
   
-  // Start date: October 6, 2025 (Puzzle #1)
-  const startDate = new Date('2025-10-06');
+  // Start date: October 5, 2025 is Puzzle #1, sequential from here
+  const startDate = new Date('2025-10-05');
   const currentDate = new Date(today);
   const daysSinceStart = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
   const puzzleIndex = daysSinceStart % curatedPuzzles.length;
