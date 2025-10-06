@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { syncStatsFromSupabase } from "@/lib/supabaseSync";
-import { AddToHomeScreen } from "@/components/AddToHomeScreen";
 
 interface GameHeaderProps {
   onOpenSettings: () => void;
@@ -69,8 +68,6 @@ export const GameHeader = ({ onOpenSettings, onOpenStats, onOpenHelp }: GameHead
       </div>
       
       <div className="flex items-center gap-1 justify-end">
-        <AddToHomeScreen />
-        
         <Button
           variant="ghost"
           size="icon"
