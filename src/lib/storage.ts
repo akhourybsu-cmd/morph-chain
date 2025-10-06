@@ -42,7 +42,7 @@ interface GameState {
 }
 
 // Game version - increment this to force reset for all users
-export const GAME_VERSION = "2.0.0"; // Modern English Only update
+export const GAME_VERSION = "2.1.0"; // Incremented for new 5L/6L puzzles with acceptance gates // Modern English Only update
 
 const STATS_KEY = "morphchain_stats";
 const SETTINGS_KEY = "morphchain_settings";
