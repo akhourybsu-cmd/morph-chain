@@ -30,6 +30,7 @@ interface GameSettings {
 }
 
 interface GameState {
+  schemaVersion?: number; // Track schema version for rule changes (optional for backwards compatibility)
   date: string;
   wordLength: number;
   moves: Array<{
@@ -40,6 +41,9 @@ interface GameState {
   completed: boolean;
   won: boolean;
 }
+
+// Schema version - increment when game rules change
+export const SCHEMA_VERSION = 1; // v1: 6L allows Δ≤2 on all moves
 
 // Game version - increment this to force reset for all users
 export const GAME_VERSION = "2.1.0"; // Incremented for new 5L/6L puzzles with acceptance gates // Modern English Only update
@@ -173,7 +177,17 @@ export const loadGameState = (wordLength: number): GameState | null => {
     const key = `${STATE_KEY}_${wordLength}`;
     const stored = localStorage.getItem(key);
     if (!stored) return null;
-    return JSON.parse(stored);
+    
+    const parsed = JSON.parse(stored);
+    
+    // Drop incompatible schemas (e.g., old 6L saves before Δ≤2 rule change)
+    if (!parsed.schemaVersion || parsed.schemaVersion < SCHEMA_VERSION) {
+      console.log(`Dropping incompatible saved game (schema v${parsed.schemaVersion || 0} < v${SCHEMA_VERSION})`);
+      clearGameState(wordLength);
+      return null;
+    }
+    
+    return parsed;
   } catch {
     return null;
   }
@@ -182,7 +196,9 @@ export const loadGameState = (wordLength: number): GameState | null => {
 export const saveGameState = (state: GameState): void => {
   try {
     const key = `${STATE_KEY}_${state.wordLength}`;
-    localStorage.setItem(key, JSON.stringify(state));
+    // Ensure schema version is saved
+    const stateWithSchema = { ...state, schemaVersion: SCHEMA_VERSION };
+    localStorage.setItem(key, JSON.stringify(stateWithSchema));
   } catch (error) {
     console.error("Failed to save game state:", error);
   }

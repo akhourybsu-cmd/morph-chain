@@ -32,6 +32,7 @@ import {
   resetAllData,
 } from "@/lib/storage";
 import { saveDispute } from "@/lib/disputeStorage";
+import { isRateLimited } from "@/lib/rateLimit";
 
 const Index = () => {
   const { toast } = useToast();
@@ -124,6 +125,13 @@ const Index = () => {
 
   const handleSubmit = (word: string) => {
     setError("");
+    
+    // Rate limiting: 6 requests per 15 seconds
+    if (isRateLimited('guess')) {
+      setError("Too many attempts. Please wait a moment.");
+      return;
+    }
+    
     setIsLoading(true);
 
     // Simulate network delay

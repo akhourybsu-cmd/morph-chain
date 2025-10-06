@@ -84,7 +84,11 @@ export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle & { puzzleInde
   // Mark this puzzle as used
   markPuzzleAsUsed(candidatePuzzle.start, candidatePuzzle.goal, puzzleIndex, today, wordLength);
   
-  const maxMoves = Math.min(14, Math.max(10, minDist + 4));
+  // Move cap formulas per recommendations:
+  // 4L/5L: clamp(minDistance + 4, 10..14)
+  // 6L: clamp(minDistance + 5, 10..14) (denser graph due to Δ≤2)
+  const moveBonus = wordLength === 6 ? 5 : 4;
+  const maxMoves = Math.min(14, Math.max(10, minDist + moveBonus));
   
   return {
     date: today,
