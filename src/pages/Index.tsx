@@ -385,16 +385,27 @@ const Index = () => {
     setSettings(newSettings);
     saveSettings(newSettings);
     
-    // Apply theme to document root
-    const themeColor = backgroundThemes[theme].bg;
-    document.documentElement.style.setProperty('--background', themeColor);
+    // Apply theme to document root - with safety check
+    const themeConfig = backgroundThemes[theme];
+    if (themeConfig) {
+      document.documentElement.style.setProperty('--background', themeConfig.bg);
+    }
   };
 
   // Apply saved theme on mount
   useEffect(() => {
-    const savedTheme = settings.backgroundTheme as BackgroundTheme || "midnight";
-    const themeColor = backgroundThemes[savedTheme].bg;
+    const savedTheme = settings.backgroundTheme as BackgroundTheme;
+    // Validate that the saved theme exists, fallback to midnight if not
+    const validTheme = savedTheme && backgroundThemes[savedTheme] ? savedTheme : "midnight";
+    const themeColor = backgroundThemes[validTheme].bg;
     document.documentElement.style.setProperty('--background', themeColor);
+    
+    // Update settings if theme was invalid
+    if (validTheme !== savedTheme) {
+      const newSettings = { ...settings, backgroundTheme: validTheme };
+      setSettings(newSettings);
+      saveSettings(newSettings);
+    }
   }, []);
 
   const handleResetData = () => {
