@@ -201,6 +201,10 @@ const Index = () => {
 
       // Check for dead-end (word with no valid next moves)
       if (word !== puzzle.goalWord && updatedMoves.length < puzzle.maxMoves) {
+        // Dead-end rules match submit validation:
+        // 4L: always one letter only
+        // 5L: after first move, one letter only (first move already done)
+        // 6L: one or two letters anytime
         const allowTwoLetters = puzzle.wordLength === 6;
         const hasNext = hasValidNextMove(word, updatedUsedWords, puzzle.wordLength, allowTwoLetters);
         
