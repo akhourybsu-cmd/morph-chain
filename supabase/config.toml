@@ -1,1 +1,10 @@
 project_id = "pzsapvrvafskqrgetjhs"
+
+[functions.get-daily-puzzle]
+verify_jwt = true
+
+[functions.validate-word]
+verify_jwt = true
+
+[functions.import-puzzles-to-vault]
+verify_jwt = true

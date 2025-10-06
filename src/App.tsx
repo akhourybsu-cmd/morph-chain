@@ -7,10 +7,12 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
+import TermsOfService from "./pages/TermsOfService";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import TodaysPuzzle from "./pages/admin/TodaysPuzzle";
 import Scheduler from "./pages/admin/Scheduler";
+import PuzzleVault from "./pages/admin/PuzzleVault";
 import Dictionary from "./pages/admin/Dictionary";
 import PlayerSessions from "./pages/admin/PlayerSessions";
 import Analytics from "./pages/admin/Analytics";
@@ -30,10 +32,12 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/terms" element={<TermsOfService />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="puzzle" element={<TodaysPuzzle />} />
             <Route path="scheduler" element={<Scheduler />} />
+            <Route path="vault" element={<PuzzleVault />} />
             <Route path="dictionary" element={<Dictionary />} />
             <Route path="sessions" element={<PlayerSessions />} />
             <Route path="analytics" element={<Analytics />} />

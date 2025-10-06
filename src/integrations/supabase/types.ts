@@ -116,6 +116,45 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_puzzle_vault: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          goal_word: string
+          id: string
+          is_active: boolean | null
+          min_distance: number
+          puzzle_index: number
+          start_word: string
+          theme_tags: string[] | null
+          word_length: number
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          goal_word: string
+          id?: string
+          is_active?: boolean | null
+          min_distance: number
+          puzzle_index: number
+          start_word: string
+          theme_tags?: string[] | null
+          word_length: number
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          goal_word?: string
+          id?: string
+          is_active?: boolean | null
+          min_distance?: number
+          puzzle_index?: number
+          start_word?: string
+          theme_tags?: string[] | null
+          word_length?: number
+        }
+        Relationships: []
+      }
       admin_puzzles: {
         Row: {
           avg_branching_factor: number | null
@@ -173,6 +212,33 @@ export type Database = {
           updated_at?: string
           variant?: Database["public"]["Enums"]["puzzle_variant"]
           word_length?: number
+        }
+        Relationships: []
+      }
+      api_rate_limits: {
+        Row: {
+          endpoint: string
+          id: string
+          last_request: string | null
+          request_count: number | null
+          user_id: string | null
+          window_start: string | null
+        }
+        Insert: {
+          endpoint: string
+          id?: string
+          last_request?: string | null
+          request_count?: number | null
+          user_id?: string | null
+          window_start?: string | null
+        }
+        Update: {
+          endpoint?: string
+          id?: string
+          last_request?: string | null
+          request_count?: number | null
+          user_id?: string | null
+          window_start?: string | null
         }
         Relationships: []
       }
@@ -251,6 +317,33 @@ export type Database = {
         }
         Relationships: []
       }
+      security_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: string | null
+          user_id: string | null
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -307,6 +400,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          _endpoint: string
+          _max_requests?: number
+          _user_id: string
+          _window_minutes?: number
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

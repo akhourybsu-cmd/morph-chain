@@ -31,6 +31,7 @@ const navigation = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Today's Puzzle", url: "/admin/puzzle", icon: Calendar },
   { title: "Scheduler", url: "/admin/scheduler", icon: Calendar },
+  { title: "Puzzle Vault", url: "/admin/vault", icon: Shield },
   { title: "Dictionary", url: "/admin/dictionary", icon: Database },
   { title: "Player Sessions", url: "/admin/sessions", icon: Users },
   { title: "Analytics", url: "/admin/analytics", icon: Activity },
