@@ -51,13 +51,7 @@ export const GameHeader = ({ onOpenSettings, onOpenStats, onOpenHelp }: GameHead
         >
           <Menu className="h-5 w-5" />
         </Button>
-      </div>
-      
-      <div className="flex justify-center">
-        <Logo />
-      </div>
-      
-      <div className="flex items-center gap-1 justify-end">
+        
         <Button
           variant="ghost"
           size="icon"
@@ -67,7 +61,13 @@ export const GameHeader = ({ onOpenSettings, onOpenStats, onOpenHelp }: GameHead
         >
           <HelpCircle className="h-5 w-5" />
         </Button>
-        
+      </div>
+      
+      <div className="flex justify-center">
+        <Logo />
+      </div>
+      
+      <div className="flex items-center gap-1 justify-end">
         <Button
           variant="ghost"
           size="icon"
