@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar, CheckCircle2, XCircle, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getDailyPuzzle } from "@/lib/gameLogic";
 
 interface PuzzleData {
   id: string;
@@ -53,43 +54,36 @@ export default function TodaysPuzzle() {
   const loadTodaysPuzzles = async () => {
     setLoading(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const daysSinceEpoch = Math.floor(new Date(today).getTime() / (1000 * 60 * 60 * 24));
-
-      // Load puzzles for each word length
-      const puzzlePromises = [4, 5, 6].map(async (wordLength) => {
-        const { count } = await supabase
-          .from('admin_puzzle_vault')
-          .select('*', { count: 'exact', head: true })
-          .eq('word_length', wordLength)
-          .eq('is_active', true);
-
-        if (!count || count === 0) return null;
-
-        const puzzleIndex = daysSinceEpoch % count;
-
-        const { data, error } = await supabase
-          .from('admin_puzzle_vault')
-          .select('*')
-          .eq('word_length', wordLength)
-          .eq('puzzle_index', puzzleIndex)
-          .eq('is_active', true)
-          .single();
-
-        if (error) {
-          console.error(`Error loading ${wordLength}L puzzle:`, error);
-          return null;
-        }
-
-        return data as PuzzleData;
-      });
-
-      const [fourL, fiveL, sixL] = await Promise.all(puzzlePromises);
+      // Load the same puzzles that users actually see
+      const puzzle4L = getDailyPuzzle(4);
+      const puzzle5L = getDailyPuzzle(5);
+      const puzzle6L = getDailyPuzzle(6);
 
       setPuzzles({
-        fourLetter: fourL,
-        fiveLetter: fiveL,
-        sixLetter: sixL
+        fourLetter: {
+          id: 'current-4l',
+          start_word: puzzle4L.startWord,
+          goal_word: puzzle4L.goalWord,
+          word_length: 4,
+          min_distance: puzzle4L.minDistance,
+          puzzle_index: puzzle4L.puzzleIndex || 0,
+        },
+        fiveLetter: {
+          id: 'current-5l',
+          start_word: puzzle5L.startWord,
+          goal_word: puzzle5L.goalWord,
+          word_length: 5,
+          min_distance: puzzle5L.minDistance,
+          puzzle_index: puzzle5L.puzzleIndex || 0,
+        },
+        sixLetter: {
+          id: 'current-6l',
+          start_word: puzzle6L.startWord,
+          goal_word: puzzle6L.goalWord,
+          word_length: 6,
+          min_distance: puzzle6L.minDistance,
+          puzzle_index: puzzle6L.puzzleIndex || 0,
+        }
       });
 
     } catch (error) {
@@ -168,7 +162,8 @@ export default function TodaysPuzzle() {
     }
 
     const solvabilityResult = solvability[puzzle.word_length];
-    const maxMoves = Math.ceil(puzzle.min_distance * 1.5) + 3;
+    const moveBonus = puzzle.word_length === 6 ? 5 : 4;
+    const maxMoves = Math.min(14, Math.max(10, puzzle.min_distance + moveBonus));
 
     return (
       <Card className="p-6">
