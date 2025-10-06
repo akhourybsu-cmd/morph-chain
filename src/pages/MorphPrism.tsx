@@ -1,0 +1,251 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, HelpCircle } from "lucide-react";
+import { ColorSwatch } from "@/components/prism/ColorSwatch";
+import { ChannelControl } from "@/components/prism/ChannelControl";
+import { GameHUD } from "@/components/prism/GameHUD";
+import {
+  Channel,
+  ColorState,
+  getNextChannelValue,
+  isCloserToGoal,
+  colorsEqual,
+} from "@/lib/prismColorGrid";
+import { getTodaysPuzzle } from "@/lib/prismPuzzleGenerator";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
+export default function MorphPrism() {
+  const navigate = useNavigate();
+  const [puzzle] = useState(() => getTodaysPuzzle());
+  const [currentColor, setCurrentColor] = useState<ColorState>(puzzle.start);
+  const [moves, setMoves] = useState<ColorState[]>([puzzle.start]);
+  const [hintsRemaining, setHintsRemaining] = useState(puzzle.hints);
+  const [lastMoveStatus, setLastMoveStatus] = useState<'closer' | 'sideways' | null>(null);
+  const [showValues, setShowValues] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  
+  const gameWon = colorsEqual(currentColor, puzzle.goal);
+  const gameLost = moves.length > puzzle.cap && !gameWon;
+  const movesUsed = moves.length - 1; // Don't count starting position
+  
+  const handleMove = (channel: Channel, direction: '+' | '-') => {
+    if (gameWon || gameLost) return;
+    
+    const newValue = getNextChannelValue(channel, currentColor[channel], direction);
+    if (newValue === null) return;
+    
+    const newColor: ColorState = { ...currentColor, [channel]: newValue };
+    
+    // Check if closer or sideways
+    const closer = isCloserToGoal(currentColor, newColor, puzzle.goal);
+    setLastMoveStatus(closer ? 'closer' : 'sideways');
+    
+    setCurrentColor(newColor);
+    setMoves(prev => [...prev, newColor]);
+    
+    // Check win condition
+    if (colorsEqual(newColor, puzzle.goal)) {
+      toast.success(`🎉 Solved in ${moves.length} moves!`);
+    } else if (moves.length >= puzzle.cap) {
+      toast.error("Out of moves! Try again tomorrow.");
+    }
+  };
+  
+  const handleHint = () => {
+    if (hintsRemaining === 0) return;
+    
+    // Simple hint: suggest a channel that gets closer
+    const channels: Channel[] = ['H', 'S', 'L'];
+    
+    for (const channel of channels) {
+      const directions: ('+' | '-')[] = ['+', '-'];
+      
+      for (const direction of directions) {
+        const newValue = getNextChannelValue(channel, currentColor[channel], direction);
+        if (newValue === null) continue;
+        
+        const testColor: ColorState = { ...currentColor, [channel]: newValue };
+        if (isCloserToGoal(currentColor, testColor, puzzle.goal)) {
+          setHintsRemaining(prev => prev - 1);
+          const channelName = channel === 'H' ? 'Hue' : channel === 'S' ? 'Saturation' : 'Lightness';
+          const directionText = direction === '+' ? 'increase' : 'decrease';
+          toast.info(`💡 Try to ${directionText} ${channelName}!`);
+          return;
+        }
+      }
+    }
+    
+    toast.info("💡 Any valid move works from here!");
+    setHintsRemaining(prev => prev - 1);
+  };
+  
+  const handleShare = () => {
+    const status = gameWon ? '✅' : '❌';
+    const text = `Morph Prism #${puzzle.puzzleNumber}\n${status} ${movesUsed}/${puzzle.cap} moves\n\nPlay at: ${window.location.origin}/prism`;
+    
+    if (navigator.share) {
+      navigator.share({ text });
+    } else {
+      navigator.clipboard.writeText(text);
+      toast.success("Copied to clipboard!");
+    }
+  };
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <header className="h-14 flex items-center px-4 border-b border-border bg-card/50 backdrop-blur-sm">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate('/')}
+          aria-label="Back to home"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        
+        <h1 className="flex-1 text-center font-bold text-lg">Morph Prism</h1>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowHelp(true)}
+          aria-label="How to play"
+        >
+          <HelpCircle className="h-5 w-5" />
+        </Button>
+      </header>
+      
+      <main className="container max-w-2xl mx-auto p-4 space-y-6">
+        {/* Color Swatches */}
+        <div className="flex items-center justify-between gap-4">
+          <ColorSwatch
+            color={puzzle.start}
+            label="Start"
+            size="small"
+            showValues={showValues}
+          />
+          
+          <ColorSwatch
+            color={currentColor}
+            label="Current"
+            size="large"
+            showValues={showValues}
+          />
+          
+          <ColorSwatch
+            color={puzzle.goal}
+            label="Goal"
+            size="small"
+            showValues={showValues}
+          />
+        </div>
+        
+        {/* Game Status */}
+        {gameWon && (
+          <div className="text-center p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
+            <p className="text-lg font-bold text-green-700 dark:text-green-300">
+              🎉 Puzzle Solved!
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Completed in {movesUsed} moves
+            </p>
+          </div>
+        )}
+        
+        {gameLost && (
+          <div className="text-center p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
+            <p className="text-lg font-bold text-red-700 dark:text-red-300">
+              Out of moves!
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Try again tomorrow
+            </p>
+          </div>
+        )}
+        
+        {/* HUD */}
+        <GameHUD
+          movesUsed={movesUsed}
+          moveCap={puzzle.cap}
+          hintsRemaining={hintsRemaining}
+          lastMoveStatus={lastMoveStatus}
+          onHint={handleHint}
+          onShare={handleShare}
+          gameWon={gameWon}
+          gameLost={gameLost}
+        />
+        
+        {/* Controls */}
+        <div className="space-y-3">
+          <ChannelControl
+            channel="H"
+            color={currentColor}
+            onMove={handleMove}
+            disabled={gameWon || gameLost}
+          />
+          <ChannelControl
+            channel="S"
+            color={currentColor}
+            onMove={handleMove}
+            disabled={gameWon || gameLost}
+          />
+          <ChannelControl
+            channel="L"
+            color={currentColor}
+            onMove={handleMove}
+            disabled={gameWon || gameLost}
+          />
+        </div>
+        
+        {/* Toggle Values */}
+        <div className="flex justify-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowValues(!showValues)}
+          >
+            {showValues ? 'Hide' : 'Show'} Color Values
+          </Button>
+        </div>
+      </main>
+      
+      {/* How to Play Dialog */}
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>How to Play Morph Prism</DialogTitle>
+            <DialogDescription>
+              Transform the start color into the goal color
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <h3 className="font-semibold mb-2">Rules:</h3>
+              <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                <li>Change ONE channel per move (Hue, Saturation, or Lightness)</li>
+                <li>Hue wraps around the color wheel (0° ↔ 345°)</li>
+                <li>Complete the puzzle within {puzzle.cap} moves</li>
+                <li>Watch for "Closer" or "Sideways" feedback after each move</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-2">Hints:</h3>
+              <p className="text-sm text-muted-foreground">
+                You have {puzzle.hints} hint(s) available. Use them wisely to get a nudge in the right direction!
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
