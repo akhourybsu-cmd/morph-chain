@@ -141,9 +141,13 @@ export const InputRow = ({
       </form>
 
       <div id="input-hint" className="sr-only">
-        {movesUsed === 0 && (wordLength === 5 || wordLength === 6)
-          ? "First move: change one or two letters. After that, change exactly one letter. Press Escape to clear, Arrow keys to cycle history."
-          : "Change exactly one letter. Press Escape to clear, Arrow keys to cycle history."}
+        {wordLength === 4
+          ? "Change exactly one letter. Press Escape to clear, Arrow keys to cycle history."
+          : wordLength === 5
+            ? (movesUsed === 0 
+                ? "First move: change one or two letters. After that, change exactly one letter. Press Escape to clear, Arrow keys to cycle history."
+                : "Change exactly one letter. Press Escape to clear, Arrow keys to cycle history.")
+            : "Change one or two letters. Press Escape to clear, Arrow keys to cycle history."}
       </div>
     </div>
   );

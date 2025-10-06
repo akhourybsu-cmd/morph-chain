@@ -37,13 +37,17 @@ export const HowToPlayModal = ({ open, onOpenChange }: HowToPlayModalProps) => {
           <section>
             <h3 className="font-semibold mb-2">How</h3>
             <p className="text-muted-foreground mb-2">
-              Change <strong>one letter</strong> each step—every step must be a real word.
+              <strong>4-Letter:</strong> Change exactly <strong>one letter</strong> each step.
             </p>
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mt-2">
-              <p className="text-sm text-foreground">
-                <strong>5L & 6L Special Rule:</strong> On your <strong>first move only</strong>, you may change <strong>one OR two letters</strong>. After that, change exactly one letter per step.
-              </p>
-            </div>
+            <p className="text-muted-foreground mb-2">
+              <strong>5-Letter:</strong> Change <strong>one OR two letters</strong> on your <strong>first move only</strong>, then one letter per step.
+            </p>
+            <p className="text-muted-foreground mb-2">
+              <strong>6-Letter:</strong> Change <strong>one OR two letters</strong> on <strong>any move</strong>.
+            </p>
+            <p className="text-muted-foreground text-sm mt-2">
+              Every step must be a real word.
+            </p>
           </section>
 
           <section>

@@ -127,9 +127,14 @@ const Index = () => {
 
     // Simulate network delay
     setTimeout(() => {
-      // Validation - 5L/6L allow 2 letters on first move
+      // Validation rules:
+      // 4L: always one letter
+      // 5L: two letters on first move only
+      // 6L: two letters anytime
       const isFirstMove = moves.length === 0;
-      const allowTwoLetters = isFirstMove && (puzzle.wordLength === 5 || puzzle.wordLength === 6);
+      const allowTwoLetters = 
+        (puzzle.wordLength === 5 && isFirstMove) || 
+        (puzzle.wordLength === 6);
       
       const isValid = allowTwoLetters
         ? (isOneLetterDifferent(currentWord, word) || isTwoLettersDifferent(currentWord, word))
@@ -417,8 +422,10 @@ const Index = () => {
                   <p className="font-medium text-foreground text-xs md:text-sm">
                     {puzzle.wordLength === 4 ? (
                       <>Change <strong>ONE</strong> letter each step. Every step must be a real word.</>
-                    ) : (
+                    ) : puzzle.wordLength === 5 ? (
                       <>Change <strong>ONE or TWO</strong> letters on your first move, then <strong>ONE</strong> letter each step. Every step must be a real word.</>
+                    ) : (
+                      <>Change <strong>ONE or TWO</strong> letters each step. Every step must be a real word.</>
                     )}
                   </p>
                   <p className="text-muted-foreground text-[11px] md:text-xs">
