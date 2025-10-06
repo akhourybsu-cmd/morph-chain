@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Search, Ban, CheckCircle, AlertCircle } from "lucide-react";
+import { z } from "zod";
 import {
   Table,
   TableBody,
@@ -21,11 +22,19 @@ export default function Dictionary() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  const searchSchema = z.object({
+    term: z.string()
+      .min(2, "Search term must be at least 2 characters")
+      .max(50, "Search term must be less than 50 characters")
+      .regex(/^[a-zA-Z]+$/, "Search term must contain only letters")
+  });
+
   const searchWords = async () => {
-    if (!searchTerm || searchTerm.length < 2) {
+    const validation = searchSchema.safeParse({ term: searchTerm });
+    if (!validation.success) {
       toast({
         title: "Invalid search",
-        description: "Please enter at least 2 characters",
+        description: validation.error.errors[0].message,
         variant: "destructive",
       });
       return;
