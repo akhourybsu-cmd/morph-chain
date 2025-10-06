@@ -9,6 +9,14 @@ import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import TodaysPuzzle from "./pages/admin/TodaysPuzzle";
+import Scheduler from "./pages/admin/Scheduler";
+import Dictionary from "./pages/admin/Dictionary";
+import PlayerSessions from "./pages/admin/PlayerSessions";
+import Analytics from "./pages/admin/Analytics";
+import FeatureFlags from "./pages/admin/FeatureFlags";
+import AuditLog from "./pages/admin/AuditLog";
+import Configuration from "./pages/admin/Configuration";
 
 const queryClient = new QueryClient();
 
@@ -24,14 +32,14 @@ const App = () => (
           <Route path="/signup" element={<SignUp />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
-            <Route path="puzzle" element={<div>Today's Puzzle</div>} />
-            <Route path="scheduler" element={<div>Scheduler</div>} />
-            <Route path="dictionary" element={<div>Dictionary</div>} />
-            <Route path="sessions" element={<div>Player Sessions</div>} />
-            <Route path="analytics" element={<div>Analytics</div>} />
-            <Route path="flags" element={<div>Feature Flags</div>} />
-            <Route path="audit" element={<div>Audit Log</div>} />
-            <Route path="config" element={<div>Configuration</div>} />
+            <Route path="puzzle" element={<TodaysPuzzle />} />
+            <Route path="scheduler" element={<Scheduler />} />
+            <Route path="dictionary" element={<Dictionary />} />
+            <Route path="sessions" element={<PlayerSessions />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="flags" element={<FeatureFlags />} />
+            <Route path="audit" element={<AuditLog />} />
+            <Route path="config" element={<Configuration />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
