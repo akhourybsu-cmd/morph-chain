@@ -37,75 +37,109 @@ export const MoveLog = ({ moves, simpleMode = false, colorblindMode, onDisputeWo
           className="bg-card border border-border rounded-lg p-3 animate-slide-in"
         >
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 font-mono text-sm flex-1 min-w-0">
-              {simpleMode ? (
-                <span className="font-semibold tracking-tiles">
-                  {move.to.split('').map((letter, i) => {
-                    const hintState = move.hints[i];
-                    const colorClass = 
-                      hintState === 'match' ? 'text-success' :
-                      hintState === 'present' ? 'text-warning' :
-                      'text-muted-foreground';
-                    return (
-                      <span key={i} className={colorClass}>
-                        {letter}
-                      </span>
-                    );
-                  })}
-                </span>
-              ) : (
-                <span className="font-semibold tracking-tiles">{move.to}</span>
-              )}
-              {onDisputeWord && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0 ml-1 opacity-50 hover:opacity-100"
-                  onClick={() => onDisputeWord(move.to)}
-                  title="Report word issue"
-                >
-                  <Flag className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {move.isComplete ? (
-                <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs font-medium border border-success/30">
-                  Goal!
-                </span>
-              ) : move.closerToGoal ? (
-                <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs font-medium flex items-center gap-1 border border-success/30">
-                  <TrendingDown className="h-3 w-3" />
-                  Closer
-                </span>
-              ) : move.isWorse ? (
-                <span className="px-2 py-0.5 rounded-full bg-destructive/20 text-destructive text-xs font-medium flex items-center gap-1 border border-destructive/30">
-                  <TrendingUp className="h-3 w-3" />
-                  Farther
-                </span>
-              ) : (
-                <span className="px-2 py-0.5 rounded-full bg-warning/20 text-warning text-xs font-medium flex items-center gap-1 border border-warning/30">
-                  <Minus className="h-3 w-3" />
-                  Same
-                </span>
-              )}
-            </div>
+            {simpleMode ? (
+              <>
+                <div className="flex items-center gap-2 font-mono text-sm flex-1 min-w-0">
+                  <span className="font-semibold tracking-tiles">
+                    {move.to.split('').map((letter, i) => {
+                      const hintState = move.hints[i];
+                      const colorClass = 
+                        hintState === 'match' ? 'text-success' :
+                        hintState === 'present' ? 'text-warning' :
+                        'text-muted-foreground';
+                      return (
+                        <span key={i} className={colorClass}>
+                          {letter}
+                        </span>
+                      );
+                    })}
+                  </span>
+                  {onDisputeWord && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0 ml-1 opacity-50 hover:opacity-100"
+                      onClick={() => onDisputeWord(move.to)}
+                      title="Report word issue"
+                    >
+                      <Flag className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {move.isComplete ? (
+                    <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs font-medium border border-success/30">
+                      Goal!
+                    </span>
+                  ) : move.closerToGoal ? (
+                    <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs font-medium flex items-center gap-1 border border-success/30">
+                      <TrendingDown className="h-3 w-3" />
+                      Closer
+                    </span>
+                  ) : move.isWorse ? (
+                    <span className="px-2 py-0.5 rounded-full bg-destructive/20 text-destructive text-xs font-medium flex items-center gap-1 border border-destructive/30">
+                      <TrendingUp className="h-3 w-3" />
+                      Farther
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full bg-warning/20 text-warning text-xs font-medium flex items-center gap-1 border border-warning/30">
+                      <Minus className="h-3 w-3" />
+                      Same
+                    </span>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="flex gap-1">
+                    {move.hints.map((state, i) => (
+                      <HintTile
+                        key={i}
+                        letter={move.to[i]}
+                        state={state}
+                        delay={i * 50}
+                        colorblindMode={colorblindMode}
+                      />
+                    ))}
+                  </div>
+                  {onDisputeWord && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0 ml-1 opacity-50 hover:opacity-100"
+                      onClick={() => onDisputeWord(move.to)}
+                      title="Report word issue"
+                    >
+                      <Flag className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {move.isComplete ? (
+                    <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs font-medium border border-success/30">
+                      Goal!
+                    </span>
+                  ) : move.closerToGoal ? (
+                    <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs font-medium flex items-center gap-1 border border-success/30">
+                      <TrendingDown className="h-3 w-3" />
+                      Closer
+                    </span>
+                  ) : move.isWorse ? (
+                    <span className="px-2 py-0.5 rounded-full bg-destructive/20 text-destructive text-xs font-medium flex items-center gap-1 border border-destructive/30">
+                      <TrendingUp className="h-3 w-3" />
+                      Farther
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full bg-warning/20 text-warning text-xs font-medium flex items-center gap-1 border border-warning/30">
+                      <Minus className="h-3 w-3" />
+                      Same
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
           </div>
-
-          {!simpleMode && (
-            <div className="flex gap-1 mt-2">
-              {move.hints.map((state, i) => (
-                <HintTile
-                  key={i}
-                  letter={move.to[i]}
-                  state={state}
-                  delay={i * 50}
-                  colorblindMode={colorblindMode}
-                />
-              ))}
-            </div>
-          )}
         </div>
       ))}
     </div>
