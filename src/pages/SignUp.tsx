@@ -34,13 +34,16 @@ export default function SignUp() {
       const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
       });
 
       if (error) throw error;
 
       toast({
         title: "Account created!",
-        description: "You can now sign in to access the admin panel.",
+        description: "You can now sign in to sync your progress.",
       });
 
       navigate("/login");
@@ -64,7 +67,7 @@ export default function SignUp() {
           </div>
           <div>
             <CardTitle className="text-2xl">Create Account</CardTitle>
-            <CardDescription>Sign up to access the admin panel</CardDescription>
+            <CardDescription>Sign up to sync your progress across devices</CardDescription>
           </div>
         </CardHeader>
         <CardContent>

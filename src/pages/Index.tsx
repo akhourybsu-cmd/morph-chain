@@ -33,6 +33,7 @@ import {
 } from "@/lib/storage";
 import { saveDispute } from "@/lib/disputeStorage";
 import { isRateLimited } from "@/lib/rateLimit";
+import { syncStatsToSupabase } from "@/lib/supabaseSync";
 
 const Index = () => {
   const { toast } = useToast();
@@ -323,6 +324,7 @@ const Index = () => {
     newStats.lastPlayedDate = today;
     setStats(newStats);
     saveStats(newStats);
+    syncStatsToSupabase();
   };
   
   const hasWonAnyLengthToday = (date: string): boolean => {
@@ -348,6 +350,7 @@ const Index = () => {
     const newSettings = { ...settings, [key]: !settings[key] };
     setSettings(newSettings);
     saveSettings(newSettings);
+    syncStatsToSupabase();
   };
 
   const handleResetData = () => {

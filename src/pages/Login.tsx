@@ -29,10 +29,10 @@ export default function Login() {
 
       toast({
         title: "Welcome back!",
-        description: "You've been successfully logged in.",
+        description: "Your progress is now synced across devices.",
       });
 
-      navigate("/admin");
+      navigate("/");
     } catch (error: any) {
       toast({
         title: "Login failed",
@@ -53,7 +53,7 @@ export default function Login() {
           </div>
           <div>
             <CardTitle className="text-2xl">Welcome Back</CardTitle>
-            <CardDescription>Sign in to access the admin panel</CardDescription>
+            <CardDescription>Sign in to sync your progress across devices</CardDescription>
           </div>
         </CardHeader>
         <CardContent>

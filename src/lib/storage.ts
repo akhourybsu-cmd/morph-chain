@@ -1,4 +1,4 @@
-interface LengthStats {
+export interface LengthStats {
   played: number;
   won: number;
   currentStreak: number;
@@ -6,7 +6,7 @@ interface LengthStats {
   distribution: number[]; // index = moves-1
 }
 
-interface GameStats {
+export interface GameStats {
   overall: {
     played: number;
     won: number;
@@ -23,7 +23,7 @@ interface GameStats {
   lastPlayedDate?: string;
 }
 
-interface GameSettings {
+export interface GameSettings {
   hardMode: boolean;
   colorblindMode: boolean;
   vibration: boolean;
