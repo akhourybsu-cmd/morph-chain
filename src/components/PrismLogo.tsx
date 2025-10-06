@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +9,8 @@ import { ChevronDown } from "lucide-react";
 
 export const PrismLogo = ({ className = "" }: { className?: string }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOnPrism = location.pathname === '/prism';
   
   return (
     <DropdownMenu>
@@ -22,18 +24,26 @@ export const PrismLogo = ({ className = "" }: { className?: string }) => {
         <ChevronDown className="h-4 w-4 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center" className="w-56">
-        <DropdownMenuItem onClick={() => navigate('/')}>
-          <div className="flex flex-col">
-            <span className="font-semibold">MORPH CHAIN</span>
-            <span className="text-xs text-muted-foreground">Daily word transformation</span>
-          </div>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/prism')}>
-          <div className="flex flex-col">
-            <span className="font-semibold">MORPH PRISM</span>
-            <span className="text-xs text-muted-foreground">Daily color puzzle</span>
-          </div>
-        </DropdownMenuItem>
+        {!isOnPrism && (
+          <DropdownMenuItem onClick={() => navigate('/prism')}>
+            <div className="flex flex-col">
+              <span className="font-semibold bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+                MORPH PRISM
+              </span>
+              <span className="text-xs text-muted-foreground">Daily color puzzle</span>
+            </div>
+          </DropdownMenuItem>
+        )}
+        {isOnPrism && (
+          <DropdownMenuItem onClick={() => navigate('/')}>
+            <div className="flex flex-col">
+              <span className="font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                MORPH CHAIN
+              </span>
+              <span className="text-xs text-muted-foreground">Daily word transformation</span>
+            </div>
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
