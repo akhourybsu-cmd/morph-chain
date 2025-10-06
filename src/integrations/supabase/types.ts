@@ -14,16 +14,284 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      admin_config: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      admin_dictionary: {
+        Row: {
+          ban_reason: string | null
+          complaint_count: number | null
+          created_at: string
+          first_seen: string | null
+          frequency_score: number | null
+          id: string
+          is_banned: boolean
+          last_seen: string | null
+          updated_at: string
+          word: string
+          word_length: number
+        }
+        Insert: {
+          ban_reason?: string | null
+          complaint_count?: number | null
+          created_at?: string
+          first_seen?: string | null
+          frequency_score?: number | null
+          id?: string
+          is_banned?: boolean
+          last_seen?: string | null
+          updated_at?: string
+          word: string
+          word_length: number
+        }
+        Update: {
+          ban_reason?: string | null
+          complaint_count?: number | null
+          created_at?: string
+          first_seen?: string | null
+          frequency_score?: number | null
+          id?: string
+          is_banned?: boolean
+          last_seen?: string | null
+          updated_at?: string
+          word?: string
+          word_length?: number
+        }
+        Relationships: []
+      }
+      admin_puzzles: {
+        Row: {
+          avg_branching_factor: number | null
+          created_at: string
+          created_by: string | null
+          goal_word: string
+          health_score: number | null
+          id: string
+          max_moves: number
+          min_distance: number
+          puzzle_index: number | null
+          scheduled_date: string | null
+          shortest_path_count: number | null
+          start_word: string
+          status: Database["public"]["Enums"]["puzzle_status"]
+          theme_tags: string[] | null
+          updated_at: string
+          variant: Database["public"]["Enums"]["puzzle_variant"]
+          word_length: number
+        }
+        Insert: {
+          avg_branching_factor?: number | null
+          created_at?: string
+          created_by?: string | null
+          goal_word: string
+          health_score?: number | null
+          id?: string
+          max_moves: number
+          min_distance: number
+          puzzle_index?: number | null
+          scheduled_date?: string | null
+          shortest_path_count?: number | null
+          start_word: string
+          status?: Database["public"]["Enums"]["puzzle_status"]
+          theme_tags?: string[] | null
+          updated_at?: string
+          variant: Database["public"]["Enums"]["puzzle_variant"]
+          word_length: number
+        }
+        Update: {
+          avg_branching_factor?: number | null
+          created_at?: string
+          created_by?: string | null
+          goal_word?: string
+          health_score?: number | null
+          id?: string
+          max_moves?: number
+          min_distance?: number
+          puzzle_index?: number | null
+          scheduled_date?: string | null
+          shortest_path_count?: number | null
+          start_word?: string
+          status?: Database["public"]["Enums"]["puzzle_status"]
+          theme_tags?: string[] | null
+          updated_at?: string
+          variant?: Database["public"]["Enums"]["puzzle_variant"]
+          word_length?: number
+        }
+        Relationships: []
+      }
+      feature_flags: {
+        Row: {
+          description: string | null
+          enabled: boolean
+          id: string
+          key: string
+          rollout_percentage: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          key: string
+          rollout_percentage?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          key?: string
+          rollout_percentage?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      player_sessions: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          hints_used: number | null
+          id: string
+          invalid_guesses: number | null
+          moves: Json
+          puzzle_date: string
+          session_id: string
+          started_at: string
+          user_id: string | null
+          won: boolean | null
+          word_length: number
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          hints_used?: number | null
+          id?: string
+          invalid_guesses?: number | null
+          moves?: Json
+          puzzle_date: string
+          session_id: string
+          started_at?: string
+          user_id?: string | null
+          won?: boolean | null
+          word_length: number
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          hints_used?: number | null
+          id?: string
+          invalid_guesses?: number | null
+          moves?: Json
+          puzzle_date?: string
+          session_id?: string
+          started_at?: string
+          user_id?: string | null
+          won?: boolean | null
+          word_length?: number
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
+      puzzle_status: "draft" | "preview" | "live" | "disabled" | "completed"
+      puzzle_variant: "delta1" | "delta2" | "delta2_first"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +418,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+      puzzle_status: ["draft", "preview", "live", "disabled", "completed"],
+      puzzle_variant: ["delta1", "delta2", "delta2_first"],
+    },
   },
 } as const
