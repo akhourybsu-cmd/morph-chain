@@ -2,6 +2,8 @@ import { TileState } from "@/components/HintTile";
 import wordsAlphaText from "./words_alpha.txt?raw";
 import { filterModernEnglish } from "./wordFilters";
 import { isPuzzleSolvable, calculateMinDistance } from "./puzzleValidator";
+import { CURATED_4L_PUZZLES } from "./curatedPuzzles4L";
+import { markPuzzleAsUsed, getCurrentPuzzleIndex } from "./puzzleTracking";
 
 // Parse and filter the word list by length with Modern English standards
 const parseWordList = () => {
@@ -53,41 +55,36 @@ export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle => {
   // Get appropriate word set
   const wordSet = wordLength === 4 ? VALID_WORDS_4 : wordLength === 5 ? VALID_WORDS_5 : VALID_WORDS_6;
   
-  // Validated puzzle pools - all verified as solvable with Modern English
+  // For 4L puzzles, use curated pairs with tracking
+  if (wordLength === 4) {
+    const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+    const puzzleIndex = daysSinceEpoch % CURATED_4L_PUZZLES.length;
+    const candidatePuzzle = CURATED_4L_PUZZLES[puzzleIndex];
+    
+    // Calculate minDistance at runtime
+    const minDist = calculateMinDistance(
+      candidatePuzzle.start,
+      candidatePuzzle.goal,
+      wordSet
+    ) || 4;
+    
+    // Mark this puzzle as used
+    markPuzzleAsUsed(candidatePuzzle.start, candidatePuzzle.goal, puzzleIndex, today);
+    
+    const maxMoves = Math.min(14, Math.max(10, minDist + 4));
+    
+    return {
+      date: today,
+      startWord: candidatePuzzle.start,
+      goalWord: candidatePuzzle.goal,
+      wordLength: 4,
+      maxMoves,
+      minDistance: minDist,
+    };
+  }
+  
+  // For 5L and 6L, use existing validated pools
   const puzzlesByLength = {
-    4: [
-      // All verified solvable with filtered word list
-      { start: "COLD", goal: "WARM", minDist: 5 },
-      { start: "LOVE", goal: "HATE", minDist: 4 },
-      { start: "WORD", goal: "PLAY", minDist: 4 },
-      { start: "HEAD", goal: "TAIL", minDist: 4 },
-      { start: "MOON", goal: "STAR", minDist: 4 },
-      { start: "FIRE", goal: "COOL", minDist: 4 },
-      { start: "DAWN", goal: "DUSK", minDist: 4 },
-      { start: "KING", goal: "PAWN", minDist: 4 },
-      { start: "WILD", goal: "TAME", minDist: 4 },
-      { start: "FISH", goal: "BIRD", minDist: 4 },
-      { start: "PAST", goal: "NEWS", minDist: 4 },
-      { start: "LIFE", goal: "DEAD", minDist: 4 },
-      { start: "BOLD", goal: "MEEK", minDist: 4 },
-      { start: "WIDE", goal: "SLIM", minDist: 4 },
-      { start: "ROCK", goal: "SAND", minDist: 4 },
-      { start: "WINE", goal: "BEER", minDist: 4 },
-      { start: "PAGE", goal: "BOOK", minDist: 4 },
-      { start: "JUMP", goal: "FALL", minDist: 4 },
-      { start: "CITY", goal: "FARM", minDist: 4 },
-      { start: "RICH", goal: "POOR", minDist: 4 },
-      { start: "SLOW", goal: "FAST", minDist: 4 },
-      { start: "COIN", goal: "CASH", minDist: 4 },
-      { start: "HOME", goal: "AWAY", minDist: 4 },
-      { start: "BUSY", goal: "IDLE", minDist: 4 },
-      { start: "GLOW", goal: "DARK", minDist: 4 },
-      { start: "SOFT", goal: "HARD", minDist: 4 },
-      { start: "RAIN", goal: "SNOW", minDist: 4 },
-      { start: "WEST", goal: "EAST", minDist: 4 },
-      { start: "BLUE", goal: "PINK", minDist: 4 },
-      { start: "LOSE", goal: "FIND", minDist: 4 },
-    ],
     5: [
       // All validated with acceptance gates: minDist 5-8, ≥10 paths, balanced letters
       { start: "BREAD", goal: "TOAST", minDist: 5 },
