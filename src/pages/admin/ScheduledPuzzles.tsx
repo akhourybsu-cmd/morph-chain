@@ -6,9 +6,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar, CheckCircle2, XCircle, Loader2, AlertTriangle, PlayCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { getDailyPuzzle } from "@/lib/gameLogic";
 import { toZonedTime, formatInTimeZone } from "date-fns-tz";
-import { startOfDay, addDays } from "date-fns";
+import { startOfDay, addDays, differenceInDays } from "date-fns";
+import { CURATED_4L_PUZZLES } from "@/lib/curatedPuzzles4L";
+import { CURATED_5L_PUZZLES } from "@/lib/curatedPuzzles5L";
+import { CURATED_6L_PUZZLES } from "@/lib/curatedPuzzles6L";
 
 interface ScheduledPuzzle {
   date: string;
@@ -42,38 +44,35 @@ export default function ScheduledPuzzles() {
       
       const puzzles: ScheduledPuzzle[] = [];
       
+      // Launch date: October 6, 2025 (NY time) is Puzzle #1
+      const launchDateNY = startOfDay(toZonedTime(new Date('2025-10-06T00:00:00'), timezone));
+      
       // Generate schedule for next N days
       for (let i = 0; i < daysAhead; i++) {
         const targetDate = addDays(todayNY, i);
         const dateStr = formatInTimeZone(targetDate, timezone, "yyyy-MM-dd");
         const dayLabel = i === 0 ? "Today" : i === 1 ? "Tomorrow" : `Day +${i}`;
         
+        // Calculate days since launch for this target date
+        const daysSinceLaunch = differenceInDays(targetDate, launchDateNY);
+        
         // Get puzzles for each word length on this date
         [4, 5, 6].forEach((wordLength) => {
-          // Temporarily set date for getDailyPuzzle calculation
-          const originalDate = new Date();
-          Object.defineProperty(global, 'Date', {
-            value: class extends Date {
-              constructor() {
-                super();
-                return targetDate;
-              }
-            }
-          });
+          const curatedPuzzles = wordLength === 4 ? CURATED_4L_PUZZLES : 
+                                 wordLength === 5 ? CURATED_5L_PUZZLES : 
+                                 CURATED_6L_PUZZLES;
           
-          const puzzle = getDailyPuzzle(wordLength as 4 | 5 | 6);
-          
-          // Restore original Date
-          Object.defineProperty(global, 'Date', { value: originalDate });
+          const puzzleIndex = daysSinceLaunch % curatedPuzzles.length;
+          const candidatePuzzle = curatedPuzzles[puzzleIndex];
           
           puzzles.push({
             date: dateStr,
             dayLabel,
             wordLength: wordLength as 4 | 5 | 6,
-            startWord: puzzle.startWord,
-            goalWord: puzzle.goalWord,
-            minDistance: puzzle.minDistance,
-            puzzleIndex: puzzle.puzzleIndex || 0,
+            startWord: candidatePuzzle.start,
+            goalWord: candidatePuzzle.goal,
+            minDistance: candidatePuzzle.minDist || 0,
+            puzzleIndex,
             solvable: undefined,
             checking: false
           });
