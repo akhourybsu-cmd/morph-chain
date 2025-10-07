@@ -30,7 +30,6 @@ export default function MorphPrism() {
   const [moves, setMoves] = useState<ColorState[]>([puzzle.start]);
   const [hintsRemaining, setHintsRemaining] = useState(puzzle.hints);
   const [lastMoveStatus, setLastMoveStatus] = useState<'closer' | 'sideways' | null>(null);
-  const [showValues, setShowValues] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   
   const gameWon = colorsEqual(currentColor, puzzle.goal);
@@ -133,21 +132,21 @@ export default function MorphPrism() {
             color={puzzle.start}
             label="Start"
             size="small"
-            showValues={showValues}
+            showValues={gameWon}
           />
           
           <ColorSwatch
             color={currentColor}
             label="Current"
             size="large"
-            showValues={showValues}
+            showValues={gameWon}
           />
           
           <ColorSwatch
             color={puzzle.goal}
             label="Goal"
             size="small"
-            showValues={showValues}
+            showValues={gameWon}
           />
         </div>
         
@@ -193,30 +192,22 @@ export default function MorphPrism() {
             color={currentColor}
             onMove={handleMove}
             disabled={gameWon || gameLost}
+            showValue={gameWon}
           />
           <ChannelControl
             channel="S"
             color={currentColor}
             onMove={handleMove}
             disabled={gameWon || gameLost}
+            showValue={gameWon}
           />
           <ChannelControl
             channel="L"
             color={currentColor}
             onMove={handleMove}
             disabled={gameWon || gameLost}
+            showValue={gameWon}
           />
-        </div>
-        
-        {/* Toggle Values */}
-        <div className="flex justify-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowValues(!showValues)}
-          >
-            {showValues ? 'Hide' : 'Show'} Color Values
-          </Button>
         </div>
       </main>
       

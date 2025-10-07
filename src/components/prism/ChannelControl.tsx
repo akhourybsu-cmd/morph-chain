@@ -8,6 +8,7 @@ interface ChannelControlProps {
   color: ColorState;
   onMove: (channel: Channel, direction: '+' | '-') => void;
   disabled?: boolean;
+  showValue?: boolean;
 }
 
 const channelLabels: Record<Channel, string> = {
@@ -27,6 +28,7 @@ export const ChannelControl = ({
   color,
   onMove,
   disabled = false,
+  showValue = false,
 }: ChannelControlProps) => {
   const directions = getAvailableDirections(color, channel);
   const value = color[channel];
@@ -38,9 +40,11 @@ export const ChannelControl = ({
         <label className={cn("text-sm font-semibold", channelColors[channel])}>
           {channelLabels[channel]}
         </label>
-        <span className="text-sm font-mono text-muted-foreground">
-          {value}{unit}
-        </span>
+        {showValue && (
+          <span className="text-sm font-mono text-muted-foreground">
+            {value}{unit}
+          </span>
+        )}
       </div>
       
       <div className="flex items-center gap-2">
