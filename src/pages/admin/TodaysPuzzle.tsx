@@ -189,11 +189,7 @@ export default function TodaysPuzzle() {
               <p className="text-muted-foreground">Goal Word:</p>
               <p className="font-mono font-semibold text-lg">{puzzle.goal_word}</p>
             </div>
-            <div>
-              <p className="text-muted-foreground">Min Distance:</p>
-              <p className="font-semibold">{puzzle.min_distance} moves</p>
-            </div>
-            <div>
+            <div className="col-span-2">
               <p className="text-muted-foreground">Max Moves:</p>
               <p className="font-semibold">{maxMoves} moves</p>
             </div>

@@ -1,16 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Upload, Database, Lock } from "lucide-react";
+import { Shield, Upload, Database, Lock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { CURATED_4L_PUZZLES } from "@/lib/curatedPuzzles4L";
 import { CURATED_5L_PUZZLES } from "@/lib/curatedPuzzles5L";
 import { CURATED_6L_PUZZLES } from "@/lib/curatedPuzzles6L";
+import { validatePuzzlePair } from "@/lib/puzzleValidatorV2";
+import { VALID_WORDS_4, VALID_WORDS_5, VALID_WORDS_6 } from "@/lib/gameLogic";
+import { Badge } from "@/components/ui/badge";
+
+interface ValidationResult {
+  puzzle: { start: string; goal: string; wordLength: number };
+  valid: boolean;
+  reason?: string;
+  minDistance?: number;
+  pathCount?: number;
+}
 
 export default function PuzzleVault() {
   const { toast } = useToast();
   const [importing, setImporting] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
   const [stats, setStats] = useState<{
     total: number;
     length4: number;
@@ -50,39 +63,132 @@ export default function PuzzleVault() {
     }
   };
 
+  const validateAllPuzzles = async () => {
+    setValidating(true);
+    setValidationResults([]);
+    
+    try {
+      const results: ValidationResult[] = [];
+      
+      toast({
+        title: "Validating Puzzles",
+        description: "Testing all curated puzzles with new algorithm...",
+      });
+      
+      // Validate 4L puzzles
+      for (const puzzle of CURATED_4L_PUZZLES) {
+        const validation = validatePuzzlePair(puzzle.start, puzzle.goal, 4, VALID_WORDS_4);
+        results.push({
+          puzzle: { start: puzzle.start, goal: puzzle.goal, wordLength: 4 },
+          valid: validation.solvable && validation.meetsGates && validation.minDistance >= 3,
+          reason: !validation.solvable ? validation.failureReason : 
+                  validation.minDistance < 3 ? `Distance too short (${validation.minDistance})` :
+                  !validation.meetsGates ? validation.failureReason : undefined,
+          minDistance: validation.minDistance,
+          pathCount: validation.pathCount
+        });
+      }
+      
+      // Validate 5L puzzles
+      for (const puzzle of CURATED_5L_PUZZLES) {
+        const validation = validatePuzzlePair(puzzle.start, puzzle.goal, 5, VALID_WORDS_5);
+        results.push({
+          puzzle: { start: puzzle.start, goal: puzzle.goal, wordLength: 5 },
+          valid: validation.solvable && validation.meetsGates && validation.minDistance >= 3,
+          reason: !validation.solvable ? validation.failureReason : 
+                  validation.minDistance < 3 ? `Distance too short (${validation.minDistance})` :
+                  !validation.meetsGates ? validation.failureReason : undefined,
+          minDistance: validation.minDistance,
+          pathCount: validation.pathCount
+        });
+      }
+      
+      // Validate 6L puzzles
+      for (const puzzle of CURATED_6L_PUZZLES) {
+        const validation = validatePuzzlePair(puzzle.start, puzzle.goal, 6, VALID_WORDS_6);
+        results.push({
+          puzzle: { start: puzzle.start, goal: puzzle.goal, wordLength: 6 },
+          valid: validation.solvable && validation.meetsGates && validation.minDistance >= 3,
+          reason: !validation.solvable ? validation.failureReason : 
+                  validation.minDistance < 3 ? `Distance too short (${validation.minDistance})` :
+                  !validation.meetsGates ? validation.failureReason : undefined,
+          minDistance: validation.minDistance,
+          pathCount: validation.pathCount
+        });
+      }
+      
+      setValidationResults(results);
+      
+      const validCount = results.filter(r => r.valid).length;
+      const invalidCount = results.length - validCount;
+      
+      toast({
+        title: "Validation Complete",
+        description: `${validCount} valid, ${invalidCount} failed`,
+        variant: invalidCount > 0 ? "destructive" : "default"
+      });
+      
+    } catch (error: any) {
+      console.error('Validation error:', error);
+      toast({
+        title: "Validation Failed",
+        description: error.message || "Failed to validate puzzles",
+        variant: "destructive"
+      });
+    } finally {
+      setValidating(false);
+    }
+  };
+
   const importPuzzles = async () => {
     setImporting(true);
     
     try {
-      // Prepare all puzzles for import
-      const allPuzzles = [
-        ...CURATED_4L_PUZZLES.map((p, index) => ({
-          start: p.start,
-          goal: p.goal,
-          minDist: p.minDist || 3,
-          wordLength: 4,
-          index
-        })),
-        ...CURATED_5L_PUZZLES.map((p, index) => ({
-          start: p.start,
-          goal: p.goal,
-          minDist: p.minDist || 3,
-          wordLength: 5,
-          index
-        })),
-        ...CURATED_6L_PUZZLES.map((p, index) => ({
-          start: p.start,
-          goal: p.goal,
-          minDist: p.minDist || 3,
-          wordLength: 6,
-          index
-        }))
-      ];
+      // Prepare all puzzles for import (only valid ones if validation was run)
+      let puzzlesToImport;
+      
+      if (validationResults.length > 0) {
+        // Only import valid puzzles
+        puzzlesToImport = validationResults
+          .filter(r => r.valid)
+          .map((r, index) => ({
+            start: r.puzzle.start,
+            goal: r.puzzle.goal,
+            minDist: r.minDistance!,
+            wordLength: r.puzzle.wordLength,
+            index
+          }));
+      } else {
+        // Import all (legacy behavior)
+        puzzlesToImport = [
+          ...CURATED_4L_PUZZLES.map((p, index) => ({
+            start: p.start,
+            goal: p.goal,
+            minDist: p.minDist || 3,
+            wordLength: 4,
+            index
+          })),
+          ...CURATED_5L_PUZZLES.map((p, index) => ({
+            start: p.start,
+            goal: p.goal,
+            minDist: p.minDist || 3,
+            wordLength: 5,
+            index
+          })),
+          ...CURATED_6L_PUZZLES.map((p, index) => ({
+            start: p.start,
+            goal: p.goal,
+            minDist: p.minDist || 3,
+            wordLength: 6,
+            index
+          }))
+        ];
+      }
 
-      console.log(`Importing ${allPuzzles.length} puzzles to secure vault...`);
+      console.log(`Importing ${puzzlesToImport.length} puzzles to secure vault...`);
 
       const { data, error } = await supabase.functions.invoke('import-puzzles-to-vault', {
-        body: { puzzles: allPuzzles }
+        body: { puzzles: puzzlesToImport }
       });
 
       if (error) {
@@ -122,6 +228,37 @@ export default function PuzzleVault() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
+        {/* Validation Card */}
+        <Card className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-blue-500/10 rounded-lg">
+              <CheckCircle2 className="h-6 w-6 text-blue-500" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold mb-2">Validate Puzzles</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Test all curated puzzles with the new algorithm. Ensures solvability, 
+                difficulty rating, and minimum 3-move requirement.
+              </p>
+              <Button 
+                onClick={validateAllPuzzles} 
+                disabled={validating}
+                className="w-full"
+                variant="outline"
+              >
+                {validating ? (
+                  <>Validating...</>
+                ) : (
+                  <>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Validate All Puzzles
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </Card>
+
         {/* Import Card */}
         <Card className="p-6">
           <div className="flex items-start gap-4">
@@ -131,8 +268,8 @@ export default function PuzzleVault() {
             <div className="flex-1">
               <h3 className="text-lg font-semibold mb-2">Import Puzzles</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Import curated puzzles from client-side files into the secure database vault.
-                This protects your proprietary puzzle data from scraping.
+                Import curated puzzles into the secure database vault.
+                {validationResults.length > 0 && " Only validated puzzles will be imported."}
               </p>
               <Button 
                 onClick={importPuzzles} 
@@ -144,7 +281,7 @@ export default function PuzzleVault() {
                 ) : (
                   <>
                     <Upload className="mr-2 h-4 w-4" />
-                    Import All Puzzles
+                    {validationResults.length > 0 ? "Import Valid Puzzles" : "Import All Puzzles"}
                   </>
                 )}
               </Button>
@@ -197,6 +334,57 @@ export default function PuzzleVault() {
           </div>
         </Card>
 
+        {/* Validation Results */}
+        {validationResults.length > 0 && (
+          <Card className="p-6 md:col-span-2">
+            <h3 className="text-lg font-semibold mb-4">Validation Results</h3>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {validationResults.map((result, idx) => (
+                <div 
+                  key={idx}
+                  className={`flex items-center justify-between p-3 rounded-lg border ${
+                    result.valid ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {result.valid ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                    <div>
+                      <div className="font-medium">
+                        {result.puzzle.start} → {result.puzzle.goal}
+                        <Badge variant="outline" className="ml-2">{result.puzzle.wordLength}L</Badge>
+                      </div>
+                      {result.valid ? (
+                        <div className="text-xs text-muted-foreground">
+                          Distance: {result.minDistance}, Paths: {result.pathCount}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-red-500">{result.reason}</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 p-3 bg-muted rounded-lg">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">Summary:</span>
+                <div className="flex gap-4">
+                  <span className="text-green-500">
+                    ✓ {validationResults.filter(r => r.valid).length} Valid
+                  </span>
+                  <span className="text-red-500">
+                    ✗ {validationResults.filter(r => !r.valid).length} Failed
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* Security Info Card */}
         <Card className="p-6 md:col-span-2">
           <div className="flex items-start gap-4">
@@ -225,6 +413,10 @@ export default function PuzzleVault() {
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-1">✓</span>
                   <span><strong>Audit Logging:</strong> All vault access is logged for security monitoring</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500 mt-1">✓</span>
+                  <span><strong>Algorithm Validation:</strong> All puzzles validated for solvability and minimum 3-move requirement</span>
                 </li>
               </ul>
             </div>

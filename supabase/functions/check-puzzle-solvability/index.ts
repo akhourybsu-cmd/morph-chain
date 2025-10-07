@@ -169,7 +169,8 @@ function bfsWithNeighborFn(
   return { solvable: false, minMoves: -1, path: [] };
 }
 
-// Special BFS for 5L: first move Δ≤2, then Δ=1 only
+// Optimized BFS for 5L: first move Δ≤2, then Δ=1 only
+// Uses single unified BFS to avoid timeouts
 function bfs5L(
   start: string,
   goal: string,
@@ -177,55 +178,36 @@ function bfs5L(
   getNeighborsDelta1: (word: string, visited: Set<string>) => string[],
   getNeighborsDelta2: (word: string, visited: Set<string>) => string[]
 ): { solvable: boolean; minMoves: number; path: string[] } {
-  // First, get all possible Δ≤2 first moves
-  const firstMoves = getNeighborsDelta2(start, new Set([start]));
-  
-  let bestPath: string[] = [];
-  let bestMoves = Infinity;
-  
-  // Try each possible first move, then continue with Δ=1
-  for (const firstMove of firstMoves) {
-    if (firstMove === goal) {
-      // Goal reached in one move
-      return {
-        solvable: true,
-        minMoves: 1,
-        path: [start, goal]
-      };
-    }
+  // Single BFS where first level uses Δ≤2, rest use Δ=1
+  const queue = [{ word: start, path: [start], isFirstMove: true }];
+  const visited = new Set<string>([start]);
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
     
-    // Continue from first move using Δ=1 only
-    const queue = [{ word: firstMove, path: [start, firstMove] }];
-    const visited = new Set<string>([start, firstMove]);
+    // Use Δ≤2 for first move, Δ=1 for subsequent moves
+    const neighbors = current.isFirstMove 
+      ? getNeighborsDelta2(current.word, visited)
+      : getNeighborsDelta1(current.word, visited);
     
-    while (queue.length > 0) {
-      const current = queue.shift()!;
-      const neighbors = getNeighborsDelta1(current.word, visited);
+    for (const nextWord of neighbors) {
+      if (nextWord === goal) {
+        return {
+          solvable: true,
+          minMoves: current.path.length,
+          path: [...current.path, nextWord]
+        };
+      }
       
-      for (const nextWord of neighbors) {
-        if (nextWord === goal) {
-          const pathLength = current.path.length;
-          if (pathLength < bestMoves) {
-            bestMoves = pathLength;
-            bestPath = [...current.path, nextWord];
-          }
-          break; // Found a path through this first move
-        }
-        
-        if (!visited.has(nextWord)) {
-          visited.add(nextWord);
-          queue.push({ word: nextWord, path: [...current.path, nextWord] });
-        }
+      if (!visited.has(nextWord)) {
+        visited.add(nextWord);
+        queue.push({ 
+          word: nextWord, 
+          path: [...current.path, nextWord],
+          isFirstMove: false // All subsequent moves use Δ=1
+        });
       }
     }
-  }
-  
-  if (bestPath.length > 0) {
-    return {
-      solvable: true,
-      minMoves: bestMoves,
-      path: bestPath
-    };
   }
   
   return { solvable: false, minMoves: -1, path: [] };
