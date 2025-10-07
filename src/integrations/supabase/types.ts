@@ -317,6 +317,30 @@ export type Database = {
         }
         Relationships: []
       }
+      prism_feedback: {
+        Row: {
+          created_at: string
+          feedback_text: string
+          id: string
+          rating: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          feedback_text: string
+          id?: string
+          rating?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          feedback_text?: string
+          id?: string
+          rating?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       security_alerts: {
         Row: {
           alert_type: string

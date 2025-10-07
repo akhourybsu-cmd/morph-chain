@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, HelpCircle } from "lucide-react";
+import { ArrowLeft, HelpCircle, MessageSquare, FlaskConical } from "lucide-react";
 import { PrismLogo } from "@/components/PrismLogo";
 import { ColorSwatch } from "@/components/prism/ColorSwatch";
 import { ChannelControl } from "@/components/prism/ChannelControl";
 import { GameHUD } from "@/components/prism/GameHUD";
+import { PrismFeedbackModal } from "@/components/prism/PrismFeedbackModal";
 import {
   Channel,
   ColorState,
@@ -32,6 +33,7 @@ export default function MorphPrism() {
   const [lastMoveStatus, setLastMoveStatus] = useState<'closer' | 'sideways' | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [showSolutionNumbers, setShowSolutionNumbers] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   
   const gameWon = colorsEqual(currentColor, puzzle.goal);
   const gameLost = moves.length > puzzle.cap && !gameWon;
@@ -116,17 +118,41 @@ export default function MorphPrism() {
           <PrismLogo />
         </div>
         
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setShowHelp(true)}
-          aria-label="How to play"
-        >
-          <HelpCircle className="h-5 w-5" />
-        </Button>
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowFeedback(true)}
+            aria-label="Send feedback"
+          >
+            <MessageSquare className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowHelp(true)}
+            aria-label="How to play"
+          >
+            <HelpCircle className="h-5 w-5" />
+          </Button>
+        </div>
       </header>
       
       <main className="container max-w-2xl mx-auto p-4 space-y-6">
+        {/* Test Build Notice */}
+        <div className="flex items-center gap-2 p-3 bg-accent/10 border border-accent/20 rounded-lg text-sm">
+          <FlaskConical className="h-4 w-4 text-accent flex-shrink-0" />
+          <p className="text-muted-foreground">
+            <span className="font-semibold text-foreground">Test Build:</span> Morph Prism is in active development. 
+            <button 
+              onClick={() => setShowFeedback(true)}
+              className="ml-1 underline hover:text-foreground transition-colors"
+            >
+              Share your feedback
+            </button>
+          </p>
+        </div>
+
         {/* Color Swatches */}
         <div className="flex items-center justify-between gap-4">
           <ColorSwatch
@@ -254,6 +280,9 @@ export default function MorphPrism() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Feedback Dialog */}
+      <PrismFeedbackModal open={showFeedback} onOpenChange={setShowFeedback} />
     </div>
   );
 }
