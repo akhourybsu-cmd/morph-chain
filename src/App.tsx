@@ -14,6 +14,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import TodaysPuzzle from "./pages/admin/TodaysPuzzle";
 import Scheduler from "./pages/admin/Scheduler";
 import PuzzleVault from "./pages/admin/PuzzleVault";
+import PuzzleValidator from "./pages/admin/PuzzleValidator";
 import Dictionary from "./pages/admin/Dictionary";
 import PlayerSessions from "./pages/admin/PlayerSessions";
 import Analytics from "./pages/admin/Analytics";
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="puzzle" element={<TodaysPuzzle />} />
             <Route path="scheduler" element={<Scheduler />} />
             <Route path="vault" element={<PuzzleVault />} />
+            <Route path="validator" element={<PuzzleValidator />} />
             <Route path="dictionary" element={<Dictionary />} />
             <Route path="sessions" element={<PlayerSessions />} />
             <Route path="analytics" element={<Analytics />} />

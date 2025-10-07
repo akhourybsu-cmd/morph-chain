@@ -101,12 +101,12 @@ export default function TodaysPuzzle() {
   const checkSolvability = async (puzzle: PuzzleData) => {
     setChecking(true);
     try {
+      // Updated to match new edge function signature
       const { data, error } = await supabase.functions.invoke('check-puzzle-solvability', {
         body: {
           startWord: puzzle.start_word,
           goalWord: puzzle.goal_word,
-          wordLength: puzzle.word_length,
-          allowTwoLetterChange: puzzle.word_length === 6
+          wordLength: puzzle.word_length
         }
       });
 
@@ -321,9 +321,9 @@ export default function TodaysPuzzle() {
       {/* Info Alert */}
       <Alert>
         <AlertDescription>
-          <strong>Solvability Check:</strong> Uses BFS algorithm to verify that a valid path exists 
-          between the start and goal words using the dictionary. For 6-letter puzzles, both 1-letter 
-          and 2-letter changes are allowed.
+          <strong>Solvability Check:</strong> Uses comprehensive BFS algorithm to verify that a valid path exists 
+          between the start and goal words. Rules: 4L uses Δ=1 only, 5L allows Δ≤2 on first move then Δ=1, 
+          6L allows Δ≤2 on all moves.
         </AlertDescription>
       </Alert>
     </div>
