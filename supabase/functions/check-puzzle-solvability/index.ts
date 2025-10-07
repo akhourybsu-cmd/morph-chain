@@ -65,25 +65,25 @@ function filterModernEnglish(words: Set<string>): Set<string> {
   return filtered;
 }
 
-// Optimized BFS with bidirectional search for large puzzles
+// Optimized BFS with proper handling of word length rules
+// 4L: Δ=1 only
+// 5L: First move Δ≤2, then Δ=1
+// 6L: All moves Δ≤2
 function findShortestPath(
   start: string,
   goal: string,
   validWords: Set<string>,
-  allowTwoLetterChange: boolean = false
+  wordLength: 4 | 5 | 6
 ): { solvable: boolean; minMoves: number; path: string[] } {
   if (start === goal) {
     return { solvable: true, minMoves: 0, path: [start] };
   }
 
-  const wordLength = start.length;
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-  // Generate neighbors efficiently
-  function getNeighbors(word: string, visited: Set<string>): string[] {
+  // Generate Δ=1 neighbors
+  function getNeighborsDelta1(word: string, visited: Set<string>): string[] {
     const neighbors: string[] = [];
-    
-    // One-letter changes
     for (let i = 0; i < wordLength; i++) {
       for (const letter of letters) {
         if (letter === word[i]) continue;
@@ -93,82 +93,139 @@ function findShortestPath(
         }
       }
     }
+    return neighbors;
+  }
+
+  // Generate Δ≤2 neighbors (includes Δ=1 and Δ=2)
+  function getNeighborsDelta2(word: string, visited: Set<string>): string[] {
+    const neighbors = new Set<string>(getNeighborsDelta1(word, visited));
     
-    // Two-letter changes (if allowed - enumerate all combinations)
-    if (allowTwoLetterChange) {
-      for (let i = 0; i < wordLength; i++) {
-        for (let j = i + 1; j < wordLength; j++) {
-          for (const letter1 of letters) {
-            if (letter1 === word[i]) continue;
-            for (const letter2 of letters) {
-              if (letter2 === word[j]) continue;
-              const candidate = 
-                word.substring(0, i) + letter1 + 
-                word.substring(i + 1, j) + letter2 + 
-                word.substring(j + 1);
-              if (validWords.has(candidate) && !visited.has(candidate)) {
-                neighbors.push(candidate);
-              }
+    // Add two-letter changes
+    for (let i = 0; i < wordLength; i++) {
+      for (let j = i + 1; j < wordLength; j++) {
+        for (const letter1 of letters) {
+          if (letter1 === word[i]) continue;
+          for (const letter2 of letters) {
+            if (letter2 === word[j]) continue;
+            const candidate = 
+              word.substring(0, i) + letter1 + 
+              word.substring(i + 1, j) + letter2 + 
+              word.substring(j + 1);
+            if (validWords.has(candidate) && !visited.has(candidate)) {
+              neighbors.add(candidate);
             }
           }
         }
       }
     }
     
-    return neighbors;
+    return Array.from(neighbors);
   }
 
-  // Bidirectional BFS for better performance
-  const forwardQueue = [{ word: start, path: [start] }];
-  const backwardQueue = [{ word: goal, path: [goal] }];
-  const forwardVisited = new Map<string, string[]>([[start, [start]]]);
-  const backwardVisited = new Map<string, string[]>([[goal, [goal]]]);
+  // Handle different word length rules
+  if (wordLength === 4) {
+    // 4L: Use Δ=1 only
+    return bfsWithNeighborFn(start, goal, validWords, getNeighborsDelta1);
+  } else if (wordLength === 5) {
+    // 5L: Special case - first move can be Δ≤2, then Δ=1 only
+    return bfs5L(start, goal, validWords, getNeighborsDelta1, getNeighborsDelta2);
+  } else {
+    // 6L: Use Δ≤2 for all moves
+    return bfsWithNeighborFn(start, goal, validWords, getNeighborsDelta2);
+  }
+}
 
-  while (forwardQueue.length > 0 && backwardQueue.length > 0) {
-    // Always expand the smaller frontier
-    if (forwardQueue.length <= backwardQueue.length) {
-      const current = forwardQueue.shift()!;
-      const neighbors = getNeighbors(current.word, new Set(forwardVisited.keys()));
-      
-      for (const nextWord of neighbors) {
-        const newPath = [...current.path, nextWord];
-        
-        // Check if we've met the backward search
-        if (backwardVisited.has(nextWord)) {
-          const backPath = backwardVisited.get(nextWord)!;
-          const fullPath = [...newPath, ...backPath.slice(1).reverse()];
-          return {
-            solvable: true,
-            minMoves: fullPath.length - 1,
-            path: fullPath
-          };
-        }
-        
-        forwardVisited.set(nextWord, newPath);
-        forwardQueue.push({ word: nextWord, path: newPath });
+// Standard BFS with custom neighbor function
+function bfsWithNeighborFn(
+  start: string,
+  goal: string,
+  validWords: Set<string>,
+  getNeighbors: (word: string, visited: Set<string>) => string[]
+): { solvable: boolean; minMoves: number; path: string[] } {
+
+  const queue = [{ word: start, path: [start] }];
+  const visited = new Set<string>([start]);
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    const neighbors = getNeighbors(current.word, visited);
+    
+    for (const nextWord of neighbors) {
+      if (nextWord === goal) {
+        return {
+          solvable: true,
+          minMoves: current.path.length,
+          path: [...current.path, nextWord]
+        };
       }
-    } else {
-      const current = backwardQueue.shift()!;
-      const neighbors = getNeighbors(current.word, new Set(backwardVisited.keys()));
       
-      for (const nextWord of neighbors) {
-        const newPath = [...current.path, nextWord];
-        
-        // Check if we've met the forward search
-        if (forwardVisited.has(nextWord)) {
-          const forwardPath = forwardVisited.get(nextWord)!;
-          const fullPath = [...forwardPath, ...newPath.slice(1).reverse()];
-          return {
-            solvable: true,
-            minMoves: fullPath.length - 1,
-            path: fullPath
-          };
-        }
-        
-        backwardVisited.set(nextWord, newPath);
-        backwardQueue.push({ word: nextWord, path: newPath });
+      if (!visited.has(nextWord)) {
+        visited.add(nextWord);
+        queue.push({ word: nextWord, path: [...current.path, nextWord] });
       }
     }
+  }
+  
+  return { solvable: false, minMoves: -1, path: [] };
+}
+
+// Special BFS for 5L: first move Δ≤2, then Δ=1 only
+function bfs5L(
+  start: string,
+  goal: string,
+  validWords: Set<string>,
+  getNeighborsDelta1: (word: string, visited: Set<string>) => string[],
+  getNeighborsDelta2: (word: string, visited: Set<string>) => string[]
+): { solvable: boolean; minMoves: number; path: string[] } {
+  // First, get all possible Δ≤2 first moves
+  const firstMoves = getNeighborsDelta2(start, new Set([start]));
+  
+  let bestPath: string[] = [];
+  let bestMoves = Infinity;
+  
+  // Try each possible first move, then continue with Δ=1
+  for (const firstMove of firstMoves) {
+    if (firstMove === goal) {
+      // Goal reached in one move
+      return {
+        solvable: true,
+        minMoves: 1,
+        path: [start, goal]
+      };
+    }
+    
+    // Continue from first move using Δ=1 only
+    const queue = [{ word: firstMove, path: [start, firstMove] }];
+    const visited = new Set<string>([start, firstMove]);
+    
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      const neighbors = getNeighborsDelta1(current.word, visited);
+      
+      for (const nextWord of neighbors) {
+        if (nextWord === goal) {
+          const pathLength = current.path.length;
+          if (pathLength < bestMoves) {
+            bestMoves = pathLength;
+            bestPath = [...current.path, nextWord];
+          }
+          break; // Found a path through this first move
+        }
+        
+        if (!visited.has(nextWord)) {
+          visited.add(nextWord);
+          queue.push({ word: nextWord, path: [...current.path, nextWord] });
+        }
+      }
+    }
+  }
+  
+  if (bestPath.length > 0) {
+    return {
+      solvable: true,
+      minMoves: bestMoves,
+      path: bestPath
+    };
   }
   
   return { solvable: false, minMoves: -1, path: [] };
@@ -250,7 +307,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { startWord, goalWord, wordLength, allowTwoLetterChange = false } = await req.json();
+    const { startWord, goalWord, wordLength } = await req.json();
 
     if (!startWord || !goalWord || !wordLength) {
       return new Response(
@@ -259,7 +316,15 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (![4, 5, 6].includes(wordLength)) {
+      return new Response(
+        JSON.stringify({ error: 'Word length must be 4, 5, or 6' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     console.log(`Checking solvability: ${startWord} -> ${goalWord} (${wordLength}L)`);
+    console.log(`Rules: ${wordLength === 4 ? 'Δ=1 only' : wordLength === 5 ? 'First move Δ≤2, then Δ=1' : 'All moves Δ≤2'}`);
 
     // Load dictionary for this word length (same as game uses)
     const validWords = await loadDictionary(wordLength);
@@ -279,13 +344,13 @@ Deno.serve(async (req) => {
 
     console.log(`Dictionary loaded: ${validWords.size} words`);
 
-    // Run BFS to find shortest path
+    // Run BFS to find shortest path with correct rules for word length
     const startTime = Date.now();
     const result = findShortestPath(
       startWord.toUpperCase(),
       goalWord.toUpperCase(),
       validWords,
-      allowTwoLetterChange
+      wordLength as 4 | 5 | 6
     );
     const duration = Date.now() - startTime;
 

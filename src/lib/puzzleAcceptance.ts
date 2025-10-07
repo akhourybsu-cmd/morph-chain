@@ -1,6 +1,8 @@
 // Puzzle acceptance gates to ensure fair difficulty across all word lengths
+// Updated to use comprehensive algorithm with pattern buckets and component analysis
 
 import { buildWordGraph, findAllShortestPaths, calculateAverageBranching } from "./puzzleValidator";
+import { validatePuzzlePair } from "./puzzleValidatorV2";
 
 export interface PuzzleCandidate {
   start: string;
@@ -8,18 +10,18 @@ export interface PuzzleCandidate {
   wordLength: 4 | 5 | 6;
 }
 
-// Gate 1: Minimum distance bands by word length
+// Gate 1: Minimum distance bands by word length (from comprehensive algorithm doc)
 const MIN_DISTANCE_BANDS = {
   4: { min: 4, max: 7 },
   5: { min: 5, max: 8 },
-  6: { min: 5, max: 9 },
+  6: { min: 3, max: 7 }, // Updated: 6L uses Δ≤2, so shorter paths are valid
 };
 
-// Gate 3: Robustness requirements
+// Gate 3: Robustness requirements (from comprehensive algorithm doc)
 const ROBUSTNESS_REQUIREMENTS = {
   4: { minPaths: 10, minBranching: 0 }, // No branching requirement for 4L
   5: { minPaths: 10, minBranching: 0 }, // No branching requirement for 5L
-  6: { minPaths: 8, minBranching: 2.3 },
+  6: { minPaths: 12, minBranching: 2.7 }, // Updated: Higher standards for 6L
 };
 
 /**
@@ -126,6 +128,7 @@ const passesModernPathCheck = (
 
 /**
  * Master acceptance gate - checks all criteria
+ * Now uses the comprehensive validation algorithm
  */
 export const meetsAcceptanceGates = (
   candidate: PuzzleCandidate,
@@ -134,32 +137,21 @@ export const meetsAcceptanceGates = (
 ): boolean => {
   const { start, goal, wordLength } = candidate;
   
-  // Gate 1: Component check
-  if (!passesComponentCheck(start, goal, words)) {
+  // Use comprehensive validator for instant component check and full validation
+  const validation = validatePuzzlePair(start, goal, wordLength, words);
+  
+  if (!validation.solvable) {
     return false;
   }
   
-  // Gate 2: Distance band
-  if (!passesDistanceCheck(minDistance, wordLength)) {
-    return false;
-  }
-  
-  // Gate 3: Robustness
-  if (!passesRobustnessCheck(start, goal, words, wordLength)) {
-    return false;
-  }
-  
-  // Gate 4: Letter sanity
+  // Gate 4: Letter sanity (still use legacy check)
   if (!passesLetterSanityCheck(start, goal)) {
     return false;
   }
   
-  // Gate 5: Modern path exists
-  if (!passesModernPathCheck(start, goal, words)) {
-    return false;
-  }
-  
-  return true;
+  // The new validator already checks distance bands, path counts, and branching
+  // via meetsGates flag
+  return validation.meetsGates;
 };
 
 /**
