@@ -23,6 +23,7 @@ export default function PuzzleVault() {
   const { toast } = useToast();
   const [importing, setImporting] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
   const [stats, setStats] = useState<{
     total: number;
@@ -137,6 +138,155 @@ export default function PuzzleVault() {
       });
     } finally {
       setValidating(false);
+    }
+  };
+
+  const removeFailedPuzzles = async () => {
+    if (validationResults.length === 0) {
+      toast({
+        title: "No Validation Data",
+        description: "Please run validation first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setRemoving(true);
+    
+    try {
+      const failedPuzzles = validationResults.filter(r => !r.valid);
+      
+      if (failedPuzzles.length === 0) {
+        toast({
+          title: "No Failed Puzzles",
+          description: "All puzzles passed validation!",
+        });
+        setRemoving(false);
+        return;
+      }
+
+      // Group failed puzzles by word length
+      const failed4L = new Set(
+        failedPuzzles
+          .filter(r => r.puzzle.wordLength === 4)
+          .map(r => `${r.puzzle.start}-${r.puzzle.goal}`)
+      );
+      const failed5L = new Set(
+        failedPuzzles
+          .filter(r => r.puzzle.wordLength === 5)
+          .map(r => `${r.puzzle.start}-${r.puzzle.goal}`)
+      );
+      const failed6L = new Set(
+        failedPuzzles
+          .filter(r => r.puzzle.wordLength === 6)
+          .map(r => `${r.puzzle.start}-${r.puzzle.goal}`)
+      );
+
+      // Filter out failed puzzles
+      const cleaned4L = CURATED_4L_PUZZLES.filter(
+        p => !failed4L.has(`${p.start}-${p.goal}`)
+      );
+      const cleaned5L = CURATED_5L_PUZZLES.filter(
+        p => !failed5L.has(`${p.start}-${p.goal}`)
+      );
+      const cleaned6L = CURATED_6L_PUZZLES.filter(
+        p => !failed6L.has(`${p.start}-${p.goal}`)
+      );
+
+      // Generate updated file contents
+      const generate4LContent = () => {
+        let content = `// Curated 4-Letter Daily Puzzle Pairs (${cleaned4L.length} Days)\n`;
+        content += `// These pairs are designed to be approachable, thematic, and multi-path robust\n\n`;
+        content += `export interface CuratedPuzzlePair {\n`;
+        content += `  start: string;\n`;
+        content += `  goal: string;\n`;
+        content += `  minDist?: number;\n`;
+        content += `}\n\n`;
+        content += `export const CURATED_4L_PUZZLES: CuratedPuzzlePair[] = [\n`;
+        cleaned4L.forEach(p => {
+          content += `  { start: "${p.start}", goal: "${p.goal}", minDist: ${p.minDist || 3} },\n`;
+        });
+        content += `];\n`;
+        return content;
+      };
+
+      const generate5LContent = () => {
+        let content = `// Curated 5-Letter Daily Puzzle Pairs (${cleaned5L.length} Days)\n`;
+        content += `// These pairs are designed to be approachable, thematic, and multi-path robust\n\n`;
+        content += `export interface CuratedPuzzlePair {\n`;
+        content += `  start: string;\n`;
+        content += `  goal: string;\n`;
+        content += `  minDist?: number;\n`;
+        content += `}\n\n`;
+        content += `export const CURATED_5L_PUZZLES: CuratedPuzzlePair[] = [\n`;
+        cleaned5L.forEach(p => {
+          content += `  { start: "${p.start}", goal: "${p.goal}", minDist: ${p.minDist || 3} },\n`;
+        });
+        content += `];\n`;
+        return content;
+      };
+
+      const generate6LContent = () => {
+        let content = `// Curated 6-Letter Daily Puzzle Pairs (${cleaned6L.length} Days)\n`;
+        content += `// These pairs are designed to be approachable, thematic, and multi-path robust\n\n`;
+        content += `export interface CuratedPuzzlePair {\n`;
+        content += `  start: string;\n`;
+        content += `  goal: string;\n`;
+        content += `  minDist?: number;\n`;
+        content += `}\n\n`;
+        content += `export const CURATED_6L_PUZZLES: CuratedPuzzlePair[] = [\n`;
+        cleaned6L.forEach(p => {
+          content += `  { start: "${p.start}", goal: "${p.goal}", minDist: ${p.minDist || 3} },\n`;
+        });
+        content += `];\n`;
+        return content;
+      };
+
+      // Show confirmation dialog with download links
+      const totalRemoved = failedPuzzles.length;
+      const totalRemaining = cleaned4L.length + cleaned5L.length + cleaned6L.length;
+
+      // Create download blobs
+      const blob4L = new Blob([generate4LContent()], { type: 'text/typescript' });
+      const blob5L = new Blob([generate5LContent()], { type: 'text/typescript' });
+      const blob6L = new Blob([generate6LContent()], { type: 'text/typescript' });
+
+      const url4L = URL.createObjectURL(blob4L);
+      const url5L = URL.createObjectURL(blob5L);
+      const url6L = URL.createObjectURL(blob6L);
+
+      // Create temporary download links
+      const download = (url: string, filename: string) => {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+
+      download(url4L, 'curatedPuzzles4L.ts');
+      download(url5L, 'curatedPuzzles5L.ts');
+      download(url6L, 'curatedPuzzles6L.ts');
+
+      toast({
+        title: "Cleanup Complete",
+        description: `Removed ${totalRemoved} failed puzzles. ${totalRemaining} valid puzzles remaining. Updated files downloaded.`,
+      });
+
+      // Clear validation results
+      setValidationResults([]);
+
+    } catch (error: any) {
+      console.error('Cleanup error:', error);
+      toast({
+        title: "Cleanup Failed",
+        description: error.message || "Failed to remove failed puzzles",
+        variant: "destructive"
+      });
+    } finally {
+      setRemoving(false);
     }
   };
 
@@ -337,7 +487,23 @@ export default function PuzzleVault() {
         {/* Validation Results */}
         {validationResults.length > 0 && (
           <Card className="p-6 md:col-span-2">
-            <h3 className="text-lg font-semibold mb-4">Validation Results</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Validation Results</h3>
+              {validationResults.some(r => !r.valid) && (
+                <Button
+                  onClick={removeFailedPuzzles}
+                  disabled={removing}
+                  variant="destructive"
+                  size="sm"
+                >
+                  {removing ? (
+                    <>Removing...</>
+                  ) : (
+                    <>Remove Failed Puzzles</>
+                  )}
+                </Button>
+              )}
+            </div>
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {validationResults.map((result, idx) => (
                 <div 
