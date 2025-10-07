@@ -111,7 +111,14 @@ export default function ScheduledPuzzles() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Edge function call failed');
+      }
+
+      if (!data) {
+        throw new Error('No data returned from edge function');
+      }
 
       // Update with result
       setScheduledPuzzles(prev => 
@@ -138,9 +145,14 @@ export default function ScheduledPuzzles() {
             : p
         )
       );
+      
+      // Show more detailed error message
+      const errorMsg = error?.message || 'Unknown error occurred';
       toast({
         title: "Check Failed",
-        description: error.message || "Please try again",
+        description: errorMsg.includes('non-2xx') 
+          ? "Server returned an error. This may be due to timeout or authentication issues. Try again."
+          : errorMsg,
         variant: "destructive"
       });
     }
