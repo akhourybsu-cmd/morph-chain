@@ -9,7 +9,8 @@ import {
   FileText,
   LogOut,
   LayoutDashboard,
-  CheckCircle2
+  CheckCircle2,
+  CalendarDays
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
@@ -31,6 +32,7 @@ import { Logo } from "@/components/Logo";
 const navigation = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Today's Puzzle", url: "/admin/puzzle", icon: Calendar },
+  { title: "Scheduled Puzzles", url: "/admin/scheduled", icon: CalendarDays },
   { title: "Scheduler", url: "/admin/scheduler", icon: Calendar },
   { title: "Puzzle Vault", url: "/admin/vault", icon: Shield },
   { title: "Puzzle Validator", url: "/admin/validator", icon: CheckCircle2 },

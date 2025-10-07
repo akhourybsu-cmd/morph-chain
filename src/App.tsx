@@ -21,6 +21,7 @@ import Analytics from "./pages/admin/Analytics";
 import FeatureFlags from "./pages/admin/FeatureFlags";
 import AuditLog from "./pages/admin/AuditLog";
 import Configuration from "./pages/admin/Configuration";
+import ScheduledPuzzles from "./pages/admin/ScheduledPuzzles";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="puzzle" element={<TodaysPuzzle />} />
+            <Route path="scheduled" element={<ScheduledPuzzles />} />
             <Route path="scheduler" element={<Scheduler />} />
             <Route path="vault" element={<PuzzleVault />} />
             <Route path="validator" element={<PuzzleValidator />} />
