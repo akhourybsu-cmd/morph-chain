@@ -31,6 +31,7 @@ export default function MorphPrism() {
   const [hintsRemaining, setHintsRemaining] = useState(puzzle.hints);
   const [lastMoveStatus, setLastMoveStatus] = useState<'closer' | 'sideways' | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [showSolutionNumbers, setShowSolutionNumbers] = useState(false);
   
   const gameWon = colorsEqual(currentColor, puzzle.goal);
   const gameLost = moves.length > puzzle.cap && !gameWon;
@@ -132,21 +133,21 @@ export default function MorphPrism() {
             color={puzzle.start}
             label="Start"
             size="small"
-            showValues={gameWon}
+            showValues={showSolutionNumbers}
           />
           
           <ColorSwatch
             color={currentColor}
             label="Current"
             size="large"
-            showValues={gameWon}
+            showValues={false}
           />
           
           <ColorSwatch
             color={puzzle.goal}
             label="Goal"
             size="small"
-            showValues={gameWon}
+            showValues={showSolutionNumbers}
           />
         </div>
         
@@ -192,23 +193,36 @@ export default function MorphPrism() {
             color={currentColor}
             onMove={handleMove}
             disabled={gameWon || gameLost}
-            showValue={gameWon}
+            showValue={true}
           />
           <ChannelControl
             channel="S"
             color={currentColor}
             onMove={handleMove}
             disabled={gameWon || gameLost}
-            showValue={gameWon}
+            showValue={true}
           />
           <ChannelControl
             channel="L"
             color={currentColor}
             onMove={handleMove}
             disabled={gameWon || gameLost}
-            showValue={gameWon}
+            showValue={true}
           />
         </div>
+        
+        {/* Show Numbers Button - appears when game ends */}
+        {(gameWon || gameLost) && (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSolutionNumbers(!showSolutionNumbers)}
+            >
+              {showSolutionNumbers ? 'Hide' : 'Show'} Numbers
+            </Button>
+          </div>
+        )}
       </main>
       
       {/* How to Play Dialog */}
