@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
 import { MorphHeader } from "@/components/MorphHeader";
+import morphLogo from "@/assets/morph-chain-logo.png";
 
 const GameSelector = () => {
   const navigate = useNavigate();
@@ -39,41 +40,13 @@ const GameSelector = () => {
               </div>
             </div>
             
-            {/* Brand M-Monogram */}
+            {/* Brand Logo */}
             <div className="flex items-center justify-center md:justify-end">
-              <svg 
-                viewBox="0 0 200 200" 
-                className="w-32 h-32 md:w-48 md:h-48"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                {/* Three chain links forming an M */}
-                <path
-                  d="M40 140 L40 80 C40 60, 50 50, 70 50 L90 50 C100 50, 100 60, 100 70 L100 120"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth="16"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-                <path
-                  d="M100 80 L100 130 C100 150, 110 160, 130 160 L150 160 C160 160, 160 150, 160 140 L160 90"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth="16"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                  opacity="0.7"
-                />
-                <path
-                  d="M160 140 L160 80 C160 60, 150 50, 130 50 L110 50 C100 50, 100 60, 100 70"
-                  stroke="hsl(var(--accent))"
-                  strokeWidth="16"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-              </svg>
+              <img 
+                src={morphLogo} 
+                alt="Morph Games Logo" 
+                className="w-32 h-32 md:w-48 md:h-48 object-contain"
+              />
             </div>
           </div>
         </section>
