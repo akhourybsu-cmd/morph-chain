@@ -3,12 +3,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import GameSelector from "./pages/GameSelector";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import TermsOfService from "./pages/TermsOfService";
 import MorphPrism from "./pages/MorphPrism";
+import MorphRush from "./pages/MorphRush";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import TodaysPuzzle from "./pages/admin/TodaysPuzzle";
@@ -31,12 +33,14 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/prism" element={<MorphPrism />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/terms" element={<TermsOfService />} />
+          <Routes>
+            <Route path="/" element={<GameSelector />} />
+            <Route path="/chain" element={<Index />} />
+            <Route path="/prism" element={<MorphPrism />} />
+            <Route path="/rush" element={<MorphRush />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/terms" element={<TermsOfService />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="puzzle" element={<TodaysPuzzle />} />

@@ -341,6 +341,93 @@ export type Database = {
         }
         Relationships: []
       }
+      rush_daily: {
+        Row: {
+          created_at: string
+          date_local: string
+          health_score: number | null
+          id: string
+          puzzle_number: number
+          start_degree: number | null
+          start_word: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          date_local: string
+          health_score?: number | null
+          id?: string
+          puzzle_number: number
+          start_degree?: number | null
+          start_word: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          date_local?: string
+          health_score?: number | null
+          id?: string
+          puzzle_number?: number
+          start_degree?: number | null
+          start_word?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      rush_runs: {
+        Row: {
+          created_at: string
+          date_local: string
+          finished_at: string | null
+          id: string
+          invalid_count: number
+          mode: string
+          multiplier_max: number
+          official_status: string
+          score: number
+          scout_used: boolean
+          session_id: string
+          started_at: string
+          undo_used: boolean
+          user_id: string | null
+          words: Json
+        }
+        Insert: {
+          created_at?: string
+          date_local: string
+          finished_at?: string | null
+          id?: string
+          invalid_count?: number
+          mode: string
+          multiplier_max?: number
+          official_status?: string
+          score?: number
+          scout_used?: boolean
+          session_id: string
+          started_at?: string
+          undo_used?: boolean
+          user_id?: string | null
+          words?: Json
+        }
+        Update: {
+          created_at?: string
+          date_local?: string
+          finished_at?: string | null
+          id?: string
+          invalid_count?: number
+          mode?: string
+          multiplier_max?: number
+          official_status?: string
+          score?: number
+          scout_used?: boolean
+          session_id?: string
+          started_at?: string
+          undo_used?: boolean
+          user_id?: string | null
+          words?: Json
+        }
+        Relationships: []
+      }
       security_alerts: {
         Row: {
           alert_type: string
