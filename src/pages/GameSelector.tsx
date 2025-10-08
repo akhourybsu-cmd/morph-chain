@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
 import { MorphHeader } from "@/components/MorphHeader";
-import morphLogo from "@/assets/morph-chain-logo.png";
+import morphIcon from "@/assets/morph-icon.png";
 
 const GameSelector = () => {
   const navigate = useNavigate();
@@ -40,11 +40,11 @@ const GameSelector = () => {
               </div>
             </div>
             
-            {/* Brand Logo */}
+            {/* Brand M Icon */}
             <div className="flex items-center justify-center md:justify-end">
               <img 
-                src={morphLogo} 
-                alt="Morph Games Logo" 
+                src={morphIcon} 
+                alt="Morph Games Icon" 
                 className="w-32 h-32 md:w-48 md:h-48 object-contain"
               />
             </div>
@@ -148,12 +148,6 @@ const GameCard = ({
     prism: "border-primary/30 hover:border-primary hover:shadow-lg hover:shadow-primary/20",
     rush: "border-rush-start/30 hover:border-rush-start hover:shadow-lg hover:shadow-rush-start/20"
   };
-  
-  const titleClasses = {
-    chain: "from-chain to-chain",
-    prism: "bg-gradient-prism",
-    rush: "bg-gradient-rush"
-  };
 
   const motifPatterns = {
     'chain-links': (
@@ -192,9 +186,21 @@ const GameCard = ({
       
       <div className="relative z-10 space-y-4">
         <div className="space-y-2">
-          <h2 className={`font-outfit font-bold text-2xl tracking-tight bg-gradient-to-r ${titleClasses[accent]} bg-clip-text text-transparent`}>
-            {title}
-          </h2>
+          {accent === 'chain' && (
+            <h2 className="font-outfit font-bold text-2xl tracking-tight bg-gradient-to-r from-chain to-chain bg-clip-text text-transparent">
+              MORPH CHAIN
+            </h2>
+          )}
+          {accent === 'prism' && (
+            <h2 className="font-outfit font-bold text-2xl tracking-tight bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+              MORPH PRISM
+            </h2>
+          )}
+          {accent === 'rush' && (
+            <h2 className="font-outfit font-bold text-2xl tracking-tight bg-gradient-rush bg-clip-text text-transparent" style={{ fontStyle: 'italic' }}>
+              MORPH RUSH
+            </h2>
+          )}
           <p className="text-sm text-muted-foreground leading-relaxed">
             {description}
           </p>
