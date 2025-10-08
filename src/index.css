@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Morph Chain Design System */
+    /* Morph Games Unified Design System */
     --background: 218 18% 7%;         /* #0F1115 near-black */
     --foreground: 210 35% 92%;        /* #E8EDF2 primary text */
 
@@ -18,7 +18,7 @@ All colors MUST be HSL.
     --popover: 218 14% 12%;
     --popover-foreground: 210 35% 92%;
 
-    --primary: 213 100% 74%;          /* #7FB2FF accent blue */
+    --primary: 213 100% 74%;          /* #7FB2FF brand blue */
     --primary-foreground: 218 18% 7%;
 
     --secondary: 215 12% 80%;         /* #B9C2CD secondary text */
@@ -35,6 +35,17 @@ All colors MUST be HSL.
 
     --success: 142 71% 45%;           /* #22C55E match */
     --warning: 38 92% 50%;            /* #F59E0B present */
+
+    /* Game-specific accents */
+    --chain-accent: 180 100% 50%;     /* Teal/Aqua */
+    --chain-accent-foreground: 218 18% 7%;
+    
+    --prism-accent-start: 180 100% 50%;    /* Cyan */
+    --prism-accent-mid: 300 100% 50%;      /* Magenta */
+    --prism-accent-end: 60 100% 50%;       /* Yellow */
+    
+    --rush-accent-start: 10 100% 65%;      /* Electric Coral #FF5A4D */
+    --rush-accent-end: 38 100% 63%;        /* Amber #FFC043 */
 
     --border: 218 12% 18%;            /* #2A2F38 */
     --input: 218 12% 18%;

@@ -1,92 +1,144 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Target, Palette, Zap, Info, BarChart3, Settings } from "lucide-react";
-import { Logo } from "@/components/Logo";
-import { getRushDailyPuzzle } from "@/lib/rushLogic";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
+import { MorphHeader } from "@/components/MorphHeader";
 
 const GameSelector = () => {
   const navigate = useNavigate();
   const puzzle = getDailyPuzzle(4);
-  const rushPuzzle = getRushDailyPuzzle();
   
   const timezone = "America/New_York";
   const formattedDate = formatInTimeZone(new Date(), timezone, 'MMMM d, yyyy');
   
   return (
-    <div className="min-h-screen flex flex-col max-w-2xl mx-auto">
-      <header className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b border-border">
-        <Logo />
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/admin')}
-            className="h-8 w-8 md:h-9 md:w-9"
-          >
-            <BarChart3 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 md:h-9 md:w-9"
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col">
+      <MorphHeader />
       
-      <main className="flex-1 px-4 py-6 md:px-6 md:py-8 space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl md:text-3xl font-bold">Choose Your Game</h1>
-          <p className="text-sm md:text-base text-muted-foreground">
-            {formattedDate} • Puzzle #{puzzle.puzzleIndex}
-          </p>
-        </div>
-        
-        <div className="grid gap-4 md:gap-6">
-          {/* Morph Chain */}
+      <main className="flex-1 container mx-auto px-4 py-8 md:py-12 max-w-6xl">
+        {/* Hero Section */}
+        <section className="mb-12 md:mb-16">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="space-y-4">
+              <h1 className="font-outfit font-bold text-4xl md:text-5xl tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  MORPH GAMES
+                </span>
+              </h1>
+              <p className="text-lg md:text-xl text-foreground">
+                Daily, solvable "change-one-thing" puzzles.
+              </p>
+              <p className="text-sm md:text-base text-muted-foreground">
+                Modern English only • NY-anchored daily • Spoiler-free shares
+              </p>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
+                <span>{formattedDate}</span>
+                <span>•</span>
+                <span>Puzzle #{puzzle.puzzleIndex}</span>
+              </div>
+            </div>
+            
+            {/* Brand M-Monogram */}
+            <div className="flex items-center justify-center md:justify-end">
+              <svg 
+                viewBox="0 0 200 200" 
+                className="w-32 h-32 md:w-48 md:h-48"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* Three chain links forming an M */}
+                <path
+                  d="M40 140 L40 80 C40 60, 50 50, 70 50 L90 50 C100 50, 100 60, 100 70 L100 120"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth="16"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+                <path
+                  d="M100 80 L100 130 C100 150, 110 160, 130 160 L150 160 C160 160, 160 150, 160 140 L160 90"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth="16"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                  opacity="0.7"
+                />
+                <path
+                  d="M160 140 L160 80 C160 60, 150 50, 130 50 L110 50 C100 50, 100 60, 100 70"
+                  stroke="hsl(var(--accent))"
+                  strokeWidth="16"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </svg>
+            </div>
+          </div>
+        </section>
+
+        {/* Game Cards Grid */}
+        <section className="grid md:grid-cols-3 gap-6">
           <GameCard
             title="Morph Chain"
-            description="Solve the daily word ladder puzzle in limited moves"
-            icon={Target}
-            color="primary"
-            onClick={() => navigate('/')}
-            badge="Classic"
+            description="Change one letter each step to reach today's goal"
+            mode="Word ladder"
+            difficulty="Moderate"
+            avgTime="3-5 min"
+            accent="chain"
+            motif="chain-links"
+            onClick={() => navigate('/chain')}
           />
           
-          {/* Morph Rush */}
+          <GameCard
+            title="Morph Prism"
+            description="Adjust hue, saturation, or lightness one step at a time"
+            mode="Color ladder"
+            difficulty="Challenging"
+            avgTime="4-6 min"
+            accent="prism"
+            motif="spectrum"
+            onClick={() => navigate('/prism')}
+          />
+          
           <GameCard
             title="Morph Rush"
-            description="2-minute score chase. Chain words for multipliers!"
-            icon={Zap}
-            color="warning"
+            description="Make as many 4-letter morphs as you can in 2 minutes"
+            mode="Score dash"
+            difficulty="Fast-paced"
+            avgTime="2 min"
+            accent="rush"
+            motif="motion"
             onClick={() => navigate('/rush?mode=daily')}
-            badge="Timed"
             secondaryAction={{
-              label: "Practice",
+              label: "Practice Mode",
               onClick: () => navigate('/rush?mode=practice')
             }}
           />
-          
-          {/* Morph Prism */}
-          <GameCard
-            title="Morph Prism"
-            description="Transform colors through HSL channels"
-            icon={Palette}
-            color="accent"
-            onClick={() => navigate('/prism')}
-            badge="Beta"
-          />
-        </div>
-        
-        <div className="flex items-center justify-center gap-2 text-xs md:text-sm text-muted-foreground pt-4">
-          <Info className="h-4 w-4" />
-          <span>All games share the same puzzle number and date</span>
-        </div>
+        </section>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-border py-6 mt-12">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+          <span>© 2025 Morph Games</span>
+          <div className="flex gap-4">
+            <button onClick={() => navigate('/rules')} className="hover:text-foreground transition-colors">
+              Rules
+            </button>
+            <button onClick={() => navigate('/kids')} className="hover:text-foreground transition-colors">
+              Kids
+            </button>
+            <button onClick={() => navigate('/press')} className="hover:text-foreground transition-colors">
+              Press
+            </button>
+            <button onClick={() => navigate('/privacy')} className="hover:text-foreground transition-colors">
+              Privacy
+            </button>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
@@ -94,57 +146,134 @@ const GameSelector = () => {
 interface GameCardProps {
   title: string;
   description: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: 'primary' | 'warning' | 'accent';
+  mode: string;
+  difficulty: string;
+  avgTime: string;
+  accent: 'chain' | 'prism' | 'rush';
+  motif: 'chain-links' | 'spectrum' | 'motion';
   onClick: () => void;
-  badge?: string;
   secondaryAction?: {
     label: string;
     onClick: () => void;
   };
 }
 
-const GameCard = ({ title, description, icon: Icon, color, onClick, badge, secondaryAction }: GameCardProps) => {
-  const colorClasses = {
-    primary: "bg-primary/10 text-primary border-primary/20",
-    warning: "bg-warning/10 text-warning border-warning/20",
-    accent: "bg-accent/10 text-accent border-accent/20"
+const GameCard = ({ 
+  title, 
+  description, 
+  mode, 
+  difficulty, 
+  avgTime, 
+  accent, 
+  motif, 
+  onClick, 
+  secondaryAction 
+}: GameCardProps) => {
+  const navigate = useNavigate();
+  const accentClasses = {
+    chain: "border-chain/30 hover:border-chain hover:shadow-lg hover:shadow-chain/20",
+    prism: "border-primary/30 hover:border-primary hover:shadow-lg hover:shadow-primary/20",
+    rush: "border-rush-start/30 hover:border-rush-start hover:shadow-lg hover:shadow-rush-start/20"
   };
   
+  const titleClasses = {
+    chain: "from-chain to-chain",
+    prism: "bg-gradient-prism",
+    rush: "bg-gradient-rush"
+  };
+
+  const motifPatterns = {
+    'chain-links': (
+      <div className="absolute top-0 right-0 w-32 h-32 opacity-5 overflow-hidden">
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <circle cx="20" cy="20" r="15" stroke="currentColor" strokeWidth="3" fill="none" />
+          <circle cx="50" cy="20" r="15" stroke="currentColor" strokeWidth="3" fill="none" />
+          <circle cx="35" cy="50" r="15" stroke="currentColor" strokeWidth="3" fill="none" />
+        </svg>
+      </div>
+    ),
+    'spectrum': (
+      <div className="absolute inset-0 opacity-10">
+        <div className="w-full h-full bg-gradient-prism" style={{ 
+          background: 'linear-gradient(135deg, hsl(var(--prism-accent-start)), hsl(var(--prism-accent-mid)), hsl(var(--prism-accent-end)))'
+        }} />
+      </div>
+    ),
+    'motion': (
+      <div className="absolute top-4 right-4 opacity-10">
+        <svg width="80" height="40" viewBox="0 0 80 40">
+          <line x1="0" y1="10" x2="60" y2="10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          <line x1="10" y1="20" x2="70" y2="20" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          <line x1="5" y1="30" x2="65" y2="30" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      </div>
+    )
+  };
+
   return (
-    <Card className={`p-4 md:p-6 hover:border-${color} transition-all cursor-pointer ${colorClasses[color]}`} onClick={onClick}>
-      <div className="flex items-start gap-4">
-        <div className={`p-3 rounded-lg bg-${color}/20`}>
-          <Icon className="h-6 w-6 md:h-8 md:w-8" />
+    <Card 
+      className={`relative p-6 border-2 transition-all cursor-pointer group overflow-hidden ${accentClasses[accent]}`} 
+      onClick={onClick}
+    >
+      {motifPatterns[motif]}
+      
+      <div className="relative z-10 space-y-4">
+        <div className="space-y-2">
+          <h2 className={`font-outfit font-bold text-2xl tracking-tight bg-gradient-to-r ${titleClasses[accent]} bg-clip-text text-transparent`}>
+            {title}
+          </h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {description}
+          </p>
         </div>
         
-        <div className="flex-1 space-y-2">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg md:text-xl font-bold">{title}</h2>
-            {badge && (
-              <span className="px-2 py-0.5 text-[10px] md:text-xs font-semibold bg-muted rounded-full">
-                {badge}
-              </span>
-            )}
-          </div>
-          <p className="text-sm md:text-base text-muted-foreground">{description}</p>
-          
-          {secondaryAction && (
-            <div className="pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  secondaryAction.onClick();
-                }}
-                className="h-8"
-              >
-                {secondaryAction.label}
-              </Button>
-            </div>
-          )}
+        <div className="flex flex-wrap gap-2">
+          <span className="px-2 py-1 text-xs font-medium bg-muted rounded-md">
+            {mode}
+          </span>
+          <span className="px-2 py-1 text-xs font-medium bg-muted rounded-md">
+            {avgTime}
+          </span>
+          <span className="px-2 py-1 text-xs font-medium bg-muted rounded-md">
+            {difficulty}
+          </span>
         </div>
+
+        <div className="flex gap-2 pt-2">
+          <Button 
+            className="flex-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick();
+            }}
+          >
+            Play Today
+          </Button>
+        </div>
+
+        {secondaryAction && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              secondaryAction.onClick();
+            }}
+          >
+            {secondaryAction.label}
+          </Button>
+        )}
+
+        <button 
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate('/rules');
+          }}
+        >
+          How to play
+        </button>
       </div>
     </Card>
   );

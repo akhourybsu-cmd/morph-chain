@@ -24,6 +24,10 @@ import FeatureFlags from "./pages/admin/FeatureFlags";
 import AuditLog from "./pages/admin/AuditLog";
 import Configuration from "./pages/admin/Configuration";
 import ScheduledPuzzles from "./pages/admin/ScheduledPuzzles";
+import Rules from "./pages/Rules";
+import Kids from "./pages/Kids";
+import Press from "./pages/Press";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +42,10 @@ const App = () => (
             <Route path="/chain" element={<Index />} />
             <Route path="/prism" element={<MorphPrism />} />
             <Route path="/rush" element={<MorphRush />} />
+            <Route path="/rules" element={<Rules />} />
+            <Route path="/kids" element={<Kids />} />
+            <Route path="/press" element={<Press />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/terms" element={<TermsOfService />} />

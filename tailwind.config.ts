@@ -52,6 +52,18 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        chain: {
+          DEFAULT: "hsl(var(--chain-accent))",
+          foreground: "hsl(var(--chain-accent-foreground))",
+        },
+        rush: {
+          start: "hsl(var(--rush-accent-start))",
+          end: "hsl(var(--rush-accent-end))",
+        },
+      },
+      backgroundImage: {
+        'gradient-prism': 'linear-gradient(135deg, hsl(var(--prism-accent-start)), hsl(var(--prism-accent-mid)), hsl(var(--prism-accent-end)))',
+        'gradient-rush': 'linear-gradient(135deg, hsl(var(--rush-accent-start)), hsl(var(--rush-accent-end)))',
       },
       letterSpacing: {
         tiles: "0.12em",
