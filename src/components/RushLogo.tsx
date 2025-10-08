@@ -8,7 +8,7 @@ import {
 import { ChevronDown, Check } from "lucide-react";
 import { MorphChainTitle, MorphPrismTitle, MorphRushTitle } from "@/components/GameTitles";
 
-export const PrismLogo = ({ className = "" }: { className?: string }) => {
+export const RushLogo = ({ className = "" }: { className?: string }) => {
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -19,7 +19,7 @@ export const PrismLogo = ({ className = "" }: { className?: string }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className={`flex items-center gap-1 hover:opacity-80 transition-opacity ${className}`}>
-        <MorphPrismTitle className="text-base sm:text-xl" />
+        <MorphRushTitle className="text-base sm:text-xl" />
         <ChevronDown className="h-4 w-4 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center" className="w-64 bg-popover z-50">

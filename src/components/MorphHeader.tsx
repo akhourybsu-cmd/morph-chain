@@ -13,30 +13,35 @@ import {
 } from "@/components/ui/sheet";
 import { Menu, ChevronDown, Check } from "lucide-react";
 import { useState } from "react";
+import { MorphChainTitle, MorphPrismTitle, MorphRushTitle } from "@/components/GameTitles";
 
 export const MorphHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const isOnChain = location.pathname === '/chain';
+  const isOnPrism = location.pathname === '/prism';
+  const isOnRush = location.pathname.startsWith('/rush');
+
   const games = [
     { 
-      name: "Morph Chain", 
+      name: <MorphChainTitle className="text-sm" />,
       path: "/chain", 
       description: "Word ladder",
-      gradient: "from-chain to-chain"
+      active: isOnChain
     },
     { 
-      name: "Morph Prism", 
+      name: <MorphPrismTitle className="text-sm" />,
       path: "/prism", 
       description: "Color ladder",
-      gradient: "bg-gradient-prism"
+      active: isOnPrism
     },
     { 
-      name: "Morph Rush", 
+      name: <MorphRushTitle className="text-sm" />,
       path: "/rush?mode=daily", 
       description: "Score dash",
-      gradient: "bg-gradient-rush"
+      active: isOnRush
     },
   ];
 
@@ -46,9 +51,7 @@ export const MorphHeader = () => {
     { name: "Press", path: "/press" },
   ];
 
-  const currentGame = games.find(game => 
-    location.pathname.startsWith(game.path.split('?')[0])
-  );
+  const currentGame = games.find(game => game.active);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -76,7 +79,7 @@ export const MorphHeader = () => {
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-64">
+            <DropdownMenuContent align="center" className="w-64 bg-popover z-50">
               {games.map((game) => (
                 <DropdownMenuItem
                   key={game.path}
@@ -84,14 +87,12 @@ export const MorphHeader = () => {
                   className="flex items-center justify-between cursor-pointer"
                 >
                   <div className="flex flex-col gap-0.5">
-                    <span className={`font-semibold bg-gradient-to-r ${game.gradient} bg-clip-text text-transparent`}>
-                      {game.name}
-                    </span>
+                    {game.name}
                     <span className="text-xs text-muted-foreground">
                       {game.description}
                     </span>
                   </div>
-                  {currentGame?.path === game.path && (
+                  {game.active && (
                     <Check className="h-4 w-4 text-primary" />
                   )}
                 </DropdownMenuItem>
@@ -137,14 +138,12 @@ export const MorphHeader = () => {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-0.5">
-                        <span className={`font-semibold bg-gradient-to-r ${game.gradient} bg-clip-text text-transparent`}>
-                          {game.name}
-                        </span>
+                        {game.name}
                         <span className="text-xs text-muted-foreground">
                           {game.description}
                         </span>
                       </div>
-                      {currentGame?.path === game.path && (
+                      {game.active && (
                         <Check className="h-4 w-4 text-primary" />
                       )}
                     </div>

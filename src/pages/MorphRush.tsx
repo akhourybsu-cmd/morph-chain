@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { GameHeader } from "@/components/GameHeader";
+import { RushLogo } from "@/components/RushLogo";
 import { DailyBanner } from "@/components/DailyBanner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -227,11 +227,13 @@ const MorphRush = () => {
   
   return (
     <div className="min-h-screen flex flex-col max-w-2xl mx-auto">
-      <GameHeader
-        onOpenSettings={() => {}}
-        onOpenStats={() => {}}
-        onOpenHelp={() => {}}
-      />
+      <header className="h-14 grid grid-cols-3 items-center px-4 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+        <div className="flex items-center gap-1 justify-start"></div>
+        <div className="flex justify-center">
+          <RushLogo />
+        </div>
+        <div className="flex items-center gap-1 justify-end"></div>
+      </header>
       
       <div className="px-3 py-2 md:px-4 md:py-3">
         <DailyBanner

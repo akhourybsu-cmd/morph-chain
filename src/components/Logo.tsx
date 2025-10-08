@@ -5,45 +5,62 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Check } from "lucide-react";
+import { MorphChainTitle, MorphPrismTitle, MorphRushTitle } from "@/components/GameTitles";
 
 export const Logo = ({ className = "" }: { className?: string }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isOnChain = location.pathname === '/';
+  
+  const isOnChain = location.pathname === '/chain';
+  const isOnPrism = location.pathname === '/prism';
+  const isOnRush = location.pathname.startsWith('/rush');
   
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className={`flex items-center gap-1 hover:opacity-80 transition-opacity ${className}`}>
-        <span 
-          className="font-outfit font-semibold text-base sm:text-xl tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent whitespace-nowrap"
-          style={{ letterSpacing: '-0.02em' }}
-        >
-          MORPH CHAIN
-        </span>
+        <MorphChainTitle className="text-base sm:text-xl" />
         <ChevronDown className="h-4 w-4 text-muted-foreground" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" className="w-56">
-        {!isOnChain && (
-          <DropdownMenuItem onClick={() => navigate('/')}>
-            <div className="flex flex-col">
-              <span className="font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                MORPH CHAIN
-              </span>
-              <span className="text-xs text-muted-foreground">Daily word transformation</span>
+      <DropdownMenuContent align="center" className="w-64 bg-popover z-50">
+        <DropdownMenuItem 
+          onClick={() => navigate('/chain')}
+          className="cursor-pointer"
+        >
+          <div className="flex items-center justify-between w-full">
+            <div className="flex flex-col gap-0.5">
+              <MorphChainTitle className="text-sm" />
+              <span className="text-xs text-muted-foreground">Word ladder</span>
             </div>
-          </DropdownMenuItem>
-        )}
-        {isOnChain && (
-          <DropdownMenuItem onClick={() => navigate('/prism')}>
-            <div className="flex flex-col">
-              <span className="font-semibold bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
-                MORPH PRISM
-              </span>
-              <span className="text-xs text-muted-foreground">Daily color puzzle</span>
+            {isOnChain && <Check className="h-4 w-4 text-primary ml-2" />}
+          </div>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem 
+          onClick={() => navigate('/prism')}
+          className="cursor-pointer"
+        >
+          <div className="flex items-center justify-between w-full">
+            <div className="flex flex-col gap-0.5">
+              <MorphPrismTitle className="text-sm" />
+              <span className="text-xs text-muted-foreground">Color ladder</span>
             </div>
-          </DropdownMenuItem>
-        )}
+            {isOnPrism && <Check className="h-4 w-4 text-primary ml-2" />}
+          </div>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem 
+          onClick={() => navigate('/rush?mode=daily')}
+          className="cursor-pointer"
+        >
+          <div className="flex items-center justify-between w-full">
+            <div className="flex flex-col gap-0.5">
+              <MorphRushTitle className="text-sm" />
+              <span className="text-xs text-muted-foreground">Score dash</span>
+            </div>
+            {isOnRush && <Check className="h-4 w-4 text-primary ml-2" />}
+          </div>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
