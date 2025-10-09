@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { GameHeader } from "@/components/GameHeader";
-import { DailyBanner } from "@/components/DailyBanner";
+import { PuzzleTopBar } from "@/components/PuzzleTopBar";
+import { LengthPills } from "@/components/LengthPills";
 import { PuzzleHero } from "@/components/PuzzleHero";
 import { InputRow } from "@/components/InputRow";
 import { MoveLog, Move } from "@/components/MoveLog";
@@ -9,7 +10,6 @@ import { SettingsModal, backgroundThemes, BackgroundTheme } from "@/components/S
 import { StatsModal } from "@/components/StatsModal";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
 import { WordDisputeModal } from "@/components/WordDisputeModal";
-import { LengthSwitcher } from "@/components/LengthSwitcher";
 import { useToast } from "@/hooks/use-toast";
 import {
   getDailyPuzzle,
@@ -155,9 +155,9 @@ const Index = () => {
       if (!isValid) {
         setInvalidGuessCount(prev => prev + 1);
         if (allowTwoLetters) {
-          setError("Must change one or two letters.");
+          setError("Must change 1 or 2 letters");
         } else {
-          setError("Must change exactly one letter.");
+          setError("Must change exactly 1 letter");
         }
         setIsLoading(false);
         return;
@@ -165,14 +165,14 @@ const Index = () => {
 
       if (!isValidWord(word, puzzle.wordLength)) {
         setInvalidGuessCount(prev => prev + 1);
-        setError("Not in word list.");
+        setError("Not in our modern-English list");
         setIsLoading(false);
         return;
       }
 
       if (usedWords.has(word)) {
         setInvalidGuessCount(prev => prev + 1);
-        setError("You already used that word.");
+        setError("Already used");
         setIsLoading(false);
         return;
       }
@@ -476,20 +476,18 @@ const Index = () => {
         onOpenHelp={() => setHelpOpen(true)}
       />
 
-      <div className="px-3 py-2 space-y-2 md:px-4 md:py-3 md:space-y-3">
-        <LengthSwitcher
+      <PuzzleTopBar
+        puzzleNumber={puzzle.puzzleIndex || 0}
+        date={puzzle.date}
+        movesUsed={moves.length}
+        moveCap={puzzle.maxMoves}
+      />
+
+      <div className="px-3 py-2 md:px-4 md:py-3">
+        <LengthPills
           selectedLength={selectedLength}
           onLengthChange={handleLengthChange}
           statuses={lengthStatuses}
-        />
-
-        <DailyBanner
-          date={puzzle.date}
-          wordLength={puzzle.wordLength}
-          maxMoves={puzzle.maxMoves}
-          puzzleIndex={puzzle.puzzleIndex || 0}
-          hardMode={settings.hardMode}
-          onToggleHardMode={() => handleToggleSetting("hardMode")}
         />
       </div>
 

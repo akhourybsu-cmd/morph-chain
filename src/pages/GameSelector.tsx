@@ -72,6 +72,7 @@ const GameSelector = () => {
             avgTime="4-6 min"
             accent="prism"
             motif="spectrum"
+            comingSoon={true}
             onClick={() => navigate('/prism')}
           />
           
@@ -83,6 +84,7 @@ const GameSelector = () => {
             avgTime="2 min"
             accent="rush"
             motif="motion"
+            comingSoon={true}
             onClick={() => navigate('/rush?mode=daily')}
             secondaryAction={{
               label: "Practice Mode",
@@ -124,6 +126,7 @@ interface GameCardProps {
   avgTime: string;
   accent: 'chain' | 'prism' | 'rush';
   motif: 'chain-links' | 'spectrum' | 'motion';
+  comingSoon?: boolean;
   onClick: () => void;
   secondaryAction?: {
     label: string;
@@ -138,7 +141,8 @@ const GameCard = ({
   difficulty, 
   avgTime, 
   accent, 
-  motif, 
+  motif,
+  comingSoon,
   onClick, 
   secondaryAction 
 }: GameCardProps) => {
@@ -179,9 +183,14 @@ const GameCard = ({
 
   return (
     <Card 
-      className={`relative p-6 border-2 transition-all cursor-pointer group overflow-hidden ${accentClasses[accent]}`} 
-      onClick={onClick}
+      className={`relative p-6 border-2 transition-all group overflow-hidden ${accentClasses[accent]} ${comingSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} 
+      onClick={comingSoon ? undefined : onClick}
     >
+      {comingSoon && (
+        <div className="absolute top-4 right-4 z-20 px-3 py-1 bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded-md text-xs font-semibold">
+          Coming Soon
+        </div>
+      )}
       {motifPatterns[motif]}
       
       <div className="relative z-10 space-y-4">
@@ -221,6 +230,7 @@ const GameCard = ({
         <div className="flex gap-2 pt-2">
           <Button 
             className="flex-1"
+            disabled={comingSoon}
             onClick={(e) => {
               e.stopPropagation();
               onClick();
@@ -235,6 +245,7 @@ const GameCard = ({
             variant="outline"
             size="sm"
             className="w-full"
+            disabled={comingSoon}
             onClick={(e) => {
               e.stopPropagation();
               secondaryAction.onClick();
@@ -245,7 +256,8 @@ const GameCard = ({
         )}
 
         <button 
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors underline disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={comingSoon}
           onClick={(e) => {
             e.stopPropagation();
             navigate('/rules');
