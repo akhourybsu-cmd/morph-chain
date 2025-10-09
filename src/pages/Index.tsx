@@ -10,6 +10,7 @@ import { SettingsModal, backgroundThemes, BackgroundTheme } from "@/components/S
 import { StatsModal } from "@/components/StatsModal";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
 import { WordDisputeModal } from "@/components/WordDisputeModal";
+import { MobileActionBar } from "@/components/MobileActionBar";
 import { useToast } from "@/hooks/use-toast";
 import {
   getDailyPuzzle,
@@ -545,6 +546,9 @@ const Index = () => {
           onDisputeWord={handleDisputeWord}
         />
 
+        {/* Mobile spacing for sticky action bar */}
+        {!gameCompleted && <div className="h-20 md:hidden" />}
+
         {gameCompleted && (
           <ResultPanel
             won={gameWon}
@@ -557,7 +561,23 @@ const Index = () => {
         )}
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 bg-card border-t border-border py-2 px-3 md:py-4 md:px-6">
+      {/* Mobile sticky action bar */}
+      {!gameCompleted && (
+        <MobileActionBar
+          onSubmit={() => {
+            const inputRow = document.querySelector('input[type="text"]') as HTMLInputElement;
+            if (inputRow) {
+              const form = inputRow.form;
+              if (form) {
+                form.requestSubmit();
+              }
+            }
+          }}
+          disabled={gameCompleted || isLoading}
+        />
+      )}
+
+      <footer className="hidden md:block fixed bottom-0 left-0 right-0 bg-card border-t border-border py-2 px-3 md:py-4 md:px-6">
         <div className="max-w-2xl mx-auto text-center">
           <p className="text-xs md:text-sm text-muted-foreground">
             New puzzle in {getTimeUntilMidnight()}
