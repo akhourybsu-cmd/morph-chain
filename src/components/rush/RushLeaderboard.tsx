@@ -38,7 +38,7 @@ export const RushLeaderboard = ({ mode = 'daily' }: RushLeaderboardProps) => {
         {data.slice(0, 100).map((row) => (
           <li key={`${row.rank}-${row.user_id}`} className="py-2 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className={`w-8 text-right font-bold ${
+              <span className={`w-8 text-right font-bold tabular-nums ${
                 row.rank === 1 ? 'text-yellow-500' :
                 row.rank === 2 ? 'text-gray-400' :
                 row.rank === 3 ? 'text-amber-600' :
@@ -47,19 +47,21 @@ export const RushLeaderboard = ({ mode = 'daily' }: RushLeaderboardProps) => {
                 #{row.rank}
               </span>
               <div className="flex flex-col">
-                <span className="font-medium text-sm">
-                  Player {String(row.user_id).slice(0, 8)}
-                </span>
-                {row.hard_mode && (
-                  <Badge variant="outline" className="w-fit text-[10px] px-1 py-0">
-                    HARD
-                  </Badge>
-                )}
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-bold text-lg uppercase">
+                    {row.initials || '???'}
+                  </span>
+                  {row.hard_mode && (
+                    <Badge variant="outline" className="text-[10px] px-1 py-0">
+                      HARD
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
             <div className="text-right">
-              <div className="font-bold">{row.score.toLocaleString()}</div>
-              <div className="text-xs text-muted-foreground">
+              <div className="font-bold tabular-nums">{row.score.toLocaleString()}</div>
+              <div className="text-xs text-muted-foreground tabular-nums">
                 {Number(row.multiplier_max).toFixed(1)}x
               </div>
             </div>

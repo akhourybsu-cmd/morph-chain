@@ -25,6 +25,7 @@ import { RushResultsPanel } from "@/components/rush/RushResultsPanel";
 import { RushLeaderboard } from "@/components/rush/RushLeaderboard";
 import { RushHowToPlay } from "@/components/rush/RushHowToPlay";
 import { RushStats } from "@/components/rush/RushStats";
+import { RushInitialsInput } from "@/components/rush/RushInitialsInput";
 import { SettingsModal, BackgroundTheme } from "@/components/SettingsModal";
 import { loadSettings, saveSettings } from "@/lib/storage";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -60,6 +61,7 @@ const MorphRush = () => {
   const [hardMode, setHardMode] = useState(false);
   const [lastChangedIdx, setLastChangedIdx] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [scoreSubmitted, setScoreSubmitted] = useState(false);
   
   // Modals & Settings
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -475,19 +477,33 @@ const MorphRush = () => {
         {/* Results */}
         {run.isFinished && (
           <div className="space-y-4 px-3 md:px-6">
-            <RushResultsPanel
-              score={run.score}
-              words={run.words}
-              multiplierMax={run.multiplierMax}
-              invalidCount={run.invalidCount}
-              endBonuses={endBonuses}
-              finalScore={finalScore}
-              shareText={shareText}
-              onPlayAgain={mode === 'practice' ? handlePlayAgain : undefined}
-              mode={mode}
-            />
+            {!scoreSubmitted && mode === 'daily' ? (
+              <RushInitialsInput
+                score={finalScore}
+                mode={mode}
+                hardMode={hardMode}
+                multiplierMax={run.multiplierMax}
+                words={run.words}
+                invalidCount={run.invalidCount}
+                onSubmitted={() => setScoreSubmitted(true)}
+              />
+            ) : (
+              <RushResultsPanel
+                score={run.score}
+                words={run.words}
+                multiplierMax={run.multiplierMax}
+                invalidCount={run.invalidCount}
+                endBonuses={endBonuses}
+                finalScore={finalScore}
+                shareText={shareText}
+                onPlayAgain={mode === 'practice' ? handlePlayAgain : undefined}
+                mode={mode}
+              />
+            )}
             
-            {mode === 'daily' && <RushLeaderboard mode="daily" />}
+            {(scoreSubmitted || mode === 'practice') && mode === 'daily' && (
+              <RushLeaderboard mode="daily" />
+            )}
           </div>
         )}
       </main>

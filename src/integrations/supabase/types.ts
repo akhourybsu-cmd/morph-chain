@@ -381,6 +381,7 @@ export type Database = {
           finished_at: string | null
           hard_mode: boolean
           id: string
+          initials: string | null
           invalid_count: number
           mode: string
           multiplier_max: number
@@ -399,6 +400,7 @@ export type Database = {
           finished_at?: string | null
           hard_mode?: boolean
           id?: string
+          initials?: string | null
           invalid_count?: number
           mode: string
           multiplier_max?: number
@@ -417,6 +419,7 @@ export type Database = {
           finished_at?: string | null
           hard_mode?: boolean
           id?: string
+          initials?: string | null
           invalid_count?: number
           mode?: string
           multiplier_max?: number
@@ -517,6 +520,7 @@ export type Database = {
           finished_at: string | null
           hard_mode: boolean | null
           id: string | null
+          initials: string | null
           invalid_count: number | null
           mode: string | null
           multiplier_max: number | null
@@ -531,6 +535,7 @@ export type Database = {
           date_local: string | null
           finished_at: string | null
           hard_mode: boolean | null
+          initials: string | null
           mode: string | null
           multiplier_max: number | null
           rank: number | null
@@ -554,6 +559,7 @@ export type Database = {
         Args: { p_date: string; p_limit?: number; p_mode: string }
         Returns: {
           hard_mode: boolean
+          initials: string
           multiplier_max: number
           rank: number
           score: number

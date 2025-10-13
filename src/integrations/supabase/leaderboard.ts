@@ -5,6 +5,7 @@ export interface LeaderboardEntry {
   score: number;
   multiplier_max: number;
   hard_mode: boolean;
+  initials: string | null;
   rank: number;
 }
 
