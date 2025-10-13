@@ -6,6 +6,7 @@ import { Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatInTimeZone } from "date-fns-tz";
+import { markFirstDailyAttemptComplete, hasCompletedFirstDailyAttempt } from "@/lib/rushStorage";
 
 interface RushInitialsInputProps {
   score: number;
@@ -33,6 +34,17 @@ export const RushInitialsInput = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (initials.length !== 3) return;
+
+    // Only allow submission if this is the first daily attempt
+    if (mode === 'daily' && hasCompletedFirstDailyAttempt()) {
+      toast({
+        title: "Already Submitted",
+        description: "Only your first daily attempt counts for the leaderboard.",
+        variant: "destructive"
+      });
+      onSubmitted();
+      return;
+    }
 
     setSubmitting(true);
     
@@ -62,6 +74,11 @@ export const RushInitialsInput = ({
         });
 
       if (error) throw error;
+
+      // Mark first daily attempt as complete
+      if (mode === 'daily') {
+        markFirstDailyAttemptComplete();
+      }
 
       toast({
         title: "Score Submitted! 🎉",
@@ -115,7 +132,9 @@ export const RushInitialsInput = ({
       </form>
 
       <p className="text-xs text-center text-muted-foreground">
-        Arcade-style leaderboard • Resets daily at midnight ET
+        {mode === 'daily' 
+          ? "First daily attempt only • Resets at midnight ET" 
+          : "Arcade-style leaderboard • Resets daily at midnight ET"}
       </p>
     </Card>
   );

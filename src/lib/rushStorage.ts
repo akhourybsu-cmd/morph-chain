@@ -72,3 +72,14 @@ export const updateRushStats = (
   
   saveRushStats(stats);
 };
+
+// Track if user has completed their first daily attempt
+export const hasCompletedFirstDailyAttempt = (): boolean => {
+  const key = 'morphchain_rush_first_daily_attempt';
+  return localStorage.getItem(key) === 'true';
+};
+
+export const markFirstDailyAttemptComplete = (): void => {
+  const key = 'morphchain_rush_first_daily_attempt';
+  localStorage.setItem(key, 'true');
+};

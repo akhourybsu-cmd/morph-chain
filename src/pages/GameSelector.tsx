@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
 import { MorphHeader } from "@/components/MorphHeader";
+import { hasCompletedFirstDailyAttempt } from "@/lib/rushStorage";
 
 const GameSelector = () => {
   const navigate = useNavigate();
@@ -58,10 +59,10 @@ const GameSelector = () => {
             accent="rush"
             motif="motion"
             onClick={() => navigate('/rush?mode=daily')}
-            secondaryAction={{
+            secondaryAction={hasCompletedFirstDailyAttempt() ? {
               label: "Practice Mode",
               onClick: () => navigate('/rush?mode=practice')
-            }}
+            } : undefined}
           />
           
           <GameCard

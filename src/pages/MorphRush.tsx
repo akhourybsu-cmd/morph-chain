@@ -28,7 +28,7 @@ import { RushHowToPlay } from "@/components/rush/RushHowToPlay";
 import { RushStats } from "@/components/rush/RushStats";
 import { RushInitialsInput } from "@/components/rush/RushInitialsInput";
 import { RushSettingsModal } from "@/components/rush/RushSettingsModal";
-import { updateRushStats } from "@/lib/rushStorage";
+import { updateRushStats, markFirstDailyAttemptComplete, hasCompletedFirstDailyAttempt } from "@/lib/rushStorage";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const MorphRush = () => {
@@ -510,7 +510,7 @@ const MorphRush = () => {
         {/* Results */}
         {run.isFinished && (
           <div className="space-y-4 px-3 md:px-6">
-            {!scoreSubmitted && mode === 'daily' ? (
+            {!scoreSubmitted && mode === 'daily' && !hasCompletedFirstDailyAttempt() ? (
               <RushInitialsInput
                 score={finalScore}
                 mode={mode}
@@ -534,7 +534,7 @@ const MorphRush = () => {
               />
             )}
             
-            {(scoreSubmitted || mode === 'practice') && mode === 'daily' && (
+            {(scoreSubmitted || mode === 'practice' || hasCompletedFirstDailyAttempt()) && mode === 'daily' && (
               <RushLeaderboard mode="daily" />
             )}
           </div>
