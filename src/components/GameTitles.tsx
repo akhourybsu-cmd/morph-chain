@@ -11,7 +11,7 @@ export const MorphChainTitle = ({ className = "" }: { className?: string }) => (
 
 export const MorphPrismTitle = ({ className = "" }: { className?: string }) => (
   <span 
-    className={`font-outfit font-semibold tracking-tight bg-gradient-to-r from-[hsl(180,100%,50%)] via-[hsl(300,100%,50%)] to-[hsl(60,100%,50%)] bg-clip-text text-transparent whitespace-nowrap ${className}`}
+    className={`font-outfit font-semibold tracking-tight bg-gradient-to-r from-[hsl(var(--prism-accent-start))] via-[hsl(var(--prism-accent-mid))] to-[hsl(var(--prism-accent-end))] bg-clip-text text-transparent whitespace-nowrap ${className}`}
     style={{ letterSpacing: '-0.02em' }}
   >
     MORPH PRISM

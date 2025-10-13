@@ -131,39 +131,67 @@ export default function MorphPrism() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background to-card">
-      {/* Centered Header - Morph Prism */}
+      {/* Header with all controls on one line */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-3 md:px-4 py-3 md:py-4">
-          <div className="flex items-center justify-center">
-            <PrismLogo />
+          <div className="flex items-center justify-between gap-2 md:gap-4">
+            {/* Left: Help & Color Guide */}
+            <div className="flex items-center gap-1 md:gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setHelpOpen(true)}
+                className="gap-1.5 text-xs md:text-sm px-2 md:px-3 h-8"
+              >
+                <Info className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Help</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowColorGuide(!showColorGuide)}
+                className="px-2 md:px-3 h-8"
+              >
+                <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Guide</span>
+              </Button>
+            </div>
+            
+            {/* Center: Title */}
+            <div className="flex-1 flex justify-center">
+              <PrismLogo />
+            </div>
+            
+            {/* Right: Auth */}
+            <div className="flex items-center gap-1 md:gap-2">
+              {session ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/profile')}
+                  className="text-xs md:text-sm px-2 md:px-3 h-8"
+                >
+                  Profile
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/login')}
+                  className="text-xs md:text-sm px-2 md:px-3 h-8"
+                >
+                  Log In
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
       {/* Puzzle Info Bar */}
-      <div className="flex items-center justify-between px-3 md:px-4 py-2 md:py-2.5 bg-card/30 border-b border-border">
+      <div className="flex items-center justify-between px-3 md:px-4 py-2 md:py-2.5 bg-card/30 border-b border-border text-xs md:text-sm">
         <div className="flex items-center gap-2 md:gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setHelpOpen(true)}
-            className="gap-1.5 text-xs md:text-sm px-2 md:px-3 h-8"
-          >
-            <Info className="h-3.5 w-3.5 md:h-4 md:w-4" />
-            <span className="hidden sm:inline">Help</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowColorGuide(!showColorGuide)}
-            className="px-2 md:px-3 h-8"
-          >
-            <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4" />
-          </Button>
-        </div>
-        
-        <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
-          <span className="font-semibold text-foreground flex items-center gap-1.5">
+          <span className="font-semibold text-foreground">
             Puzzle #{puzzleNumber}
           </span>
           <span className="text-muted-foreground hidden sm:inline">•</span>
@@ -172,30 +200,9 @@ export default function MorphPrism() {
           </span>
         </div>
 
-        <div className="flex items-center gap-1 md:gap-2">
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Clock className="h-3 w-3 md:h-3.5 md:w-3.5" />
-            <span className="font-mono text-xs md:text-sm">{timeUntilMidnight}</span>
-          </div>
-          {session ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/profile')}
-              className="text-xs md:text-sm px-2 md:px-3 h-8"
-            >
-              Profile
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/login')}
-              className="text-xs md:text-sm px-2 md:px-3 h-8"
-            >
-              Log In
-            </Button>
-          )}
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Clock className="h-3 w-3 md:h-3.5 md:w-3.5" />
+          <span className="font-mono text-xs md:text-sm">{timeUntilMidnight}</span>
         </div>
       </div>
 
