@@ -41,7 +41,7 @@ export default function OnScreenKeyboard({
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto space-y-1.5 md:space-y-2 py-2 select-none">
+    <div className="w-full max-w-lg mx-auto space-y-1.5 md:space-y-2 py-2 select-none px-2">
       {KEYBOARD_ROWS.map((row, rowIndex) => (
         <div 
           key={rowIndex} 
@@ -55,7 +55,7 @@ export default function OnScreenKeyboard({
             <Button
               onClick={onEnter}
               disabled={disabled}
-              className="h-14 md:h-12 px-3 md:px-4 font-bold text-sm md:text-sm bg-gradient-to-r from-[hsl(var(--prism-accent-start))] via-[hsl(var(--prism-accent-mid))] to-[hsl(var(--prism-accent-end))] hover:opacity-90 text-white"
+              className="h-12 md:h-12 px-2 md:px-4 font-bold text-xs md:text-sm bg-gradient-to-r from-[hsl(var(--prism-accent-start))] via-[hsl(var(--prism-accent-mid))] to-[hsl(var(--prism-accent-end))] hover:opacity-90 text-white"
             >
               ENTER
             </Button>
@@ -66,7 +66,7 @@ export default function OnScreenKeyboard({
               key={key}
               onClick={() => onKeyPress(key)}
               disabled={disabled}
-              className={`h-14 md:h-12 min-w-[2.5rem] md:min-w-[2.25rem] px-2 md:px-2 font-bold text-sm md:text-sm transition-all ${getKeyStyle(key)} border`}
+              className={`h-12 md:h-12 w-8 md:min-w-[2.25rem] px-1 md:px-2 font-bold text-sm md:text-sm transition-all ${getKeyStyle(key)} border`}
             >
               {key}
             </Button>
@@ -77,9 +77,9 @@ export default function OnScreenKeyboard({
               onClick={onBackspace}
               disabled={disabled}
               variant="outline"
-              className="h-14 md:h-12 px-3 md:px-4 bg-card hover:bg-accent border-border"
+              className="h-12 md:h-12 px-2 md:px-4 bg-card hover:bg-accent border-border"
             >
-              <Delete className="h-5 w-5 md:h-4 md:w-4" />
+              <Delete className="h-4 w-4" />
             </Button>
           )}
         </div>
