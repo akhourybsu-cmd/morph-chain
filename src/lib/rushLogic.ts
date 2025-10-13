@@ -1,5 +1,5 @@
 // Morph Rush Game Logic
-import { VALID_WORDS_4 } from "./gameLogic";
+import { VALID_WORDS_4, VALID_WORDS_5, VALID_WORDS_6 } from "./gameLogic";
 import { toZonedTime, formatInTimeZone } from "date-fns-tz";
 import { startOfDay, differenceInDays } from "date-fns";
 
@@ -30,16 +30,28 @@ export interface RushRun {
   isFinished: boolean;
 }
 
+// Dictionary validation by length
+export const isValidWordByLen = (word: string): boolean => {
+  const n = word.length;
+  if (n === 4) return VALID_WORDS_4.has(word);
+  if (n === 5) return VALID_WORDS_5.has(word);
+  if (n === 6) return VALID_WORDS_6.has(word);
+  return false;
+};
+
 // Get neighbors (words that differ by exactly 1 letter)
 export const getNeighbors = (word: string): string[] => {
   const neighbors: string[] = [];
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const wordSet = word.length === 4 ? VALID_WORDS_4 : 
+                  word.length === 5 ? VALID_WORDS_5 : 
+                  VALID_WORDS_6;
   
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < word.length; i++) {
     for (const letter of letters) {
       if (letter === word[i]) continue;
       const newWord = word.substring(0, i) + letter + word.substring(i + 1);
-      if (VALID_WORDS_4.has(newWord)) {
+      if (wordSet.has(newWord)) {
         neighbors.push(newWord);
       }
     }

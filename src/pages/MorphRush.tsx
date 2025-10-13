@@ -5,22 +5,23 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { isValidWord, isOneLetterDifferent } from "@/lib/gameLogic";
 import {
   getRushDailyPuzzle,
-  calculateWordScore,
-  calculateFlowMultiplier,
   calculateEndBonuses,
   getScoutHint,
   RushWord,
   RushRun,
-  generateRushShareText
+  generateRushShareText,
+  isValidWordByLen
 } from "@/lib/rushLogic";
+import { scoreWord } from "@/lib/rushScoring";
+import { isValidMorphHard } from "@/lib/rushHardMode";
 import { RushTimer } from "@/components/rush/RushTimer";
 import { RushScoreDisplay } from "@/components/rush/RushScoreDisplay";
 import { RushPowerups } from "@/components/rush/RushPowerups";
 import { RushWordRibbon } from "@/components/rush/RushWordRibbon";
 import { RushResultsPanel } from "@/components/rush/RushResultsPanel";
+import { RushLeaderboard } from "@/components/rush/RushLeaderboard";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const MorphRush = () => {
@@ -51,6 +52,9 @@ const MorphRush = () => {
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
+  const [hardMode, setHardMode] = useState(false);
+  const [lastChangedIdx, setLastChangedIdx] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Timer tick
   const handleTimerTick = useCallback(() => {
@@ -66,36 +70,61 @@ const MorphRush = () => {
   // Handle submission
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!input.trim() || run.isFinished) return;
+    if (!input.trim() || run.isFinished || isSubmitting) return;
     
+    setIsSubmitting(true);
     const word = input.trim().toUpperCase();
     setError("");
     
-    // Validation
+    // Validation: length
     if (word.length !== 4) {
       setError("Must be 4 letters");
       triggerShake();
+      setIsSubmitting(false);
       return;
     }
     
-    if (!isOneLetterDifferent(currentWord, word)) {
-      setError("Change exactly one letter");
-      setRun(prev => ({ ...prev, invalidCount: prev.invalidCount + 1 }));
-      triggerShake();
-      return;
+    // Validation: one-letter morph (with Hard Mode enforcement)
+    if (hardMode) {
+      const res = isValidMorphHard(currentWord, word, lastChangedIdx);
+      if (!res.ok) {
+        setError(res.reason ?? "Invalid morph");
+        setRun(prev => ({ ...prev, invalidCount: prev.invalidCount + 1 }));
+        triggerShake();
+        setIsSubmitting(false);
+        return;
+      }
+      setLastChangedIdx(res.changedIdx);
+    } else {
+      // Classic one-letter check
+      let diffs = 0;
+      for (let i = 0; i < word.length; i++) {
+        if (word[i] !== currentWord[i]) diffs++;
+      }
+      if (diffs !== 1) {
+        setError("Change exactly one letter");
+        setRun(prev => ({ ...prev, invalidCount: prev.invalidCount + 1 }));
+        triggerShake();
+        setIsSubmitting(false);
+        return;
+      }
     }
     
-    if (!isValidWord(word, 4)) {
+    // Validation: dictionary
+    if (!isValidWordByLen(word)) {
       setError("Not in word list");
       setRun(prev => ({ ...prev, invalidCount: prev.invalidCount + 1 }));
       triggerShake();
+      setIsSubmitting(false);
       return;
     }
     
+    // Validation: reuse
     if (run.usedWords.has(word)) {
       setError("Already used");
       setRun(prev => ({ ...prev, invalidCount: prev.invalidCount + 1 }));
       triggerShake();
+      setIsSubmitting(false);
       return;
     }
     
@@ -104,15 +133,9 @@ const MorphRush = () => {
       setRun(prev => ({ ...prev, timerStarted: true }));
     }
     
-    // Calculate scoring
+    // Calculate scoring using centralized function
     const now = Date.now();
-    const newMultiplier = calculateFlowMultiplier(
-      run.currentMultiplier,
-      run.lastValidTime,
-      now
-    );
-    
-    const wordScore = calculateWordScore(word, run.usedWords, newMultiplier);
+    const wordScore = scoreWord(word, run.usedWords, run.currentMultiplier, run.lastValidTime, now);
     
     const newWord: RushWord = {
       word,
@@ -120,27 +143,34 @@ const MorphRush = () => {
       baseScore: wordScore.base,
       rarityBonus: wordScore.rarity,
       branchBonus: wordScore.branch,
-      multiplier: newMultiplier,
+      multiplier: wordScore.multiplier,
       totalScore: wordScore.total
     };
     
-    setRun(prev => ({
-      ...prev,
-      words: [...prev.words, newWord],
-      usedWords: new Set([...prev.usedWords, word]),
-      score: prev.score + wordScore.total,
-      currentMultiplier: newMultiplier,
-      multiplierMax: Math.max(prev.multiplierMax, newMultiplier),
-      lastValidTime: now
-    }));
+    // Update state with proper Set cloning
+    setRun(prev => {
+      const newUsedWords = new Set(prev.usedWords);
+      newUsedWords.add(word);
+      
+      return {
+        ...prev,
+        words: [...prev.words, newWord],
+        usedWords: newUsedWords,
+        score: prev.score + wordScore.total,
+        currentMultiplier: wordScore.multiplier,
+        multiplierMax: Math.max(prev.multiplierMax, wordScore.multiplier),
+        lastValidTime: now
+      };
+    });
     
     setCurrentWord(word);
     setInput("");
+    setIsSubmitting(false);
     
     // Show score toast
     toast({
       title: `+${wordScore.total} points`,
-      description: `${newMultiplier.toFixed(1)}x multiplier`,
+      description: `${wordScore.multiplier.toFixed(1)}x multiplier`,
       duration: 1500
     });
   };
@@ -241,8 +271,19 @@ const MorphRush = () => {
           wordLength={4}
           maxMoves={0}
           puzzleIndex={puzzle.puzzleNumber}
-          hardMode={false}
-          onToggleHardMode={() => {}}
+          hardMode={hardMode}
+          onToggleHardMode={() => {
+            if (run.words.length === 0) {
+              setHardMode(!hardMode);
+              setLastChangedIdx(null);
+            } else {
+              toast({
+                title: "Can't toggle Hard Mode",
+                description: "Hard Mode must be set before your first move",
+                variant: "destructive"
+              });
+            }
+          }}
         />
       </div>
       
@@ -320,17 +361,21 @@ const MorphRush = () => {
         
         {/* Results */}
         {run.isFinished && (
-          <RushResultsPanel
-            score={run.score}
-            words={run.words}
-            multiplierMax={run.multiplierMax}
-            invalidCount={run.invalidCount}
-            endBonuses={endBonuses}
-            finalScore={finalScore}
-            shareText={shareText}
-            onPlayAgain={mode === 'practice' ? handlePlayAgain : undefined}
-            mode={mode}
-          />
+          <div className="space-y-4 px-3 md:px-6">
+            <RushResultsPanel
+              score={run.score}
+              words={run.words}
+              multiplierMax={run.multiplierMax}
+              invalidCount={run.invalidCount}
+              endBonuses={endBonuses}
+              finalScore={finalScore}
+              shareText={shareText}
+              onPlayAgain={mode === 'practice' ? handlePlayAgain : undefined}
+              mode={mode}
+            />
+            
+            {mode === 'daily' && <RushLeaderboard mode="daily" />}
+          </div>
         )}
       </main>
     </div>

@@ -379,6 +379,7 @@ export type Database = {
           created_at: string
           date_local: string
           finished_at: string | null
+          hard_mode: boolean
           id: string
           invalid_count: number
           mode: string
@@ -396,6 +397,7 @@ export type Database = {
           created_at?: string
           date_local: string
           finished_at?: string | null
+          hard_mode?: boolean
           id?: string
           invalid_count?: number
           mode: string
@@ -413,6 +415,7 @@ export type Database = {
           created_at?: string
           date_local?: string
           finished_at?: string | null
+          hard_mode?: boolean
           id?: string
           invalid_count?: number
           mode?: string
@@ -508,7 +511,34 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      rush_best_runs: {
+        Row: {
+          date_local: string | null
+          finished_at: string | null
+          hard_mode: boolean | null
+          id: string | null
+          invalid_count: number | null
+          mode: string | null
+          multiplier_max: number | null
+          score: number | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      rush_daily_leaderboard: {
+        Row: {
+          date_local: string | null
+          finished_at: string | null
+          hard_mode: boolean | null
+          mode: string | null
+          multiplier_max: number | null
+          rank: number | null
+          score: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_rate_limit: {
@@ -519,6 +549,16 @@ export type Database = {
           _window_minutes?: number
         }
         Returns: boolean
+      }
+      get_rush_daily_leaderboard: {
+        Args: { p_date: string; p_limit?: number; p_mode: string }
+        Returns: {
+          hard_mode: boolean
+          multiplier_max: number
+          rank: number
+          score: number
+          user_id: string
+        }[]
       }
       has_role: {
         Args: {
