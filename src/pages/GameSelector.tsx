@@ -101,12 +101,6 @@ const GameSelector = () => {
             <button onClick={() => navigate('/rules')} className="hover:text-foreground transition-colors">
               Rules
             </button>
-            <button onClick={() => navigate('/kids')} className="hover:text-foreground transition-colors">
-              Kids
-            </button>
-            <button onClick={() => navigate('/press')} className="hover:text-foreground transition-colors">
-              Press
-            </button>
             <button onClick={() => navigate('/privacy')} className="hover:text-foreground transition-colors">
               Privacy
             </button>

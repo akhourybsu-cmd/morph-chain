@@ -253,30 +253,129 @@ export default function MorphPrism() {
       
       {/* How to Play Dialog */}
       <Dialog open={showHelp} onOpenChange={setShowHelp}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>How to Play Morph Prism</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">How to Play Morph Prism</DialogTitle>
             <DialogDescription>
-              Transform the start color into the goal color
+              Transform the start color into the goal color by adjusting HSL channels
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <h3 className="font-semibold mb-2">Rules:</h3>
-              <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                <li>Change ONE channel per move (Hue, Saturation, or Lightness)</li>
-                <li>Hue wraps around the color wheel (0° ↔ 345°)</li>
-                <li>Complete the puzzle within {puzzle.cap} moves</li>
-                <li>Watch for "Closer" or "Sideways" feedback after each move</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-2">Hints:</h3>
-              <p className="text-sm text-muted-foreground">
-                You have {puzzle.hints} hint(s) available. Use them wisely to get a nudge in the right direction!
+          <div className="space-y-6 py-4 text-sm">
+            <section>
+              <h3 className="font-semibold text-base mb-2">🎯 Objective</h3>
+              <p className="text-muted-foreground mb-2">
+                Your goal is to transform the START color swatch into the GOAL color swatch by making a series of careful adjustments to the color's HSL (Hue, Saturation, Lightness) values.
               </p>
-            </div>
+              <p className="text-muted-foreground text-sm">
+                Each adjustment brings you closer to the target color, but you must stay within the move limit!
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">🎨 Understanding HSL</h3>
+              <div className="space-y-3 bg-card p-3 rounded border border-border">
+                <div>
+                  <p className="font-medium text-sm">Hue (0° - 345°)</p>
+                  <p className="text-xs text-muted-foreground">
+                    The color itself on the color wheel. 0° = Red, 120° = Green, 240° = Blue. Adjustments: ±15° per move. <strong>Wraps around:</strong> 345° + 15° = 0° (back to red).
+                  </p>
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Saturation (0% - 100%)</p>
+                  <p className="text-xs text-muted-foreground">
+                    Color intensity. 0% = completely gray (no color), 100% = fully vibrant. Adjustments: ±10% per move.
+                  </p>
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Lightness (0% - 100%)</p>
+                  <p className="text-xs text-muted-foreground">
+                    Brightness level. 0% = pure black, 50% = true color, 100% = pure white. Adjustments: ±10% per move.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">📏 Core Rules</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2 text-muted-foreground">
+                  <span className="text-primary">•</span>
+                  <span><strong>One Channel Per Move:</strong> You can only adjust ONE of the three channels (H, S, or L) on each turn. Choose wisely!</span>
+                </li>
+                <li className="flex items-start gap-2 text-muted-foreground">
+                  <span className="text-primary">•</span>
+                  <span><strong>Fixed Adjustments:</strong> Hue changes by ±15°, Saturation and Lightness change by ±10% each move. You can't make smaller or larger adjustments.</span>
+                </li>
+                <li className="flex items-start gap-2 text-muted-foreground">
+                  <span className="text-primary">•</span>
+                  <span><strong>Move Limit:</strong> You have {puzzle.cap} moves to reach the goal. Plan your path carefully—some puzzles require thinking several steps ahead!</span>
+                </li>
+                <li className="flex items-start gap-2 text-muted-foreground">
+                  <span className="text-primary">•</span>
+                  <span><strong>Hue Wrapping:</strong> The hue wheel wraps around at 0°/345°. Going from 345° up brings you to 0° (red), and going from 0° down takes you to 345°.</span>
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">🎯 Distance Feedback</h3>
+              <p className="text-muted-foreground mb-2">After each move, you'll see feedback indicating your progress:</p>
+              <div className="space-y-2 bg-card p-3 rounded border border-border">
+                <div className="flex items-start gap-2">
+                  <div className="px-2 py-1 bg-success/10 text-success rounded text-xs font-medium whitespace-nowrap">
+                    ✓ Closer
+                  </div>
+                  <span className="text-xs text-muted-foreground">Your move decreased the total color distance to the goal. You're on the right track!</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="px-2 py-1 bg-warning/10 text-warning rounded text-xs font-medium whitespace-nowrap">
+                    ↔ Sideways
+                  </div>
+                  <span className="text-xs text-muted-foreground">The distance stayed the same. Sometimes necessary to position yourself for the next move, but be careful not to waste moves.</span>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">💡 Hints</h3>
+              <div className="bg-card p-3 rounded border border-border">
+                <p className="text-sm text-muted-foreground mb-2">
+                  You have <strong>{puzzle.hints} hint(s)</strong> available for this puzzle.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Using a hint will reveal which channel (H, S, or L) and direction (+/-) to adjust next. Use hints strategically when you're stuck or need confirmation of your planned path.
+                </p>
+              </div>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">🏆 Winning</h3>
+              <p className="text-muted-foreground">
+                Successfully match the GOAL color exactly within the allowed number of moves. The current color display will show a checkmark (✓) when you've achieved an exact match!
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">💡 Strategy Tips</h3>
+              <ul className="space-y-2 ml-4 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  <span>Compare the START and GOAL color values carefully before making your first move</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  <span>Calculate the number of moves needed for each channel (divide the difference by 15 for Hue, by 10 for S and L)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  <span>Watch out for hue wrapping—sometimes the shorter path is to go "backwards" around the wheel</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  <span>Don't waste moves on channels that are already at the goal value</span>
+                </li>
+              </ul>
+            </section>
           </div>
         </DialogContent>
       </Dialog>

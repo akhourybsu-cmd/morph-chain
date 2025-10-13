@@ -35,34 +35,60 @@ export const HowToPlayModal = ({ open, onOpenChange }: HowToPlayModalProps) => {
           </section>
 
           <section>
-            <h3 className="font-semibold mb-2">How</h3>
-            <p className="text-muted-foreground mb-2">
-              <strong>4-Letter:</strong> Change exactly <strong>one letter</strong> each step.
+            <h3 className="font-semibold mb-2">How It Works</h3>
+            <p className="text-muted-foreground mb-3">
+              Transform the START word into the GOAL word by changing letters one step at a time. Each intermediate word must be a valid English word from our dictionary.
             </p>
-            <p className="text-muted-foreground mb-2">
-              <strong>5-Letter:</strong> Change <strong>one OR two letters</strong> on your <strong>first move only</strong>, then one letter per step.
-            </p>
-            <p className="text-muted-foreground mb-2">
-              <strong>6-Letter:</strong> Change <strong>one OR two letters</strong> on <strong>any move</strong>.
-            </p>
-            <p className="text-muted-foreground text-sm mt-2">
-              Every step must be a real word.
-            </p>
+            
+            <div className="space-y-3">
+              <div className="bg-card p-3 rounded-lg border border-border">
+                <p className="font-medium text-sm mb-1">4-Letter Words:</p>
+                <p className="text-muted-foreground text-sm">
+                  Change <strong>exactly one letter</strong> per move. For example: LAKE → MAKE → MARE → CARE → CART
+                </p>
+              </div>
+              
+              <div className="bg-card p-3 rounded-lg border border-border">
+                <p className="font-medium text-sm mb-1">5-Letter Words:</p>
+                <p className="text-muted-foreground text-sm">
+                  Your <strong>first move only</strong> can change one OR two letters. After that, change exactly one letter per move. This gives you flexibility to start, then follows the classic one-letter-change rule.
+                </p>
+              </div>
+              
+              <div className="bg-card p-3 rounded-lg border border-border">
+                <p className="font-medium text-sm mb-1">6-Letter Words:</p>
+                <p className="text-muted-foreground text-sm">
+                  You can change <strong>up to two letters</strong> on any move throughout the puzzle. This provides more paths to the goal but requires careful planning.
+                </p>
+              </div>
+            </div>
           </section>
 
           <section>
-            <h3 className="font-semibold mb-2">Rules</h3>
-            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li><strong>No repeats:</strong> You can't use the same word twice</li>
-              <li><strong>Moves limit:</strong> You have up to 14 moves (varies by puzzle difficulty)</li>
-              <li><strong>Daily choice:</strong> Play today's 4-letter, 5-letter, or 6-letter puzzle (or all three!)</li>
+            <h3 className="font-semibold mb-2">Important Rules</h3>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+              <li>
+                <strong>No Repeating Words:</strong> Once you use a word in your chain, you cannot use it again in the same puzzle.
+              </li>
+              <li>
+                <strong>Move Limit:</strong> Each puzzle has a maximum number of moves (typically 10-14 depending on difficulty). Plan your path carefully!
+              </li>
+              <li>
+                <strong>Valid Words Only:</strong> All words must be from our curated dictionary of modern American English—no proper nouns, abbreviations, slang, or archaic terms.
+              </li>
+              <li>
+                <strong>Daily Puzzles:</strong> Each day features new 4-letter, 5-letter, and 6-letter puzzles. You can play one, two, or all three!
+              </li>
+              <li>
+                <strong>Letter Position Matters:</strong> You must change specific letter positions while keeping others the same. Simply rearranging (anagramming) doesn't count.
+              </li>
             </ul>
           </section>
 
           <section>
-            <h3 className="font-semibold mb-2">Hints</h3>
+            <h3 className="font-semibold mb-2">Letter Feedback (Hints)</h3>
             <p className="text-muted-foreground mb-3">
-              After each valid step, tiles show how your current word compares to the GOAL:
+              After each valid move, the tiles change color to show how your current word compares to the GOAL word. This feedback helps you plan your next moves:
             </p>
             <div className="space-y-2 bg-card p-3 rounded-lg border border-border">
               <div className="flex items-center gap-3">
@@ -81,40 +107,45 @@ export const HowToPlayModal = ({ open, onOpenChange }: HowToPlayModalProps) => {
           </section>
 
           <section>
-            <h3 className="font-semibold mb-2">Distance Indicators</h3>
+            <h3 className="font-semibold mb-2">Distance Progress Indicators</h3>
+            <p className="text-muted-foreground mb-2 text-sm">
+              Each move shows whether you're getting closer to or farther from the goal word. Use these indicators to guide your strategy:
+            </p>
             <div className="space-y-2 bg-card p-3 rounded-lg border border-border">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 px-2 py-1 bg-success/10 text-success rounded text-xs font-medium">
+              <div className="flex items-start gap-2">
+                <div className="flex items-center gap-1 px-2 py-1 bg-success/10 text-success rounded text-xs font-medium whitespace-nowrap">
                   ↑ Closer
                 </div>
-                <span className="text-muted-foreground text-xs">Your step moved you nearer to the GOAL</span>
+                <span className="text-muted-foreground text-xs">Your move decreased the minimum number of steps needed to reach the GOAL. You're on the right track!</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 px-2 py-1 bg-warning/10 text-warning rounded text-xs font-medium">
+              <div className="flex items-start gap-2">
+                <div className="flex items-center gap-1 px-2 py-1 bg-warning/10 text-warning rounded text-xs font-medium whitespace-nowrap">
                   ↔ Sideways
                 </div>
-                <span className="text-muted-foreground text-xs">Same distance from GOAL</span>
+                <span className="text-muted-foreground text-xs">The distance to the GOAL stayed the same. You're exploring alternative paths but not progressing directly.</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 px-2 py-1 bg-destructive/10 text-destructive rounded text-xs font-medium">
+              <div className="flex items-start gap-2">
+                <div className="flex items-center gap-1 px-2 py-1 bg-destructive/10 text-destructive rounded text-xs font-medium whitespace-nowrap">
                   ↓ Worse
                 </div>
-                <span className="text-muted-foreground text-xs">You moved farther from GOAL</span>
+                <span className="text-muted-foreground text-xs">Your move increased the distance to the GOAL. Sometimes necessary for complex puzzles, but use sparingly.</span>
               </div>
             </div>
           </section>
 
           <section>
-            <h3 className="font-semibold mb-2">Winning</h3>
-            <p className="text-muted-foreground">
-              <strong>Win:</strong> Reach the GOAL within the move limit.
-            </p>
-            <p className="text-muted-foreground">
-              <strong>Share:</strong> Copy your spoiler-free emoji grid to share with friends.
-            </p>
-            <p className="text-muted-foreground">
-              <strong>Streaks:</strong> Build streaks by winning at least one puzzle each day.
-            </p>
+            <h3 className="font-semibold mb-2">Winning & Sharing</h3>
+            <div className="space-y-2">
+              <p className="text-muted-foreground text-sm">
+                <strong>Victory Condition:</strong> Successfully transform the START word into the GOAL word within the allowed number of moves. The fewer moves you use, the better!
+              </p>
+              <p className="text-muted-foreground text-sm">
+                <strong>Share Your Results:</strong> After completing a puzzle, you can copy a spoiler-free emoji grid showing your path's efficiency without revealing the actual words. Perfect for comparing strategies with friends!
+              </p>
+              <p className="text-muted-foreground text-sm">
+                <strong>Build Your Streak:</strong> Win at least one puzzle (any word length) each day to maintain and grow your streak. Streaks reset at midnight Eastern Time.
+              </p>
+            </div>
           </section>
 
           <section className="pt-2 border-t border-border">
