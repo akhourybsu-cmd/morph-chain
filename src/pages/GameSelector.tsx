@@ -211,18 +211,6 @@ const GameCard = ({
           </p>
         </div>
         
-        <div className="flex flex-wrap gap-1 md:gap-2">
-          <span className="px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium bg-muted rounded-md">
-            {mode}
-          </span>
-          <span className="px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium bg-muted rounded-md hidden md:inline-block">
-            {avgTime}
-          </span>
-          <span className="px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium bg-muted rounded-md hidden md:inline-block">
-            {difficulty}
-          </span>
-        </div>
-
         <div className="flex-1"></div>
 
         {comingSoon && (
