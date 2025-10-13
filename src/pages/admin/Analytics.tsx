@@ -5,8 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { TrendingUp, Users, Target, Zap, Download, Gamepad2, Trophy, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { Progress } from "@/components/ui/progress";
 
 interface AnalyticsData {
   // Morph Chain Stats
@@ -185,11 +184,6 @@ export default function Analytics() {
     return <div className="flex items-center justify-center p-8">Loading analytics...</div>;
   }
 
-  const gameComparisonData = [
-    { game: "Chain", sessions: stats.chainSessions, completed: stats.chainCompleted },
-    { game: "Rush", sessions: stats.rushRuns, completed: stats.rushCompleted },
-  ];
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -258,29 +252,43 @@ export default function Analytics() {
         </Card>
       </div>
 
-      {/* Game Comparison Chart */}
+      {/* Game Comparison */}
       <Card>
         <CardHeader>
           <CardTitle>Game Activity Comparison</CardTitle>
           <CardDescription>Sessions started vs completed across games</CardDescription>
         </CardHeader>
-        <CardContent>
-          <ChartContainer
-            config={{
-              sessions: { label: "Sessions", color: "hsl(var(--primary))" },
-              completed: { label: "Completed", color: "hsl(var(--secondary))" },
-            }}
-            className="h-[300px]"
-          >
-            <BarChart data={gameComparisonData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="game" />
-              <YAxis />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="sessions" fill="var(--color-sessions)" />
-              <Bar dataKey="completed" fill="var(--color-completed)" />
-            </BarChart>
-          </ChartContainer>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Morph Chain - Sessions</span>
+                <span className="text-sm text-muted-foreground">{stats.chainSessions}</span>
+              </div>
+              <Progress value={(stats.chainSessions / stats.totalGamesPlayed) * 100} />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Morph Chain - Completed</span>
+                <span className="text-sm text-muted-foreground">{stats.chainCompleted}</span>
+              </div>
+              <Progress value={(stats.chainCompleted / stats.totalGamesPlayed) * 100} className="bg-secondary" />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Morph Rush - Sessions</span>
+                <span className="text-sm text-muted-foreground">{stats.rushRuns}</span>
+              </div>
+              <Progress value={(stats.rushRuns / stats.totalGamesPlayed) * 100} />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Morph Rush - Completed</span>
+                <span className="text-sm text-muted-foreground">{stats.rushCompleted}</span>
+              </div>
+              <Progress value={(stats.rushCompleted / stats.totalGamesPlayed) * 100} className="bg-secondary" />
+            </div>
+          </div>
         </CardContent>
       </Card>
 
