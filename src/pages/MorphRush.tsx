@@ -4,7 +4,7 @@ import { DailyBanner } from "@/components/DailyBanner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertCircle, Menu, HelpCircle, TrendingUp, User, LogOut, Trophy } from "lucide-react";
+import { AlertCircle, Menu, HelpCircle, TrendingUp, User, Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -84,10 +84,6 @@ const MorphRush = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-  };
   
   // Timer tick
   const handleTimerTick = useCallback(() => {
@@ -334,12 +330,12 @@ const MorphRush = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleSignOut}
-              aria-label="Sign out"
+              onClick={() => navigate('/profile')}
+              aria-label="View profile"
               className="hover:bg-muted/50 h-9 w-9"
-              title="Sign out"
+              title="View profile"
             >
-              <LogOut className="h-5 w-5" />
+              <User className="h-5 w-5" />
             </Button>
           ) : (
             <Button

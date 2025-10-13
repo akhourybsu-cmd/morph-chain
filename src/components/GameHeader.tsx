@@ -1,4 +1,4 @@
-import { Menu, TrendingUp, HelpCircle, User, LogOut } from "lucide-react";
+import { Menu, TrendingUp, HelpCircle, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { useNavigate } from "react-router-dom";
@@ -34,10 +34,6 @@ export const GameHeader = ({ onOpenSettings, onOpenStats, onOpenHelp }: GameHead
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-  };
 
   return (
     <header className="h-14 grid grid-cols-3 items-center px-4 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
@@ -82,12 +78,12 @@ export const GameHeader = ({ onOpenSettings, onOpenStats, onOpenHelp }: GameHead
           <Button
             variant="ghost"
             size="icon"
-            onClick={handleSignOut}
-            aria-label="Sign out"
+            onClick={() => navigate('/profile')}
+            aria-label="View profile"
             className="hover:bg-muted/50 h-9 w-9"
-            title="Sign out"
+            title="View profile"
           >
-            <LogOut className="h-5 w-5" />
+            <User className="h-5 w-5" />
           </Button>
         ) : (
           <Button
