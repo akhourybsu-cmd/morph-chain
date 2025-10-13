@@ -153,7 +153,22 @@ export type Database = {
           theme_tags?: string[] | null
           word_length?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "admin_puzzle_vault_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_my_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_puzzle_vault_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_stats_all"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       admin_puzzles: {
         Row: {
@@ -240,7 +255,22 @@ export type Database = {
           user_id?: string | null
           window_start?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "api_rate_limits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "api_rate_limits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_stats_all"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       feature_flags: {
         Row: {
@@ -339,7 +369,22 @@ export type Database = {
           rating?: number | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "prism_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "prism_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_stats_all"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       rush_daily: {
         Row: {
@@ -432,7 +477,22 @@ export type Database = {
           user_id?: string | null
           words?: Json
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "rush_runs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "rush_runs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_stats_all"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       security_alerts: {
         Row: {
@@ -459,7 +519,61 @@ export type Database = {
           ip_address?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "security_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "security_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_stats_all"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          avatar_path: string | null
+          default_initials: string | null
+          display_name: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avatar_path?: string | null
+          default_initials?: string | null
+          display_name?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avatar_path?: string | null
+          default_initials?: string | null
+          display_name?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_my_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_stats_all"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -552,7 +666,36 @@ export type Database = {
           word?: string
           word_length?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "word_feedback_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "v_my_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "word_feedback_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_stats_all"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "word_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "word_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_stats_all"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Views: {
@@ -570,7 +713,22 @@ export type Database = {
           session_id: string | null
           user_id: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "rush_runs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "rush_runs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_stats_all"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       rush_daily_leaderboard: {
         Row: {
@@ -584,7 +742,88 @@ export type Database = {
           score: number | null
           user_id: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "rush_runs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "rush_runs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_stats_all"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      v_my_stats: {
+        Row: {
+          chain_avg_time_ms: number | null
+          chain_best_moves: number | null
+          chain_clears: number | null
+          chain_plays: number | null
+          rush_avg_score: number | null
+          rush_best_multiplier: number | null
+          rush_best_score: number | null
+          rush_plays: number | null
+          rush_time_ms: number | null
+          user_id: string | null
+        }
         Relationships: []
+      }
+      v_user_stats_all: {
+        Row: {
+          chain_avg_time_ms: number | null
+          chain_best_moves: number | null
+          chain_clears: number | null
+          chain_plays: number | null
+          rush_avg_score: number | null
+          rush_best_multiplier: number | null
+          rush_best_score: number | null
+          rush_plays: number | null
+          rush_time_ms: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      v_user_stats_chain: {
+        Row: {
+          avg_time_ms: number | null
+          best_moves: number | null
+          clears: number | null
+          plays: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      v_user_stats_rush: {
+        Row: {
+          avg_score: number | null
+          best_multiplier: number | null
+          best_score: number | null
+          plays: number | null
+          total_ms: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rush_runs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "rush_runs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_stats_all"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Functions: {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,22 @@ export const RushInitialsInput = ({
   const [initials, setInitials] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+
+  // Preload default initials from profile
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      const user = data.session?.user;
+      if (!user) return;
+      const { data: prof } = await supabase
+        .from("user_profiles")
+        .select("default_initials")
+        .eq("user_id", user.id)
+        .single();
+      if (prof?.default_initials) {
+        setInitials(prof.default_initials.toUpperCase().slice(0, 3));
+      }
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

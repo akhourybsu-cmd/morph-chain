@@ -12,14 +12,22 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Menu, ChevronDown, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MorphChainTitle, MorphPrismTitle, MorphRushTitle } from "@/components/GameTitles";
 import morphIcon from "@/assets/morph-icon.png";
+import { supabase } from "@/integrations/supabase/client";
 
 export const MorphHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s));
+    return () => subscription.unsubscribe();
+  }, []);
 
   const isOnChain = location.pathname === '/chain';
   const isOnPrism = location.pathname === '/prism';
@@ -116,6 +124,23 @@ export const MorphHeader = () => {
               {link.name}
             </Button>
           ))}
+
+          {/* Auth Button */}
+          {session ? (
+            <Button
+              variant="default"
+              onClick={() => navigate('/profile')}
+            >
+              View Profile
+            </Button>
+          ) : (
+            <Button
+              variant="default"
+              onClick={() => navigate('/login')}
+            >
+              Log In
+            </Button>
+          )}
         </nav>
 
         {/* Mobile Menu */}
@@ -170,6 +195,31 @@ export const MorphHeader = () => {
                     {link.name}
                   </button>
                 ))}
+              </div>
+
+              {/* Auth Section */}
+              <div className="space-y-2 pt-4 border-t border-border">
+                {session ? (
+                  <button
+                    onClick={() => {
+                      navigate('/profile');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left px-2 py-3 rounded-lg hover:bg-muted transition-colors font-medium"
+                  >
+                    View Profile
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      navigate('/login');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left px-2 py-3 rounded-lg hover:bg-muted transition-colors font-medium"
+                  >
+                    Log In
+                  </button>
+                )}
               </div>
             </nav>
           </SheetContent>
