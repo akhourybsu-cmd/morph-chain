@@ -131,40 +131,58 @@ export default function MorphPrism() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background to-card">
-      {/* Custom Header - Morph Prism Only */}
+      {/* Compact Header - Morph Prism */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 md:px-6 py-4 md:py-5">
-          <div className="flex items-center justify-between">
-            {/* Centered Title */}
+        <div className="container mx-auto px-3 md:px-4 py-2 md:py-3">
+          <div className="flex items-center justify-between gap-2">
+            {/* Left: Help */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setHelpOpen(true)}
+              className="gap-1.5 text-xs md:text-sm px-2 md:px-3"
+            >
+              <Info className="h-3.5 w-3.5 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Help</span>
+            </Button>
+            
+            {/* Center: Title */}
             <div className="flex-1 flex justify-center">
-              <PrismLogo />
+              <div className="text-center">
+                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-[hsl(var(--prism-accent-start))] via-[hsl(var(--prism-accent-mid))] to-[hsl(var(--prism-accent-end))] bg-clip-text text-transparent">
+                  MORPH PRISM
+                </h1>
+                <p className="text-[10px] md:text-xs text-muted-foreground">
+                  Puzzle #{puzzleNumber}
+                </p>
+              </div>
             </div>
             
-            {/* Right Actions */}
-            <div className="flex items-center gap-2 md:gap-3">
+            {/* Right: Auth + Stats */}
+            <div className="flex items-center gap-1 md:gap-2">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setHelpOpen(true)}
-                className="gap-2"
+                onClick={() => setShowColorGuide(!showColorGuide)}
+                className="px-2 md:px-3"
               >
-                <Info className="h-4 w-4" />
-                <span className="hidden sm:inline">Help</span>
+                <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4" />
               </Button>
-              
               {session ? (
                 <Button
-                  variant="default"
+                  variant="ghost"
                   size="sm"
                   onClick={() => navigate('/profile')}
+                  className="text-xs md:text-sm px-2 md:px-3"
                 >
                   Profile
                 </Button>
               ) : (
                 <Button
-                  variant="default"
+                  variant="ghost"
                   size="sm"
                   onClick={() => navigate('/login')}
+                  className="text-xs md:text-sm px-2 md:px-3"
                 >
                   Log In
                 </Button>
@@ -174,194 +192,122 @@ export default function MorphPrism() {
         </div>
       </header>
 
-      {/* Puzzle Info Bar */}
-      <div className="flex items-center justify-between px-4 md:px-6 py-3 bg-card/30 border-b border-border text-xs md:text-sm">
-        <div className="flex items-center gap-2 md:gap-4">
-          <span className="font-semibold text-foreground flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4" style={{ color: 'hsl(var(--prism-accent-mid))' }} />
-            Puzzle #{puzzleNumber}
-          </span>
-          <span className="text-muted-foreground hidden sm:inline">
-            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-          </span>
-        </div>
-        
-        <div className="flex items-center gap-3 md:gap-4">
-          <span className="font-mono text-foreground font-semibold">
-            {rows.length}/{MAX_GUESSES}
-          </span>
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Clock className="h-3 w-3 md:h-3.5 md:w-3.5" />
-            <span className="font-mono text-xs md:text-sm">{timeUntilMidnight}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 md:px-6 py-6 md:py-8 max-w-3xl">
-        <div className="space-y-6 md:space-y-8">
-          {/* Color Guide Toggle */}
-          <div className="text-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowColorGuide(!showColorGuide)}
-              className="gap-2"
-            >
-              <Info className="h-4 w-4" />
-              {showColorGuide ? 'Hide' : 'Show'} Color Guide
-            </Button>
-            
-            {/* Inline Color Guide */}
-            {showColorGuide && (
-              <div className="bg-card border border-border rounded-lg p-4 text-left space-y-3 animate-fade-in">
-                <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" style={{ color: 'hsl(var(--prism-accent-mid))' }} />
-                  Color Meaning Guide
-                </h3>
-                <div className="space-y-2 text-xs md:text-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded border border-border shrink-0" style={{ background: 'hsl(180 80% 60%)' }} />
-                    <div>
-                      <p className="font-semibold">Bright & Vivid</p>
-                      <p className="text-muted-foreground">Letter is in correct position</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded border border-border shrink-0" style={{ background: 'hsl(300 60% 50%)' }} />
-                    <div>
-                      <p className="font-semibold">Medium Brightness</p>
-                      <p className="text-muted-foreground">Letter exists but wrong position</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded border border-border shrink-0" style={{ background: 'hsl(0 20% 35%)' }} />
-                    <div>
-                      <p className="font-semibold">Dark & Muted</p>
-                      <p className="text-muted-foreground">Letter not in word</p>
-                    </div>
-                  </div>
-                  <div className="pt-2 border-t border-border">
-                    <p className="text-muted-foreground italic">
-                      <strong>Hue shift:</strong> Color changes toward the target letter on the spectrum (A=red → Z=purple)
-                    </p>
-                  </div>
-                </div>
+      {/* Main Content - Wordle Style Layout */}
+      <main className="flex-1 flex flex-col container mx-auto px-3 md:px-4 py-3 md:py-4 max-w-lg">
+        {/* Compact Color Guide */}
+        {showColorGuide && (
+          <div className="bg-card/50 border border-border rounded-lg p-3 md:p-4 animate-fade-in">
+            <div className="grid grid-cols-3 gap-2 text-[10px] md:text-xs">
+              <div className="text-center space-y-1">
+                <div className="h-10 w-full rounded border border-border mx-auto" style={{ background: 'hsl(180 80% 60%)' }} />
+                <p className="font-semibold text-[9px] md:text-[10px]">Correct Position</p>
               </div>
-            )}
-          </div>
-
-          {/* Spectrum Preview Bar */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground px-1">
-              <span className="font-medium">Spectrum Preview</span>
-              {rows.length > 0 && (
-                <span className="font-mono">{Math.round((rows[rows.length - 1]?.similarity || 0) * 100)}% aligned</span>
-              )}
+              <div className="text-center space-y-1">
+                <div className="h-10 w-full rounded border border-border mx-auto" style={{ background: 'hsl(300 60% 50%)' }} />
+                <p className="font-semibold text-[9px] md:text-[10px]">Wrong Position</p>
+              </div>
+              <div className="text-center space-y-1">
+                <div className="h-10 w-full rounded border border-border mx-auto" style={{ background: 'hsl(0 20% 35%)' }} />
+                <p className="font-semibold text-[9px] md:text-[10px]">Not in Word</p>
+              </div>
             </div>
-            <div 
-              className="h-5 md:h-6 rounded-xl overflow-hidden border border-border shadow-lg transition-all duration-300"
-              style={{
-                opacity: rows.length > 0 ? 1 : 0.3,
-                background: spectrum.length 
-                  ? `linear-gradient(90deg, ${spectrum.map(t => t.hex).join(',')})` 
-                  : 'hsl(var(--muted))',
-                boxShadow: rows.length > 0 ? '0 0 20px rgba(255,255,255,0.1) inset' : 'none'
-              }}
-            />
           </div>
+        )}
 
-          {/* Guess Grid */}
-          <div className="space-y-4 md:space-y-5">
-            {/* Previous guesses */}
-            {rows.map((row, idx) => (
-              <div key={idx} className="space-y-2.5 animate-fade-in">
-                <div className="flex justify-center gap-2 md:gap-3">
-                  {Array.from({ length: WORD_LENGTH }).map((_, i) => (
-                    <ChromaTile
-                      key={i}
-                      letter={row.word[i] || ''}
-                      bgHex={row.colors[i] || 'transparent'}
-                      glow
-                    />
-                  ))}
-                </div>
-                <SimilarityMeter value={row.similarity} />
+        {/* Wordle-style Grid - Centered */}
+        <div className="flex-1 flex flex-col justify-center space-y-2 md:space-y-2.5 py-2">
+          {/* Previous guesses */}
+          {rows.map((row, idx) => (
+            <div key={idx} className="flex justify-center gap-1.5 md:gap-2 animate-fade-in">
+              {Array.from({ length: WORD_LENGTH }).map((_, i) => (
+                <ChromaTile
+                  key={i}
+                  letter={row.word[i] || ''}
+                  bgHex={row.colors[i] || 'transparent'}
+                  glow
+                />
+              ))}
+            </div>
+          ))}
+
+          {/* Current input row */}
+          {gameStatus === 'playing' && rows.length < MAX_GUESSES && (
+            <div className="flex justify-center gap-1.5 md:gap-2">
+              {Array.from({ length: WORD_LENGTH }).map((_, i) => (
+                <ChromaTile
+                  key={i}
+                  letter={currentInput[i] || ''}
+                  bgHex="transparent"
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Empty rows */}
+          {Array.from({ 
+            length: Math.max(0, MAX_GUESSES - rows.length - (gameStatus === 'playing' ? 1 : 0)) 
+          }).map((_, i) => (
+            <div key={`empty-${i}`} className="flex justify-center gap-1.5 md:gap-2 opacity-20">
+              {Array.from({ length: WORD_LENGTH }).map((_, j) => (
+                <ChromaTile key={j} letter="" bgHex="transparent" />
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Bottom Section - Input & Status */}
+        <div className="space-y-2 md:space-y-3">
+          {/* Similarity Bar */}
+          {rows.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-[10px] md:text-xs text-muted-foreground">
+                <span>Alignment</span>
+                <span className="font-mono font-semibold">{Math.round((rows[rows.length - 1]?.similarity || 0) * 100)}%</span>
               </div>
-            ))}
+              <SimilarityMeter value={rows[rows.length - 1]?.similarity || 0} />
+            </div>
+          )}
 
-            {/* Current input row */}
-            {gameStatus === 'playing' && rows.length < MAX_GUESSES && (
-              <div className="space-y-2.5">
-                <div className="flex justify-center gap-2 md:gap-3">
-                  {Array.from({ length: WORD_LENGTH }).map((_, i) => (
-                    <ChromaTile
-                      key={i}
-                      letter={currentInput[i] || ''}
-                      bgHex="transparent"
-                    />
-                  ))}
-                </div>
-                <SimilarityMeter value={0} />
-              </div>
-            )}
-
-            {/* Empty rows */}
-            {Array.from({ 
-              length: Math.max(0, MAX_GUESSES - rows.length - (gameStatus === 'playing' ? 1 : 0)) 
-            }).map((_, i) => (
-              <div key={`empty-${i}`} className="space-y-2.5 opacity-30">
-                <div className="flex justify-center gap-2 md:gap-3">
-                  {Array.from({ length: WORD_LENGTH }).map((_, j) => (
-                    <ChromaTile key={j} letter="" bgHex="transparent" />
-                  ))}
-                </div>
-                <SimilarityMeter value={0} />
-              </div>
-            ))}
-          </div>
-
-          {/* Input Area */}
+          {/* Input */}
           {gameStatus === 'playing' && (
-            <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
-              <div className="flex gap-2 md:gap-3">
+            <form onSubmit={handleSubmit} className="space-y-2">
+              <div className="flex gap-2">
                 <Input
                   type="text"
                   value={currentInput}
                   onChange={(e) => setCurrentInput(e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, WORD_LENGTH))}
-                  placeholder="TYPE HERE"
-                  className="flex-1 text-center font-bold text-lg tracking-widest uppercase"
+                  placeholder="TYPE WORD"
+                  className="flex-1 text-center font-bold text-base md:text-lg tracking-widest uppercase h-12 md:h-14"
                   maxLength={WORD_LENGTH}
                   autoFocus
+                  autoComplete="off"
                 />
                 <Button 
                   type="submit"
-                  className="px-6 bg-gradient-to-r from-prism-accent-start via-prism-accent-mid to-prism-accent-end hover:opacity-90"
+                  className="px-6 md:px-8 h-12 md:h-14 font-bold bg-gradient-to-r from-[hsl(var(--prism-accent-start))] via-[hsl(var(--prism-accent-mid))] to-[hsl(var(--prism-accent-end))] hover:opacity-90"
                 >
-                  Submit
+                  Go
                 </Button>
               </div>
               {error && (
-                <p className="text-sm text-destructive text-center animate-fade-in">
+                <p className="text-xs md:text-sm text-destructive text-center font-semibold animate-fade-in">
                   {error}
                 </p>
               )}
             </form>
           )}
 
-          {/* Game Status & Share */}
+          {/* Share Button */}
           {gameStatus !== 'playing' && (
-            <div className="flex justify-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleShare}
-                className="gap-2"
-              >
-                <Share2 className="h-4 w-4" />
-                Share Result
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
+              className="w-full gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              Share Result
+            </Button>
           )}
         </div>
       </main>
