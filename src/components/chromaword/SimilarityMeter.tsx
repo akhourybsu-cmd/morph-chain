@@ -1,21 +1,24 @@
-interface SimilarityMeterProps {
-  similarity: number;
-}
-
-export const SimilarityMeter = ({ similarity }: SimilarityMeterProps) => {
-  const percentage = Math.round(similarity * 100);
-  
+export default function SimilarityMeter({ value }: { value: number }) {
+  const pct = Math.max(0, Math.min(100, Math.round(value * 100)))
   return (
-    <div className="flex items-center gap-2 w-full">
-      <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 transition-all duration-500"
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-      <span className="text-sm font-mono font-semibold min-w-[3rem] text-right">
-        {percentage}%
-      </span>
+    <div
+      role="img" aria-label={`Spectrum alignment ${pct} percent`}
+      style={{
+        height: 14,
+        borderRadius: 999,
+        background: 'rgba(255,255,255,0.06)',
+        border: '1px solid rgba(255,255,255,0.10)',
+        overflow: 'hidden',
+        boxShadow: 'inset 0 0 10px rgba(0,0,0,0.35)'
+      }}
+    >
+      <div
+        style={{
+          width: pct + '%',
+          height: '100%',
+          background: 'linear-gradient(90deg,#ff62c8,#ff7f50,#ffd873,#8bff8b,#7fd0ff,#9a86ff,#ce6bff)'
+        }}
+      />
     </div>
-  );
-};
+  )
+}
