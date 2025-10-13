@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { GameHeader } from "@/components/GameHeader";
 import { PuzzleTopBar } from "@/components/PuzzleTopBar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { AlertCircle } from "lucide-react";
 import { LengthPills } from "@/components/LengthPills";
 import { PuzzleHero } from "@/components/PuzzleHero";
-import { InputRow } from "@/components/InputRow";
+import OnScreenKeyboard from "@/components/OnScreenKeyboard";
 import { MoveLog, Move } from "@/components/MoveLog";
 import { ResultPanel } from "@/components/ResultPanel";
 import { SettingsModal, backgroundThemes, BackgroundTheme } from "@/components/SettingsModal";
@@ -47,6 +49,7 @@ const Index = () => {
   const [moves, setMoves] = useState<Move[]>([]);
   const [currentWord, setCurrentWord] = useState(puzzle.startWord);
   const [usedWords, setUsedWords] = useState(new Set([puzzle.startWord]));
+  const [currentInput, setCurrentInput] = useState("");
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [gameCompleted, setGameCompleted] = useState(false);
@@ -130,7 +133,7 @@ const Index = () => {
     }
   }, []);
 
-  const handleSubmit = (word: string) => {
+  const submitGuess = (word: string) => {
     setError("");
     
     // Rate limiting: 6 requests per 15 seconds
@@ -305,8 +308,57 @@ const Index = () => {
       }
 
       setIsLoading(false);
+      setCurrentInput("");
     }, 200);
   };
+
+  const handleSubmit = () => {
+    if (!currentInput.trim() || gameCompleted || isLoading) return;
+    submitGuess(currentInput.trim().toUpperCase());
+  };
+
+  const handleKeyPress = (key: string) => {
+    if (currentInput.length < puzzle.wordLength) {
+      setCurrentInput(currentInput + key);
+    }
+  };
+
+  const handleBackspace = () => {
+    setCurrentInput(currentInput.slice(0, -1));
+  };
+
+  // Track letter states for keyboard feedback
+  const usedLetters = useMemo(() => {
+    const letters = new Set<string>();
+    moves.forEach(move => {
+      move.to.split('').forEach(letter => letters.add(letter));
+    });
+    return letters;
+  }, [moves]);
+
+  const correctLetters = useMemo(() => {
+    const letters = new Set<string>();
+    moves.forEach(move => {
+      move.hints.forEach((hint, index) => {
+        if (hint === 'match') {
+          letters.add(move.to[index]);
+        }
+      });
+    });
+    return letters;
+  }, [moves]);
+
+  const wrongPositionLetters = useMemo(() => {
+    const letters = new Set<string>();
+    moves.forEach(move => {
+      move.hints.forEach((hint, index) => {
+        if (hint === 'present') {
+          letters.add(move.to[index]);
+        }
+      });
+    });
+    return letters;
+  }, [moves]);
 
   const updateStats = (won: boolean, movesCount: number) => {
     const newStats = { ...stats };
@@ -373,6 +425,7 @@ const Index = () => {
     setGameCompleted(false);
     setGameWon(false);
     setError("");
+    setCurrentInput("");
     setInvalidGuessCount(0);
     clearGameState(puzzle.wordLength);
   };
@@ -530,16 +583,60 @@ const Index = () => {
         )}
 
         {!gameCompleted && (
-          <InputRow
-            previousWord={currentWord}
-            onSubmit={handleSubmit}
-            error={error}
-            disabled={gameCompleted}
-            isLoading={isLoading}
-            movesUsed={moves.length}
-            maxMoves={puzzle.maxMoves}
-            wordLength={puzzle.wordLength}
-          />
+          <div className="px-3 py-3 space-y-2 md:px-6 md:py-4 md:space-y-3">
+            <div className="space-y-2 md:space-y-3">
+              <div className="flex gap-1.5 md:gap-2">
+                <Input
+                  value={currentWord}
+                  disabled
+                  className="flex-1 font-mono uppercase tracking-tiles bg-muted/30 border-muted cursor-not-allowed text-sm md:text-base h-10 md:h-11"
+                  placeholder="Previous"
+                  aria-label="Previous word"
+                />
+                
+                <span className="flex items-center text-lg md:text-2xl text-muted-foreground">→</span>
+                
+                <Input
+                  value={currentInput}
+                  disabled
+                  className="flex-1 font-mono uppercase tracking-tiles text-sm md:text-base h-10 md:h-11 bg-background"
+                  placeholder="..."
+                  maxLength={currentWord.length}
+                  aria-label="Next word"
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-xs md:text-sm">
+                <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                  {error && (
+                    <div
+                      className="flex items-center gap-1 md:gap-1.5 text-destructive animate-slide-in truncate"
+                      role="alert"
+                    >
+                      <AlertCircle className="h-3 w-3 md:h-3.5 md:w-3.5 flex-shrink-0" />
+                      <span className="truncate text-[11px] md:text-sm">{error}</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="text-muted-foreground font-medium text-xs md:text-sm flex-shrink-0">
+                  <span className="text-foreground">{moves.length}</span>
+                  <span className="mx-0.5 md:mx-1">/</span>
+                  <span>{puzzle.maxMoves}</span>
+                </div>
+              </div>
+            </div>
+
+            <OnScreenKeyboard
+              onKeyPress={handleKeyPress}
+              onBackspace={handleBackspace}
+              onEnter={handleSubmit}
+              disabled={gameCompleted || isLoading}
+              usedLetters={usedLetters}
+              correctLetters={correctLetters}
+              wrongPositionLetters={wrongPositionLetters}
+            />
+          </div>
         )}
 
         <MoveLog
