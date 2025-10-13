@@ -1,356 +1,302 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { HelpCircle, MessageSquare, FlaskConical } from "lucide-react";
-import { PrismLogo } from "@/components/PrismLogo";
-import { ColorSwatch } from "@/components/prism/ColorSwatch";
-import { ChannelControl } from "@/components/prism/ChannelControl";
-import { GameHUD } from "@/components/prism/GameHUD";
-import { PrismFeedbackModal } from "@/components/prism/PrismFeedbackModal";
-import {
-  Channel,
-  ColorState,
-  getNextChannelValue,
-  isCloserToGoal,
-  colorsEqual,
-} from "@/lib/prismColorGrid";
-import { getTodaysPuzzle } from "@/lib/prismPuzzleGenerator";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { HelpCircle, Share2, Eye } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { PrismLogo } from "@/components/PrismLogo";
+import { ChromaTile } from "@/components/chromaword/ChromaTile";
+import { ChromaKeyboard } from "@/components/chromaword/ChromaKeyboard";
+import { SimilarityMeter } from "@/components/chromaword/SimilarityMeter";
+import { getTodaysPuzzle, scoreGuess, GuessResult } from "@/lib/chromawordLogic";
+import { VALID_WORDS_5 } from "@/lib/gameLogic";
 
 export default function MorphPrism() {
   const navigate = useNavigate();
-  const [puzzle] = useState(() => getTodaysPuzzle());
-  const [currentColor, setCurrentColor] = useState<ColorState>(puzzle.start);
-  const [moves, setMoves] = useState<ColorState[]>([puzzle.start]);
-  const [hintsRemaining, setHintsRemaining] = useState(puzzle.hints);
-  const [lastMoveStatus, setLastMoveStatus] = useState<'closer' | 'sideways' | null>(null);
-  const [showHelp, setShowHelp] = useState(false);
-  const [showSolutionNumbers, setShowSolutionNumbers] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
+  const puzzle = getTodaysPuzzle();
   
-  const gameWon = colorsEqual(currentColor, puzzle.goal);
-  const gameLost = moves.length > puzzle.cap && !gameWon;
-  const movesUsed = moves.length - 1; // Don't count starting position
-  
-  const handleMove = (channel: Channel, direction: '+' | '-') => {
-    if (gameWon || gameLost) return;
-    
-    const newValue = getNextChannelValue(channel, currentColor[channel], direction);
-    if (newValue === null) return;
-    
-    const newColor: ColorState = { ...currentColor, [channel]: newValue };
-    
-    // Check if closer or sideways
-    const closer = isCloserToGoal(currentColor, newColor, puzzle.goal);
-    setLastMoveStatus(closer ? 'closer' : 'sideways');
-    
-    setCurrentColor(newColor);
-    setMoves(prev => [...prev, newColor]);
-    
-    // Check win condition
-    if (colorsEqual(newColor, puzzle.goal)) {
-      toast.success(`🎉 Solved in ${moves.length} moves!`);
-    } else if (moves.length >= puzzle.cap) {
-      toast.error("Out of moves! Try again tomorrow.");
-    }
-  };
-  
-  const handleHint = () => {
-    if (hintsRemaining === 0) return;
-    
-    // Simple hint: suggest a channel that gets closer
-    const channels: Channel[] = ['H', 'S', 'L'];
-    
-    for (const channel of channels) {
-      const directions: ('+' | '-')[] = ['+', '-'];
-      
-      for (const direction of directions) {
-        const newValue = getNextChannelValue(channel, currentColor[channel], direction);
-        if (newValue === null) continue;
-        
-        const testColor: ColorState = { ...currentColor, [channel]: newValue };
-        if (isCloserToGoal(currentColor, testColor, puzzle.goal)) {
-          setHintsRemaining(prev => prev - 1);
-          const channelName = channel === 'H' ? 'Hue' : channel === 'S' ? 'Saturation' : 'Lightness';
-          const directionText = direction === '+' ? 'increase' : 'decrease';
-          toast.info(`💡 Try to ${directionText} ${channelName}!`);
-          return;
-        }
+  const [guesses, setGuesses] = useState<GuessResult[]>([]);
+  const [currentGuess, setCurrentGuess] = useState("");
+  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showSymbols, setShowSymbols] = useState(false);
+
+  // Keyboard event listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameStatus !== 'playing') return;
+
+      if (e.key === 'Enter') {
+        handleSubmitGuess();
+      } else if (e.key === 'Backspace') {
+        handleBackspace();
+      } else if (/^[a-zA-Z]$/.test(e.key)) {
+        handleKeyPress(e.key.toUpperCase());
       }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentGuess, gameStatus, guesses]);
+
+  const handleKeyPress = (key: string) => {
+    if (currentGuess.length < puzzle.length) {
+      setCurrentGuess(prev => prev + key);
     }
-    
-    toast.info("💡 Any valid move works from here!");
-    setHintsRemaining(prev => prev - 1);
   };
-  
+
+  const handleBackspace = () => {
+    setCurrentGuess(prev => prev.slice(0, -1));
+  };
+
+  const handleSubmitGuess = () => {
+    if (currentGuess.length !== puzzle.length) {
+      toast.error(`Word must be ${puzzle.length} letters`);
+      return;
+    }
+
+    const upperGuess = currentGuess.toUpperCase();
+    
+    // Validate against dictionary
+    if (!VALID_WORDS_5.has(upperGuess.toLowerCase())) {
+      toast.error("Not in word list");
+      return;
+    }
+
+    const result = scoreGuess(
+      upperGuess,
+      puzzle.target,
+      puzzle.weights,
+      guesses.length,
+      puzzle.maxGuesses
+    );
+
+    setGuesses(prev => [...prev, result]);
+    setCurrentGuess("");
+
+    if (result.win) {
+      setGameStatus('won');
+      toast.success(`Amazing! You solved it in ${guesses.length + 1} ${guesses.length === 0 ? 'guess' : 'guesses'}!`);
+    } else if (guesses.length + 1 >= puzzle.maxGuesses) {
+      setGameStatus('lost');
+      toast.error(`Game over! The word was ${puzzle.target}`);
+    }
+  };
+
   const handleShare = () => {
-    const status = gameWon ? '✅' : '❌';
-    const text = `Morph Prism #${puzzle.puzzleNumber}\n${status} ${movesUsed}/${puzzle.cap} moves\n\nPlay at: ${window.location.origin}/prism`;
+    const shareText = `CHROMAWORD — Morph Prism\nPuzzle ${puzzle.id}\nSolved in ${guesses.length}/${puzzle.maxGuesses}\nSpectrum Alignment: ${Math.round((guesses[guesses.length - 1]?.similarity || 0) * 100)}%\n#ChromaWord #MorphPrism`;
     
     if (navigator.share) {
-      navigator.share({ text });
+      navigator.share({ text: shareText });
     } else {
-      navigator.clipboard.writeText(text);
+      navigator.clipboard.writeText(shareText);
       toast.success("Copied to clipboard!");
     }
   };
-  
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <header className="h-14 grid grid-cols-3 items-center px-4 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="flex items-center gap-1 justify-start">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowFeedback(true)}
-            aria-label="Send feedback"
-            className="hover:bg-muted/50 h-9 w-9"
-          >
-            <MessageSquare className="h-5 w-5" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowHelp(true)}
-            aria-label="How to play"
-            className="hover:bg-muted/50 h-9 w-9"
-          >
-            <HelpCircle className="h-5 w-5" />
-          </Button>
-        </div>
-        
-        <div className="flex justify-center">
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-card">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <PrismLogo />
-        </div>
-        
-        <div className="flex items-center gap-1 justify-end">
-          {/* Empty right side to maintain grid balance */}
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowHowToPlay(true)}
+              aria-label="How to play"
+            >
+              <HelpCircle className="h-5 w-5" />
+            </Button>
+            {gameStatus !== 'playing' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleShare}
+                aria-label="Share results"
+              >
+                <Share2 className="h-5 w-5" />
+              </Button>
+            )}
+          </div>
         </div>
       </header>
-      
-      <main className="container max-w-2xl mx-auto p-4 space-y-6">
-        {/* Test Build Notice */}
-        <div className="flex items-center gap-2 p-3 bg-accent/10 border border-accent/20 rounded-lg text-sm">
-          <FlaskConical className="h-4 w-4 text-accent flex-shrink-0" />
-          <p className="text-muted-foreground">
-            <span className="font-semibold text-foreground">Test Build:</span> Morph Prism is in active development. 
-            <button 
-              onClick={() => setShowFeedback(true)}
-              className="ml-1 underline hover:text-foreground transition-colors"
-            >
-              Share your feedback
-            </button>
-          </p>
-        </div>
 
-        {/* Color Swatches */}
-        <div className="flex items-center justify-between gap-4">
-          <ColorSwatch
-            color={puzzle.start}
-            label="Start"
-            size="small"
-            showValues={showSolutionNumbers}
-          />
-          
-          <ColorSwatch
-            color={currentColor}
-            label="Current"
-            size="large"
-            showValues={false}
-          />
-          
-          <ColorSwatch
-            color={puzzle.goal}
-            label="Goal"
-            size="small"
-            showValues={showSolutionNumbers}
-          />
-        </div>
-        
-        {/* Game Status */}
-        {gameWon && (
-          <div className="text-center p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
-            <p className="text-lg font-bold text-green-700 dark:text-green-300">
-              🎉 Puzzle Solved!
-            </p>
+      {/* Main Content */}
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-2xl">
+        <div className="space-y-8">
+          {/* Game Status */}
+          <div className="text-center">
+            <h1 className="text-xl font-semibold mb-2">
+              Puzzle #{puzzle.id.split('_')[1]}
+            </h1>
             <p className="text-sm text-muted-foreground">
-              Completed in {movesUsed} moves
+              Decode the {puzzle.length}-letter word through spectral feedback
             </p>
           </div>
-        )}
-        
-        {gameLost && (
-          <div className="text-center p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
-            <p className="text-lg font-bold text-red-700 dark:text-red-300">
-              Out of moves!
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Try again tomorrow
-            </p>
+
+          {/* Guess Grid */}
+          <div className="space-y-2">
+            {/* Previous guesses */}
+            {guesses.map((guess, rowIndex) => {
+              const guessWord = puzzle.target.split('').map((_, i) => {
+                // Reconstruct the guess word from tiles
+                return String.fromCharCode(65 + Math.round((guess.tiles[i].h / 360) * 26));
+              }).join('');
+              
+              return (
+                <div key={rowIndex} className="space-y-2">
+                  <div className="flex justify-center gap-1">
+                    {guess.tiles.map((tile, i) => {
+                      // Get the actual guessed letter by working backwards from the scoring
+                      const letter = rowIndex < guesses.length ? 
+                        (puzzle.target[i] || '?') : '?';
+                      
+                      return (
+                        <ChromaTile
+                          key={i}
+                          letter={letter}
+                          color={tile}
+                          meta={guess.tileMeta[i]}
+                          state="submitted"
+                          showSymbol={showSymbols}
+                        />
+                      );
+                    })}
+                  </div>
+                  <SimilarityMeter similarity={guess.similarity} />
+                </div>
+              );
+            })}
+
+            {/* Current guess row */}
+            {gameStatus === 'playing' && guesses.length < puzzle.maxGuesses && (
+              <div className="flex justify-center gap-1">
+                {Array.from({ length: puzzle.length }).map((_, i) => (
+                  <ChromaTile
+                    key={i}
+                    letter={currentGuess[i] || ''}
+                    state={currentGuess[i] ? 'filled' : 'empty'}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Empty rows */}
+            {Array.from({ length: Math.max(0, puzzle.maxGuesses - guesses.length - (gameStatus === 'playing' ? 1 : 0)) }).map((_, i) => (
+              <div key={`empty-${i}`} className="flex justify-center gap-1">
+                {Array.from({ length: puzzle.length }).map((_, j) => (
+                  <ChromaTile key={j} letter="" state="empty" />
+                ))}
+              </div>
+            ))}
           </div>
-        )}
-        
-        {/* HUD */}
-        <GameHUD
-          movesUsed={movesUsed}
-          moveCap={puzzle.cap}
-          hintsRemaining={hintsRemaining}
-          lastMoveStatus={lastMoveStatus}
-          onHint={handleHint}
-          onShare={handleShare}
-          gameWon={gameWon}
-          gameLost={gameLost}
-        />
-        
-        {/* Controls */}
-        <div className="space-y-3">
-          <ChannelControl
-            channel="H"
-            color={currentColor}
-            onMove={handleMove}
-            disabled={gameWon || gameLost}
-            showValue={true}
-          />
-          <ChannelControl
-            channel="S"
-            color={currentColor}
-            onMove={handleMove}
-            disabled={gameWon || gameLost}
-            showValue={true}
-          />
-          <ChannelControl
-            channel="L"
-            color={currentColor}
-            onMove={handleMove}
-            disabled={gameWon || gameLost}
-            showValue={true}
-          />
-        </div>
-        
-        {/* Show Numbers Button - appears when game ends */}
-        {(gameWon || gameLost) && (
+
+          {/* Game Status Messages */}
+          {gameStatus === 'won' && (
+            <div className="text-center p-4 bg-green-500/10 border border-green-500 rounded-lg">
+              <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                🎉 Congratulations! You solved it in {guesses.length} {guesses.length === 1 ? 'guess' : 'guesses'}!
+              </p>
+            </div>
+          )}
+
+          {gameStatus === 'lost' && (
+            <div className="text-center p-4 bg-red-500/10 border border-red-500 rounded-lg">
+              <p className="text-lg font-semibold text-red-600 dark:text-red-400">
+                The word was: <span className="font-mono">{puzzle.target}</span>
+              </p>
+            </div>
+          )}
+
+          {/* Controls */}
           <div className="flex justify-center">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowSolutionNumbers(!showSolutionNumbers)}
+              onClick={() => setShowSymbols(!showSymbols)}
             >
-              {showSolutionNumbers ? 'Hide' : 'Show'} Numbers
+              <Eye className="h-4 w-4 mr-2" />
+              {showSymbols ? 'Hide' : 'Show'} Symbols
             </Button>
           </div>
-        )}
+
+          {/* Keyboard */}
+          <ChromaKeyboard
+            onKeyPress={handleKeyPress}
+            onBackspace={handleBackspace}
+            onEnter={handleSubmitGuess}
+            disabled={gameStatus !== 'playing'}
+          />
+        </div>
       </main>
-      
+
       {/* How to Play Dialog */}
-      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+      <Dialog open={showHowToPlay} onOpenChange={setShowHowToPlay}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">How to Play Morph Prism</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">How to Play Chromaword</DialogTitle>
             <DialogDescription>
-              Transform the start color into the goal color by adjusting HSL channels
+              Decode the word using spectral color feedback
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4 text-sm">
             <section>
               <h3 className="font-semibold text-base mb-2">🎯 Objective</h3>
-              <p className="text-muted-foreground mb-2">
-                Your goal is to transform the START color swatch into the GOAL color swatch by making a series of careful adjustments to the color's HSL (Hue, Saturation, Lightness) values.
-              </p>
-              <p className="text-muted-foreground text-sm">
-                Each adjustment brings you closer to the target color, but you must stay within the move limit!
-              </p>
-            </section>
-
-            <section>
-              <h3 className="font-semibold text-base mb-2">🎨 Understanding HSL</h3>
-              <div className="space-y-3 bg-card p-3 rounded border border-border">
-                <div>
-                  <p className="font-medium text-sm">Hue (0° - 345°)</p>
-                  <p className="text-xs text-muted-foreground">
-                    The color itself on the color wheel. 0° = Red, 120° = Green, 240° = Blue. Adjustments: ±15° per move. <strong>Wraps around:</strong> 345° + 15° = 0° (back to red).
-                  </p>
-                </div>
-                <div>
-                  <p className="font-medium text-sm">Saturation (0% - 100%)</p>
-                  <p className="text-xs text-muted-foreground">
-                    Color intensity. 0% = completely gray (no color), 100% = fully vibrant. Adjustments: ±10% per move.
-                  </p>
-                </div>
-                <div>
-                  <p className="font-medium text-sm">Lightness (0% - 100%)</p>
-                  <p className="text-xs text-muted-foreground">
-                    Brightness level. 0% = pure black, 50% = true color, 100% = pure white. Adjustments: ±10% per move.
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            <section>
-              <h3 className="font-semibold text-base mb-2">📏 Core Rules</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2 text-muted-foreground">
-                  <span className="text-primary">•</span>
-                  <span><strong>One Channel Per Move:</strong> You can only adjust ONE of the three channels (H, S, or L) on each turn. Choose wisely!</span>
-                </li>
-                <li className="flex items-start gap-2 text-muted-foreground">
-                  <span className="text-primary">•</span>
-                  <span><strong>Fixed Adjustments:</strong> Hue changes by ±15°, Saturation and Lightness change by ±10% each move. You can't make smaller or larger adjustments.</span>
-                </li>
-                <li className="flex items-start gap-2 text-muted-foreground">
-                  <span className="text-primary">•</span>
-                  <span><strong>Move Limit:</strong> You have {puzzle.cap} moves to reach the goal. Plan your path carefully—some puzzles require thinking several steps ahead!</span>
-                </li>
-                <li className="flex items-start gap-2 text-muted-foreground">
-                  <span className="text-primary">•</span>
-                  <span><strong>Hue Wrapping:</strong> The hue wheel wraps around at 0°/345°. Going from 345° up brings you to 0° (red), and going from 0° down takes you to 345°.</span>
-                </li>
-              </ul>
-            </section>
-
-            <section>
-              <h3 className="font-semibold text-base mb-2">🎯 Distance Feedback</h3>
-              <p className="text-muted-foreground mb-2">After each move, you'll see feedback indicating your progress:</p>
-              <div className="space-y-2 bg-card p-3 rounded border border-border">
-                <div className="flex items-start gap-2">
-                  <div className="px-2 py-1 bg-success/10 text-success rounded text-xs font-medium whitespace-nowrap">
-                    ✓ Closer
-                  </div>
-                  <span className="text-xs text-muted-foreground">Your move decreased the total color distance to the goal. You're on the right track!</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="px-2 py-1 bg-warning/10 text-warning rounded text-xs font-medium whitespace-nowrap">
-                    ↔ Sideways
-                  </div>
-                  <span className="text-xs text-muted-foreground">The distance stayed the same. Sometimes necessary to position yourself for the next move, but be careful not to waste moves.</span>
-                </div>
-              </div>
-            </section>
-
-            <section>
-              <h3 className="font-semibold text-base mb-2">💡 Hints</h3>
-              <div className="bg-card p-3 rounded border border-border">
-                <p className="text-sm text-muted-foreground mb-2">
-                  You have <strong>{puzzle.hints} hint(s)</strong> available for this puzzle.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Using a hint will reveal which channel (H, S, or L) and direction (+/-) to adjust next. Use hints strategically when you're stuck or need confirmation of your planned path.
-                </p>
-              </div>
-            </section>
-
-            <section>
-              <h3 className="font-semibold text-base mb-2">🏆 Winning</h3>
               <p className="text-muted-foreground">
-                Successfully match the GOAL color exactly within the allowed number of moves. The current color display will show a checkmark (✓) when you've achieved an exact match!
+                Guess the {puzzle.length}-letter word in {puzzle.maxGuesses} tries or less. Each guess reveals spectral color feedback to guide you to the solution.
               </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">🎨 Color Feedback</h3>
+              <div className="space-y-3">
+                <p className="text-muted-foreground">Each letter tile shows a unique color based on:</p>
+                <ul className="space-y-2 ml-4">
+                  <li className="flex items-start gap-2 text-muted-foreground">
+                    <span className="text-primary">•</span>
+                    <span><strong>Hue:</strong> Letters map to a color wheel (A=red → Z=purple). Tiles blend toward the target letter's hue.</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-muted-foreground">
+                    <span className="text-primary">•</span>
+                    <span><strong>Saturation:</strong> Vibrant colors = letter is in the word. Dull colors = letter is not in the word.</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-muted-foreground">
+                    <span className="text-primary">•</span>
+                    <span><strong>Brightness:</strong> Brightest = correct position. Medium = in word but wrong position. Dim = not in word.</span>
+                  </li>
+                </ul>
+              </div>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">📊 Similarity Meter</h3>
+              <p className="text-muted-foreground">
+                Each guess shows a spectrum alignment percentage (0-100%). Higher percentages mean you're closer to the target word. Use this to gauge your overall progress!
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">♿ Accessibility Symbols</h3>
+              <p className="text-muted-foreground mb-2">
+                Toggle symbols for color-blind safe feedback:
+              </p>
+              <div className="space-y-2 bg-card p-3 rounded border border-border">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono">✓</span>
+                  <span className="text-xs text-muted-foreground">Correct letter in correct position</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono">◎</span>
+                  <span className="text-xs text-muted-foreground">Letter in word but wrong position</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono">✗</span>
+                  <span className="text-xs text-muted-foreground">Letter not in word</span>
+                </div>
+              </div>
             </section>
 
             <section>
@@ -358,28 +304,25 @@ export default function MorphPrism() {
               <ul className="space-y-2 ml-4 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  <span>Compare the START and GOAL color values carefully before making your first move</span>
+                  <span>Start with common letters to gather information</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  <span>Calculate the number of moves needed for each channel (divide the difference by 15 for Hue, by 10 for S and L)</span>
+                  <span>Pay attention to both color and brightness of tiles</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  <span>Watch out for hue wrapping—sometimes the shorter path is to go "backwards" around the wheel</span>
+                  <span>Watch the similarity percentage to track your progress</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  <span>Don't waste moves on channels that are already at the goal value</span>
+                  <span>Use the alphabet color wheel to predict letter colors</span>
                 </li>
               </ul>
             </section>
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Feedback Dialog */}
-      <PrismFeedbackModal open={showFeedback} onOpenChange={setShowFeedback} />
     </div>
   );
 }
