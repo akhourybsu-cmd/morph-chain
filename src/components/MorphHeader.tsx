@@ -32,23 +32,21 @@ export const MorphHeader = () => {
       active: isOnChain
     },
     { 
-      name: <MorphPrismTitle className="text-sm" />,
-      path: "/prism", 
-      description: "Color ladder",
-      active: isOnPrism
-    },
-    { 
       name: <MorphRushTitle className="text-sm" />,
       path: "/rush?mode=daily", 
       description: "Score dash",
       active: isOnRush
     },
+    { 
+      name: <MorphPrismTitle className="text-sm" />,
+      path: "/prism", 
+      description: "Color ladder",
+      active: isOnPrism
+    },
   ];
 
   const utilityLinks = [
     { name: "Rules", path: "/rules" },
-    { name: "Kids", path: "/kids" },
-    { name: "Press", path: "/press" },
   ];
 
   const currentGame = games.find(game => game.active);

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, HelpCircle, MessageSquare, FlaskConical } from "lucide-react";
+import { HelpCircle, MessageSquare, FlaskConical } from "lucide-react";
 import { PrismLogo } from "@/components/PrismLogo";
 import { ColorSwatch } from "@/components/prism/ColorSwatch";
 import { ChannelControl } from "@/components/prism/ChannelControl";
@@ -104,37 +104,35 @@ export default function MorphPrism() {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <header className="h-14 flex items-center px-4 border-b border-border bg-card/50 backdrop-blur-sm">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate('/')}
-          aria-label="Back to home"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        
-        <div className="flex-1 flex justify-center">
-          <PrismLogo />
-        </div>
-        
-        <div className="flex gap-1">
+      <header className="h-14 grid grid-cols-3 items-center px-4 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+        <div className="flex items-center gap-1 justify-start">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setShowFeedback(true)}
             aria-label="Send feedback"
+            className="hover:bg-muted/50 h-9 w-9"
           >
             <MessageSquare className="h-5 w-5" />
           </Button>
+          
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setShowHelp(true)}
             aria-label="How to play"
+            className="hover:bg-muted/50 h-9 w-9"
           >
             <HelpCircle className="h-5 w-5" />
           </Button>
+        </div>
+        
+        <div className="flex justify-center">
+          <PrismLogo />
+        </div>
+        
+        <div className="flex items-center gap-1 justify-end">
+          {/* Empty right side to maintain grid balance */}
         </div>
       </header>
       

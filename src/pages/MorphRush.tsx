@@ -27,8 +27,7 @@ import { RushLeaderboard } from "@/components/rush/RushLeaderboard";
 import { RushHowToPlay } from "@/components/rush/RushHowToPlay";
 import { RushStats } from "@/components/rush/RushStats";
 import { RushInitialsInput } from "@/components/rush/RushInitialsInput";
-import { SettingsModal, BackgroundTheme } from "@/components/SettingsModal";
-import { loadSettings, saveSettings } from "@/lib/storage";
+import { RushSettingsModal } from "@/components/rush/RushSettingsModal";
 import { updateRushStats } from "@/lib/rushStorage";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -70,7 +69,6 @@ const MorphRush = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [settings, setSettings] = useState(loadSettings());
   const [user, setUser] = useState<any>(null);
 
   // Auth listener
@@ -89,11 +87,6 @@ const MorphRush = () => {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
-  };
-
-  const handleSaveSettings = (newSettings: any) => {
-    setSettings(newSettings);
-    saveSettings(newSettings);
   };
   
   // Timer tick
@@ -364,23 +357,31 @@ const MorphRush = () => {
       </header>
       
       {/* Modals */}
-      <SettingsModal
+      <RushSettingsModal
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
-        hardMode={settings.hardMode}
-        onToggleHardMode={() => handleSaveSettings({ ...settings, hardMode: !settings.hardMode })}
-        colorblindMode={settings.colorblindMode}
-        onToggleColorblindMode={() => handleSaveSettings({ ...settings, colorblindMode: !settings.colorblindMode })}
-        vibration={settings.vibration}
-        onToggleVibration={() => handleSaveSettings({ ...settings, vibration: !settings.vibration })}
-        backgroundTheme={settings.backgroundTheme as BackgroundTheme}
-        onChangeBackgroundTheme={(theme: BackgroundTheme) => handleSaveSettings({ ...settings, backgroundTheme: theme })}
+        hardMode={hardMode}
+        onToggleHardMode={() => {
+          if (run.words.length === 0) {
+            setHardMode(!hardMode);
+            setLastChangedIdx(null);
+          } else {
+            toast({
+              title: "Can't toggle Hard Mode",
+              description: "Hard Mode must be set before your first move",
+              variant: "destructive"
+            });
+          }
+        }}
+        canToggleHardMode={run.words.length === 0}
+        onViewLeaderboard={() => setShowLeaderboard(true)}
         onResetData={() => {
           if (confirm('Reset all Rush data? This cannot be undone.')) {
-            localStorage.removeItem('rush_stats');
+            localStorage.removeItem('morphchain_rush_stats');
             window.location.reload();
           }
         }}
+        mode={mode}
       />
       <RushStats open={statsOpen} onOpenChange={setStatsOpen} />
       <RushHowToPlay open={helpOpen} onOpenChange={setHelpOpen} />
