@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.check-puzzle-solvability]
 verify_jwt = true
+
+[functions.populate-dictionary]
+verify_jwt = true

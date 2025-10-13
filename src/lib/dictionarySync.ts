@@ -46,6 +46,7 @@ export const trackWordUsage = async (word: string) => {
 
 /**
  * Submit a word dispute/complaint
+ * Now uses word_feedback table for better security (non-admin users shouldn't write to admin tables)
  */
 export const submitWordDispute = async (word: string, reason: string) => {
   const { data: { user } } = await supabase.auth.getUser();
@@ -56,48 +57,23 @@ export const submitWordDispute = async (word: string, reason: string) => {
   const upperWord = word.toUpperCase();
 
   try {
-    // Check if word exists in dictionary
-    const { data: existing } = await supabase
-      .from('admin_dictionary')
-      .select('id, complaint_count')
-      .eq('word', upperWord)
-      .maybeSingle();
-
-    if (existing) {
-      // Increment complaint count
-      const { error } = await supabase
-        .from('admin_dictionary')
-        .update({
-          complaint_count: (existing.complaint_count || 0) + 1,
-        })
-        .eq('id', existing.id);
-
-      if (error) throw error;
-    } else {
-      // Create new entry with complaint
-      const { error } = await supabase
-        .from('admin_dictionary')
-        .insert({
-          word: upperWord,
-          word_length: word.length,
-          complaint_count: 1,
-          first_seen: new Date().toISOString().split('T')[0],
-        });
-
-      if (error) throw error;
-    }
-
-    // Log the audit trail
-    await supabase
-      .from('admin_audit_log')
+    // Submit to word_feedback table (secure, RLS-protected)
+    const { error } = await supabase
+      .from('word_feedback')
       .insert({
         user_id: user.id,
-        action: 'word_disputed',
-        entity_type: 'dictionary',
-        entity_id: existing?.id,
-        details: { word: upperWord, reason },
+        word: upperWord,
+        word_length: upperWord.length,
+        reason: reason,
+        status: 'pending'
       });
 
+    if (error) {
+      console.error('Error submitting word feedback:', error);
+      return { error: error.message };
+    }
+
+    console.log(`Word feedback submitted for: ${upperWord}`);
     return { success: true };
   } catch (error: any) {
     console.error('Error submitting word dispute:', error);
