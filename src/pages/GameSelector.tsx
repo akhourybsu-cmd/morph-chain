@@ -40,9 +40,9 @@ const GameSelector = () => {
           </div>
         </section>
 
-        {/* Game Cards Grid - 2x2 Layout */}
+        {/* Game Cards Grid - 2x2 Layout (Mobile & Desktop) */}
         <section className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-3 md:gap-6">
             {/* Top Row */}
             <GameCard
               title="Morph Chain"
@@ -170,60 +170,61 @@ const GameCard = ({
 
   return (
     <Card 
-      className={`relative p-6 border-2 transition-all group overflow-hidden ${accentClasses[accent]} ${comingSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} 
+      className={`relative p-3 md:p-6 border-2 transition-all group overflow-hidden ${accentClasses[accent]} ${comingSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} 
       onClick={comingSoon ? undefined : onClick}
     >
       {comingSoon && (
-        <div className="absolute top-4 right-4 z-20 px-3 py-1 bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded-md text-xs font-semibold">
+        <div className="absolute top-2 right-2 md:top-4 md:right-4 z-20 px-2 py-1 bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded-md text-xs font-semibold">
           Coming Soon
         </div>
       )}
       {motifPatterns[motif]}
       
-      <div className="relative z-10 space-y-4">
-        <div className="space-y-2">
+      <div className="relative z-10 space-y-2 md:space-y-4">
+        <div className="space-y-1 md:space-y-2">
           {accent === 'chain' && (
-            <h2 className="font-outfit font-bold text-2xl tracking-tight bg-gradient-to-r from-chain to-chain bg-clip-text text-transparent">
+            <h2 className="font-outfit font-bold text-base md:text-2xl tracking-tight bg-gradient-to-r from-chain to-chain bg-clip-text text-transparent">
               MORPH CHAIN
             </h2>
           )}
           {accent === 'prism' && (
-            <h2 className="font-outfit font-bold text-2xl tracking-tight bg-gradient-to-r from-[hsl(var(--prism-accent-start))] via-[hsl(var(--prism-accent-mid))] to-[hsl(var(--prism-accent-end))] bg-clip-text text-transparent">
+            <h2 className="font-outfit font-bold text-base md:text-2xl tracking-tight bg-gradient-to-r from-[hsl(var(--prism-accent-start))] via-[hsl(var(--prism-accent-mid))] to-[hsl(var(--prism-accent-end))] bg-clip-text text-transparent">
               MORPH PRISM
             </h2>
           )}
           {accent === 'rush' && (
-            <h2 className="font-outfit font-bold text-2xl tracking-tight bg-gradient-rush bg-clip-text text-transparent" style={{ fontStyle: 'italic' }}>
+            <h2 className="font-outfit font-bold text-base md:text-2xl tracking-tight bg-gradient-rush bg-clip-text text-transparent" style={{ fontStyle: 'italic' }}>
               MORPH RUSH
             </h2>
           )}
-          <p className="text-sm text-muted-foreground leading-relaxed">
+          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed hidden md:block">
             {description}
           </p>
         </div>
         
-        <div className="flex flex-wrap gap-2">
-          <span className="px-2 py-1 text-xs font-medium bg-muted rounded-md">
+        <div className="flex flex-wrap gap-1 md:gap-2">
+          <span className="px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium bg-muted rounded-md">
             {mode}
           </span>
-          <span className="px-2 py-1 text-xs font-medium bg-muted rounded-md">
+          <span className="px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium bg-muted rounded-md hidden md:inline-block">
             {avgTime}
           </span>
-          <span className="px-2 py-1 text-xs font-medium bg-muted rounded-md">
+          <span className="px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium bg-muted rounded-md hidden md:inline-block">
             {difficulty}
           </span>
         </div>
 
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-1 md:pt-2">
           <Button 
-            className="flex-1"
+            className="flex-1 h-8 md:h-10 text-xs md:text-sm"
             disabled={comingSoon}
             onClick={(e) => {
               e.stopPropagation();
               onClick();
             }}
           >
-            Play Today
+            <span className="md:hidden">Play</span>
+            <span className="hidden md:inline">Play Today</span>
           </Button>
         </div>
 
@@ -231,26 +232,28 @@ const GameCard = ({
           <Button
             variant="outline"
             size="sm"
-            className="w-full"
+            className="w-full h-7 md:h-9 text-xs"
             disabled={comingSoon}
             onClick={(e) => {
               e.stopPropagation();
               secondaryAction.onClick();
             }}
           >
-            {secondaryAction.label}
+            <span className="md:hidden">Practice</span>
+            <span className="hidden md:inline">{secondaryAction.label}</span>
           </Button>
         )}
 
         <button 
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors underline disabled:opacity-50 disabled:cursor-not-allowed"
+          className="text-[10px] md:text-xs text-muted-foreground hover:text-foreground transition-colors underline disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={comingSoon}
           onClick={(e) => {
             e.stopPropagation();
             navigate('/rules');
           }}
         >
-          How to play
+          <span className="md:hidden">Rules</span>
+          <span className="hidden md:inline">How to play</span>
         </button>
       </div>
     </Card>
@@ -297,35 +300,35 @@ const ShareCard = () => {
   ];
 
   return (
-    <Card className="relative p-6 border-2 transition-all group overflow-hidden border-primary/30 hover:border-primary hover:shadow-lg hover:shadow-primary/20">
+    <Card className="relative p-3 md:p-6 border-2 transition-all group overflow-hidden border-primary/30 hover:border-primary hover:shadow-lg hover:shadow-primary/20">
       <div className="absolute inset-0 opacity-5">
         <div className="w-full h-full bg-gradient-to-br from-primary via-accent to-secondary" />
       </div>
       
       <div className="relative z-10 h-full flex flex-col">
-        <div className="space-y-2 mb-6">
-          <h2 className="font-outfit font-bold text-2xl tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+        <div className="space-y-1 md:space-y-2 mb-3 md:mb-6">
+          <h2 className="font-outfit font-bold text-base md:text-2xl tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             SHARE
           </h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
+          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed hidden md:block">
             Spread the word about Morph Games
           </p>
         </div>
         
         <div className="flex-1 flex items-center justify-center">
-          <div className="grid grid-cols-3 gap-4 w-full max-w-xs">
+          <div className="grid grid-cols-3 gap-2 md:gap-4 w-full">
             {socialIcons.map((social) => {
               const Icon = social.icon;
               return (
                 <button
                   key={social.platform}
                   onClick={() => handleShare(social.platform)}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-accent/10 transition-all group/icon ${social.color}`}
+                  className={`flex flex-col items-center gap-1 md:gap-2 p-1.5 md:p-3 rounded-lg hover:bg-accent/10 transition-all group/icon ${social.color}`}
                 >
-                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center group-hover/icon:scale-110 transition-transform">
-                    <Icon className="w-5 h-5" />
+                  <div className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-muted flex items-center justify-center group-hover/icon:scale-110 transition-transform">
+                    <Icon className="w-3.5 h-3.5 md:w-5 md:h-5" />
                   </div>
-                  <span className="text-xs font-medium text-center leading-tight">
+                  <span className="text-[9px] md:text-xs font-medium text-center leading-tight">
                     {social.name}
                   </span>
                 </button>
