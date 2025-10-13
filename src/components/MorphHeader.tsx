@@ -49,7 +49,7 @@ export const MorphHeader = () => {
     { 
       name: <MorphPrismTitle className="text-sm" />,
       path: "/prism", 
-      description: "Color ladder",
+      description: "Color puzzle",
       active: isOnPrism
     },
   ];

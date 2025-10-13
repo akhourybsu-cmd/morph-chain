@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
 import { MorphHeader } from "@/components/MorphHeader";
+import { MorphPrismTitle } from "@/components/GameTitles";
 import { hasCompletedFirstDailyAttempt } from "@/lib/rushStorage";
 
 const GameSelector = () => {
@@ -67,13 +68,12 @@ const GameSelector = () => {
           
           <GameCard
             title="Morph Prism"
-            description="Adjust hue, saturation, or lightness one step at a time"
-            mode="Color ladder"
+            description="Decode the word through chromatic color clues"
+            mode="Color puzzle"
             difficulty="Challenging"
             avgTime="4-6 min"
             accent="prism"
             motif="spectrum"
-            comingSoon={true}
             onClick={() => navigate('/prism')}
           />
         </section>
@@ -180,7 +180,7 @@ const GameCard = ({
             </h2>
           )}
           {accent === 'prism' && (
-            <h2 className="font-outfit font-bold text-2xl tracking-tight bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+            <h2 className="font-outfit font-bold text-2xl tracking-tight bg-gradient-to-r from-[hsl(var(--prism-accent-start))] via-[hsl(var(--prism-accent-mid))] to-[hsl(var(--prism-accent-end))] bg-clip-text text-transparent">
               MORPH PRISM
             </h2>
           )}
