@@ -14,6 +14,7 @@ import {
 import { Menu, ChevronDown, Check } from "lucide-react";
 import { useState } from "react";
 import { MorphChainTitle, MorphPrismTitle, MorphRushTitle } from "@/components/GameTitles";
+import morphIcon from "@/assets/morph-icon.png";
 
 export const MorphHeader = () => {
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ export const MorphHeader = () => {
           className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity"
         >
           <img 
-            src="/src/assets/morph-icon.png" 
+            src={morphIcon}
             alt="" 
             aria-hidden="true"
             className="w-7 h-7 md:w-8 md:h-8 object-contain"
