@@ -28,9 +28,6 @@ const GameSelector = () => {
             <p className="text-base md:text-lg text-foreground font-medium">
               A letter changes everything.
             </p>
-            <p className="text-sm md:text-base text-muted-foreground font-medium pt-1.5">
-              Modern English only • NY-anchored daily • Spoiler-free shares
-            </p>
             <div className="flex items-center gap-2 text-sm md:text-base text-muted-foreground font-medium pt-2">
               <span>{formattedDate}</span>
               <span>•</span>
