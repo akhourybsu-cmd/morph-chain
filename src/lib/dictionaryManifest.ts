@@ -34,11 +34,11 @@ export interface DictionaryManifest {
  */
 export const DICTIONARY_MANIFEST: DictionaryManifest = {
   versions: {
-    "4L": "v1.0-core4L",
-    "5L": "v1.0-core5L",
-    "6L": "v1.0-core6L"
+    "4L": "v1.2-core4L-notheme",
+    "5L": "v1.2-core5L-notheme",
+    "6L": "v1.2-core6L-notheme"
   },
-  updated: "2025-10-12T00:00:00Z",
+  updated: "2025-10-13T00:00:00Z",
   description: "Morph Games Modern U.S. English Core Dictionary",
   policy: "Modern U.S. English only - excludes proper nouns, abbreviations, slang, archaic/dialectal words, and non-U.S. spellings",
   totalPuzzles: {

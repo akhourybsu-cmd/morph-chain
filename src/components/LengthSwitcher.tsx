@@ -10,6 +10,12 @@ interface LengthSwitcherProps {
   };
 }
 
+const difficultyConfig = {
+  4: { dots: 1, label: "Standard", shortLabel: "Standard", minimal: "4L" },
+  5: { dots: 2, label: "Advanced", shortLabel: "Adv.", minimal: "5L" },
+  6: { dots: 3, label: "Expert", shortLabel: "Expert", minimal: "6L" },
+} as const;
+
 export const LengthSwitcher = ({ selectedLength, onLengthChange, statuses }: LengthSwitcherProps) => {
   const getStatusIcon = (status: "empty" | "won" | "failed" | "in-progress") => {
     switch (status) {
@@ -24,33 +30,73 @@ export const LengthSwitcher = ({ selectedLength, onLengthChange, statuses }: Len
     }
   };
 
+  const getDifficultyDots = (count: number, isSelected: boolean) => {
+    return (
+      <div className="flex items-center gap-0.5">
+        {Array.from({ length: count }).map((_, i) => (
+          <div
+            key={i}
+            className={`w-1 h-1 rounded-full transition-colors ${
+              isSelected ? "bg-background" : "bg-primary/40"
+            }`}
+          />
+        ))}
+      </div>
+    );
+  };
+
   const lengths: Array<4 | 5 | 6> = [4, 5, 6];
 
   return (
-    <div className="flex items-center justify-center gap-0.5 md:gap-1 p-0.5 md:p-1 bg-card/50 rounded-lg border border-border transition-all">
-      {lengths.map((length) => (
-        <button
-          key={length}
-          onClick={() => onLengthChange(length)}
-          className={`
-            relative px-3 py-1.5 md:px-4 md:py-2 rounded-md font-medium text-xs md:text-sm transition-all duration-200
-            ${
-              selectedLength === length
-                ? "bg-primary text-primary-foreground shadow-sm scale-105"
-                : "hover:bg-muted text-muted-foreground hover:scale-105"
-            }
-          `}
-        >
-          <div className="flex items-center gap-1 md:gap-1.5">
-            <span>{length}L</span>
+    <div 
+      role="tablist"
+      className="flex items-center justify-center gap-1.5 p-1 bg-card/50 rounded-xl border border-border max-w-[360px] mx-auto"
+    >
+      {lengths.map((length) => {
+        const config = difficultyConfig[length];
+        const isSelected = selectedLength === length;
+        
+        return (
+          <button
+            key={length}
+            role="tab"
+            aria-selected={isSelected}
+            aria-label={`${length} letters - ${config.label} difficulty`}
+            onClick={() => onLengthChange(length)}
+            className={`
+              relative flex-1 min-w-[88px] px-3 py-2 rounded-xl font-semibold text-sm
+              transition-all duration-200 ease-in-out
+              ${
+                isSelected
+                  ? "bg-primary text-primary-foreground shadow-md scale-105"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:scale-102"
+              }
+            `}
+          >
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-1.5">
+                {getDifficultyDots(config.dots, isSelected)}
+                <span className="hidden xs:inline">{length}L</span>
+                <span className="inline xs:hidden">{config.minimal}</span>
+              </div>
+              
+              {/* Label visibility based on screen size */}
+              <span className="hidden sm:inline text-[10px] font-medium opacity-90">
+                {config.label}
+              </span>
+              <span className="hidden xs:inline sm:hidden text-[10px] font-medium opacity-90">
+                {config.shortLabel}
+              </span>
+            </div>
+
             {statuses[length] !== "empty" && (
-              <span className="absolute -top-0.5 -right-0.5 md:-top-1 md:-right-1">
+              <span className="absolute -top-1 -right-1">
                 {getStatusIcon(statuses[length])}
               </span>
             )}
-          </div>
-        </button>
-      ))}
+          </button>
+        );
+      })}
     </div>
   );
 };
