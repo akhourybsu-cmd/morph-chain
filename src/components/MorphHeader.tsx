@@ -55,6 +55,7 @@ export const MorphHeader = () => {
   ];
 
   const utilityLinks = [
+    { name: "What's New", path: "/whats-new" },
     { name: "Rules", path: "/rules" },
   ];
 

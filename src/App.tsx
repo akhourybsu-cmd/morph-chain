@@ -29,6 +29,7 @@ import Kids from "./pages/Kids";
 import Press from "./pages/Press";
 import Privacy from "./pages/Privacy";
 import ProfilePage from "./pages/ProfilePage";
+import WhatsNew from "./pages/WhatsNew";
 import { useVersionCheck } from "./hooks/useVersionCheck";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ const App = () => {
             <Route path="/signup" element={<SignUp />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/whats-new" element={<WhatsNew />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="puzzle" element={<TodaysPuzzle />} />
