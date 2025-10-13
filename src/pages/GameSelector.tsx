@@ -6,6 +6,8 @@ import { formatInTimeZone } from "date-fns-tz";
 import { MorphHeader } from "@/components/MorphHeader";
 import { MorphPrismTitle } from "@/components/GameTitles";
 import { hasCompletedFirstDailyAttempt } from "@/lib/rushStorage";
+import { Facebook, Instagram, Linkedin, MessageSquare, Share2 } from "lucide-react";
+import { toast } from "sonner";
 
 const GameSelector = () => {
   const navigate = useNavigate();
@@ -38,44 +40,50 @@ const GameSelector = () => {
           </div>
         </section>
 
-        {/* Game Cards Grid */}
-        <section className="grid md:grid-cols-3 gap-6">
-          <GameCard
-            title="Morph Chain"
-            description="Change one letter each step to reach today's goal"
-            mode="Word ladder"
-            difficulty="Moderate"
-            avgTime="3-5 min"
-            accent="chain"
-            motif="chain-links"
-            onClick={() => navigate('/chain')}
-          />
-          
-          <GameCard
-            title="Morph Rush"
-            description="Make as many 4-letter morphs as you can in 2 minutes"
-            mode="Score dash"
-            difficulty="Fast-paced"
-            avgTime="2 min"
-            accent="rush"
-            motif="motion"
-            onClick={() => navigate('/rush?mode=daily')}
-            secondaryAction={hasCompletedFirstDailyAttempt() ? {
-              label: "Practice Mode",
-              onClick: () => navigate('/rush?mode=practice')
-            } : undefined}
-          />
-          
-          <GameCard
-            title="Morph Prism"
-            description="Decode the word through chromatic color clues"
-            mode="Color puzzle"
-            difficulty="Challenging"
-            avgTime="4-6 min"
-            accent="prism"
-            motif="spectrum"
-            onClick={() => navigate('/prism')}
-          />
+        {/* Game Cards Grid - 2x2 Layout */}
+        <section className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Top Row */}
+            <GameCard
+              title="Morph Chain"
+              description="Change one letter each step to reach today's goal"
+              mode="Word ladder"
+              difficulty="Moderate"
+              avgTime="3-5 min"
+              accent="chain"
+              motif="chain-links"
+              onClick={() => navigate('/chain')}
+            />
+            
+            <GameCard
+              title="Morph Rush"
+              description="Make as many 4-letter morphs as you can in 2 minutes"
+              mode="Score dash"
+              difficulty="Fast-paced"
+              avgTime="2 min"
+              accent="rush"
+              motif="motion"
+              onClick={() => navigate('/rush?mode=daily')}
+              secondaryAction={hasCompletedFirstDailyAttempt() ? {
+                label: "Practice Mode",
+                onClick: () => navigate('/rush?mode=practice')
+              } : undefined}
+            />
+            
+            {/* Bottom Row */}
+            <GameCard
+              title="Morph Prism"
+              description="Decode the word through chromatic color clues"
+              mode="Color puzzle"
+              difficulty="Challenging"
+              avgTime="4-6 min"
+              accent="prism"
+              motif="spectrum"
+              onClick={() => navigate('/prism')}
+            />
+
+            <ShareCard />
+          </div>
         </section>
       </main>
 
@@ -244,6 +252,87 @@ const GameCard = ({
         >
           How to play
         </button>
+      </div>
+    </Card>
+  );
+};
+
+const ShareCard = () => {
+  const shareUrl = window.location.origin;
+  const shareText = "Check out Morph Games - A letter changes everything!";
+
+  const handleShare = (platform: string) => {
+    let url = "";
+    
+    switch (platform) {
+      case "facebook":
+        url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+        break;
+      case "twitter":
+        url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+        break;
+      case "linkedin":
+        url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+        break;
+      case "instagram":
+        toast.info("Copy the link and share it on Instagram!");
+        navigator.clipboard.writeText(shareUrl);
+        return;
+      case "sms":
+        url = `sms:?&body=${encodeURIComponent(shareText + " " + shareUrl)}`;
+        break;
+    }
+    
+    if (url) {
+      window.open(url, "_blank", "width=600,height=400");
+    }
+  };
+
+  const socialIcons = [
+    { name: "Facebook", icon: Facebook, platform: "facebook", color: "hover:text-[#1877F2]" },
+    { name: "X/Twitter", icon: Share2, platform: "twitter", color: "hover:text-[#1DA1F2]" },
+    { name: "LinkedIn", icon: Linkedin, platform: "linkedin", color: "hover:text-[#0A66C2]" },
+    { name: "Instagram", icon: Instagram, platform: "instagram", color: "hover:text-[#E4405F]" },
+    { name: "Text/SMS", icon: MessageSquare, platform: "sms", color: "hover:text-accent" },
+  ];
+
+  return (
+    <Card className="relative p-6 border-2 transition-all group overflow-hidden border-primary/30 hover:border-primary hover:shadow-lg hover:shadow-primary/20">
+      <div className="absolute inset-0 opacity-5">
+        <div className="w-full h-full bg-gradient-to-br from-primary via-accent to-secondary" />
+      </div>
+      
+      <div className="relative z-10 h-full flex flex-col">
+        <div className="space-y-2 mb-6">
+          <h2 className="font-outfit font-bold text-2xl tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            SHARE
+          </h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Spread the word about Morph Games
+          </p>
+        </div>
+        
+        <div className="flex-1 flex items-center justify-center">
+          <div className="grid grid-cols-3 gap-4 w-full max-w-xs">
+            {socialIcons.map((social) => {
+              const Icon = social.icon;
+              return (
+                <button
+                  key={social.platform}
+                  onClick={() => handleShare(social.platform)}
+                  className={`flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-accent/10 transition-all group/icon ${social.color}`}
+                >
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center group-hover/icon:scale-110 transition-transform">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-medium text-center leading-tight">
+                    {social.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </Card>
   );
