@@ -65,6 +65,21 @@ const GameSelector = () => {
           />
           
           <GameCard
+            title="Morph Rush"
+            description="Make as many 4-letter morphs as you can in 2 minutes"
+            mode="Score dash"
+            difficulty="Fast-paced"
+            avgTime="2 min"
+            accent="rush"
+            motif="motion"
+            onClick={() => navigate('/rush?mode=daily')}
+            secondaryAction={{
+              label: "Practice Mode",
+              onClick: () => navigate('/rush?mode=practice')
+            }}
+          />
+          
+          <GameCard
             title="Morph Prism"
             description="Adjust hue, saturation, or lightness one step at a time"
             mode="Color ladder"
@@ -74,22 +89,6 @@ const GameSelector = () => {
             motif="spectrum"
             comingSoon={true}
             onClick={() => navigate('/prism')}
-          />
-          
-          <GameCard
-            title="Morph Rush"
-            description="Make as many 4-letter morphs as you can in 2 minutes"
-            mode="Score dash"
-            difficulty="Fast-paced"
-            avgTime="2 min"
-            accent="rush"
-            motif="motion"
-            comingSoon={true}
-            onClick={() => navigate('/rush?mode=daily')}
-            secondaryAction={{
-              label: "Practice Mode",
-              onClick: () => navigate('/rush?mode=practice')
-            }}
           />
         </section>
       </main>
