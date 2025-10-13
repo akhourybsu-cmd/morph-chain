@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { GameHeader } from "@/components/GameHeader";
+import { MorphHeader } from "@/components/MorphHeader";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Share2, Eye, EyeOff, Clock, Sparkles } from "lucide-react";
+import { Share2, Clock, Sparkles, Info } from "lucide-react";
 import { toast } from "sonner";
 import { PrismLogo } from "@/components/PrismLogo";
 import ChromaTile from "@/components/chromaword/ChromaTile";
@@ -11,6 +11,7 @@ import SimilarityMeter from "@/components/chromaword/SimilarityMeter";
 import { scoreGuess } from "@/lib/chromawordLogic";
 import { VALID_WORDS_5 } from "@/lib/gameLogic";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 const DEFAULT_TARGET = "SHINE";
 const WORD_LENGTH = 5;
@@ -31,12 +32,12 @@ export default function MorphPrism() {
   const [rows, setRows] = useState<Guess[]>([]);
   const [currentInput, setCurrentInput] = useState("");
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
-  const [showSymbols, setShowSymbols] = useState(false);
   const [error, setError] = useState("");
   
   // Modals
   const [helpOpen, setHelpOpen] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [showColorGuide, setShowColorGuide] = useState(false);
 
   // Timer countdown to next puzzle
   const [timeUntilMidnight, setTimeUntilMidnight] = useState("");
@@ -123,57 +124,111 @@ export default function MorphPrism() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background to-card">
-      {/* Header */}
-      <GameHeader 
-        onOpenSettings={() => navigate('/')}
-        onOpenStats={() => navigate('/')}
-        onOpenHelp={() => setHelpOpen(true)}
-      />
+      {/* Header with full navigation */}
+      <MorphHeader />
 
       {/* Puzzle Info Bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-card/30 border-b border-border text-xs">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-4 py-2 md:py-3 bg-card/30 border-b border-border text-xs md:text-sm">
+        <div className="flex items-center gap-2 md:gap-3">
           <span className="font-semibold text-foreground flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-prism-accent-mid" />
+            <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4" style={{ color: 'hsl(var(--prism-accent-mid))' }} />
             Puzzle #{puzzleNumber}
           </span>
-          <span className="text-muted-foreground">
-            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} (NY)
+          <span className="text-muted-foreground hidden sm:inline">
+            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
           </span>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <span className="font-mono text-foreground">
             {rows.length}/{MAX_GUESSES}
           </span>
           <div className="flex items-center gap-1 text-muted-foreground">
-            <Clock className="h-3 w-3" />
-            <span className="font-mono">{timeUntilMidnight}</span>
+            <Clock className="h-3 w-3 md:h-3.5 md:w-3.5" />
+            <span className="font-mono text-xs md:text-sm">{timeUntilMidnight}</span>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-6 max-w-2xl">
-        <div className="space-y-6">
-          {/* Game Title */}
-          <div className="text-center space-y-2">
+      <main className="flex-1 container mx-auto px-4 py-4 md:py-6 max-w-2xl">
+        <div className="space-y-4 md:space-y-6">
+          {/* Game Title & Color Guide */}
+          <div className="text-center space-y-3">
             <PrismLogo />
-            <p className="text-sm text-muted-foreground">
-              Decode the word through spectral color feedback
+            <p className="text-sm md:text-base text-muted-foreground">
+              Decode the word through chromatic color clues
             </p>
+            
+            {/* Color Guide Toggle */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowColorGuide(!showColorGuide)}
+              className="gap-2"
+            >
+              <Info className="h-4 w-4" />
+              {showColorGuide ? 'Hide' : 'Show'} Color Guide
+            </Button>
+            
+            {/* Inline Color Guide */}
+            {showColorGuide && (
+              <div className="bg-card border border-border rounded-lg p-4 text-left space-y-3 animate-fade-in">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" style={{ color: 'hsl(var(--prism-accent-mid))' }} />
+                  Color Meaning Guide
+                </h3>
+                <div className="space-y-2 text-xs md:text-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="h-8 w-8 rounded border border-border shrink-0" style={{ background: 'hsl(180 80% 60%)' }} />
+                    <div>
+                      <p className="font-semibold">Bright & Vivid</p>
+                      <p className="text-muted-foreground">Letter is in correct position</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-8 w-8 rounded border border-border shrink-0" style={{ background: 'hsl(300 60% 50%)' }} />
+                    <div>
+                      <p className="font-semibold">Medium Brightness</p>
+                      <p className="text-muted-foreground">Letter exists but wrong position</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-8 w-8 rounded border border-border shrink-0" style={{ background: 'hsl(0 20% 35%)' }} />
+                    <div>
+                      <p className="font-semibold">Dark & Muted</p>
+                      <p className="text-muted-foreground">Letter not in word</p>
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t border-border">
+                    <p className="text-muted-foreground italic">
+                      <strong>Hue shift:</strong> Color changes toward the target letter on the spectrum (A=red → Z=purple)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Spectrum Preview Bar */}
-          <div 
-            className="h-3 rounded-full overflow-hidden border border-border/50 transition-opacity duration-300"
-            style={{
-              opacity: rows.length > 0 ? 1 : 0.2,
-              background: spectrum.length 
-                ? `linear-gradient(90deg, ${spectrum.map(t => t.hex).join(',')})` 
-                : 'hsl(var(--muted))'
-            }}
-          />
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+              <span>Spectrum Preview</span>
+              {rows.length > 0 && (
+                <span className="font-mono">{Math.round((rows[rows.length - 1]?.similarity || 0) * 100)}% aligned</span>
+              )}
+            </div>
+            <div 
+              className="h-4 md:h-5 rounded-lg overflow-hidden border border-border shadow-inner transition-all duration-300"
+              style={{
+                opacity: rows.length > 0 ? 1 : 0.3,
+                background: spectrum.length 
+                  ? `linear-gradient(90deg, ${spectrum.map(t => t.hex).join(',')})` 
+                  : 'hsl(var(--muted))',
+                boxShadow: rows.length > 0 ? '0 0 20px rgba(255,255,255,0.1) inset' : 'none'
+              }}
+            />
+          </div>
 
           {/* Guess Grid */}
           <div className="space-y-3">
@@ -253,33 +308,20 @@ export default function MorphPrism() {
             </form>
           )}
 
-          {/* Controls */}
-          <div className="flex justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowSymbols(!showSymbols)}
-            >
-              {showSymbols ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-              {showSymbols ? 'Hide' : 'Show'} Symbols
-            </Button>
-            
-            {gameStatus !== 'playing' && (
+          {/* Game Status & Share */}
+          {gameStatus !== 'playing' && (
+            <div className="flex justify-center">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleShare}
+                className="gap-2"
               >
-                <Share2 className="h-4 w-4 mr-2" />
+                <Share2 className="h-4 w-4" />
                 Share Result
               </Button>
-            )}
-          </div>
-
-          {/* Legend */}
-          <div className="text-center text-xs text-muted-foreground px-4">
-            <p>Color intensity ≈ presence/position • Hue ≈ letter proximity • Bar ≈ alignment</p>
-          </div>
+            </div>
+          )}
         </div>
       </main>
 
@@ -371,23 +413,42 @@ export default function MorphPrism() {
             </section>
 
             <section>
-              <h3 className="font-semibold text-base mb-2">🎨 Color Feedback</h3>
-              <div className="space-y-3">
-                <p className="text-muted-foreground">Each letter tile shows a unique color based on:</p>
-                <ul className="space-y-2 ml-4">
-                  <li className="flex items-start gap-2 text-muted-foreground">
-                    <span className="text-primary">•</span>
-                    <span><strong>Hue:</strong> Letters map to a color wheel (A=red → Z=purple). Tiles blend toward the target letter's hue.</span>
-                  </li>
-                  <li className="flex items-start gap-2 text-muted-foreground">
-                    <span className="text-primary">•</span>
-                    <span><strong>Saturation:</strong> Vibrant colors = letter is in the word. Dull colors = letter is not in the word.</span>
-                  </li>
-                  <li className="flex items-start gap-2 text-muted-foreground">
-                    <span className="text-primary">•</span>
-                    <span><strong>Brightness:</strong> Brightest = correct position. Medium = in word but wrong position. Dim = not in word.</span>
-                  </li>
-                </ul>
+              <h3 className="font-semibold text-base mb-3">🎨 Color Feedback System</h3>
+              <div className="space-y-4">
+                <p className="text-muted-foreground">Each letter tile uses chromatic clues to guide you:</p>
+                
+                {/* Visual examples */}
+                <div className="grid gap-3">
+                  <div className="flex items-center gap-3 p-3 bg-card rounded-lg border border-border">
+                    <div className="h-12 w-12 rounded border border-border shrink-0" style={{ background: 'hsl(180 80% 60%)', boxShadow: '0 0 14px rgba(255,255,255,0.18) inset' }} />
+                    <div className="text-sm">
+                      <p className="font-semibold">Bright & Vivid</p>
+                      <p className="text-muted-foreground">Letter is in the correct position</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 bg-card rounded-lg border border-border">
+                    <div className="h-12 w-12 rounded border border-border shrink-0" style={{ background: 'hsl(300 60% 50%)' }} />
+                    <div className="text-sm">
+                      <p className="font-semibold">Medium Brightness</p>
+                      <p className="text-muted-foreground">Letter exists in the word but wrong position</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 bg-card rounded-lg border border-border">
+                    <div className="h-12 w-12 rounded border border-border shrink-0" style={{ background: 'hsl(0 20% 35%)' }} />
+                    <div className="text-sm">
+                      <p className="font-semibold">Dark & Muted</p>
+                      <p className="text-muted-foreground">Letter is not in the word at all</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pt-2 border-t border-border">
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Bonus Clue:</strong> The hue (color tone) shifts toward the target letter's position on the color spectrum (A=red, M=green, Z=purple).
+                  </p>
+                </div>
               </div>
             </section>
 
