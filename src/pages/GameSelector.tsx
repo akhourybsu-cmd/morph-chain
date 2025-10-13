@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
 import { MorphHeader } from "@/components/MorphHeader";
-import morphIcon from "@/assets/morph-icon.png";
 
 const GameSelector = () => {
   const navigate = useNavigate();
@@ -17,36 +16,25 @@ const GameSelector = () => {
     <div className="min-h-screen flex flex-col">
       <MorphHeader />
       
-      <main className="flex-1 container mx-auto px-4 py-8 md:py-12 max-w-6xl">
-        {/* Hero Section */}
-        <section className="mb-12 md:mb-16">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="space-y-4">
-              <h1 className="font-outfit font-bold text-4xl md:text-5xl tracking-tight" style={{ letterSpacing: '-0.02em' }}>
-                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  MORPH GAMES
-                </span>
-              </h1>
-              <p className="text-lg md:text-xl text-foreground">
-                Daily, solvable "change-one-thing" puzzles.
-              </p>
-              <p className="text-sm md:text-base text-muted-foreground">
-                Modern English only • NY-anchored daily • Spoiler-free shares
-              </p>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
-                <span>{formattedDate}</span>
-                <span>•</span>
-                <span>Puzzle #{puzzle.puzzleIndex}</span>
-              </div>
-            </div>
-            
-            {/* Brand M Icon */}
-            <div className="flex items-center justify-center md:justify-end">
-              <img 
-                src={morphIcon} 
-                alt="Morph Games Icon" 
-                className="w-32 h-32 md:w-48 md:h-48 object-contain"
-              />
+      <main className="flex-1 container mx-auto px-4 max-w-6xl">
+        {/* Hero Section - Mobile Optimized */}
+        <section className="py-3 md:py-8 mb-8 md:mb-12">
+          <div className="space-y-1 md:space-y-3">
+            <h1 className="font-outfit font-bold text-2xl md:text-4xl tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                MORPH GAMES
+              </span>
+            </h1>
+            <p className="text-base md:text-lg text-foreground font-medium">
+              A letter changes everything.
+            </p>
+            <p className="text-sm md:text-base text-muted-foreground font-medium pt-1.5">
+              Modern English only • NY-anchored daily • Spoiler-free shares
+            </p>
+            <div className="flex items-center gap-2 text-sm md:text-base text-muted-foreground font-medium pt-2">
+              <span>{formattedDate}</span>
+              <span>•</span>
+              <span>Puzzle #{puzzle.puzzleIndex}</span>
             </div>
           </div>
         </section>

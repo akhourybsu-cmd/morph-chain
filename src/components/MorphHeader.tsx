@@ -54,11 +54,17 @@ export const MorphHeader = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 md:h-18 items-center justify-between px-4 md:px-6">
-        {/* Brand Wordmark */}
+        {/* Brand Wordmark with Logo */}
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity"
         >
+          <img 
+            src="/src/assets/morph-icon.png" 
+            alt="" 
+            aria-hidden="true"
+            className="w-7 h-7 md:w-8 md:h-8 object-contain"
+          />
           <span 
             className="font-outfit font-bold text-lg md:text-xl tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent whitespace-nowrap"
             style={{ letterSpacing: '-0.02em' }}
