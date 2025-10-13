@@ -6,7 +6,7 @@ import { TrendingUp, Users, Target, Zap, Download, Gamepad2, Trophy, Sparkles } 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 interface AnalyticsData {
   // Morph Chain Stats
@@ -272,16 +272,14 @@ export default function Analytics() {
             }}
             className="h-[300px]"
           >
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={gameComparisonData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="game" />
-                <YAxis />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="sessions" fill="var(--color-sessions)" />
-                <Bar dataKey="completed" fill="var(--color-completed)" />
-              </BarChart>
-            </ResponsiveContainer>
+            <BarChart data={gameComparisonData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="game" />
+              <YAxis />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="sessions" fill="var(--color-sessions)" />
+              <Bar dataKey="completed" fill="var(--color-completed)" />
+            </BarChart>
           </ChartContainer>
         </CardContent>
       </Card>
