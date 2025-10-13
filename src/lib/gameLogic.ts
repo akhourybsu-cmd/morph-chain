@@ -9,8 +9,16 @@ import { markPuzzleAsUsed, getCurrentPuzzleIndex } from "./puzzleTracking";
 import { toZonedTime, formatInTimeZone } from "date-fns-tz";
 import { startOfDay, differenceInDays } from "date-fns";
 
-// Parse and filter the word list by length with Modern English standards
-const parseWordList = () => {
+// Lazy-load and cache the word list to improve initial page load performance
+let cachedWords4: Set<string> | null = null;
+let cachedWords5: Set<string> | null = null;
+let cachedWords6: Set<string> | null = null;
+
+const ensureWordsLoaded = () => {
+  if (cachedWords4 && cachedWords5 && cachedWords6) {
+    return;
+  }
+  
   const words4Raw = new Set<string>();
   const words5Raw = new Set<string>();
   const words6Raw = new Set<string>();
@@ -29,20 +37,49 @@ const parseWordList = () => {
   }
   
   // Apply Modern English filters
-  const words4 = filterModernEnglish(words4Raw);
-  const words5 = filterModernEnglish(words5Raw);
-  const words6 = filterModernEnglish(words6Raw);
+  cachedWords4 = filterModernEnglish(words4Raw);
+  cachedWords5 = filterModernEnglish(words5Raw);
+  cachedWords6 = filterModernEnglish(words6Raw);
   
-  console.log(`Word counts after filtering: 4L=${words4.size}, 5L=${words5.size}, 6L=${words6.size}`);
-  
-  return { words4, words5, words6 };
+  console.log(`Word counts after filtering: 4L=${cachedWords4.size}, 5L=${cachedWords5.size}, 6L=${cachedWords6.size}`);
 };
 
-const { words4, words5, words6 } = parseWordList();
+// Proxy objects that load on first access
+export const VALID_WORDS_4 = new Proxy(new Set<string>(), {
+  has(_, key) {
+    ensureWordsLoaded();
+    return cachedWords4!.has(key as string);
+  },
+  get(_, prop) {
+    ensureWordsLoaded();
+    const value = (cachedWords4 as any)[prop];
+    return typeof value === 'function' ? value.bind(cachedWords4) : value;
+  }
+}) as Set<string>;
 
-export const VALID_WORDS_4 = words4;
-export const VALID_WORDS_5 = words5;
-export const VALID_WORDS_6 = words6;
+export const VALID_WORDS_5 = new Proxy(new Set<string>(), {
+  has(_, key) {
+    ensureWordsLoaded();
+    return cachedWords5!.has(key as string);
+  },
+  get(_, prop) {
+    ensureWordsLoaded();
+    const value = (cachedWords5 as any)[prop];
+    return typeof value === 'function' ? value.bind(cachedWords5) : value;
+  }
+}) as Set<string>;
+
+export const VALID_WORDS_6 = new Proxy(new Set<string>(), {
+  has(_, key) {
+    ensureWordsLoaded();
+    return cachedWords6!.has(key as string);
+  },
+  get(_, prop) {
+    ensureWordsLoaded();
+    const value = (cachedWords6 as any)[prop];
+    return typeof value === 'function' ? value.bind(cachedWords6) : value;
+  }
+}) as Set<string>;
 
 export interface Puzzle {
   date: string;
