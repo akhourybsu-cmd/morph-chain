@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { MorphHeader } from "@/components/MorphHeader";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Share2, Clock, Sparkles, Info } from "lucide-react";
@@ -26,18 +26,25 @@ type Guess = {
 
 export default function MorphPrism() {
   const navigate = useNavigate();
-  const puzzleNumber = 1; // TODO: Calculate from date
+  const puzzleNumber = 1;
   const today = new Date().toISOString().split('T')[0];
   
   const [rows, setRows] = useState<Guess[]>([]);
   const [currentInput, setCurrentInput] = useState("");
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
   const [error, setError] = useState("");
+  const [session, setSession] = useState<any>(null);
   
   // Modals
   const [helpOpen, setHelpOpen] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [showColorGuide, setShowColorGuide] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s));
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Timer countdown to next puzzle
   const [timeUntilMidnight, setTimeUntilMidnight] = useState("");
@@ -124,12 +131,52 @@ export default function MorphPrism() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background to-card">
-      {/* Header with full navigation */}
-      <MorphHeader />
+      {/* Custom Header - Morph Prism Only */}
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 md:px-6 py-4 md:py-5">
+          <div className="flex items-center justify-between">
+            {/* Centered Title */}
+            <div className="flex-1 flex justify-center">
+              <PrismLogo />
+            </div>
+            
+            {/* Right Actions */}
+            <div className="flex items-center gap-2 md:gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setHelpOpen(true)}
+                className="gap-2"
+              >
+                <Info className="h-4 w-4" />
+                <span className="hidden sm:inline">Help</span>
+              </Button>
+              
+              {session ? (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => navigate('/profile')}
+                >
+                  Profile
+                </Button>
+              ) : (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => navigate('/login')}
+                >
+                  Log In
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
 
       {/* Puzzle Info Bar */}
-      <div className="flex items-center justify-between px-4 py-2 md:py-3 bg-card/30 border-b border-border text-xs md:text-sm">
-        <div className="flex items-center gap-2 md:gap-3">
+      <div className="flex items-center justify-between px-4 md:px-6 py-3 bg-card/30 border-b border-border text-xs md:text-sm">
+        <div className="flex items-center gap-2 md:gap-4">
           <span className="font-semibold text-foreground flex items-center gap-1.5">
             <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4" style={{ color: 'hsl(var(--prism-accent-mid))' }} />
             Puzzle #{puzzleNumber}
@@ -139,11 +186,11 @@ export default function MorphPrism() {
           </span>
         </div>
         
-        <div className="flex items-center gap-2 md:gap-3">
-          <span className="font-mono text-foreground">
+        <div className="flex items-center gap-3 md:gap-4">
+          <span className="font-mono text-foreground font-semibold">
             {rows.length}/{MAX_GUESSES}
           </span>
-          <div className="flex items-center gap-1 text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
             <Clock className="h-3 w-3 md:h-3.5 md:w-3.5" />
             <span className="font-mono text-xs md:text-sm">{timeUntilMidnight}</span>
           </div>
@@ -151,16 +198,10 @@ export default function MorphPrism() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-4 md:py-6 max-w-2xl">
-        <div className="space-y-4 md:space-y-6">
-          {/* Game Title & Color Guide */}
-          <div className="text-center space-y-3">
-            <PrismLogo />
-            <p className="text-sm md:text-base text-muted-foreground">
-              Decode the word through chromatic color clues
-            </p>
-            
-            {/* Color Guide Toggle */}
+      <main className="flex-1 container mx-auto px-4 md:px-6 py-6 md:py-8 max-w-3xl">
+        <div className="space-y-6 md:space-y-8">
+          {/* Color Guide Toggle */}
+          <div className="text-center">
             <Button
               variant="outline"
               size="sm"
@@ -211,15 +252,15 @@ export default function MorphPrism() {
           </div>
 
           {/* Spectrum Preview Bar */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-              <span>Spectrum Preview</span>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground px-1">
+              <span className="font-medium">Spectrum Preview</span>
               {rows.length > 0 && (
                 <span className="font-mono">{Math.round((rows[rows.length - 1]?.similarity || 0) * 100)}% aligned</span>
               )}
             </div>
             <div 
-              className="h-4 md:h-5 rounded-lg overflow-hidden border border-border shadow-inner transition-all duration-300"
+              className="h-5 md:h-6 rounded-xl overflow-hidden border border-border shadow-lg transition-all duration-300"
               style={{
                 opacity: rows.length > 0 ? 1 : 0.3,
                 background: spectrum.length 
@@ -231,11 +272,11 @@ export default function MorphPrism() {
           </div>
 
           {/* Guess Grid */}
-          <div className="space-y-3">
+          <div className="space-y-4 md:space-y-5">
             {/* Previous guesses */}
             {rows.map((row, idx) => (
-              <div key={idx} className="space-y-2 animate-fade-in">
-                <div className="flex justify-center gap-2">
+              <div key={idx} className="space-y-2.5 animate-fade-in">
+                <div className="flex justify-center gap-2 md:gap-3">
                   {Array.from({ length: WORD_LENGTH }).map((_, i) => (
                     <ChromaTile
                       key={i}
@@ -251,8 +292,8 @@ export default function MorphPrism() {
 
             {/* Current input row */}
             {gameStatus === 'playing' && rows.length < MAX_GUESSES && (
-              <div className="space-y-2">
-                <div className="flex justify-center gap-2">
+              <div className="space-y-2.5">
+                <div className="flex justify-center gap-2 md:gap-3">
                   {Array.from({ length: WORD_LENGTH }).map((_, i) => (
                     <ChromaTile
                       key={i}
@@ -269,8 +310,8 @@ export default function MorphPrism() {
             {Array.from({ 
               length: Math.max(0, MAX_GUESSES - rows.length - (gameStatus === 'playing' ? 1 : 0)) 
             }).map((_, i) => (
-              <div key={`empty-${i}`} className="space-y-2 opacity-30">
-                <div className="flex justify-center gap-2">
+              <div key={`empty-${i}`} className="space-y-2.5 opacity-30">
+                <div className="flex justify-center gap-2 md:gap-3">
                   {Array.from({ length: WORD_LENGTH }).map((_, j) => (
                     <ChromaTile key={j} letter="" bgHex="transparent" />
                   ))}
@@ -282,8 +323,8 @@ export default function MorphPrism() {
 
           {/* Input Area */}
           {gameStatus === 'playing' && (
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div className="flex gap-2">
+            <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
+              <div className="flex gap-2 md:gap-3">
                 <Input
                   type="text"
                   value={currentInput}
