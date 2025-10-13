@@ -8,13 +8,26 @@ import { MorphPrismTitle } from "@/components/GameTitles";
 import { hasCompletedFirstDailyAttempt } from "@/lib/rushStorage";
 import { Facebook, Instagram, Linkedin, MessageSquare, Share2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 const GameSelector = () => {
   const navigate = useNavigate();
   const puzzle = getDailyPuzzle(4);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   
   const timezone = "America/New_York";
   const formattedDate = formatInTimeZone(new Date(), timezone, 'MMMM d, yyyy');
+  
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserEmail(user?.email || null);
+    };
+    getUser();
+  }, []);
+  
+  const isPrismAccessGranted = userEmail === "akhourybsu@gmail.com";
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -79,6 +92,7 @@ const GameSelector = () => {
               avgTime="4-6 min"
               accent="prism"
               motif="spectrum"
+              comingSoon={!isPrismAccessGranted}
               onClick={() => navigate('/prism')}
             />
 
