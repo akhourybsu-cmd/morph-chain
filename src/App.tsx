@@ -28,10 +28,15 @@ import Rules from "./pages/Rules";
 import Kids from "./pages/Kids";
 import Press from "./pages/Press";
 import Privacy from "./pages/Privacy";
+import { useVersionCheck } from "./hooks/useVersionCheck";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  // Check for version updates every 5 minutes
+  useVersionCheck();
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -68,7 +73,8 @@ const App = () => (
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
-);
+    </QueryClientProvider>
+  );
+};
 
 export default App;
