@@ -1,11 +1,3 @@
-import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
 interface LengthPillsProps {
   selectedLength: 4 | 5 | 6;
   onLengthChange: (length: 4 | 5 | 6) => void;
@@ -16,68 +8,38 @@ interface LengthPillsProps {
   };
 }
 
-const getRuleBadge = (length: 4 | 5 | 6) => {
-  switch (length) {
-    case 4:
-      return { label: "Δ=1", tooltip: "Change exactly 1 letter per move" };
-    case 5:
-      return { label: "1st Δ≤2", tooltip: "First move: up to 2 letters, then 1 letter per move" };
-    case 6:
-      return { label: "Δ≤2", tooltip: "Change up to 2 letters per move" };
-  }
-};
-
-export const LengthPills = ({ selectedLength, onLengthChange, statuses }: LengthPillsProps) => {
+export const LengthPills = ({ selectedLength, onLengthChange }: LengthPillsProps) => {
   const lengths: Array<4 | 5 | 6> = [4, 5, 6];
 
   return (
-    <TooltipProvider>
-      <div className="flex items-center justify-center gap-2 py-3">
-        {lengths.map((length) => {
-          const badge = getRuleBadge(length);
-          const isSelected = selectedLength === length;
-          const status = statuses[length];
-          
-          return (
-            <Tooltip key={length}>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => onLengthChange(length)}
-                  className={`
-                    relative flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
-                    transition-all duration-200
-                    ${isSelected 
-                      ? 'bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/50' 
-                      : 'bg-card hover:bg-muted/50 text-foreground'
-                    }
-                    ${status === 'won' ? 'ring-2 ring-success/50' : ''}
-                    ${status === 'failed' ? 'ring-2 ring-destructive/50' : ''}
-                  `}
-                >
-                  <span className="font-bold">{length}L</span>
-                  <Badge 
-                    variant="secondary" 
-                    className="text-xs px-1.5 py-0 h-5 bg-background/50"
-                  >
-                    {badge.label}
-                  </Badge>
-                  {status !== 'empty' && (
-                    <div className={`
-                      absolute -top-1 -right-1 h-3 w-3 rounded-full
-                      ${status === 'won' ? 'bg-success' : ''}
-                      ${status === 'failed' ? 'bg-destructive' : ''}
-                      ${status === 'in-progress' ? 'bg-warning' : ''}
-                    `} />
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="max-w-xs">{badge.tooltip}</p>
-              </TooltipContent>
-            </Tooltip>
-          );
-        })}
-      </div>
-    </TooltipProvider>
+    <div 
+      role="tablist"
+      className="flex items-center justify-center gap-0 p-1 bg-[#1C1F26] rounded-full max-w-[340px] mx-auto"
+    >
+      {lengths.map((length) => {
+        const isSelected = selectedLength === length;
+        
+        return (
+          <button
+            key={length}
+            role="tab"
+            aria-selected={isSelected}
+            aria-label={`${length} letters`}
+            onClick={() => onLengthChange(length)}
+            className={`
+              flex-1 min-h-[44px] px-6 py-2.5 rounded-full font-semibold text-base
+              transition-all duration-200 ease-in-out
+              ${
+                isSelected
+                  ? "bg-[#00E6E6] text-[#1C1F26]"
+                  : "bg-transparent text-white/70 hover:text-white"
+              }
+            `}
+          >
+            {length}L
+          </button>
+        );
+      })}
+    </div>
   );
 };
