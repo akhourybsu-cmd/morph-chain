@@ -187,14 +187,9 @@ const GameCard = ({
       className={`relative p-3 md:p-6 border-2 transition-all group overflow-hidden ${accentClasses[accent]} ${comingSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} 
       onClick={comingSoon ? undefined : onClick}
     >
-      {comingSoon && (
-        <div className="absolute top-2 right-2 md:top-4 md:right-4 z-20 px-2 py-1 bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded-md text-xs font-semibold">
-          Coming Soon
-        </div>
-      )}
       {motifPatterns[motif]}
       
-      <div className="relative z-10 space-y-2 md:space-y-4">
+      <div className="relative z-10 space-y-2 md:space-y-4 h-full flex flex-col">
         <div className="space-y-1 md:space-y-2">
           {accent === 'chain' && (
             <h2 className="font-outfit font-bold text-base md:text-2xl tracking-tight bg-gradient-to-r from-chain to-chain bg-clip-text text-transparent">
@@ -211,7 +206,7 @@ const GameCard = ({
               MORPH RUSH
             </h2>
           )}
-          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed hidden md:block">
+          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
             {description}
           </p>
         </div>
@@ -228,7 +223,17 @@ const GameCard = ({
           </span>
         </div>
 
-        <div className="flex gap-2 pt-1 md:pt-2">
+        <div className="flex-1"></div>
+
+        {comingSoon && (
+          <div className="flex justify-center pb-2">
+            <div className="px-3 py-1.5 bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded-md text-xs font-semibold">
+              Coming Soon
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-2">
           <Button 
             className="flex-1 h-8 md:h-10 text-xs md:text-sm"
             disabled={comingSoon}
@@ -257,18 +262,6 @@ const GameCard = ({
             <span className="hidden md:inline">{secondaryAction.label}</span>
           </Button>
         )}
-
-        <button 
-          className="text-[10px] md:text-xs text-muted-foreground hover:text-foreground transition-colors underline disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={comingSoon}
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate('/rules');
-          }}
-        >
-          <span className="md:hidden">Rules</span>
-          <span className="hidden md:inline">How to play</span>
-        </button>
       </div>
     </Card>
   );
