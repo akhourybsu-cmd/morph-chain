@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { GameHeader } from "@/components/GameHeader";
 import { PuzzleTopBar } from "@/components/PuzzleTopBar";
 import { Button } from "@/components/ui/button";
-import { Home } from "lucide-react";
 import { LengthPills } from "@/components/LengthPills";
 import { PuzzleHero } from "@/components/PuzzleHero";
 import { InputRow } from "@/components/InputRow";
@@ -475,19 +474,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col max-w-2xl mx-auto">
-      <div className="flex items-center justify-between px-3 py-2 md:px-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/')}
-          className="gap-2"
-        >
-          <Home className="h-4 w-4" />
-          <span className="hidden sm:inline">Home</span>
-        </Button>
-        <div className="flex-1" />
-      </div>
-
       <GameHeader
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenStats={() => setStatsOpen(true)}
