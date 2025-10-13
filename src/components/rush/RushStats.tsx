@@ -5,6 +5,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Trophy, Target, Zap, Award } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { loadRushStats } from "@/lib/rushStorage";
 
 interface RushStatsProps {
   open: boolean;
@@ -12,14 +14,7 @@ interface RushStatsProps {
 }
 
 export const RushStats = ({ open, onOpenChange }: RushStatsProps) => {
-  // TODO: Load actual stats from storage/Supabase
-  const stats = {
-    gamesPlayed: 0,
-    highScore: 0,
-    totalWords: 0,
-    maxMultiplier: 1.0,
-    averageScore: 0,
-  };
+  const stats = loadRushStats();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -28,40 +23,87 @@ export const RushStats = ({ open, onOpenChange }: RushStatsProps) => {
           <DialogTitle className="text-2xl font-bold">Rush Statistics</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <StatCard
-              icon={<Trophy className="h-5 w-5 text-primary" />}
-              label="Games Played"
-              value={stats.gamesPlayed}
-            />
-            <StatCard
-              icon={<Target className="h-5 w-5 text-primary" />}
-              label="High Score"
-              value={stats.highScore.toLocaleString()}
-            />
-            <StatCard
-              icon={<Award className="h-5 w-5 text-primary" />}
-              label="Total Words"
-              value={stats.totalWords.toLocaleString()}
-            />
-            <StatCard
-              icon={<Zap className="h-5 w-5 text-primary" />}
-              label="Max Multiplier"
-              value={`${stats.maxMultiplier.toFixed(1)}x`}
-            />
-          </div>
-
-          <div className="pt-4 border-t border-border">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Average Score</span>
-              <span className="text-lg font-semibold">{stats.averageScore.toLocaleString()}</span>
+        <Tabs defaultValue="normal" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="normal">Normal Mode</TabsTrigger>
+            <TabsTrigger value="hard">Hard Mode</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="normal" className="space-y-4 mt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <StatCard
+                icon={<Trophy className="h-5 w-5 text-primary" />}
+                label="Games Played"
+                value={stats.normal.gamesPlayed}
+              />
+              <StatCard
+                icon={<Target className="h-5 w-5 text-primary" />}
+                label="High Score"
+                value={stats.normal.highScore.toLocaleString()}
+              />
+              <StatCard
+                icon={<Award className="h-5 w-5 text-primary" />}
+                label="Total Words"
+                value={stats.normal.totalWords.toLocaleString()}
+              />
+              <StatCard
+                icon={<Zap className="h-5 w-5 text-primary" />}
+                label="Max Multiplier"
+                value={`${stats.normal.maxMultiplier.toFixed(1)}x`}
+              />
             </div>
-          </div>
 
-          <div className="text-xs text-muted-foreground text-center pt-2">
-            Sign in to sync your stats across devices
-          </div>
+            <div className="pt-4 border-t border-border">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Average Score</span>
+                <span className="text-lg font-semibold">
+                  {stats.normal.gamesPlayed > 0 
+                    ? Math.round(stats.normal.totalScore / stats.normal.gamesPlayed).toLocaleString()
+                    : '0'}
+                </span>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="hard" className="space-y-4 mt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <StatCard
+                icon={<Trophy className="h-5 w-5 text-primary" />}
+                label="Games Played"
+                value={stats.hard.gamesPlayed}
+              />
+              <StatCard
+                icon={<Target className="h-5 w-5 text-primary" />}
+                label="High Score"
+                value={stats.hard.highScore.toLocaleString()}
+              />
+              <StatCard
+                icon={<Award className="h-5 w-5 text-primary" />}
+                label="Total Words"
+                value={stats.hard.totalWords.toLocaleString()}
+              />
+              <StatCard
+                icon={<Zap className="h-5 w-5 text-primary" />}
+                label="Max Multiplier"
+                value={`${stats.hard.maxMultiplier.toFixed(1)}x`}
+              />
+            </div>
+
+            <div className="pt-4 border-t border-border">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Average Score</span>
+                <span className="text-lg font-semibold">
+                  {stats.hard.gamesPlayed > 0 
+                    ? Math.round(stats.hard.totalScore / stats.hard.gamesPlayed).toLocaleString()
+                    : '0'}
+                </span>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <div className="text-xs text-muted-foreground text-center pt-2">
+          Sign in to sync your stats across devices
         </div>
       </DialogContent>
     </Dialog>

@@ -3,7 +3,8 @@ import { RushLogo } from "@/components/RushLogo";
 import { DailyBanner } from "@/components/DailyBanner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Menu, HelpCircle, TrendingUp, User, LogOut } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertCircle, Menu, HelpCircle, TrendingUp, User, LogOut, Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -28,6 +29,7 @@ import { RushStats } from "@/components/rush/RushStats";
 import { RushInitialsInput } from "@/components/rush/RushInitialsInput";
 import { SettingsModal, BackgroundTheme } from "@/components/SettingsModal";
 import { loadSettings, saveSettings } from "@/lib/storage";
+import { updateRushStats } from "@/lib/rushStorage";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const MorphRush = () => {
@@ -62,6 +64,7 @@ const MorphRush = () => {
   const [lastChangedIdx, setLastChangedIdx] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   
   // Modals & Settings
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -98,11 +101,13 @@ const MorphRush = () => {
     setRun(prev => {
       const newTime = Math.max(0, prev.timeRemaining - 1);
       if (newTime === 0 && !prev.isFinished) {
+        // Save stats when game finishes
+        updateRushStats(prev.score, prev.words.length, prev.multiplierMax, hardMode);
         return { ...prev, timeRemaining: 0, isFinished: true };
       }
       return { ...prev, timeRemaining: newTime };
     });
-  }, []);
+  }, [hardMode]);
   
   // Handle submission
   const handleSubmit = (e?: React.FormEvent) => {
@@ -380,6 +385,19 @@ const MorphRush = () => {
       <RushStats open={statsOpen} onOpenChange={setStatsOpen} />
       <RushHowToPlay open={helpOpen} onOpenChange={setHelpOpen} />
       
+      {/* Leaderboard dialog (for viewing during gameplay) */}
+      <Dialog open={showLeaderboard} onOpenChange={setShowLeaderboard}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-primary" />
+              Daily Leaderboard
+            </DialogTitle>
+          </DialogHeader>
+          <RushLeaderboard mode="daily" />
+        </DialogContent>
+      </Dialog>
+      
       <div className="px-3 py-2 md:px-4 md:py-3">
         <DailyBanner
           date={puzzle.date}
@@ -473,6 +491,20 @@ const MorphRush = () => {
         
         {/* Word ribbon */}
         <RushWordRibbon words={run.words} />
+        
+        {/* View Leaderboard Button (only show during gameplay in daily mode) */}
+        {!run.isFinished && mode === 'daily' && (
+          <div className="px-3 py-4 md:px-6">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setShowLeaderboard(true)}
+            >
+              <Trophy className="h-4 w-4 mr-2" />
+              View Leaderboard
+            </Button>
+          </div>
+        )}
         
         {/* Results */}
         {run.isFinished && (
