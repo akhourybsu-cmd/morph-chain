@@ -12,6 +12,7 @@ import { scoreGuess } from "@/lib/chromawordLogic";
 import { VALID_WORDS_5 } from "@/lib/gameLogic";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import OnScreenKeyboard from "@/components/prism/OnScreenKeyboard";
 
 const DEFAULT_TARGET = "SHINE";
 const WORD_LENGTH = 5;
@@ -74,8 +75,27 @@ export default function MorphPrism() {
     return scoreGuess(rows[rows.length-1].word, DEFAULT_TARGET).tiles;
   }, [rows]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Track used letters for keyboard feedback
+  const { usedLetters, correctLetters, wrongPositionLetters } = useMemo(() => {
+    const used = new Set<string>();
+    const correct = new Set<string>();
+    const wrongPos = new Set<string>();
+    
+    rows.forEach(row => {
+      row.word.split('').forEach((letter, idx) => {
+        used.add(letter);
+        if (DEFAULT_TARGET[idx] === letter) {
+          correct.add(letter);
+        } else if (DEFAULT_TARGET.includes(letter)) {
+          wrongPos.add(letter);
+        }
+      });
+    });
+    
+    return { usedLetters: used, correctLetters: correct, wrongPositionLetters: wrongPos };
+  }, [rows]);
+
+  const submitGuess = () => {
     if (gameStatus !== 'playing') return;
     
     const word = currentInput.trim().toUpperCase();
@@ -116,6 +136,21 @@ export default function MorphPrism() {
       setShowResults(true);
       toast.error(`The word was ${DEFAULT_TARGET}`);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submitGuess();
+  };
+
+  const handleKeyPress = (key: string) => {
+    if (currentInput.length < WORD_LENGTH) {
+      setCurrentInput(prev => prev + key);
+    }
+  };
+
+  const handleBackspace = () => {
+    setCurrentInput(prev => prev.slice(0, -1));
   };
 
   const handleShare = () => {
@@ -282,33 +317,38 @@ export default function MorphPrism() {
             </div>
           )}
 
-          {/* Input */}
+          {/* Current word display */}
           {gameStatus === 'playing' && (
-            <form onSubmit={handleSubmit} className="space-y-2">
-              <div className="flex gap-2">
-                <Input
-                  type="text"
-                  value={currentInput}
-                  onChange={(e) => setCurrentInput(e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, WORD_LENGTH))}
-                  placeholder="TYPE WORD"
-                  className="flex-1 text-center font-bold text-base md:text-lg tracking-widest uppercase h-12 md:h-14"
-                  maxLength={WORD_LENGTH}
-                  autoFocus
-                  autoComplete="off"
-                />
-                <Button 
-                  type="submit"
-                  className="px-6 md:px-8 h-12 md:h-14 font-bold bg-gradient-to-r from-[hsl(var(--prism-accent-start))] via-[hsl(var(--prism-accent-mid))] to-[hsl(var(--prism-accent-end))] hover:opacity-90"
-                >
-                  Go
-                </Button>
+            <div className="space-y-3">
+              <div className="flex justify-center gap-1.5 md:gap-2 py-2">
+                {Array.from({ length: WORD_LENGTH }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-12 md:h-14 w-12 md:w-14 border-2 border-border rounded bg-card/50 flex items-center justify-center text-lg md:text-2xl font-bold"
+                  >
+                    {currentInput[i] || ''}
+                  </div>
+                ))}
               </div>
               {error && (
                 <p className="text-xs md:text-sm text-destructive text-center font-semibold animate-fade-in">
                   {error}
                 </p>
               )}
-            </form>
+            </div>
+          )}
+
+          {/* On-screen Keyboard */}
+          {gameStatus === 'playing' && (
+            <OnScreenKeyboard
+              onKeyPress={handleKeyPress}
+              onBackspace={handleBackspace}
+              onEnter={submitGuess}
+              disabled={gameStatus !== 'playing'}
+              usedLetters={usedLetters}
+              correctLetters={correctLetters}
+              wrongPositionLetters={wrongPositionLetters}
+            />
           )}
 
           {/* Share Button */}
