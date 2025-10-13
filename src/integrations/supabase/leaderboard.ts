@@ -11,7 +11,8 @@ export interface LeaderboardEntry {
 
 export async function fetchDailyLeaderboard(
   dateISO: string, 
-  mode: 'daily' | 'practice' = 'daily'
+  mode: 'daily' | 'practice' = 'daily',
+  hardMode?: boolean
 ): Promise<LeaderboardEntry[]> {
   const { data, error } = await supabase.rpc('get_rush_daily_leaderboard', {
     p_date: dateISO,
@@ -20,5 +21,12 @@ export async function fetchDailyLeaderboard(
   });
   
   if (error) throw error;
-  return (data || []) as LeaderboardEntry[];
+  
+  // Filter by hard mode if specified
+  let results = (data || []) as LeaderboardEntry[];
+  if (hardMode !== undefined) {
+    results = results.filter(entry => entry.hard_mode === hardMode);
+  }
+  
+  return results;
 }
