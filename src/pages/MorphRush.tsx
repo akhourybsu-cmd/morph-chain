@@ -3,8 +3,9 @@ import { RushLogo } from "@/components/RushLogo";
 import { DailyBanner } from "@/components/DailyBanner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Menu, HelpCircle, TrendingUp, User, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   getRushDailyPuzzle,
   calculateEndBonuses,
@@ -22,6 +23,10 @@ import { RushPowerups } from "@/components/rush/RushPowerups";
 import { RushWordRibbon } from "@/components/rush/RushWordRibbon";
 import { RushResultsPanel } from "@/components/rush/RushResultsPanel";
 import { RushLeaderboard } from "@/components/rush/RushLeaderboard";
+import { RushHowToPlay } from "@/components/rush/RushHowToPlay";
+import { RushStats } from "@/components/rush/RushStats";
+import { SettingsModal, BackgroundTheme } from "@/components/SettingsModal";
+import { loadSettings, saveSettings } from "@/lib/storage";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const MorphRush = () => {
@@ -55,6 +60,36 @@ const MorphRush = () => {
   const [hardMode, setHardMode] = useState(false);
   const [lastChangedIdx, setLastChangedIdx] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Modals & Settings
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [settings, setSettings] = useState(loadSettings());
+  const [user, setUser] = useState<any>(null);
+
+  // Auth listener
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
+  const handleSaveSettings = (newSettings: any) => {
+    setSettings(newSettings);
+    saveSettings(newSettings);
+  };
   
   // Timer tick
   const handleTimerTick = useCallback(() => {
@@ -258,12 +293,90 @@ const MorphRush = () => {
   return (
     <div className="min-h-screen flex flex-col max-w-2xl mx-auto">
       <header className="h-14 grid grid-cols-3 items-center px-4 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="flex items-center gap-1 justify-start"></div>
+        <div className="flex items-center gap-1 justify-start">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Open settings"
+            className="hover:bg-muted/50 h-9 w-9"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setHelpOpen(true)}
+            aria-label="How to play"
+            className="hover:bg-muted/50 h-9 w-9"
+          >
+            <HelpCircle className="h-5 w-5" />
+          </Button>
+        </div>
+        
         <div className="flex justify-center">
           <RushLogo />
         </div>
-        <div className="flex items-center gap-1 justify-end"></div>
+        
+        <div className="flex items-center gap-1 justify-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setStatsOpen(true)}
+            aria-label="View statistics"
+            className="hover:bg-muted/50 h-9 w-9"
+          >
+            <TrendingUp className="h-5 w-5" />
+          </Button>
+
+          {user ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              aria-label="Sign out"
+              className="hover:bg-muted/50 h-9 w-9"
+              title="Sign out"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/login')}
+              aria-label="Sign in to sync progress"
+              className="hover:bg-muted/50 h-9 w-9"
+              title="Sign in to sync progress across devices"
+            >
+              <User className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
       </header>
+      
+      {/* Modals */}
+      <SettingsModal
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        hardMode={settings.hardMode}
+        onToggleHardMode={() => handleSaveSettings({ ...settings, hardMode: !settings.hardMode })}
+        colorblindMode={settings.colorblindMode}
+        onToggleColorblindMode={() => handleSaveSettings({ ...settings, colorblindMode: !settings.colorblindMode })}
+        vibration={settings.vibration}
+        onToggleVibration={() => handleSaveSettings({ ...settings, vibration: !settings.vibration })}
+        backgroundTheme={settings.backgroundTheme as BackgroundTheme}
+        onChangeBackgroundTheme={(theme: BackgroundTheme) => handleSaveSettings({ ...settings, backgroundTheme: theme })}
+        onResetData={() => {
+          if (confirm('Reset all Rush data? This cannot be undone.')) {
+            localStorage.removeItem('rush_stats');
+            window.location.reload();
+          }
+        }}
+      />
+      <RushStats open={statsOpen} onOpenChange={setStatsOpen} />
+      <RushHowToPlay open={helpOpen} onOpenChange={setHelpOpen} />
       
       <div className="px-3 py-2 md:px-4 md:py-3">
         <DailyBanner
