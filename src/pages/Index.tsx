@@ -388,6 +388,7 @@ const Index = () => {
   const handleLetterSwap = () => {
     if (letterSwapUsed || gameCompleted) return;
     setLetterSwapActive(!letterSwapActive);
+    setSwapSelection([]); // Clear selection when toggling
     if (doubleSwapActive) {
       setDoubleSwapActive(false);
     }
