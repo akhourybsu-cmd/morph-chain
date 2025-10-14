@@ -136,30 +136,87 @@ function SideMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
 function HowToPlayModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-slate-900 rounded-xl p-5 ring-1 ring-slate-800">
-        <div className="text-xl font-bold text-slate-100 mb-1">How to Play — Arcade</div>
-        <div className="text-slate-300 text-sm space-y-3 max-h-[65vh] overflow-auto">
-          <p><b>Objective:</b> Build the longest chain before your <i>Chain Stability</i> reaches 0.</p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Change <b>one letter</b> per move to make a new valid word.</li>
-            <li>Every move <b>costs</b> stability. Smart morphs can sometimes <b>restore</b> it.</li>
-            <li>Power-ups <b>cost</b> stability—use them wisely.</li>
-            <li>No repeats; all words must be modern U.S. English.</li>
-          </ul>
-          <p className="mt-2"><b>Power-ups & costs:</b></p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>🔄 <b>Double Swap</b> (−10): next move may change ≤2 letters.</li>
-            <li>💡 <b>Insight</b> (−8): flashes 3 viable positions to change.</li>
-            <li>⚙️ <b>Repair</b> (−15 → +20): spend 15 to restore 20 stability.</li>
-            <li>🎲 <b>Wildcard</b> (free, rare): injects one random letter change.</li>
-          </ul>
-          <p><b>Tip:</b> Save Double Swap for dead ends. Keep a buffer of stability. Don't repeat words.</p>
+    <div className="fixed inset-0 z-50 grid place-items-center p-4">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-slate-900 rounded-xl p-6 ring-1 ring-slate-700 shadow-2xl">
+        <div className="text-2xl font-bold text-slate-100 mb-4 text-center">
+          <MorphArcadeTitle className="text-xl" />
         </div>
-        <div className="mt-4 flex justify-end">
-          <button onClick={onClose} className="px-3 py-1.5 rounded-md bg-cyan-400 text-slate-900 font-semibold">
-            Got it
+        
+        <div className="text-slate-300 text-sm space-y-4 max-h-[70vh] overflow-auto pr-2">
+          <section>
+            <h3 className="text-lg font-bold text-cyan-400 mb-2">🎯 Objective</h3>
+            <p>Build the longest possible word chain before your <b className="text-cyan-300">Chain Stability</b> reaches zero. Unlike other modes, there's no time limit—only your strategic decisions matter!</p>
+          </section>
+
+          <section>
+            <h3 className="text-lg font-bold text-cyan-400 mb-2">⛓️ Chain Stability Explained</h3>
+            <p className="mb-2"><b className="text-cyan-300">Chain Stability</b> represents the strength of your word chain. Think of it as your resource that depletes as you play:</p>
+            <ul className="list-disc pl-5 space-y-1.5">
+              <li><b>Every word costs -5 stability</b> (basic move cost)</li>
+              <li><b>Invalid moves cost -12 stability</b> (wrong words, repeats, or changing too many letters)</li>
+              <li><b>Smart plays reward you:</b> 25% chance to gain +6 stability on valid moves</li>
+              <li><b>Power-ups cost stability</b> to activate (but can help you survive longer)</li>
+              <li><b>Game ends</b> when stability reaches 0</li>
+            </ul>
+            <p className="mt-2 text-cyan-200 italic">💡 Strategy tip: Maintain a stability buffer and use power-ups wisely!</p>
+          </section>
+
+          <section>
+            <h3 className="text-lg font-bold text-cyan-400 mb-2">📜 Basic Rules</h3>
+            <ul className="list-disc pl-5 space-y-1.5">
+              <li>Change <b>exactly one letter</b> per move to create a new valid word</li>
+              <li>All words must be valid modern U.S. English dictionary words</li>
+              <li><b>No repeating words</b>—each word can only be used once per game</li>
+              <li>Choose your word length (4L, 5L, or 6L) before starting</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 className="text-lg font-bold text-cyan-400 mb-2">⚡ Power-Ups</h3>
+            <p className="mb-2">Earn power-ups through gameplay (every 4-move streak or randomly ~12% chance). Use them strategically:</p>
+            <div className="space-y-2">
+              <div className="bg-slate-800 p-2 rounded">
+                <p><b>🔄 Double Swap</b> <span className="text-red-400">(costs -10 stability)</span></p>
+                <p className="text-xs text-slate-400">Allows your <b>next move</b> to change up to 2 letters instead of 1. Perfect for escaping dead ends!</p>
+              </div>
+              <div className="bg-slate-800 p-2 rounded">
+                <p><b>💡 Insight</b> <span className="text-red-400">(costs -8 stability)</span></p>
+                <p className="text-xs text-slate-400">Highlights 3 letter positions you can change to find valid words. Great for when you're stuck!</p>
+              </div>
+              <div className="bg-slate-800 p-2 rounded">
+                <p><b>⚙️ Repair</b> <span className="text-red-400">(costs -15)</span> <span className="text-green-400">(restores +20)</span></p>
+                <p className="text-xs text-slate-400">Net gain of +5 stability. Use when your chain is weakening to keep going longer!</p>
+              </div>
+              <div className="bg-slate-800 p-2 rounded">
+                <p><b>🎲 Wildcard</b> <span className="text-green-400">(FREE!)</span></p>
+                <p className="text-xs text-slate-400">Randomly changes one letter for you. Rare drop, use wisely for exploration!</p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="text-lg font-bold text-cyan-400 mb-2">🏆 Scoring</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><b>Longest Chain:</b> Total number of valid words in your chain</li>
+              <li><b>Best Streak:</b> Consecutive valid moves without errors</li>
+            </ul>
+          </section>
+
+          <section className="bg-cyan-900/20 p-3 rounded border border-cyan-700/30">
+            <h3 className="text-sm font-bold text-cyan-300 mb-1">💎 Pro Tips</h3>
+            <ul className="text-xs space-y-1 text-slate-300">
+              <li>• Save Double Swap for when you're truly stuck</li>
+              <li>• Use Repair before stability gets too low</li>
+              <li>• Build streaks to earn more power-ups</li>
+              <li>• Longer words (6L) are harder but more rewarding</li>
+            </ul>
+          </section>
+        </div>
+
+        <div className="mt-5 flex justify-center">
+          <button onClick={onClose} className="px-6 py-2.5 rounded-lg bg-cyan-400 text-slate-900 font-bold text-base hover:bg-cyan-300 transition">
+            Let's Play! 🎮
           </button>
         </div>
       </div>
@@ -340,6 +397,7 @@ function Tiles({
 export default function ArcadeSurvivalPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [firstTime, setFirstTime] = useState(true);
 
   const [length, setLength] = useState<LengthMode>(4);
   const [state, setState] = useState<GameState>("idle");
@@ -377,7 +435,13 @@ export default function ArcadeSurvivalPage() {
     [current, length]
   );
 
-  const start = () => setState("running");
+  const start = () => {
+    if (firstTime) {
+      setHelpOpen(true);
+      setFirstTime(false);
+    }
+    setState("running");
+  };
 
   const adjustStability = (delta: number) =>
     setStability((s) => {
@@ -409,13 +473,15 @@ export default function ArcadeSurvivalPage() {
     setPower((p) => ({ ...p, [t]: Math.max(0, (p[t] || 0) - 1) }));
 
   const usePower = (t: PowerupType) => {
-    if ((power[t] || 0) <= 0 || state !== "running") return;
+    const count = power[t] || 0;
+    if (count <= 0 || state !== "running") return;
+
+    spendPower(t);
 
     switch (t) {
       case "doubleSwap":
         adjustStability(-10);
         setDoubleSwapOnce(true);
-        spendPower("doubleSwap");
         break;
       case "insight": {
         adjustStability(-8);
@@ -423,19 +489,16 @@ export default function ArcadeSurvivalPage() {
         while (picks.size < Math.min(3, length)) picks.add(Math.floor(Math.random() * length));
         setFlash(Array.from(picks));
         setTimeout(() => setFlash([]), 1200);
-        spendPower("insight");
         break;
       }
       case "repair":
         adjustStability(-15);
         setTimeout(() => adjustStability(+20), 40);
-        spendPower("repair");
         break;
       case "wildcard": {
         const idx = Math.floor(Math.random() * length);
         const letter = String.fromCharCode(97 + Math.floor(Math.random() * 26));
         setCurrent((w) => w.substring(0, idx) + letter + w.substring(idx + 1));
-        spendPower("wildcard");
         break;
       }
     }
