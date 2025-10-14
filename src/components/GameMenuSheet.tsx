@@ -11,11 +11,12 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AddToHomeScreen } from "@/components/AddToHomeScreen";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Home } from "lucide-react";
+import { ChevronDown, Home, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { backgroundThemes, BackgroundTheme } from "@/components/SettingsModal";
 import { MorphChainTitle, MorphPrismTitle, MorphRushTitle, MorphArcadeTitle } from "@/components/GameTitles";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface GameMenuSheetProps {
   open: boolean;
@@ -46,6 +47,7 @@ export const GameMenuSheet = ({
 }: GameMenuSheetProps) => {
   const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const { hasBetaAccess } = useUserRole();
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -82,10 +84,17 @@ export const GameMenuSheet = ({
               
               <Button
                 variant="ghost"
-                className="w-full justify-start text-sm h-auto py-2"
-                onClick={() => handleNavigate("/arcade-survival")}
+                className="w-full justify-start text-sm h-auto py-2 gap-2"
+                onClick={() => hasBetaAccess && handleNavigate("/arcade-survival")}
+                disabled={!hasBetaAccess}
               >
                 <MorphArcadeTitle className="text-base" />
+                {!hasBetaAccess && (
+                  <>
+                    <Lock className="h-3 w-3 ml-auto" />
+                    <span className="text-xs text-muted-foreground">Coming Soon</span>
+                  </>
+                )}
               </Button>
               
               <Button
@@ -98,10 +107,17 @@ export const GameMenuSheet = ({
               
               <Button
                 variant="ghost"
-                className="w-full justify-start text-sm h-auto py-2"
-                onClick={() => handleNavigate("/prism")}
+                className="w-full justify-start text-sm h-auto py-2 gap-2"
+                onClick={() => hasBetaAccess && handleNavigate("/prism")}
+                disabled={!hasBetaAccess}
               >
                 <MorphPrismTitle className="text-base" />
+                {!hasBetaAccess && (
+                  <>
+                    <Lock className="h-3 w-3 ml-auto" />
+                    <span className="text-xs text-muted-foreground">Coming Soon</span>
+                  </>
+                )}
               </Button>
             </div>
           </div>

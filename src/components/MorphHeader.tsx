@@ -11,17 +11,19 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu, ChevronDown, Check } from "lucide-react";
+import { Menu, ChevronDown, Check, Lock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { MorphChainTitle, MorphPrismTitle, MorphRushTitle, MorphArcadeTitle } from "@/components/GameTitles";
 import morphIcon from "@/assets/morph-icon.png";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 
 export const MorphHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
+  const { hasBetaAccess } = useUserRole();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -39,25 +41,29 @@ export const MorphHeader = () => {
       name: <MorphChainTitle className="text-sm" />,
       path: "/chain", 
       description: "Word ladder",
-      active: isOnChain
+      active: isOnChain,
+      locked: false
     },
     { 
       name: <MorphArcadeTitle className="text-sm" />,
       path: "/arcade-survival", 
-      description: "Timed arcade mode",
-      active: isOnArcade
+      description: hasBetaAccess ? "Timed arcade mode" : "Coming soon",
+      active: isOnArcade,
+      locked: !hasBetaAccess
     },
     { 
       name: <MorphRushTitle className="text-sm" />,
       path: "/rush?mode=daily", 
       description: "Score dash",
-      active: isOnRush
+      active: isOnRush,
+      locked: false
     },
     { 
       name: <MorphPrismTitle className="text-sm" />,
       path: "/prism", 
-      description: "Color puzzle",
-      active: isOnPrism
+      description: hasBetaAccess ? "Color puzzle" : "Coming soon",
+      active: isOnPrism,
+      locked: !hasBetaAccess
     },
   ];
 
@@ -104,16 +110,20 @@ export const MorphHeader = () => {
               {games.map((game) => (
                 <DropdownMenuItem
                   key={game.path}
-                  onClick={() => navigate(game.path)}
+                  onClick={() => !game.locked && navigate(game.path)}
+                  disabled={game.locked}
                   className="flex items-center justify-between cursor-pointer"
                 >
                   <div className="flex flex-col gap-0.5">
-                    {game.name}
+                    <div className="flex items-center gap-2">
+                      {game.name}
+                      {game.locked && <Lock className="h-3 w-3 text-muted-foreground" />}
+                    </div>
                     <span className="text-xs text-muted-foreground">
                       {game.description}
                     </span>
                   </div>
-                  {game.active && (
+                  {game.active && !game.locked && (
                     <Check className="h-4 w-4 text-primary" />
                   )}
                 </DropdownMenuItem>
@@ -169,19 +179,25 @@ export const MorphHeader = () => {
                   <button
                     key={game.path}
                     onClick={() => {
-                      navigate(game.path);
-                      setMobileMenuOpen(false);
+                      if (!game.locked) {
+                        navigate(game.path);
+                        setMobileMenuOpen(false);
+                      }
                     }}
-                    className="w-full text-left px-2 py-3 rounded-lg hover:bg-muted transition-colors"
+                    disabled={game.locked}
+                    className="w-full text-left px-2 py-3 rounded-lg hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-0.5">
-                        {game.name}
+                        <div className="flex items-center gap-2">
+                          {game.name}
+                          {game.locked && <Lock className="h-3 w-3 text-muted-foreground" />}
+                        </div>
                         <span className="text-xs text-muted-foreground">
                           {game.description}
                         </span>
                       </div>
-                      {game.active && (
+                      {game.active && !game.locked && (
                         <Check className="h-4 w-4 text-primary" />
                       )}
                     </div>

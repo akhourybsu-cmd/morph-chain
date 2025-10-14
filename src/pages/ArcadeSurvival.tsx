@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MorphArcadeTitle } from "@/components/GameTitles";
-import { Menu } from "lucide-react";
+import { Menu, Lock } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
 
 /**
  * MORPH CHAIN — ARCADE
@@ -395,12 +397,22 @@ function Tiles({
 }
 
 export default function ArcadeSurvivalPage() {
+  const navigate = useNavigate();
+  const { hasBetaAccess, loading } = useUserRole();
+  
   const [menuOpen, setMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [firstTime, setFirstTime] = useState(true);
 
   const [length, setLength] = useState<LengthMode>(4);
   const [state, setState] = useState<GameState>("idle");
+  
+  // Redirect if user doesn't have beta access
+  useEffect(() => {
+    if (!loading && !hasBetaAccess) {
+      navigate("/");
+    }
+  }, [loading, hasBetaAccess, navigate]);
 
   const [stability, setStability] = useState<number>(MAX_STABILITY);
 
@@ -585,6 +597,11 @@ morphchaingame.com`;
       <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
       <HowToPlayModal open={helpOpen} onClose={() => setHelpOpen(false)} />
 
+      {loading ? (
+        <main className="max-w-screen-sm mx-auto px-4 py-6 flex items-center justify-center min-h-[50vh]">
+          <div className="text-slate-300">Loading...</div>
+        </main>
+      ) : (
       <main className="max-w-screen-sm mx-auto px-4 py-6">
         <div className="mb-3">
           <ChainBar value={stability} max={MAX_STABILITY} />
@@ -651,6 +668,7 @@ morphchaingame.com`;
           </div>
         )}
       </main>
+      )}
     </div>
   );
 }

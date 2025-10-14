@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Share2, Clock, Sparkles, Info } from "lucide-react";
+import { Share2, Clock, Sparkles, Info, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { PrismLogo } from "@/components/PrismLogo";
+import { useUserRole } from "@/hooks/useUserRole";
 import ChromaTile from "@/components/chromaword/ChromaTile";
 import SimilarityMeter from "@/components/chromaword/SimilarityMeter";
 import { scoreGuess } from "@/lib/chromawordLogic";
@@ -27,6 +28,7 @@ type Guess = {
 
 export default function MorphPrism() {
   const navigate = useNavigate();
+  const { hasBetaAccess, loading } = useUserRole();
   const puzzleNumber = 1;
   const today = new Date().toISOString().split('T')[0];
   
@@ -46,6 +48,13 @@ export default function MorphPrism() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s));
     return () => subscription.unsubscribe();
   }, []);
+  
+  // Redirect if user doesn't have beta access
+  useEffect(() => {
+    if (!loading && !hasBetaAccess) {
+      navigate("/");
+    }
+  }, [loading, hasBetaAccess, navigate]);
 
   // Timer countdown to next puzzle
   const [timeUntilMidnight, setTimeUntilMidnight] = useState("");
@@ -163,6 +172,14 @@ export default function MorphPrism() {
       toast.success("Copied to clipboard!");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-background to-card">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background to-card">
