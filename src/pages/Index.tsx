@@ -607,7 +607,7 @@ const Index = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-between text-xs md:text-sm">
+              <div className="flex items-center text-xs md:text-sm">
                 <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                   {error && (
                     <div
@@ -618,12 +618,6 @@ const Index = () => {
                       <span className="truncate text-[11px] md:text-sm">{error}</span>
                     </div>
                   )}
-                </div>
-                
-                <div className="text-muted-foreground font-medium text-xs md:text-sm flex-shrink-0">
-                  <span className="text-foreground">{moves.length}</span>
-                  <span className="mx-0.5 md:mx-1">/</span>
-                  <span>{puzzle.maxMoves}</span>
                 </div>
               </div>
             </div>

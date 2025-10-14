@@ -47,7 +47,7 @@ export const MoveLog = ({ moves, simpleMode = false, colorblindMode, onDisputeWo
             </div>
             {simpleMode ? (
               <>
-                <div className="flex items-center justify-center gap-2 font-mono text-sm flex-1 min-w-0">
+                <div className="flex items-center gap-2 font-mono text-sm flex-1 min-w-0">
                   <span className="font-semibold tracking-tiles">
                     {move.to.split('').map((letter, i) => {
                       const hintState = move.hints[i];
@@ -82,13 +82,13 @@ export const MoveLog = ({ moves, simpleMode = false, colorblindMode, onDisputeWo
                   ) : move.isWorse ? (
                     <TrendingDown className="h-4 w-4 text-destructive" />
                   ) : (
-                    <Minus className="h-4 w-4 text-warning" />
+                    <TrendingUp className="h-4 w-4 text-warning" />
                   )}
                 </div>
               </>
             ) : (
               <>
-                <div className="flex items-center justify-center gap-2 flex-1">
+                <div className="flex items-center gap-2 flex-1">
                   <div className="flex gap-1">
                     {move.hints.map((state, i) => (
                       <HintTile
@@ -120,7 +120,7 @@ export const MoveLog = ({ moves, simpleMode = false, colorblindMode, onDisputeWo
                   ) : move.isWorse ? (
                     <TrendingDown className="h-4 w-4 text-destructive" />
                   ) : (
-                    <Minus className="h-4 w-4 text-warning" />
+                    <TrendingUp className="h-4 w-4 text-warning" />
                   )}
                 </div>
               </>

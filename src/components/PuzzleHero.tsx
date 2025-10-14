@@ -22,9 +22,9 @@ export const PuzzleHero = ({
 
   return (
     <div className="px-3 py-4 space-y-3 md:px-6 md:py-6 md:space-y-4">
-      <div className="flex items-center justify-center gap-3 md:gap-4">
+      <div className="flex items-center justify-center gap-6 md:gap-8">
         <WordBadge label="START" word={startWord} />
-        <ArrowRight className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
+        <ArrowRight className="h-6 w-6 md:h-7 md:w-7 text-primary" strokeWidth={2.5} />
         <WordBadge label="GOAL" word={goalWord} />
       </div>
 
