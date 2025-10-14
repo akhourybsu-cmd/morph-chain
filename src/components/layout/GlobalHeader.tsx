@@ -1,5 +1,7 @@
 import React from "react";
 
+import { MorphArcadeTitle } from "@/components/GameTitles";
+
 export function GlobalHeader({
   onOpenMenu,
   onOpenHelp,

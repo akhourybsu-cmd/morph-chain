@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { GlobalHeader } from "@/components/layout/GlobalHeader";
-import { SideMenu } from "@/components/layout/SideMenu";
+import { MorphArcadeTitle } from "@/components/GameTitles";
+import { Menu } from "lucide-react";
 
 /**
- * MORPH CHAIN — ARCADE (SURVIVAL)
+ * MORPH CHAIN — ARCADE
  * - No timer; you manage "Chain Stability" (resource)
  * - Goal: build the longest chain before stability hits 0
  * - Modes: 4L / 5L / 6L
@@ -53,13 +53,88 @@ async function getStartWord(len: LengthMode): Promise<string> {
   return list[Math.floor(Math.random() * list.length)];
 }
 
+/* ----------------------------- Header & Menu ----------------------------- */
+
+function ArcadeHeader({
+  onOpenMenu,
+  onOpenHelp,
+}: {
+  onOpenMenu: () => void;
+  onOpenHelp: () => void;
+}) {
+  return (
+    <header className="sticky top-0 z-40 bg-[#0B1E26]/90 backdrop-blur border-b border-slate-800">
+      <div className="max-w-screen-sm mx-auto px-4 h-16 flex items-center justify-between">
+        {/* Left: Hamburger Menu */}
+        <button
+          aria-label="Open menu"
+          onClick={onOpenMenu}
+          className="p-2 rounded-md text-slate-300 hover:bg-slate-800"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+
+        {/* Center: Logo */}
+        <a href="/" className="absolute left-1/2 -translate-x-1/2">
+          <MorphArcadeTitle className="text-xl md:text-2xl" />
+        </a>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onOpenHelp}
+            className="px-3 py-1.5 rounded-md text-slate-300 hover:bg-slate-800 text-sm"
+          >
+            How to Play
+          </button>
+          <a
+            href="/login"
+            className="px-3 py-1.5 rounded-md bg-slate-800 text-slate-100 text-sm hover:ring-1 hover:ring-slate-700"
+          >
+            Log in
+          </a>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function SideMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <aside className="absolute left-0 top-0 h-full w-72 bg-slate-900 border-r border-slate-800 p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="font-bold text-slate-100">Morph Games</div>
+          <button onClick={onClose} className="p-2 rounded-md text-slate-300 hover:bg-slate-800">
+            ✕
+          </button>
+        </div>
+        <nav className="flex flex-col gap-2 text-slate-200">
+          <a className="hover:text-cyan-300" href="/">Morph Chain (Classic)</a>
+          <a className="hover:text-cyan-300" href="/arcade-survival">
+            <span className="inline-block">Morph Chain: </span>
+            <span className="inline-block bg-gradient-to-r from-[#FF6B35] to-[#F7931E] bg-clip-text text-transparent font-bold" style={{ 
+              fontFamily: 'Impact, "Arial Black", sans-serif',
+              letterSpacing: '0.05em'
+            }}>ARCADE</span>
+          </a>
+          <a className="hover:text-cyan-300" href="/rush">Morph Rush</a>
+          <a className="hover:text-cyan-300" href="/prism">Morph Prism</a>
+        </nav>
+      </aside>
+    </div>
+  );
+}
+
 function HowToPlayModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="relative w-full max-w-md bg-slate-900 rounded-xl p-5 ring-1 ring-slate-800">
-        <div className="text-xl font-bold text-slate-100 mb-1">How to Play — Arcade (Survival)</div>
+        <div className="text-xl font-bold text-slate-100 mb-1">How to Play — Arcade</div>
         <div className="text-slate-300 text-sm space-y-3 max-h-[65vh] overflow-auto">
           <p><b>Objective:</b> Build the longest chain before your <i>Chain Stability</i> reaches 0.</p>
           <ul className="list-disc pl-5 space-y-1">
@@ -421,7 +496,7 @@ export default function ArcadeSurvivalPage() {
   };
 
   const share = async () => {
-    const text = `Morph Chain — Arcade (Survival) ${length}L
+    const text = `Morph Chain — Arcade ${length}L
 Longest chain: ${history.length}
 Best streak: ${streakMax}
 morphchaingame.com`;
@@ -435,10 +510,9 @@ morphchaingame.com`;
 
   return (
     <div className="min-h-screen bg-[#0B1E26] text-slate-100">
-      <GlobalHeader
+      <ArcadeHeader
         onOpenMenu={() => setMenuOpen(true)}
         onOpenHelp={() => setHelpOpen(true)}
-        titleRightBadge="ARCADE"
       />
       <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
       <HowToPlayModal open={helpOpen} onClose={() => setHelpOpen(false)} />
