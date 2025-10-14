@@ -83,6 +83,16 @@ export const GameMenuSheet = ({
               <Button
                 variant="ghost"
                 className="w-full justify-start text-sm h-auto py-2"
+                onClick={() => handleNavigate("/arcade")}
+              >
+                <span className="font-outfit font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  MORPH CHAIN: ARCADE
+                </span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-sm h-auto py-2"
                 onClick={() => handleNavigate("/rush?mode=daily")}
               >
                 <MorphRushTitle className="text-base" />

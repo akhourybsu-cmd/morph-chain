@@ -30,6 +30,7 @@ export const MorphHeader = () => {
   }, []);
 
   const isOnChain = location.pathname === '/chain';
+  const isOnArcade = location.pathname === '/arcade';
   const isOnPrism = location.pathname === '/prism';
   const isOnRush = location.pathname.startsWith('/rush');
 
@@ -39,6 +40,12 @@ export const MorphHeader = () => {
       path: "/chain", 
       description: "Word ladder",
       active: isOnChain
+    },
+    { 
+      name: <span className="font-outfit font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent text-sm">MORPH CHAIN: ARCADE</span>,
+      path: "/arcade", 
+      description: "Timed arcade mode",
+      active: isOnArcade
     },
     { 
       name: <MorphRushTitle className="text-sm" />,
