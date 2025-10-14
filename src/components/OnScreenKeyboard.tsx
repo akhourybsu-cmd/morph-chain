@@ -77,7 +77,7 @@ export default function OnScreenKeyboard({
               onClick={onBackspace}
               disabled={disabled}
               variant="outline"
-              className="h-11 min-w-[3.5rem] px-2 bg-card hover:bg-accent border-border flex-shrink-0"
+              className="h-11 min-w-[2.5rem] px-1 bg-card hover:bg-accent border-border flex-shrink-0"
             >
               <Delete className="h-4 w-4" />
             </Button>

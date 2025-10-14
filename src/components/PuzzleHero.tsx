@@ -6,8 +6,8 @@ interface PuzzleHeroProps {
   goalWord: string;
   movesUsed: number;
   maxMoves: number;
-  onToggleSimpleMode: () => void;
-  simpleMode: boolean;
+  onToggleSimpleMode?: () => void;
+  simpleMode?: boolean;
 }
 
 export const PuzzleHero = ({
@@ -28,30 +28,18 @@ export const PuzzleHero = ({
         <WordBadge label="GOAL" word={goalWord} />
       </div>
 
-      <div className="flex items-center justify-center gap-2 md:gap-3">
-        <div className="flex gap-1">
-          {dots.map((_, i) => {
-            const isUsed = i < movesUsed;
-            return (
-              <div
-                key={i}
-                className={`h-1.5 w-1.5 md:h-2 md:w-2 rounded-full transition-all duration-200 ${
-                  isUsed ? "bg-primary animate-scale-in" : "bg-muted/30"
-                }`}
-              />
-            );
-          })}
-        </div>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleSimpleMode}
-          className="h-6 px-2 text-[10px] md:text-xs"
-        >
-          <Type className="h-3 w-3 mr-1" />
-          {simpleMode ? "Show tiles" : "Simple"}
-        </Button>
+      <div className="flex items-center justify-center gap-1">
+        {dots.map((_, i) => {
+          const isUsed = i < movesUsed;
+          return (
+            <div
+              key={i}
+              className={`h-1.5 w-1.5 md:h-2 md:w-2 rounded-full transition-all duration-200 ${
+                isUsed ? "bg-primary animate-scale-in" : "bg-muted/30"
+              }`}
+            />
+          );
+        })}
       </div>
     </div>
   );

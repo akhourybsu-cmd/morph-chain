@@ -166,6 +166,7 @@ const Index = () => {
         } else {
           setError("Must change exactly 1 letter");
         }
+        setCurrentInput("");
         setIsLoading(false);
         return;
       }
@@ -173,6 +174,7 @@ const Index = () => {
       if (!isValidWord(word, puzzle.wordLength)) {
         setInvalidGuessCount(prev => prev + 1);
         setError("Not in our modern-English list");
+        setCurrentInput("");
         setIsLoading(false);
         return;
       }
@@ -180,6 +182,7 @@ const Index = () => {
       if (usedWords.has(word)) {
         setInvalidGuessCount(prev => prev + 1);
         setError("Already used");
+        setCurrentInput("");
         setIsLoading(false);
         return;
       }
@@ -554,8 +557,6 @@ const Index = () => {
           goalWord={puzzle.goalWord}
           movesUsed={moves.length}
           maxMoves={puzzle.maxMoves}
-          onToggleSimpleMode={() => setSimpleMode(!simpleMode)}
-          simpleMode={simpleMode}
         />
 
         {!gameCompleted && moves.length === 0 && (
