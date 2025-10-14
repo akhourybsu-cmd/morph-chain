@@ -64,6 +64,7 @@ const Index = () => {
   const [doubleSwapActive, setDoubleSwapActive] = useState(false);
   const [letterSwapActive, setLetterSwapActive] = useState(false);
   const [swapSelection, setSwapSelection] = useState<number[]>([]);
+  const [shake, setShake] = useState(false);
 
   // Modals
   const [menuOpen, setMenuOpen] = useState(false);
@@ -190,6 +191,16 @@ const Index = () => {
         setInvalidGuessCount(prev => prev + 1);
         setError("Not in our modern-English list");
         setCurrentInput("");
+        
+        // If letter swap was active, consume it and show shake feedback
+        if (letterSwapActive) {
+          setLetterSwapActive(false);
+          setLetterSwapUsed(true);
+          setSwapSelection([]);
+          setShake(true);
+          setTimeout(() => setShake(false), 500);
+        }
+        
         setIsLoading(false);
         return;
       }
@@ -393,17 +404,15 @@ const Index = () => {
     
     setSwapSelection(newSelection);
     
-    // If two tiles selected, perform swap
+    // If two tiles selected, perform swap (but don't auto-submit)
     if (newSelection.length === 2) {
       const wordArray = currentWord.split('');
       const [i, j] = newSelection;
       [wordArray[i], wordArray[j]] = [wordArray[j], wordArray[i]];
       const swappedWord = wordArray.join('');
-      
-      // Submit the swapped word
-      setTimeout(() => {
-        submitGuess(swappedWord);
-      }, 300);
+      setCurrentWord(swappedWord);
+      setCurrentInput(swappedWord);
+      setSwapSelection([]);
     }
   };
 
@@ -689,7 +698,7 @@ const Index = () => {
               )}
               
               {letterSwapActive && (
-                <div className="flex gap-2 justify-center mb-3">
+                <div className={`flex gap-2 justify-center mb-3 ${shake ? 'animate-shake' : ''}`}>
                   {currentWord.split('').map((letter, index) => (
                     <button
                       key={index}
