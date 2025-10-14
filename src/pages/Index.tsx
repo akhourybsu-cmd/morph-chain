@@ -728,11 +728,25 @@ const Index = () => {
                     
                     <Input
                       value={currentInput}
-                      disabled
+                      onChange={(e) => {
+                        if (!settings.useOnScreenKeyboard) {
+                          const value = e.target.value.toUpperCase();
+                          if (value.length <= currentWord.length) {
+                            setCurrentInput(value);
+                          }
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (!settings.useOnScreenKeyboard && e.key === 'Enter') {
+                          handleSubmit();
+                        }
+                      }}
+                      disabled={settings.useOnScreenKeyboard ?? true}
                       className="flex-1 font-mono uppercase tracking-tiles text-sm md:text-base h-10 md:h-11 bg-background"
                       placeholder="..."
                       maxLength={currentWord.length}
                       aria-label="Next word"
+                      autoFocus={!settings.useOnScreenKeyboard}
                     />
                   </div>
 
