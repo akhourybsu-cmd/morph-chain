@@ -518,7 +518,7 @@ morphchaingame.com`;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--arcade-bg))] via-slate-900 to-slate-800 text-slate-100">
+    <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--arcade-bg))] via-[hsl(var(--arcade-bg-mid))] to-[hsl(var(--arcade-bg))] text-slate-100">
       <ArcadeHeader
         onOpenMenu={() => setMenuOpen(true)}
         onOpenHelp={() => setHelpOpen(true)}
