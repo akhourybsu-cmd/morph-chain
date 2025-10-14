@@ -20,9 +20,10 @@ export const MorphPrismTitle = ({ className = "" }: { className?: string }) => (
 
 export const MorphRushTitle = ({ className = "" }: { className?: string }) => (
   <span 
-    className={`font-outfit font-semibold tracking-tight bg-gradient-rush bg-clip-text text-transparent whitespace-nowrap ${className}`}
-    style={{ letterSpacing: '-0.02em', fontStyle: 'italic' }}
+    className={`font-outfit font-semibold tracking-tight whitespace-nowrap ${className}`}
+    style={{ letterSpacing: '-0.02em' }}
   >
-    MORPH RUSH
+    <span className="bg-gradient-rush bg-clip-text text-transparent">MORPH </span>
+    <span className="bg-gradient-rush bg-clip-text text-transparent italic">RUSH</span>
   </span>
 );
