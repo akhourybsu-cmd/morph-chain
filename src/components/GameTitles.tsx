@@ -2,7 +2,7 @@
 
 export const MorphChainTitle = ({ className = "" }: { className?: string }) => (
   <span 
-    className={`font-outfit font-semibold tracking-tight bg-gradient-chain bg-clip-text text-transparent whitespace-nowrap ${className}`}
+    className={`font-outfit font-semibold tracking-tight bg-gradient-to-r from-chain to-chain bg-clip-text text-transparent whitespace-nowrap ${className}`}
     style={{ letterSpacing: '-0.02em' }}
   >
     MORPH CHAIN
@@ -14,7 +14,7 @@ export const MorphArcadeTitle = ({ className = "" }: { className?: string }) => 
     className={`font-outfit font-bold tracking-tight whitespace-nowrap ${className}`}
     style={{ letterSpacing: '-0.02em' }}
   >
-    <span className="bg-gradient-chain bg-clip-text text-transparent">MORPH CHAIN: </span>
+    <span className="bg-gradient-to-r from-chain to-chain bg-clip-text text-transparent">MORPH CHAIN: </span>
     <span className="bg-gradient-to-r from-[#FF6B35] to-[#F7931E] bg-clip-text text-transparent" style={{ 
       textShadow: '0 0 20px rgba(255, 107, 53, 0.3)',
       fontFamily: 'Impact, "Arial Black", sans-serif',

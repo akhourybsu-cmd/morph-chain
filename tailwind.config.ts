@@ -61,8 +61,7 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         chain: {
-          start: "hsl(var(--chain-start))",
-          end: "hsl(var(--chain-end))",
+          DEFAULT: "hsl(var(--chain-accent))",
           foreground: "hsl(var(--chain-accent-foreground))",
         },
         rush: {
@@ -71,7 +70,6 @@ export default {
         },
       },
       backgroundImage: {
-        'gradient-chain': 'linear-gradient(135deg, hsl(var(--chain-start)), hsl(var(--chain-end)))',
         'gradient-prism': 'linear-gradient(135deg, hsl(var(--prism-accent-start)), hsl(var(--prism-accent-mid)), hsl(var(--prism-accent-end)))',
         'gradient-rush': 'linear-gradient(135deg, hsl(var(--rush-accent-start)), hsl(var(--rush-accent-end)))',
       },
