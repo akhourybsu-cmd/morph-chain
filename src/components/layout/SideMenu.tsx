@@ -1,4 +1,5 @@
 import React from "react";
+import { MorphArcadeTitle } from "@/components/GameTitles";
 
 export function SideMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   if (!open) return null;
@@ -16,11 +17,7 @@ export function SideMenu({ open, onClose }: { open: boolean; onClose: () => void
         <nav className="flex flex-col gap-2 text-slate-200">
           <a className="hover:text-cyan-300" href="/">Morph Chain (Classic)</a>
           <a className="hover:text-cyan-300" href="/arcade-survival">
-            <span className="inline-block">Morph Chain: </span>
-            <span className="inline-block bg-gradient-to-r from-[#FF6B35] to-[#F7931E] bg-clip-text text-transparent font-bold" style={{ 
-              fontFamily: 'Impact, "Arial Black", sans-serif',
-              letterSpacing: '0.05em'
-            }}>ARCADE</span>
+            <MorphArcadeTitle />
           </a>
           <a className="hover:text-cyan-300" href="/rush">Morph Rush</a>
           <a className="hover:text-cyan-300" href="/prism">Morph Prism</a>

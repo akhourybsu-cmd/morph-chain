@@ -15,7 +15,7 @@ import { ChevronDown, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { backgroundThemes, BackgroundTheme } from "@/components/SettingsModal";
-import { MorphChainTitle, MorphPrismTitle, MorphRushTitle } from "@/components/GameTitles";
+import { MorphChainTitle, MorphPrismTitle, MorphRushTitle, MorphArcadeTitle } from "@/components/GameTitles";
 
 interface GameMenuSheetProps {
   open: boolean;
@@ -85,13 +85,7 @@ export const GameMenuSheet = ({
                 className="w-full justify-start text-sm h-auto py-2"
                 onClick={() => handleNavigate("/arcade-survival")}
               >
-                <span className="font-outfit font-bold tracking-tight">
-                  <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">MORPH CHAIN: </span>
-                  <span className="bg-gradient-to-r from-[#FF6B35] to-[#F7931E] bg-clip-text text-transparent" style={{ 
-                    fontFamily: 'Impact, "Arial Black", sans-serif',
-                    letterSpacing: '0.05em'
-                  }}>ARCADE</span>
-                </span>
+                <MorphArcadeTitle className="text-base" />
               </Button>
               
               <Button
