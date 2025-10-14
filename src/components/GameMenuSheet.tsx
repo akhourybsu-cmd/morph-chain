@@ -83,17 +83,17 @@ export const GameMenuSheet = ({
               <Button
                 variant="ghost"
                 className="w-full justify-start text-sm h-auto py-2"
-                onClick={() => handleNavigate("/prism")}
+                onClick={() => handleNavigate("/rush?mode=daily")}
               >
-                <MorphPrismTitle className="text-base" />
+                <MorphRushTitle className="text-base" />
               </Button>
               
               <Button
                 variant="ghost"
                 className="w-full justify-start text-sm h-auto py-2"
-                onClick={() => handleNavigate("/rush?mode=daily")}
+                onClick={() => handleNavigate("/prism")}
               >
-                <MorphRushTitle className="text-base" />
+                <MorphPrismTitle className="text-base" />
               </Button>
             </div>
           </div>
