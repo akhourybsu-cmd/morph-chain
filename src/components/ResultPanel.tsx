@@ -91,9 +91,6 @@ export const ResultPanel = ({
             <h2 className="text-2xl font-semibold">
               Reached {goalWord} in {movesUsed}!
             </h2>
-            <p className="text-sm text-muted-foreground">
-              Optimal path was {minDistance} moves
-            </p>
           </>
         ) : (
           <>
@@ -101,9 +98,6 @@ export const ResultPanel = ({
               <X className="h-12 w-12 text-destructive animate-scale-in" />
             </div>
             <h2 className="text-2xl font-semibold">Out of moves</h2>
-            <p className="text-sm text-muted-foreground">
-              Minimum possible was {minDistance} moves
-            </p>
           </>
         )}
       </div>
