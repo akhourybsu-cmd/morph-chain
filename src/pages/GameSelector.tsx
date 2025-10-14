@@ -59,7 +59,7 @@ const GameSelector = () => {
           
           <GameBanner
             game="rush"
-            title={<MorphRushTitle className="text-2xl md:text-4xl" />}
+            title={<MorphRushTitle className="text-2xl md:text-4xl px-4" />}
             description="Fast-paced morphing under pressure"
             onClick={() => navigate('/rush?mode=daily')}
           />
@@ -136,14 +136,14 @@ const GameBanner = ({ game, title, description, onClick, comingSoon }: GameBanne
         ${comingSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.01]'}
       `}
     >
-      <div className="relative z-10 flex flex-col items-center justify-center gap-2 md:gap-3">
+      <div className="relative z-10 flex flex-col items-center justify-center gap-2 md:gap-3 overflow-visible">
         {comingSoon && (
           <div className="absolute -top-8 md:-top-10 px-4 py-1.5 bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded-full text-xs md:text-sm font-semibold">
             Coming Soon
           </div>
         )}
         
-        <div className="text-center">
+        <div className="text-center w-full overflow-visible">
           {title}
         </div>
         
