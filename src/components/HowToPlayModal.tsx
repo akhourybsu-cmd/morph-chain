@@ -50,9 +50,13 @@ export const HowToPlayModal = ({ open, onOpenChange }: HowToPlayModalProps) => {
               
               <div className="bg-card p-3 rounded-lg border border-border">
                 <p className="font-medium text-sm mb-1">5-Letter Words:</p>
-                <p className="text-muted-foreground text-sm">
-                  Your <strong>first move only</strong> can change one OR two letters. After that, change exactly one letter per move. This gives you flexibility to start, then follows the classic one-letter-change rule.
+                <p className="text-muted-foreground text-sm mb-2">
+                  Change <strong>exactly one letter</strong> per move. You have access to two special power-ups that can be used once per puzzle:
                 </p>
+                <ul className="text-muted-foreground text-sm space-y-1 ml-4 list-disc">
+                  <li><strong>Double Swap:</strong> Activate to change two letters in your next move instead of one</li>
+                  <li><strong>Letter Swap:</strong> Swap the positions of any two letters in the current word</li>
+                </ul>
               </div>
               
               <div className="bg-card p-3 rounded-lg border border-border">

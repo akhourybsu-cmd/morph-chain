@@ -16,6 +16,7 @@ import { StatsModal } from "@/components/StatsModal";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
 import { WordDisputeModal } from "@/components/WordDisputeModal";
 import { MobileActionBar } from "@/components/MobileActionBar";
+import { MorphPowerups } from "@/components/MorphPowerups";
 import { useToast } from "@/hooks/use-toast";
 import {
   getDailyPuzzle,
@@ -56,6 +57,13 @@ const Index = () => {
   const [gameCompleted, setGameCompleted] = useState(false);
   const [gameWon, setGameWon] = useState(false);
   const [simpleMode, setSimpleMode] = useState(false);
+
+  // Power-ups (5L only)
+  const [doubleSwapUsed, setDoubleSwapUsed] = useState(false);
+  const [letterSwapUsed, setLetterSwapUsed] = useState(false);
+  const [doubleSwapActive, setDoubleSwapActive] = useState(false);
+  const [letterSwapActive, setLetterSwapActive] = useState(false);
+  const [swapSelection, setSwapSelection] = useState<number[]>([]);
 
   // Modals
   const [menuOpen, setMenuOpen] = useState(false);
@@ -120,6 +128,13 @@ const Index = () => {
       setGameWon(false);
     }
     setError("");
+    
+    // Reset power-ups
+    setDoubleSwapUsed(false);
+    setLetterSwapUsed(false);
+    setDoubleSwapActive(false);
+    setLetterSwapActive(false);
+    setSwapSelection([]);
   };
 
   // Load saved game state on mount
@@ -149,11 +164,10 @@ const Index = () => {
     setTimeout(() => {
       // Validation rules:
       // 4L: always one letter
-      // 5L: two letters on first move only
+      // 5L: one letter (removed two-letter first move rule, now using power-ups)
       // 6L: two letters anytime
-      const isFirstMove = moves.length === 0;
       const allowTwoLetters = 
-        (puzzle.wordLength === 5 && isFirstMove) || 
+        (puzzle.wordLength === 5 && doubleSwapActive) || 
         (puzzle.wordLength === 6);
       
       const isValid = allowTwoLetters
@@ -219,6 +233,17 @@ const Index = () => {
       setMoves(updatedMoves);
       setCurrentWord(word);
       setUsedWords(updatedUsedWords);
+      
+      // Deactivate and mark power-ups as used
+      if (doubleSwapActive) {
+        setDoubleSwapActive(false);
+        setDoubleSwapUsed(true);
+      }
+      if (letterSwapActive) {
+        setLetterSwapActive(false);
+        setLetterSwapUsed(true);
+        setSwapSelection([]);
+      }
 
       // Vibration feedback
       if (settings.vibration && navigator.vibrate) {
@@ -331,6 +356,57 @@ const Index = () => {
     setCurrentInput(currentInput.slice(0, -1));
   };
 
+  const handleDoubleSwap = () => {
+    if (doubleSwapUsed || gameCompleted) return;
+    setDoubleSwapActive(!doubleSwapActive);
+    if (letterSwapActive) {
+      setLetterSwapActive(false);
+      setSwapSelection([]);
+    }
+  };
+
+  const handleLetterSwap = () => {
+    if (letterSwapUsed || gameCompleted) return;
+    setLetterSwapActive(!letterSwapActive);
+    if (doubleSwapActive) {
+      setDoubleSwapActive(false);
+    }
+  };
+
+  const handleTileClick = (index: number) => {
+    if (!letterSwapActive || gameCompleted) return;
+    
+    const newSelection = [...swapSelection];
+    const existingIndex = newSelection.indexOf(index);
+    
+    if (existingIndex >= 0) {
+      // Deselect if already selected
+      newSelection.splice(existingIndex, 1);
+    } else if (newSelection.length < 2) {
+      // Select if less than 2 selected
+      newSelection.push(index);
+    } else {
+      // Replace oldest selection
+      newSelection.shift();
+      newSelection.push(index);
+    }
+    
+    setSwapSelection(newSelection);
+    
+    // If two tiles selected, perform swap
+    if (newSelection.length === 2) {
+      const wordArray = currentWord.split('');
+      const [i, j] = newSelection;
+      [wordArray[i], wordArray[j]] = [wordArray[j], wordArray[i]];
+      const swappedWord = wordArray.join('');
+      
+      // Submit the swapped word
+      setTimeout(() => {
+        submitGuess(swappedWord);
+      }, 300);
+    }
+  };
+
   // Track letter states for keyboard feedback
   const usedLetters = useMemo(() => {
     const letters = new Set<string>();
@@ -431,6 +507,11 @@ const Index = () => {
     setError("");
     setCurrentInput("");
     setInvalidGuessCount(0);
+    setDoubleSwapUsed(false);
+    setLetterSwapUsed(false);
+    setDoubleSwapActive(false);
+    setLetterSwapActive(false);
+    setSwapSelection([]);
     clearGameState(puzzle.wordLength);
   };
 
@@ -567,10 +648,10 @@ const Index = () => {
                 <div className="text-xl md:text-2xl">💡</div>
                 <div className="space-y-1">
                   <p className="font-medium text-foreground text-xs md:text-sm">
-                    {puzzle.wordLength === 4 ? (
+                     {puzzle.wordLength === 4 ? (
                       <>Change <strong>ONE</strong> letter each step. Every step must be a real word.</>
                     ) : puzzle.wordLength === 5 ? (
-                      <>Change <strong>ONE or TWO</strong> letters on your first move, then <strong>ONE</strong> letter each step. Every step must be a real word.</>
+                      <>Change <strong>ONE</strong> letter each step. Use power-ups to change two letters or swap positions. Every step must be a real word.</>
                     ) : (
                       <>Change <strong>ONE or TWO</strong> letters each step. Every step must be a real word.</>
                     )}
@@ -585,44 +666,89 @@ const Index = () => {
         )}
 
         {!gameCompleted && (
-          <div className="px-3 py-3 space-y-2 md:px-6 md:py-4 md:space-y-3">
-            <div className="space-y-2 md:space-y-3">
-              <div className="flex gap-1.5 md:gap-2">
-                <Input
-                  value={currentWord}
-                  disabled
-                  className="flex-1 font-mono uppercase tracking-tiles bg-muted/30 border-muted cursor-not-allowed text-sm md:text-base h-10 md:h-11"
-                  placeholder="Previous"
-                  aria-label="Previous word"
-                />
-                
-                <span className="flex items-center text-lg md:text-2xl text-muted-foreground">→</span>
-                
-                <Input
-                  value={currentInput}
-                  disabled
-                  className="flex-1 font-mono uppercase tracking-tiles text-sm md:text-base h-10 md:h-11 bg-background"
-                  placeholder="..."
-                  maxLength={currentWord.length}
-                  aria-label="Next word"
-                />
-              </div>
-
-              <div className="flex items-center text-xs md:text-sm">
-                <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                  {error && (
-                    <div
-                      className="flex items-center gap-1 md:gap-1.5 text-destructive animate-slide-in truncate"
-                      role="alert"
-                    >
-                      <AlertCircle className="h-3 w-3 md:h-3.5 md:w-3.5 flex-shrink-0" />
-                      <span className="truncate text-[11px] md:text-sm">{error}</span>
-                    </div>
-                  )}
+          <>
+            {puzzle.wordLength === 5 && (
+              <MorphPowerups
+                doubleSwapUsed={doubleSwapUsed}
+                letterSwapUsed={letterSwapUsed}
+                doubleSwapActive={doubleSwapActive}
+                letterSwapActive={letterSwapActive}
+                onDoubleSwap={handleDoubleSwap}
+                onLetterSwap={handleLetterSwap}
+                disabled={gameCompleted}
+              />
+            )}
+            
+            <div className="px-3 py-3 space-y-2 md:px-6 md:py-4 md:space-y-3">
+              {letterSwapActive && (
+                <div className="bg-primary/10 border border-primary rounded-lg p-3 mb-3 text-sm animate-fade-in">
+                  <p className="text-center font-medium">
+                    Tap two letters on the current word to swap their positions
+                  </p>
                 </div>
-              </div>
+              )}
+              
+              {letterSwapActive && (
+                <div className="flex gap-2 justify-center mb-3">
+                  {currentWord.split('').map((letter, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleTileClick(index)}
+                      className={`
+                        w-12 h-12 md:w-14 md:h-14 rounded-lg font-mono font-bold text-lg
+                        transition-all duration-200 border-2
+                        ${swapSelection.includes(index)
+                          ? 'bg-primary text-primary-foreground border-primary scale-110 shadow-lg'
+                          : 'bg-card border-border hover:border-primary hover:scale-105'
+                        }
+                      `}
+                    >
+                      {letter}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {!letterSwapActive && (
+                <div className="space-y-2 md:space-y-3">
+                  <div className="flex gap-1.5 md:gap-2">
+                    <Input
+                      value={currentWord}
+                      disabled
+                      className="flex-1 font-mono uppercase tracking-tiles bg-muted/30 border-muted cursor-not-allowed text-sm md:text-base h-10 md:h-11"
+                      placeholder="Previous"
+                      aria-label="Previous word"
+                    />
+                    
+                    <span className="flex items-center text-lg md:text-2xl text-muted-foreground">→</span>
+                    
+                    <Input
+                      value={currentInput}
+                      disabled
+                      className="flex-1 font-mono uppercase tracking-tiles text-sm md:text-base h-10 md:h-11 bg-background"
+                      placeholder="..."
+                      maxLength={currentWord.length}
+                      aria-label="Next word"
+                    />
+                  </div>
+
+                  <div className="flex items-center text-xs md:text-sm">
+                    <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                      {error && (
+                        <div
+                          className="flex items-center gap-1 md:gap-1.5 text-destructive animate-slide-in truncate"
+                          role="alert"
+                        >
+                          <AlertCircle className="h-3 w-3 md:h-3.5 md:w-3.5 flex-shrink-0" />
+                          <span className="truncate text-[11px] md:text-sm">{error}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
+          </>
         )}
 
         <MoveLog
