@@ -151,6 +151,15 @@ const Index = () => {
   }, []);
 
   const submitGuess = (word: string) => {
+    // If letter swap is active and two tiles are selected, perform the swap first
+    let wordToSubmit = word;
+    if (letterSwapActive && swapSelection.length === 2) {
+      const wordArray = currentWord.split('');
+      const [i, j] = swapSelection;
+      [wordArray[i], wordArray[j]] = [wordArray[j], wordArray[i]];
+      wordToSubmit = wordArray.join('');
+    }
+    
     setError("");
     
     // Rate limiting: 6 requests per 15 seconds
@@ -172,8 +181,8 @@ const Index = () => {
         (puzzle.wordLength === 6);
       
       const isValid = allowTwoLetters
-        ? (isOneLetterDifferent(currentWord, word) || isTwoLettersDifferent(currentWord, word))
-        : isOneLetterDifferent(currentWord, word);
+        ? (isOneLetterDifferent(currentWord, wordToSubmit) || isTwoLettersDifferent(currentWord, wordToSubmit))
+        : isOneLetterDifferent(currentWord, wordToSubmit);
       
       if (!isValid) {
         setInvalidGuessCount(prev => prev + 1);
@@ -187,7 +196,7 @@ const Index = () => {
         return;
       }
 
-      if (!isValidWord(word, puzzle.wordLength)) {
+      if (!isValidWord(wordToSubmit, puzzle.wordLength)) {
         setInvalidGuessCount(prev => prev + 1);
         setError("Not in our modern-English list");
         setCurrentInput("");
@@ -205,7 +214,7 @@ const Index = () => {
         return;
       }
 
-      if (usedWords.has(word)) {
+      if (usedWords.has(wordToSubmit)) {
         setInvalidGuessCount(prev => prev + 1);
         setError("Already used");
         setCurrentInput("");
@@ -214,9 +223,9 @@ const Index = () => {
       }
 
       const currentDistance = calculateDistance(currentWord, puzzle.goalWord);
-      const newDistance = calculateDistance(word, puzzle.goalWord);
+      const newDistance = calculateDistance(wordToSubmit, puzzle.goalWord);
       const closerToGoal = newDistance < currentDistance;
-      const isComplete = word === puzzle.goalWord;
+      const isComplete = wordToSubmit === puzzle.goalWord;
       const isWorse = newDistance > currentDistance;
 
       // Hard mode check
@@ -231,8 +240,8 @@ const Index = () => {
       const newMove: Move = {
         id: `move-${moves.length}`,
         from: currentWord,
-        to: word,
-        hints: getHints(word, puzzle.goalWord),
+        to: wordToSubmit,
+        hints: getHints(wordToSubmit, puzzle.goalWord),
         closerToGoal,
         isComplete,
         isWorse,
@@ -240,9 +249,9 @@ const Index = () => {
       };
 
       const updatedMoves = [...moves, newMove];
-      const updatedUsedWords = new Set([...usedWords, word]);
+      const updatedUsedWords = new Set([...usedWords, wordToSubmit]);
       setMoves(updatedMoves);
-      setCurrentWord(word);
+      setCurrentWord(wordToSubmit);
       setUsedWords(updatedUsedWords);
       
       // Deactivate and mark power-ups as used
@@ -396,24 +405,9 @@ const Index = () => {
     } else if (newSelection.length < 2) {
       // Select if less than 2 selected
       newSelection.push(index);
-    } else {
-      // Replace oldest selection
-      newSelection.shift();
-      newSelection.push(index);
     }
     
     setSwapSelection(newSelection);
-    
-    // If two tiles selected, perform swap (but don't auto-submit)
-    if (newSelection.length === 2) {
-      const wordArray = currentWord.split('');
-      const [i, j] = newSelection;
-      [wordArray[i], wordArray[j]] = [wordArray[j], wordArray[i]];
-      const swappedWord = wordArray.join('');
-      setCurrentWord(swappedWord);
-      setCurrentInput(swappedWord);
-      setSwapSelection([]);
-    }
   };
 
   // Track letter states for keyboard feedback
