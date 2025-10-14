@@ -24,7 +24,7 @@ export const PuzzleHero = ({
     <div className="px-3 py-4 space-y-3 md:px-6 md:py-6 md:space-y-4">
       <div className="flex items-center justify-center gap-3 md:gap-4">
         <WordBadge label="START" word={startWord} />
-        <div className="flex items-center">
+        <div className="flex items-center mt-2">
           <svg 
             width="48" 
             height="24" 
