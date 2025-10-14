@@ -64,34 +64,43 @@ function ArcadeHeader({
 }) {
   return (
     <header className="sticky top-0 z-40 bg-[#0B1E26]/90 backdrop-blur border-b border-slate-800">
-      <div className="max-w-screen-sm mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Left: Hamburger Menu */}
+      <div className="max-w-screen-sm mx-auto px-4 h-14 flex items-center justify-between">
         <button
           aria-label="Open menu"
           onClick={onOpenMenu}
           className="p-2 rounded-md text-slate-300 hover:bg-slate-800"
         >
-          <Menu className="w-6 h-6" />
+          <Menu className="w-5 h-5" />
         </button>
 
-        {/* Center: Logo */}
-        <a href="/" className="absolute left-1/2 -translate-x-1/2">
-          <MorphArcadeTitle className="text-xl md:text-2xl" />
+        <a href="/" className="flex-1 flex justify-center">
+          <MorphArcadeTitle className="text-base sm:text-lg" />
         </a>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={onOpenHelp}
-            className="px-3 py-1.5 rounded-md text-slate-300 hover:bg-slate-800 text-sm"
+            className="p-2 rounded-md text-slate-300 hover:bg-slate-800"
+            aria-label="How to Play"
+            title="How to Play"
           >
-            How to Play
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <circle cx="12" cy="17" r="0.5" fill="currentColor"/>
+            </svg>
           </button>
           <a
             href="/login"
-            className="px-3 py-1.5 rounded-md bg-slate-800 text-slate-100 text-sm hover:ring-1 hover:ring-slate-700"
+            className="p-2 rounded-md text-slate-300 hover:bg-slate-800"
+            aria-label="Log in"
+            title="Log in"
           >
-            Log in
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/>
+              <line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
           </a>
         </div>
       </div>
