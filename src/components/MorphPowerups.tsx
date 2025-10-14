@@ -27,13 +27,13 @@ export const MorphPowerups = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant={doubleSwapActive ? "default" : "outline"}
+              variant="outline"
               size="sm"
               onClick={onDoubleSwap}
               disabled={doubleSwapUsed || disabled}
               className={`h-10 px-4 transition-all ${
                 doubleSwapActive 
-                  ? "ring-2 ring-primary ring-offset-2 shadow-lg" 
+                  ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 shadow-lg" 
                   : ""
               }`}
             >
@@ -54,13 +54,13 @@ export const MorphPowerups = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant={letterSwapActive ? "default" : "outline"}
+              variant="outline"
               size="sm"
               onClick={onLetterSwap}
               disabled={letterSwapUsed || disabled}
               className={`h-10 px-4 transition-all ${
                 letterSwapActive 
-                  ? "ring-2 ring-primary ring-offset-2 shadow-lg" 
+                  ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 shadow-lg" 
                   : ""
               }`}
             >

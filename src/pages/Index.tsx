@@ -151,15 +151,7 @@ const Index = () => {
   }, []);
 
   const submitGuess = (word: string) => {
-    // If letter swap is active and two tiles are selected, perform the swap first
-    let wordToSubmit = word;
-    if (letterSwapActive && swapSelection.length === 2) {
-      const wordArray = currentWord.split('');
-      const [i, j] = swapSelection;
-      [wordArray[i], wordArray[j]] = [wordArray[j], wordArray[i]];
-      wordToSubmit = wordArray.join('');
-    }
-    
+    const wordToSubmit = word;
     setError("");
     
     // Rate limiting: 6 requests per 15 seconds
@@ -387,10 +379,30 @@ const Index = () => {
 
   const handleLetterSwap = () => {
     if (letterSwapUsed || gameCompleted) return;
-    setLetterSwapActive(!letterSwapActive);
+    const newState = !letterSwapActive;
+    setLetterSwapActive(newState);
     setSwapSelection([]); // Clear selection when toggling
     if (doubleSwapActive) {
       setDoubleSwapActive(false);
+    }
+    
+    // If we have a full swap selection when toggling off, perform the swap
+    if (!newState && swapSelection.length === 2) {
+      const wordArray = currentWord.split('');
+      const [i, j] = swapSelection;
+      [wordArray[i], wordArray[j]] = [wordArray[j], wordArray[i]];
+      const swappedWord = wordArray.join('');
+      
+      // Validate and submit the swapped word
+      if (isValidWord(swappedWord, puzzle.wordLength)) {
+        submitGuess(swappedWord);
+        setLetterSwapUsed(true);
+      } else {
+        setError("Swapped word is not valid");
+        setLetterSwapUsed(true);
+        setShake(true);
+        setTimeout(() => setShake(false), 500);
+      }
     }
   };
 
