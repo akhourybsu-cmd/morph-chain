@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { Menu, ChevronDown, Check } from "lucide-react";
 import { useState, useEffect } from "react";
-import { MorphChainTitle, MorphPrismTitle, MorphRushTitle } from "@/components/GameTitles";
+import { MorphChainTitle, MorphPrismTitle, MorphRushTitle, MorphArcadeTitle } from "@/components/GameTitles";
 import morphIcon from "@/assets/morph-icon.png";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,7 +30,7 @@ export const MorphHeader = () => {
   }, []);
 
   const isOnChain = location.pathname === '/chain';
-  const isOnArcade = location.pathname === '/arcade';
+  const isOnArcade = location.pathname === '/arcade-survival';
   const isOnPrism = location.pathname === '/prism';
   const isOnRush = location.pathname.startsWith('/rush');
 
@@ -42,8 +42,8 @@ export const MorphHeader = () => {
       active: isOnChain
     },
     { 
-      name: <span className="font-outfit font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent text-sm">MORPH CHAIN: ARCADE</span>,
-      path: "/arcade", 
+      name: <MorphArcadeTitle className="text-sm" />,
+      path: "/arcade-survival", 
       description: "Timed arcade mode",
       active: isOnArcade
     },
