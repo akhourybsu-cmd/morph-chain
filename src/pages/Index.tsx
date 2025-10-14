@@ -10,7 +10,8 @@ import { PuzzleHero } from "@/components/PuzzleHero";
 import OnScreenKeyboard from "@/components/OnScreenKeyboard";
 import { MoveLog, Move } from "@/components/MoveLog";
 import { ResultPanel } from "@/components/ResultPanel";
-import { SettingsModal, backgroundThemes, BackgroundTheme } from "@/components/SettingsModal";
+import { GameMenuSheet } from "@/components/GameMenuSheet";
+import { backgroundThemes, BackgroundTheme } from "@/components/SettingsModal";
 import { StatsModal } from "@/components/StatsModal";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
 import { WordDisputeModal } from "@/components/WordDisputeModal";
@@ -57,7 +58,7 @@ const Index = () => {
   const [simpleMode, setSimpleMode] = useState(false);
 
   // Modals
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [disputeOpen, setDisputeOpen] = useState(false);
@@ -478,7 +479,7 @@ const Index = () => {
       setUsedWords(new Set([puzzle.startWord]));
       setGameCompleted(false);
       setGameWon(false);
-      setSettingsOpen(false);
+      setMenuOpen(false);
       toast({ title: "All data has been reset" });
     }
   };
@@ -531,7 +532,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col max-w-2xl mx-auto pb-[280px] md:pb-24">
       <GameHeader
-        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenSettings={() => setMenuOpen(true)}
         onOpenStats={() => setStatsOpen(true)}
         onOpenHelp={() => setHelpOpen(true)}
       />
@@ -666,9 +667,9 @@ const Index = () => {
         </div>
       </footer>
 
-      <SettingsModal
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
+      <GameMenuSheet
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
         hardMode={settings.hardMode}
         onToggleHardMode={() => handleToggleSetting("hardMode")}
         colorblindMode={settings.colorblindMode}
