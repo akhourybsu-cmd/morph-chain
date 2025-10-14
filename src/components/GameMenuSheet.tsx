@@ -11,10 +11,11 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AddToHomeScreen } from "@/components/AddToHomeScreen";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Home, Link2, Palette, Zap } from "lucide-react";
+import { ChevronDown, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { backgroundThemes, BackgroundTheme } from "@/components/SettingsModal";
+import { MorphChainTitle, MorphPrismTitle, MorphRushTitle } from "@/components/GameTitles";
 
 interface GameMenuSheetProps {
   open: boolean;
@@ -61,45 +62,38 @@ export const GameMenuSheet = ({
         <div className="space-y-4 py-4">
           {/* Morph Games Section */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2 px-2 py-1">
-              <Home className="h-4 w-4 text-primary" />
-              <h3 className="font-semibold text-sm">Morph Games</h3>
-            </div>
-            
             <Button
               variant="ghost"
-              className="w-full justify-start pl-4 text-sm"
+              className="w-full justify-start px-2 py-1 h-auto"
               onClick={() => handleNavigate("/")}
             >
-              Home Page
+              <Home className="h-4 w-4 mr-2 text-primary" />
+              <h3 className="font-semibold text-sm">Morph Games</h3>
             </Button>
 
             <div className="pl-4 space-y-1">
               <Button
                 variant="ghost"
-                className="w-full justify-start text-sm"
+                className="w-full justify-start text-sm h-auto py-2"
                 onClick={() => handleNavigate("/chain")}
               >
-                <Link2 className="h-3.5 w-3.5 mr-2 text-chain" />
-                Morph Chain
+                <MorphChainTitle className="text-base" />
               </Button>
               
               <Button
                 variant="ghost"
-                className="w-full justify-start text-sm"
+                className="w-full justify-start text-sm h-auto py-2"
                 onClick={() => handleNavigate("/prism")}
               >
-                <Palette className="h-3.5 w-3.5 mr-2 text-prism" />
-                Morph Prism
+                <MorphPrismTitle className="text-base" />
               </Button>
               
               <Button
                 variant="ghost"
-                className="w-full justify-start text-sm"
-                onClick={() => handleNavigate("/rush")}
+                className="w-full justify-start text-sm h-auto py-2"
+                onClick={() => handleNavigate("/rush?mode=daily")}
               >
-                <Zap className="h-3.5 w-3.5 mr-2 text-rush" />
-                Morph Rush
+                <MorphRushTitle className="text-base" />
               </Button>
             </div>
           </div>
