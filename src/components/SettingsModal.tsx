@@ -29,6 +29,8 @@ interface SettingsModalProps {
   onToggleColorblindMode: () => void;
   vibration: boolean;
   onToggleVibration: () => void;
+  useOnScreenKeyboard: boolean;
+  onToggleOnScreenKeyboard: () => void;
   backgroundTheme: BackgroundTheme;
   onChangeBackgroundTheme: (theme: BackgroundTheme) => void;
   onResetData: () => void;
@@ -43,6 +45,8 @@ export const SettingsModal = ({
   onToggleColorblindMode,
   vibration,
   onToggleVibration,
+  useOnScreenKeyboard,
+  onToggleOnScreenKeyboard,
   backgroundTheme,
   onChangeBackgroundTheme,
   onResetData,
@@ -100,6 +104,22 @@ export const SettingsModal = ({
               id="vibration"
               checked={vibration}
               onCheckedChange={onToggleVibration}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="onscreen-keyboard" className="text-base">
+                On-Screen Keyboard
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Show on-screen keyboard
+              </p>
+            </div>
+            <Switch
+              id="onscreen-keyboard"
+              checked={useOnScreenKeyboard}
+              onCheckedChange={onToggleOnScreenKeyboard}
             />
           </div>
 

@@ -28,6 +28,7 @@ export interface GameSettings {
   colorblindMode: boolean;
   vibration: boolean;
   backgroundTheme?: string;
+  useOnScreenKeyboard?: boolean;
 }
 
 interface GameState {
@@ -152,12 +153,14 @@ export const loadSettings = (): GameSettings => {
         colorblindMode: false,
         vibration: true,
         backgroundTheme: "midnight",
+        useOnScreenKeyboard: true,
       };
     }
     const parsed = JSON.parse(stored);
     return {
       ...parsed,
       backgroundTheme: parsed.backgroundTheme || "midnight",
+      useOnScreenKeyboard: parsed.useOnScreenKeyboard ?? true,
     };
   } catch {
     return {
@@ -165,6 +168,7 @@ export const loadSettings = (): GameSettings => {
       colorblindMode: false,
       vibration: true,
       backgroundTheme: "midnight",
+      useOnScreenKeyboard: true,
     };
   }
 };

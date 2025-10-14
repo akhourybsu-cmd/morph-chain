@@ -775,7 +775,7 @@ const Index = () => {
       </main>
 
       {/* Fixed keyboard at bottom */}
-      {!gameCompleted && (
+      {!gameCompleted && settings.useOnScreenKeyboard && (
         <div className="fixed bottom-2 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border pb-safe">
           <OnScreenKeyboard
             onKeyPress={handleKeyPress}
@@ -806,6 +806,8 @@ const Index = () => {
         onToggleColorblindMode={() => handleToggleSetting("colorblindMode")}
         vibration={settings.vibration}
         onToggleVibration={() => handleToggleSetting("vibration")}
+        useOnScreenKeyboard={settings.useOnScreenKeyboard ?? true}
+        onToggleOnScreenKeyboard={() => handleToggleSetting("useOnScreenKeyboard")}
         backgroundTheme={(settings.backgroundTheme as BackgroundTheme) || "midnight"}
         onChangeBackgroundTheme={handleChangeBackgroundTheme}
         onResetData={handleResetData}

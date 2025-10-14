@@ -27,6 +27,8 @@ interface GameMenuSheetProps {
   onToggleColorblindMode: () => void;
   vibration: boolean;
   onToggleVibration: () => void;
+  useOnScreenKeyboard: boolean;
+  onToggleOnScreenKeyboard: () => void;
   backgroundTheme: BackgroundTheme;
   onChangeBackgroundTheme: (theme: BackgroundTheme) => void;
   onResetData: () => void;
@@ -41,6 +43,8 @@ export const GameMenuSheet = ({
   onToggleColorblindMode,
   vibration,
   onToggleVibration,
+  useOnScreenKeyboard,
+  onToggleOnScreenKeyboard,
   backgroundTheme,
   onChangeBackgroundTheme,
   onResetData,
@@ -177,6 +181,22 @@ export const GameMenuSheet = ({
                   id="vibration"
                   checked={vibration}
                   onCheckedChange={onToggleVibration}
+                />
+              </div>
+
+              <div className="flex items-center justify-between px-2">
+                <div className="space-y-0.5">
+                  <Label htmlFor="onscreen-keyboard" className="text-sm">
+                    On-Screen Keyboard
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Show keyboard overlay
+                  </p>
+                </div>
+                <Switch
+                  id="onscreen-keyboard"
+                  checked={useOnScreenKeyboard}
+                  onCheckedChange={onToggleOnScreenKeyboard}
                 />
               </div>
 
