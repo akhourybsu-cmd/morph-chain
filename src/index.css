@@ -37,7 +37,8 @@ All colors MUST be HSL.
     --warning: 38 92% 50%;            /* #F59E0B present */
 
     /* Game-specific accents */
-    --chain-accent: 180 100% 50%;     /* Teal/Aqua */
+    --chain-start: 180 100% 65%;      /* Bright Cyan #52F5FF */
+    --chain-end: 170 95% 55%;         /* Turquoise #1AE8D8 */
     --chain-accent-foreground: 218 18% 7%;
     
     --arcade-bg: 25 40% 12%;          /* Deep warm orange-brown #2B1A0F */
