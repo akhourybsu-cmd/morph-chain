@@ -23,20 +23,28 @@ interface MoveLogProps {
 export const MoveLog = ({ moves, simpleMode = false, colorblindMode, onDisputeWord }: MoveLogProps) => {
   if (moves.length === 0) {
     return (
-      <div className="px-6 py-8 text-center text-muted-foreground">
+      <div className="px-6 py-6 text-center text-muted-foreground">
         <p className="text-sm">Your moves will appear here</p>
       </div>
     );
   }
 
+  // Reverse moves to show newest first
+  const reversedMoves = [...moves].reverse();
+
   return (
-    <div className="px-6 py-4 space-y-2 max-h-[45vh] overflow-y-auto">
-      {moves.map((move, index) => (
+    <div className="px-4 py-2 space-y-1.5 max-h-[35vh] overflow-y-auto">
+      {reversedMoves.map((move, index) => {
+        const moveNumber = moves.length - index;
+        return (
         <div
           key={move.id}
-          className="bg-card border border-border rounded-lg p-3 animate-slide-in"
+          className="bg-card border border-border rounded-md p-2 animate-slide-in"
         >
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-5 text-xs font-bold text-muted-foreground flex-shrink-0">
+              {moveNumber}
+            </div>
             {simpleMode ? (
               <>
                 <div className="flex items-center gap-2 font-mono text-sm flex-1 min-w-0">
@@ -66,26 +74,15 @@ export const MoveLog = ({ moves, simpleMode = false, colorblindMode, onDisputeWo
                     </Button>
                   )}
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-1 flex-shrink-0">
                   {move.isComplete ? (
-                    <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs font-medium border border-success/30">
-                      Goal!
-                    </span>
+                    <Flag className="h-4 w-4 text-success" />
                   ) : move.closerToGoal ? (
-                    <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs font-medium flex items-center gap-1 border border-success/30">
-                      <TrendingDown className="h-3 w-3" />
-                      Closer
-                    </span>
+                    <TrendingDown className="h-4 w-4 text-success" />
                   ) : move.isWorse ? (
-                    <span className="px-2 py-0.5 rounded-full bg-destructive/20 text-destructive text-xs font-medium flex items-center gap-1 border border-destructive/30">
-                      <TrendingUp className="h-3 w-3" />
-                      Farther
-                    </span>
+                    <TrendingUp className="h-4 w-4 text-destructive" />
                   ) : (
-                    <span className="px-2 py-0.5 rounded-full bg-warning/20 text-warning text-xs font-medium flex items-center gap-1 border border-warning/30">
-                      <Minus className="h-3 w-3" />
-                      Same
-                    </span>
+                    <Minus className="h-4 w-4 text-warning" />
                   )}
                 </div>
               </>
@@ -115,33 +112,23 @@ export const MoveLog = ({ moves, simpleMode = false, colorblindMode, onDisputeWo
                     </Button>
                   )}
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-1 flex-shrink-0">
                   {move.isComplete ? (
-                    <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs font-medium border border-success/30">
-                      Goal!
-                    </span>
+                    <Flag className="h-4 w-4 text-success" />
                   ) : move.closerToGoal ? (
-                    <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs font-medium flex items-center gap-1 border border-success/30">
-                      <TrendingDown className="h-3 w-3" />
-                      Closer
-                    </span>
+                    <TrendingDown className="h-4 w-4 text-success" />
                   ) : move.isWorse ? (
-                    <span className="px-2 py-0.5 rounded-full bg-destructive/20 text-destructive text-xs font-medium flex items-center gap-1 border border-destructive/30">
-                      <TrendingUp className="h-3 w-3" />
-                      Farther
-                    </span>
+                    <TrendingUp className="h-4 w-4 text-destructive" />
                   ) : (
-                    <span className="px-2 py-0.5 rounded-full bg-warning/20 text-warning text-xs font-medium flex items-center gap-1 border border-warning/30">
-                      <Minus className="h-3 w-3" />
-                      Same
-                    </span>
+                    <Minus className="h-4 w-4 text-warning" />
                   )}
                 </div>
               </>
             )}
           </div>
         </div>
-      ))}
+      );
+      })}
     </div>
   );
 };

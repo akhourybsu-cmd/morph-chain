@@ -650,7 +650,7 @@ const Index = () => {
 
       {/* Fixed keyboard at bottom */}
       {!gameCompleted && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border pb-safe">
+        <div className="fixed bottom-2 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border pb-safe">
           <OnScreenKeyboard
             onKeyPress={handleKeyPress}
             onBackspace={handleBackspace}
