@@ -526,7 +526,7 @@ const Index = () => {
   }), [puzzle.date]);
 
   return (
-    <div className="min-h-screen flex flex-col max-w-2xl mx-auto">
+    <div className="min-h-screen flex flex-col max-w-2xl mx-auto pb-[280px] md:pb-24">
       <GameHeader
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenStats={() => setStatsOpen(true)}
@@ -548,7 +548,7 @@ const Index = () => {
         />
       </div>
 
-      <main className="flex-1 pb-16 md:pb-24">
+      <main className="flex-1">
         <PuzzleHero
           startWord={puzzle.startWord}
           goalWord={puzzle.goalWord}
@@ -626,16 +626,6 @@ const Index = () => {
                 </div>
               </div>
             </div>
-
-            <OnScreenKeyboard
-              onKeyPress={handleKeyPress}
-              onBackspace={handleBackspace}
-              onEnter={handleSubmit}
-              disabled={gameCompleted || isLoading}
-              usedLetters={usedLetters}
-              correctLetters={correctLetters}
-              wrongPositionLetters={wrongPositionLetters}
-            />
           </div>
         )}
 
@@ -645,9 +635,6 @@ const Index = () => {
           colorblindMode={settings.colorblindMode}
           onDisputeWord={handleDisputeWord}
         />
-
-        {/* Mobile spacing for sticky action bar */}
-        {!gameCompleted && <div className="h-20 md:hidden" />}
 
         {gameCompleted && (
           <ResultPanel
@@ -661,20 +648,19 @@ const Index = () => {
         )}
       </main>
 
-      {/* Mobile sticky action bar */}
+      {/* Fixed keyboard at bottom */}
       {!gameCompleted && (
-        <MobileActionBar
-          onSubmit={() => {
-            const inputRow = document.querySelector('input[type="text"]') as HTMLInputElement;
-            if (inputRow) {
-              const form = inputRow.form;
-              if (form) {
-                form.requestSubmit();
-              }
-            }
-          }}
-          disabled={gameCompleted || isLoading}
-        />
+        <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border pb-safe">
+          <OnScreenKeyboard
+            onKeyPress={handleKeyPress}
+            onBackspace={handleBackspace}
+            onEnter={handleSubmit}
+            disabled={gameCompleted || isLoading}
+            usedLetters={usedLetters}
+            correctLetters={correctLetters}
+            wrongPositionLetters={wrongPositionLetters}
+          />
+        </div>
       )}
 
       <footer className="hidden md:block fixed bottom-0 left-0 right-0 bg-card border-t border-border py-2 px-3 md:py-4 md:px-6">
