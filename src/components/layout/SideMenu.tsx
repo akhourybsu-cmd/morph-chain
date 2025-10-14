@@ -15,8 +15,7 @@ export function SideMenu({ open, onClose }: { open: boolean; onClose: () => void
         </div>
         <nav className="flex flex-col gap-2 text-slate-200">
           <a className="hover:text-cyan-300" href="/">Morph Chain (Classic)</a>
-          <a className="hover:text-cyan-300" href="/arcade">Morph Chain: Arcade (Timed)</a>
-          <a className="hover:text-cyan-300" href="/arcade-survival">Morph Chain: Arcade (Survival)</a>
+          <a className="hover:text-cyan-300" href="/arcade-survival">Morph Chain: Arcade</a>
           <a className="hover:text-cyan-300" href="/rush">Morph Rush</a>
           <a className="hover:text-cyan-300" href="/prism">Morph Prism</a>
         </nav>
