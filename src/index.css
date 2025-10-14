@@ -40,6 +40,9 @@ All colors MUST be HSL.
     --chain-accent: 180 100% 50%;     /* Teal/Aqua */
     --chain-accent-foreground: 218 18% 7%;
     
+    --arcade-bg: 15 45% 10%;          /* Deep warm brown #1A1310 */
+    --arcade-accent: 25 90% 55%;      /* Orange #F7931E */
+    
     --prism-accent-start: 180 100% 50%;    /* Cyan */
     --prism-accent-mid: 300 100% 50%;      /* Magenta */
     --prism-accent-end: 60 100% 50%;       /* Yellow */

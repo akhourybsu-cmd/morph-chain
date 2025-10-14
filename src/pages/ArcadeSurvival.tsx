@@ -63,7 +63,7 @@ function ArcadeHeader({
   onOpenHelp: () => void;
 }) {
   return (
-    <header className="sticky top-0 z-40 bg-[#0B1E26]/90 backdrop-blur border-b border-slate-800">
+    <header className="sticky top-0 z-40 bg-[hsl(var(--arcade-bg))]/90 backdrop-blur border-b border-slate-800">
       <div className="max-w-screen-sm mx-auto px-4 h-14 flex items-center justify-between">
         <button
           aria-label="Open menu"
@@ -518,7 +518,7 @@ morphchaingame.com`;
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1E26] text-slate-100">
+    <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--arcade-bg))] via-slate-900 to-slate-800 text-slate-100">
       <ArcadeHeader
         onOpenMenu={() => setMenuOpen(true)}
         onOpenHelp={() => setHelpOpen(true)}
