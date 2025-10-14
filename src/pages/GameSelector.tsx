@@ -3,7 +3,7 @@ import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
 import { MorphHeader } from "@/components/MorphHeader";
 import { MorphChainTitle, MorphPrismTitle, MorphRushTitle } from "@/components/GameTitles";
-import { Facebook, Instagram, Linkedin, MessageSquare, Share2 } from "lucide-react";
+import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Palette, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -121,6 +121,14 @@ const GameBanner = ({ game, title, description, onClick, comingSoon }: GameBanne
     rush: "border-[hsl(var(--rush-accent-start)_/_0.3)] hover:border-[hsl(var(--rush-accent-start)_/_0.6)]"
   };
 
+  const iconConfig = {
+    chain: { Icon: Link2, color: "hsl(var(--chain))" },
+    prism: { Icon: Palette, color: "hsl(var(--prism))" },
+    rush: { Icon: Zap, color: "hsl(var(--rush))" }
+  };
+
+  const { Icon, color } = iconConfig[game];
+
   return (
     <button
       onClick={comingSoon ? undefined : onClick}
@@ -133,9 +141,19 @@ const GameBanner = ({ game, title, description, onClick, comingSoon }: GameBanne
         shadow-lg hover:shadow-xl
         transition-all duration-300 ease-out
         group
+        overflow-hidden
         ${comingSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.01]'}
       `}
     >
+      {/* Background Icon */}
+      <div className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 opacity-5 group-hover:opacity-10 transition-opacity duration-300">
+        <Icon 
+          className="w-24 h-24 md:w-32 md:h-32" 
+          style={{ color }}
+          strokeWidth={1.5}
+        />
+      </div>
+
       <div className="relative z-10 flex flex-col items-center justify-center gap-2 md:gap-3">
         {comingSoon && (
           <div className="absolute -top-8 md:-top-10 px-4 py-1.5 bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded-full text-xs md:text-sm font-semibold">
