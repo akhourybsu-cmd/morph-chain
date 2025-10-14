@@ -22,9 +22,26 @@ export const PuzzleHero = ({
 
   return (
     <div className="px-3 py-4 space-y-3 md:px-6 md:py-6 md:space-y-4">
-      <div className="flex items-center justify-center gap-6 md:gap-8">
+      <div className="flex items-center justify-center gap-3 md:gap-4">
         <WordBadge label="START" word={startWord} />
-        <ArrowRight className="h-6 w-6 md:h-7 md:w-7 text-primary" strokeWidth={2.5} />
+        <div className="flex items-center">
+          <svg 
+            width="48" 
+            height="24" 
+            viewBox="0 0 48 24" 
+            className="text-primary"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path 
+              d="M2 12H42M42 12L34 4M42 12L34 20" 
+              stroke="currentColor" 
+              strokeWidth="3" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
         <WordBadge label="GOAL" word={goalWord} />
       </div>
 

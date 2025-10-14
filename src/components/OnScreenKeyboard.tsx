@@ -28,15 +28,7 @@ export default function OnScreenKeyboard({
 }: OnScreenKeyboardProps) {
   
   const getKeyStyle = (key: string) => {
-    if (correctLetters.has(key)) {
-      return "bg-[hsl(120,60%,50%)] text-white hover:bg-[hsl(120,60%,45%)] border-[hsl(120,60%,60%)]";
-    }
-    if (wrongPositionLetters.has(key)) {
-      return "bg-[hsl(45,100%,50%)] text-white hover:bg-[hsl(45,100%,45%)] border-[hsl(45,100%,60%)]";
-    }
-    if (usedLetters.has(key)) {
-      return "bg-muted/40 text-muted-foreground hover:bg-muted/50";
-    }
+    // Remove color feedback - just show neutral styling for all keys
     return "bg-card hover:bg-accent text-foreground border-border";
   };
 
