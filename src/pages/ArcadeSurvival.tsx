@@ -2,13 +2,28 @@ import React, { useEffect, useMemo, useState } from "react";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { SideMenu } from "@/components/layout/SideMenu";
 
+/**
+ * MORPH CHAIN — ARCADE (SURVIVAL)
+ * - No timer; you manage "Chain Stability" (resource)
+ * - Goal: build the longest chain before stability hits 0
+ * - Modes: 4L / 5L / 6L
+ * - Δ rules: 1 letter per move; Δ≤2 only if Double Swap is active for the next submit
+ * - Dictionary + no repeats enforced
+ */
+
 type LengthMode = 4 | 5 | 6;
 type PowerupType = "doubleSwap" | "insight" | "repair" | "wildcard";
 type GameState = "idle" | "running" | "paused" | "results";
 
-const isAlphaLower = (s: string) => /^[a-z]+$/.test(s);
+const MAX_STABILITY = 100;
 
-async function validateWordServer(word: string, len: LengthMode) {
+const isAlphaLower = (s: string) => /^[a-z]+$/.test(s);
+const hamming = (a: string, b: string) =>
+  a.split("").reduce((d, ch, i) => d + (ch !== b[i] ? 1 : 0), 0);
+
+/* ----------------------- API helpers (server authoritative) ----------------------- */
+
+async function validateWord(word: string, len: LengthMode) {
   try {
     const res = await fetch("/api/validate", {
       method: "POST",
@@ -22,9 +37,6 @@ async function validateWordServer(word: string, len: LengthMode) {
   }
 }
 
-const hamming = (a: string, b: string) =>
-  a.split("").reduce((d, ch, i) => d + (ch !== b[i] ? 1 : 0), 0);
-
 async function getStartWord(len: LengthMode): Promise<string> {
   try {
     const res = await fetch(`/api/arcade/start?len=${len}`);
@@ -33,8 +45,8 @@ async function getStartWord(len: LengthMode): Promise<string> {
       if (data?.word && data.word.length === len) return data.word.toLowerCase();
     }
   } catch {}
-  const pool4 = ["cold", "ring", "melt", "farm", "moth", "sand", "tide", "lamp"];
-  const pool5 = ["crane", "flint", "panel", "plain", "trick", "grain", "spoil", "shell"];
+  const pool4 = ["cold", "sand", "lamp", "tide", "moth", "farm", "ring", "melt"];
+  const pool5 = ["crane", "flint", "plain", "panel", "grain", "spoil", "trick", "shelf"];
   const pool6 = ["cinder", "velvet", "pollen", "napkin", "credit", "fabric", "museum", "radius"];
   const pools: Record<LengthMode, string[]> = { 4: pool4, 5: pool5, 6: pool6 };
   const list = pools[len];
@@ -46,27 +58,27 @@ function HowToPlayModal({ open, onClose }: { open: boolean; onClose: () => void 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-card rounded-xl p-5 ring-1 ring-border">
-        <div className="text-xl font-bold text-foreground mb-1">How to Play — Arcade (Survival)</div>
-        <div className="text-muted-foreground text-sm space-y-3 max-h-[65vh] overflow-auto">
+      <div className="relative w-full max-w-md bg-slate-900 rounded-xl p-5 ring-1 ring-slate-800">
+        <div className="text-xl font-bold text-slate-100 mb-1">How to Play — Arcade (Survival)</div>
+        <div className="text-slate-300 text-sm space-y-3 max-h-[65vh] overflow-auto">
           <p><b>Objective:</b> Build the longest chain before your <i>Chain Stability</i> reaches 0.</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Change <b>one letter</b> per move to make a new valid word.</li>
-            <li>Every move <b>costs</b> stability. Smart morphs can restore it.</li>
+            <li>Every move <b>costs</b> stability. Smart morphs can sometimes <b>restore</b> it.</li>
             <li>Power-ups <b>cost</b> stability—use them wisely.</li>
             <li>No repeats; all words must be modern U.S. English.</li>
           </ul>
-          <p className="mt-2"><b>Power-ups:</b></p>
+          <p className="mt-2"><b>Power-ups & costs:</b></p>
           <ul className="list-disc pl-5 space-y-1">
-            <li>🔄 <b>Double Swap</b> (−10 stability): next move may change 2 letters.</li>
-            <li>💡 <b>Insight</b> (−8 stability): highlights 3 viable letter positions.</li>
-            <li>⚙️ <b>Repair</b> (−15 stability): restore +20 stability (rare).</li>
-            <li>🎲 <b>Wildcard</b> (free, rare): auto-injects a valid random letter change.</li>
+            <li>🔄 <b>Double Swap</b> (−10): next move may change ≤2 letters.</li>
+            <li>💡 <b>Insight</b> (−8): flashes 3 viable positions to change.</li>
+            <li>⚙️ <b>Repair</b> (−15 → +20): spend 15 to restore 20 stability.</li>
+            <li>🎲 <b>Wildcard</b> (free, rare): injects one random letter change.</li>
           </ul>
-          <p><b>Tip:</b> Aim for letters with good connectivity, keep a small buffer of stability, and don't hoard power-ups.</p>
+          <p><b>Tip:</b> Save Double Swap for dead ends. Keep a buffer of stability. Don't repeat words.</p>
         </div>
         <div className="mt-4 flex justify-end">
-          <button onClick={onClose} className="px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold">
+          <button onClick={onClose} className="px-3 py-1.5 rounded-md bg-cyan-400 text-slate-900 font-semibold">
             Got it
           </button>
         </div>
@@ -86,7 +98,7 @@ function LengthToggle({
     <button
       onClick={() => onChange(v)}
       className={`flex-1 py-2 rounded-md text-sm font-semibold transition ${
-        value === v ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+        value === v ? "bg-cyan-400 text-slate-900" : "bg-slate-800 text-slate-200"
       }`}
       aria-pressed={value === v}
     >
@@ -106,15 +118,12 @@ function ChainBar({ value, max }: { value: number; max: number }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
   return (
     <div className="w-full max-w-sm mx-auto">
-      <div className="flex items-center justify-between text-muted-foreground text-xs mb-1">
+      <div className="flex items-center justify-between text-slate-300 text-xs mb-1">
         <span>Chain Stability</span>
         <span>{Math.max(0, Math.floor(value))}/{max}</span>
       </div>
-      <div className="h-2 rounded bg-muted overflow-hidden">
-        <div
-          className="h-2 bg-primary transition-[width] duration-300"
-          style={{ width: `${pct}%` }}
-        />
+      <div className="h-2 rounded bg-slate-800 overflow-hidden">
+        <div className="h-2 bg-cyan-400 transition-[width] duration-300" style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
@@ -133,13 +142,13 @@ function PowerHUD({
       <button
         onClick={() => count > 0 && onUse(t)}
         className={`relative w-10 h-10 rounded-md flex items-center justify-center ${
-          count > 0 ? "bg-primary/20 ring-1 ring-primary text-primary" : "bg-muted text-muted-foreground"
+          count > 0 ? "bg-cyan-400/20 ring-1 ring-cyan-400 text-cyan-200" : "bg-slate-800 text-slate-500"
         }`}
         title={`${label}${count ? ` (${count})` : ""}`}
       >
         <span className="text-lg">{icon}</span>
         {count > 0 && (
-          <span className="absolute -top-1 -right-1 text-[10px] bg-primary text-primary-foreground px-1 py-[1px] rounded">
+          <span className="absolute -top-1 -right-1 text-[10px] bg-cyan-400 text-slate-900 px-1 py-[1px] rounded">
             {count}
           </span>
         )}
@@ -149,8 +158,8 @@ function PowerHUD({
   return (
     <div className="w-full max-w-sm mx-auto flex items-center justify-between">
       <div className="text-left">
-        <div className="text-xs text-muted-foreground">Longest Chain</div>
-        <div className="text-xl font-bold text-foreground">Survive</div>
+        <div className="text-xs text-slate-400">Longest Chain</div>
+        <div className="text-xl font-bold text-slate-100">Survive</div>
       </div>
       <div className="flex items-center gap-2">
         <Slot t="doubleSwap" label="Double Swap" icon="🔄" />
@@ -164,34 +173,81 @@ function PowerHUD({
 
 function Tiles({
   word,
-  lockIndex,
   flashIndices,
   onChangeAt,
 }: {
   word: string;
-  lockIndex?: number | null;
   flashIndices?: number[];
   onChangeAt: (i: number, ch: string) => void;
 }) {
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [inputValue, setInputValue] = useState("");
+
+  const handleTileClick = (i: number, ch: string) => {
+    setEditingIndex(i);
+    setInputValue(ch);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.toLowerCase();
+    if (val === "" || /^[a-z]$/.test(val)) {
+      setInputValue(val);
+    }
+  };
+
+  const handleInputSubmit = (i: number) => {
+    if (/^[a-z]$/.test(inputValue)) {
+      onChangeAt(i, inputValue);
+    }
+    setEditingIndex(null);
+    setInputValue("");
+  };
+
+  const handleInputBlur = (i: number) => {
+    if (inputValue) {
+      handleInputSubmit(i);
+    } else {
+      setEditingIndex(null);
+      setInputValue("");
+    }
+  };
+
   return (
     <div className="flex justify-center gap-2 my-4">
       {word.split("").map((ch, i) => {
-        const locked = lockIndex === i;
         const hinted = flashIndices?.includes(i);
+        const isEditing = editingIndex === i;
+
+        if (isEditing) {
+          return (
+            <div key={i} className="relative w-12 h-12">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={handleInputChange}
+                onBlur={() => handleInputBlur(i)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleInputSubmit(i);
+                  if (e.key === "Escape") {
+                    setEditingIndex(null);
+                    setInputValue("");
+                  }
+                }}
+                autoFocus
+                maxLength={1}
+                className="w-12 h-12 rounded-md text-center text-xl font-bold bg-cyan-400/20 text-slate-100 border-2 border-cyan-400 outline-none"
+              />
+            </div>
+          );
+        }
+
         return (
           <button
             key={i}
             className={`w-12 h-12 rounded-md grid place-items-center text-xl font-bold
-              ${locked ? "bg-muted text-muted-foreground ring-1 ring-border" : "bg-muted text-foreground"}
-              ${hinted ? "outline outline-2 outline-primary" : ""}`}
-            onClick={() => {
-              if (locked) return;
-              const next = prompt("Replace with letter a–z:", ch);
-              if (!next) return;
-              const c = next.trim().toLowerCase();
-              if (/^[a-z]$/.test(c)) onChangeAt(i, c);
-            }}
-            title={locked ? "Locked" : "Tap to change letter"}
+              bg-slate-800 text-slate-100 ${hinted ? "outline outline-2 outline-cyan-400" : ""}`}
+            onClick={() => handleTileClick(i, ch)}
+            title="Tap to change letter"
           >
             {ch.toUpperCase()}
           </button>
@@ -208,68 +264,44 @@ export default function ArcadeSurvivalPage() {
   const [length, setLength] = useState<LengthMode>(4);
   const [state, setState] = useState<GameState>("idle");
 
-  const MAX_STAB = 100;
-  const [stability, setStability] = useState(MAX_STAB);
+  const [stability, setStability] = useState<number>(MAX_STABILITY);
 
   const [current, setCurrent] = useState("----");
-  const [accepted, setAccepted] = useState<string[]>([]);
+  const [history, setHistory] = useState<string[]>([]);
   const [flash, setFlash] = useState<number[]>([]);
-  const [doubleSwapActive, setDoubleSwapActive] = useState(false);
+  const [doubleSwapOnce, setDoubleSwapOnce] = useState(false);
 
   const [power, setPower] = useState<Partial<Record<PowerupType, number>>>({
-    doubleSwap: 0,
-    insight: 0,
-    repair: 0,
-    wildcard: 0,
+    doubleSwap: 0, insight: 0, repair: 0, wildcard: 0,
   });
 
   const [streak, setStreak] = useState(0);
-  const [bestStreak, setBestStreak] = useState(0);
+  const [streakMax, setStreakMax] = useState(0);
+
   const [resultsOpen, setResultsOpen] = useState(false);
 
   useEffect(() => {
     if (state === "running") return;
     (async () => setCurrent(await getStartWord(length)))();
-    setAccepted([]);
-    setStability(MAX_STAB);
-    setStreak(0);
-    setBestStreak(0);
+    setHistory([]);
+    setStability(MAX_STABILITY);
     setPower({ doubleSwap: 0, insight: 0, repair: 0, wildcard: 0 });
     setFlash([]);
-    setDoubleSwapActive(false);
+    setDoubleSwapOnce(false);
+    setStreak(0);
+    setStreakMax(0);
   }, [length, state]);
 
-  const canSubmit = useMemo(() => isAlphaLower(current) && current.length === length, [current, length]);
+  const canSubmit = useMemo(
+    () => isAlphaLower(current) && current.length === length,
+    [current, length]
+  );
 
   const start = () => setState("running");
 
-  const randomChance = (p: number) => Math.random() < p;
-
-  const tryEarnPower = () => {
-    setStreak((s) => {
-      const next = s + 1;
-      setBestStreak((b) => Math.max(b, next));
-      if (next % 4 === 0) {
-        giveRandomPower();
-      } else if (randomChance(0.12)) {
-        giveRandomPower();
-      }
-      return next;
-    });
-  };
-
-  const giveRandomPower = () => {
-    const pool: PowerupType[] = ["doubleSwap", "insight", "repair", "wildcard"];
-    const t = pool[Math.floor(Math.random() * pool.length)];
-    setPower((p) => ({ ...p, [t]: (p[t] || 0) + 1 }));
-  };
-
-  const spendPower = (t: PowerupType) =>
-    setPower((p) => ({ ...p, [t]: Math.max(0, (p[t] || 0) - 1) }));
-
   const adjustStability = (delta: number) =>
     setStability((s) => {
-      const next = Math.max(0, Math.min(MAX_STAB, s + delta));
+      const next = Math.max(0, Math.min(MAX_STABILITY, s + delta));
       if (next === 0) {
         setState("results");
         setResultsOpen(true);
@@ -277,17 +309,35 @@ export default function ArcadeSurvivalPage() {
       return next;
     });
 
-  const handleUsePower = (t: PowerupType) => {
+  const giveRandomPower = () => {
+    const pool: PowerupType[] = ["doubleSwap", "insight", "repair", "wildcard"];
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    setPower((p) => ({ ...p, [pick]: (p[pick] || 0) + 1 }));
+  };
+
+  const earnOnPlay = () => {
+    setStreak((s) => {
+      const next = s + 1;
+      setStreakMax((m) => Math.max(m, next));
+      if (next % 4 === 0) giveRandomPower();
+      else if (Math.random() < 0.12) giveRandomPower();
+      return next;
+    });
+  };
+
+  const spendPower = (t: PowerupType) =>
+    setPower((p) => ({ ...p, [t]: Math.max(0, (p[t] || 0) - 1) }));
+
+  const usePower = (t: PowerupType) => {
     if ((power[t] || 0) <= 0 || state !== "running") return;
 
     switch (t) {
       case "doubleSwap":
         adjustStability(-10);
-        setDoubleSwapActive(true);
+        setDoubleSwapOnce(true);
         spendPower("doubleSwap");
         break;
-
-      case "insight":
+      case "insight": {
         adjustStability(-8);
         const picks = new Set<number>();
         while (picks.size < Math.min(3, length)) picks.add(Math.floor(Math.random() * length));
@@ -295,24 +345,23 @@ export default function ArcadeSurvivalPage() {
         setTimeout(() => setFlash([]), 1200);
         spendPower("insight");
         break;
-
+      }
       case "repair":
         adjustStability(-15);
-        setTimeout(() => adjustStability(+20), 50);
+        setTimeout(() => adjustStability(+20), 40);
         spendPower("repair");
         break;
-
-      case "wildcard":
-        if (!current || current.length !== length) return;
+      case "wildcard": {
         const idx = Math.floor(Math.random() * length);
         const letter = String.fromCharCode(97 + Math.floor(Math.random() * 26));
         setCurrent((w) => w.substring(0, idx) + letter + w.substring(idx + 1));
         spendPower("wildcard");
         break;
+      }
     }
   };
 
-  const handleChangeAt = (i: number, ch: string) => {
+  const onChangeAt = (i: number, ch: string) => {
     setCurrent((w) => {
       const arr = w.split("");
       arr[i] = ch;
@@ -323,64 +372,58 @@ export default function ArcadeSurvivalPage() {
   const submit = async () => {
     if (state !== "running" || !canSubmit) return;
 
-    const lastWord = accepted.length ? accepted[accepted.length - 1] : current;
-    const dist = accepted.length ? hamming(current, lastWord) : 1;
+    const lastWord = history.length ? history[history.length - 1] : current;
+    const dist = history.length ? hamming(current, lastWord) : 1;
 
-    const allowed = doubleSwapActive ? dist <= 2 : dist === 1;
+    const allowed = doubleSwapOnce ? dist <= 2 : dist === 1;
     if (!allowed) {
       adjustStability(-12);
       setStreak(0);
-      setDoubleSwapActive(false);
+      setDoubleSwapOnce(false);
       return;
     }
 
-    const v = await validateWordServer(current, length);
-    if (!v.ok || accepted.includes(current)) {
+    const valid = await validateWord(current, length);
+    if (!valid.ok || history.includes(current)) {
       adjustStability(-12);
       setStreak(0);
-      setDoubleSwapActive(false);
+      setDoubleSwapOnce(false);
       return;
     }
 
     adjustStability(-5);
-
-    if (randomChance(0.25)) adjustStability(+6);
-
-    setAccepted((arr) => [...arr, current]);
-    tryEarnPower();
-
-    if (doubleSwapActive) setDoubleSwapActive(false);
+    if (Math.random() < 0.25) adjustStability(+6);
+    setHistory((h) => [...h, current]);
+    earnOnPlay();
+    if (doubleSwapOnce) setDoubleSwapOnce(false);
   };
 
   const undo = () => {
-    if (!accepted.length) return;
-    const next = [...accepted];
-    next.pop();
-    setAccepted(next);
+    if (!history.length) return;
+    setHistory((h) => {
+      const next = [...h]; next.pop(); return next;
+    });
     setStreak(0);
     adjustStability(-5);
   };
 
-  useEffect(() => {
-    if (state !== "idle") return;
-    (async () => setCurrent(await getStartWord(length)))();
-  }, [state, length]);
-
   const reset = () => {
     setState("idle");
-    setStability(MAX_STAB);
-    setAccepted([]);
+    setStability(MAX_STABILITY);
+    setHistory([]);
     setStreak(0);
-    setBestStreak(0);
+    setStreakMax(0);
     setPower({ doubleSwap: 0, insight: 0, repair: 0, wildcard: 0 });
     setFlash([]);
-    setDoubleSwapActive(false);
+    setDoubleSwapOnce(false);
+    (async () => setCurrent(await getStartWord(length)))();
+    setResultsOpen(false);
   };
 
   const share = async () => {
     const text = `Morph Chain — Arcade (Survival) ${length}L
-Longest chain: ${accepted.length}
-Best streak: ${bestStreak}
+Longest chain: ${history.length}
+Best streak: ${streakMax}
 morphchaingame.com`;
     try {
       await navigator.share?.({ text });
@@ -391,18 +434,22 @@ morphchaingame.com`;
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <GlobalHeader onOpenMenu={() => setMenuOpen(true)} onOpenHelp={() => setHelpOpen(true)} />
+    <div className="min-h-screen bg-[#0B1E26] text-slate-100">
+      <GlobalHeader
+        onOpenMenu={() => setMenuOpen(true)}
+        onOpenHelp={() => setHelpOpen(true)}
+        titleRightBadge="ARCADE"
+      />
       <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
       <HowToPlayModal open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <main className="max-w-screen-sm mx-auto px-4 py-6">
         <div className="mb-3">
-          <ChainBar value={stability} max={MAX_STAB} />
+          <ChainBar value={stability} max={MAX_STABILITY} />
         </div>
 
         <div className="mb-3">
-          <PowerHUD power={power} onUse={handleUsePower} />
+          <PowerHUD power={power} onUse={usePower} />
         </div>
 
         <div className="mb-4 flex items-center justify-center">
@@ -416,67 +463,48 @@ morphchaingame.com`;
           />
         </div>
 
-        <div className="text-center text-xs text-muted-foreground mb-2">
-          Change one letter per move. Every move costs stability. Survive as long as possible.
+        <div className="text-center text-xs text-slate-400 mb-2">
+          Change one letter per move (or two with Double Swap). Every move costs stability. Survive as long as possible.
         </div>
 
-        <Tiles word={current} onChangeAt={handleChangeAt} lockIndex={null} flashIndices={flash} />
+        <Tiles word={current} onChangeAt={onChangeAt} flashIndices={flash} />
 
         <div className="flex gap-2 justify-center">
           {state !== "running" ? (
-            <button
-              className="px-5 py-2 rounded-md bg-primary text-primary-foreground font-semibold"
-              onClick={start}
-            >
+            <button className="px-5 py-2 rounded-md bg-cyan-400 text-slate-900 font-semibold" onClick={start}>
               {state === "idle" ? "Start" : "Resume"}
             </button>
           ) : (
             <>
-              <button
-                className="px-5 py-2 rounded-md bg-primary text-primary-foreground font-semibold"
-                onClick={submit}
-              >
+              <button className="px-5 py-2 rounded-md bg-cyan-400 text-slate-900 font-semibold" onClick={submit}>
                 Submit
               </button>
-              <button
-                className="px-5 py-2 rounded-md bg-muted text-foreground"
-                onClick={undo}
-              >
+              <button className="px-5 py-2 rounded-md bg-slate-800 text-slate-100" onClick={undo}>
                 Undo
               </button>
-              <button
-                className="px-5 py-2 rounded-md bg-muted text-foreground"
-                onClick={() => setState("paused")}
-              >
+              <button className="px-5 py-2 rounded-md bg-slate-800 text-slate-100" onClick={() => setState("paused")}>
                 Pause
               </button>
             </>
           )}
-          {(state === "results") && (
-            <button className="px-5 py-2 rounded-md bg-muted text-foreground" onClick={reset}>
-              Play Again
-            </button>
-          )}
         </div>
 
-        {state === "results" && (
+        {resultsOpen && (
           <div className="fixed inset-0 z-40 bg-black/60 grid place-items-center p-4">
-            <div className="w-full max-w-sm bg-card rounded-xl p-5 ring-1 ring-border">
-              <div className="text-xl font-bold text-foreground mb-1">Chain Broken</div>
-              <div className="text-muted-foreground text-sm mb-3">
-                Longest chain: <b>{accepted.length}</b> • Best streak: <b>{bestStreak}</b>
+            <div className="w-full max-w-sm bg-slate-900 rounded-xl p-5 ring-1 ring-slate-700">
+              <div className="text-xl font-bold text-slate-100 mb-1">Chain Broken</div>
+              <div className="text-slate-300 text-sm mb-3">
+                Longest chain: <b>{history.length}</b> • Best streak: <b>{streakMax}</b>
               </div>
               <div className="flex gap-2">
-                <button className="flex-1 py-2 rounded-md bg-primary text-primary-foreground font-semibold" onClick={share}>
+                <button className="flex-1 py-2 rounded-md bg-cyan-400 text-slate-900 font-semibold" onClick={share}>
                   Share
                 </button>
-                <button className="flex-1 py-2 rounded-md bg-muted text-foreground" onClick={reset}>
+                <button className="flex-1 py-2 rounded-md bg-slate-800 text-slate-100" onClick={reset}>
                   Play Again
                 </button>
               </div>
-              <div className="mt-4 text-xs text-muted-foreground line-clamp-2">
-                {accepted.join(" → ")}
-              </div>
+              <div className="mt-4 text-xs text-slate-500 line-clamp-2">{history.join(" → ")}</div>
             </div>
           </div>
         )}
