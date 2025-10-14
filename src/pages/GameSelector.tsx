@@ -1,11 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
 import { MorphHeader } from "@/components/MorphHeader";
-import { MorphPrismTitle } from "@/components/GameTitles";
-import { hasCompletedFirstDailyAttempt } from "@/lib/rushStorage";
+import { MorphChainTitle, MorphPrismTitle, MorphRushTitle } from "@/components/GameTitles";
 import { Facebook, Instagram, Linkedin, MessageSquare, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,71 +30,49 @@ const GameSelector = () => {
     <div className="min-h-screen flex flex-col">
       <MorphHeader />
       
-      <main className="flex-1 container mx-auto px-4 max-w-6xl">
-        {/* Hero Section - Mobile Optimized */}
-        <section className="py-3 md:py-8 mb-8 md:mb-12">
-          <div className="space-y-1 md:space-y-3">
-            <h1 className="font-outfit font-bold text-2xl md:text-4xl tracking-tight" style={{ letterSpacing: '-0.02em' }}>
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                MORPH GAMES
-              </span>
-            </h1>
-            <p className="text-base md:text-lg text-foreground font-medium">
-              A letter changes everything.
-            </p>
-            <div className="flex items-center gap-2 text-sm md:text-base text-muted-foreground font-medium pt-2">
-              <span>{formattedDate}</span>
-              <span>•</span>
-              <span>Puzzle #{puzzle.puzzleIndex}</span>
-            </div>
+      <main className="flex-1 container mx-auto px-4 py-8 md:py-12 max-w-5xl">
+        {/* Hero Section */}
+        <section className="text-center mb-12 md:mb-16">
+          <h1 className="font-outfit font-bold text-3xl md:text-5xl tracking-tight mb-3" style={{ letterSpacing: '-0.02em' }}>
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              MORPH GAMES
+            </span>
+          </h1>
+          <p className="text-lg md:text-xl text-foreground font-medium mb-2">
+            A letter changes everything.
+          </p>
+          <div className="flex items-center justify-center gap-2 text-sm md:text-base text-muted-foreground font-medium">
+            <span>{formattedDate}</span>
+            <span>•</span>
+            <span>Puzzle #{puzzle.puzzleIndex}</span>
           </div>
         </section>
 
-        {/* Game Cards Grid - 2x2 Layout (Mobile & Desktop) */}
-        <section className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-2 gap-3 md:gap-6">
-            {/* Top Row */}
-            <GameCard
-              title="Morph Chain"
-              description="Change one letter each step to reach today's goal"
-              mode="Word ladder"
-              difficulty="Moderate"
-              avgTime="3-5 min"
-              accent="chain"
-              motif="chain-links"
-              onClick={() => navigate('/chain')}
-            />
-            
-            <GameCard
-              title="Morph Rush"
-              description="Make as many 4-letter morphs as you can in 2 minutes"
-              mode="Score dash"
-              difficulty="Fast-paced"
-              avgTime="2 min"
-              accent="rush"
-              motif="motion"
-              onClick={() => navigate('/rush?mode=daily')}
-              secondaryAction={hasCompletedFirstDailyAttempt() ? {
-                label: "Practice Mode",
-                onClick: () => navigate('/rush?mode=practice')
-              } : undefined}
-            />
-            
-            {/* Bottom Row */}
-            <GameCard
-              title="Morph Prism"
-              description="Decode the word through chromatic color clues"
-              mode="Color puzzle"
-              difficulty="Challenging"
-              avgTime="4-6 min"
-              accent="prism"
-              motif="spectrum"
-              comingSoon={!isPrismAccessGranted}
-              onClick={() => navigate('/prism')}
-            />
+        {/* Full-Width Game Banners */}
+        <section className="space-y-4 md:space-y-6">
+          <GameBanner
+            game="chain"
+            title={<MorphChainTitle className="text-2xl md:text-4xl" />}
+            description="Transform words one letter at a time"
+            onClick={() => navigate('/chain')}
+          />
+          
+          <GameBanner
+            game="rush"
+            title={<MorphRushTitle className="text-2xl md:text-4xl" />}
+            description="Fast-paced morphing under pressure"
+            onClick={() => navigate('/rush?mode=daily')}
+          />
+          
+          <GameBanner
+            game="prism"
+            title={<MorphPrismTitle className="text-2xl md:text-4xl" />}
+            description="Decode words through chromatic clues"
+            onClick={() => navigate('/prism')}
+            comingSoon={!isPrismAccessGranted}
+          />
 
-            <ShareCard />
-          </div>
+          <ShareBanner />
         </section>
       </main>
 
@@ -119,143 +94,73 @@ const GameSelector = () => {
   );
 };
 
-interface GameCardProps {
-  title: string;
+interface GameBannerProps {
+  game: 'chain' | 'prism' | 'rush';
+  title: React.ReactNode;
   description: string;
-  mode: string;
-  difficulty: string;
-  avgTime: string;
-  accent: 'chain' | 'prism' | 'rush';
-  motif: 'chain-links' | 'spectrum' | 'motion';
-  comingSoon?: boolean;
   onClick: () => void;
-  secondaryAction?: {
-    label: string;
-    onClick: () => void;
-  };
+  comingSoon?: boolean;
 }
 
-const GameCard = ({ 
-  title, 
-  description, 
-  mode, 
-  difficulty, 
-  avgTime, 
-  accent, 
-  motif,
-  comingSoon,
-  onClick, 
-  secondaryAction 
-}: GameCardProps) => {
-  const navigate = useNavigate();
-  const accentClasses = {
-    chain: "border-chain/30 hover:border-chain hover:shadow-lg hover:shadow-chain/20",
-    prism: "border-primary/30 hover:border-primary hover:shadow-lg hover:shadow-primary/20",
-    rush: "border-rush-start/30 hover:border-rush-start hover:shadow-lg hover:shadow-rush-start/20"
+const GameBanner = ({ game, title, description, onClick, comingSoon }: GameBannerProps) => {
+  const gradientClasses = {
+    chain: "from-[hsl(var(--chain-accent)_/_0.15)] to-[hsl(var(--chain-accent)_/_0.05)]",
+    prism: "from-[hsl(var(--prism-accent-start)_/_0.15)] via-[hsl(var(--prism-accent-mid)_/_0.10)] to-[hsl(var(--prism-accent-end)_/_0.15)]",
+    rush: "from-[hsl(var(--rush-accent-start)_/_0.15)] to-[hsl(var(--rush-accent-end)_/_0.15)]"
   };
 
-  const motifPatterns = {
-    'chain-links': (
-      <div className="absolute top-0 right-0 w-32 h-32 opacity-5 overflow-hidden">
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <circle cx="20" cy="20" r="15" stroke="currentColor" strokeWidth="3" fill="none" />
-          <circle cx="50" cy="20" r="15" stroke="currentColor" strokeWidth="3" fill="none" />
-          <circle cx="35" cy="50" r="15" stroke="currentColor" strokeWidth="3" fill="none" />
-        </svg>
-      </div>
-    ),
-    'spectrum': (
-      <div className="absolute inset-0 opacity-10">
-        <div className="w-full h-full bg-gradient-prism" style={{ 
-          background: 'linear-gradient(135deg, hsl(var(--prism-accent-start)), hsl(var(--prism-accent-mid)), hsl(var(--prism-accent-end)))'
-        }} />
-      </div>
-    ),
-    'motion': (
-      <div className="absolute top-4 right-4 opacity-10">
-        <svg width="80" height="40" viewBox="0 0 80 40">
-          <line x1="0" y1="10" x2="60" y2="10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-          <line x1="10" y1="20" x2="70" y2="20" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-          <line x1="5" y1="30" x2="65" y2="30" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-        </svg>
-      </div>
-    )
+  const glowClasses = {
+    chain: "hover:shadow-[0_0_40px_hsl(var(--chain-accent)_/_0.3),0_0_80px_hsl(var(--chain-accent)_/_0.15)]",
+    prism: "hover:shadow-[0_0_40px_hsl(var(--prism-accent-mid)_/_0.3),0_0_80px_hsl(var(--prism-accent-mid)_/_0.15)]",
+    rush: "hover:shadow-[0_0_40px_hsl(var(--rush-accent-start)_/_0.3),0_0_80px_hsl(var(--rush-accent-start)_/_0.15)]"
+  };
+
+  const borderClasses = {
+    chain: "border-[hsl(var(--chain-accent)_/_0.3)] hover:border-[hsl(var(--chain-accent)_/_0.6)]",
+    prism: "border-[hsl(var(--prism-accent-mid)_/_0.3)] hover:border-[hsl(var(--prism-accent-mid)_/_0.6)]",
+    rush: "border-[hsl(var(--rush-accent-start)_/_0.3)] hover:border-[hsl(var(--rush-accent-start)_/_0.6)]"
   };
 
   return (
-    <Card 
-      className={`relative p-3 md:p-6 border-2 transition-all group overflow-hidden ${accentClasses[accent]} ${comingSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} 
+    <button
       onClick={comingSoon ? undefined : onClick}
+      disabled={comingSoon}
+      className={`
+        relative w-full py-12 md:py-16 px-6 md:px-12 
+        rounded-2xl border-2 
+        bg-gradient-to-r ${gradientClasses[game]}
+        ${borderClasses[game]}
+        ${glowClasses[game]}
+        transition-all duration-300 ease-out
+        group overflow-hidden
+        ${comingSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02]'}
+      `}
     >
-      {motifPatterns[motif]}
-      
-      <div className="relative z-10 space-y-2 md:space-y-4 h-full flex flex-col">
-        <div className="space-y-1 md:space-y-2">
-          {accent === 'chain' && (
-            <h2 className="font-outfit font-bold text-base md:text-2xl tracking-tight bg-gradient-to-r from-chain to-chain bg-clip-text text-transparent">
-              MORPH CHAIN
-            </h2>
-          )}
-          {accent === 'prism' && (
-            <h2 className="font-outfit font-bold text-base md:text-2xl tracking-tight bg-gradient-to-r from-[hsl(var(--prism-accent-start))] via-[hsl(var(--prism-accent-mid))] to-[hsl(var(--prism-accent-end))] bg-clip-text text-transparent">
-              MORPH PRISM
-            </h2>
-          )}
-          {accent === 'rush' && (
-            <h2 className="font-outfit font-bold text-base md:text-2xl tracking-tight bg-gradient-rush bg-clip-text text-transparent" style={{ fontStyle: 'italic' }}>
-              MORPH RUSH
-            </h2>
-          )}
-          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-            {description}
-          </p>
-        </div>
-        
-        <div className="flex-1"></div>
+      {/* Background glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-2xl -z-10">
+        <div className={`w-full h-full bg-gradient-to-r ${gradientClasses[game]}`} />
+      </div>
 
+      <div className="relative z-10 flex flex-col items-center justify-center gap-3 md:gap-4">
         {comingSoon && (
-          <div className="flex justify-center pb-2">
-            <div className="px-3 py-1.5 bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded-md text-xs font-semibold">
-              Coming Soon
-            </div>
+          <div className="absolute -top-8 md:-top-10 px-4 py-1.5 bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded-full text-xs md:text-sm font-semibold">
+            Coming Soon
           </div>
         )}
-
-        <div className="flex gap-2">
-          <Button 
-            className="flex-1 h-8 md:h-10 text-xs md:text-sm"
-            disabled={comingSoon}
-            onClick={(e) => {
-              e.stopPropagation();
-              onClick();
-            }}
-          >
-            <span className="md:hidden">Play</span>
-            <span className="hidden md:inline">Play Today</span>
-          </Button>
+        
+        <div className="text-center">
+          {title}
         </div>
-
-        {secondaryAction && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full h-7 md:h-9 text-xs"
-            disabled={comingSoon}
-            onClick={(e) => {
-              e.stopPropagation();
-              secondaryAction.onClick();
-            }}
-          >
-            <span className="md:hidden">Practice</span>
-            <span className="hidden md:inline">{secondaryAction.label}</span>
-          </Button>
-        )}
+        
+        <p className="text-base md:text-lg text-muted-foreground font-medium max-w-2xl">
+          {description}
+        </p>
       </div>
-    </Card>
+    </button>
   );
 };
 
-const ShareCard = () => {
+const ShareBanner = () => {
   const shareUrl = window.location.origin;
   const shareText = "Check out Morph Games - A letter changes everything!";
 
@@ -287,52 +192,49 @@ const ShareCard = () => {
   };
 
   const socialIcons = [
-    { name: "Facebook", icon: Facebook, platform: "facebook", color: "hover:text-[#1877F2]" },
-    { name: "X/Twitter", icon: Share2, platform: "twitter", color: "hover:text-[#1DA1F2]" },
-    { name: "LinkedIn", icon: Linkedin, platform: "linkedin", color: "hover:text-[#0A66C2]" },
-    { name: "Instagram", icon: Instagram, platform: "instagram", color: "hover:text-[#E4405F]" },
-    { name: "Text/SMS", icon: MessageSquare, platform: "sms", color: "hover:text-accent" },
+    { name: "Facebook", icon: Facebook, platform: "facebook" },
+    { name: "X", icon: Share2, platform: "twitter" },
+    { name: "LinkedIn", icon: Linkedin, platform: "linkedin" },
+    { name: "Instagram", icon: Instagram, platform: "instagram" },
+    { name: "Text", icon: MessageSquare, platform: "sms" },
   ];
 
   return (
-    <Card className="relative p-3 md:p-6 border-2 transition-all group overflow-hidden border-primary/30 hover:border-primary hover:shadow-lg hover:shadow-primary/20">
-      <div className="absolute inset-0 opacity-5">
-        <div className="w-full h-full bg-gradient-to-br from-primary via-accent to-secondary" />
-      </div>
+    <div className="relative w-full py-12 md:py-16 px-6 md:px-12 rounded-2xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-accent/10 overflow-hidden group hover:border-primary/60 hover:shadow-[0_0_40px_hsl(var(--primary)_/_0.2),0_0_80px_hsl(var(--primary)_/_0.1)] transition-all duration-300">
+      {/* Background glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-2xl -z-10" />
       
-      <div className="relative z-10 h-full flex flex-col">
-        <div className="space-y-1 md:space-y-2 mb-3 md:mb-6">
-          <h2 className="font-outfit font-bold text-base md:text-2xl tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            SHARE
+      <div className="relative z-10 flex flex-col items-center justify-center gap-6">
+        <div className="text-center">
+          <h2 className="font-outfit font-bold text-2xl md:text-4xl tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2" style={{ letterSpacing: '-0.02em' }}>
+            Share the Morph.
           </h2>
-          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed hidden md:block">
+          <p className="text-sm md:text-base text-muted-foreground font-medium">
             Spread the word about Morph Games
           </p>
         </div>
         
-        <div className="flex-1 flex items-center justify-center">
-          <div className="grid grid-cols-3 gap-2 md:gap-4 w-full">
-            {socialIcons.map((social) => {
-              const Icon = social.icon;
-              return (
-                <button
-                  key={social.platform}
-                  onClick={() => handleShare(social.platform)}
-                  className={`flex flex-col items-center gap-1 md:gap-2 p-1.5 md:p-3 rounded-lg hover:bg-accent/10 transition-all group/icon ${social.color}`}
-                >
-                  <div className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-muted flex items-center justify-center group-hover/icon:scale-110 transition-transform">
-                    <Icon className="w-3.5 h-3.5 md:w-5 md:h-5" />
-                  </div>
-                  <span className="text-[9px] md:text-xs font-medium text-center leading-tight">
-                    {social.name}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        <div className="flex gap-4 md:gap-6 flex-wrap justify-center">
+          {socialIcons.map((social) => {
+            const Icon = social.icon;
+            return (
+              <button
+                key={social.platform}
+                onClick={() => handleShare(social.platform)}
+                className="flex flex-col items-center gap-2 group/icon"
+              >
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center hover:bg-primary/30 hover:border-primary/50 hover:scale-110 transition-all duration-200">
+                  <Icon className="w-6 h-6 md:w-7 md:h-7 text-primary" />
+                </div>
+                <span className="text-xs md:text-sm font-medium text-muted-foreground group-hover/icon:text-foreground transition-colors">
+                  {social.name}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 
