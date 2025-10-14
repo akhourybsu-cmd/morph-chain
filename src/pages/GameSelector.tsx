@@ -7,24 +7,15 @@ import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Palette, Z
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const GameSelector = () => {
   const navigate = useNavigate();
   const puzzle = getDailyPuzzle(4);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const { hasBetaAccess } = useUserRole();
   
   const timezone = "America/New_York";
   const formattedDate = formatInTimeZone(new Date(), timezone, 'MMMM d, yyyy');
-  
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUserEmail(user?.email || null);
-    };
-    getUser();
-  }, []);
-  
-  const isPrismAccessGranted = userEmail === "akhourybsu@gmail.com";
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -62,6 +53,7 @@ const GameSelector = () => {
             title={<MorphArcadeTitle className="text-2xl md:text-4xl" />}
             description="Survival mode - manage your chain stability"
             onClick={() => navigate('/arcade-survival')}
+            comingSoon={!hasBetaAccess}
           />
           
           <GameBanner
@@ -76,7 +68,7 @@ const GameSelector = () => {
             title={<MorphPrismTitle className="text-2xl md:text-4xl" />}
             description="Decode words through chromatic clues"
             onClick={() => navigate('/prism')}
-            comingSoon={!isPrismAccessGranted}
+            comingSoon={!hasBetaAccess}
           />
 
           <ShareBanner />
