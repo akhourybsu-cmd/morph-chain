@@ -126,22 +126,17 @@ const GameBanner = ({ game, title, description, onClick, comingSoon }: GameBanne
       onClick={comingSoon ? undefined : onClick}
       disabled={comingSoon}
       className={`
-        relative w-full py-12 md:py-16 px-6 md:px-12 
-        rounded-2xl border-2 
+        relative w-full py-6 md:py-8 px-6 md:px-12 
+        rounded-xl border-2 
         bg-gradient-to-r ${gradientClasses[game]}
         ${borderClasses[game]}
-        ${glowClasses[game]}
+        shadow-lg hover:shadow-xl
         transition-all duration-300 ease-out
         group overflow-hidden
-        ${comingSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02]'}
+        ${comingSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.01]'}
       `}
     >
-      {/* Background glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-2xl -z-10">
-        <div className={`w-full h-full bg-gradient-to-r ${gradientClasses[game]}`} />
-      </div>
-
-      <div className="relative z-10 flex flex-col items-center justify-center gap-3 md:gap-4">
+      <div className="relative z-10 flex flex-col items-center justify-center gap-2 md:gap-3">
         {comingSoon && (
           <div className="absolute -top-8 md:-top-10 px-4 py-1.5 bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded-full text-xs md:text-sm font-semibold">
             Coming Soon
@@ -152,7 +147,7 @@ const GameBanner = ({ game, title, description, onClick, comingSoon }: GameBanne
           {title}
         </div>
         
-        <p className="text-base md:text-lg text-muted-foreground font-medium max-w-2xl">
+        <p className="text-sm md:text-base text-muted-foreground font-medium max-w-2xl">
           {description}
         </p>
       </div>
@@ -200,16 +195,13 @@ const ShareBanner = () => {
   ];
 
   return (
-    <div className="relative w-full py-12 md:py-16 px-6 md:px-12 rounded-2xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-accent/10 overflow-hidden group hover:border-primary/60 hover:shadow-[0_0_40px_hsl(var(--primary)_/_0.2),0_0_80px_hsl(var(--primary)_/_0.1)] transition-all duration-300">
-      {/* Background glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-2xl -z-10" />
-      
-      <div className="relative z-10 flex flex-col items-center justify-center gap-6">
+    <div className="relative w-full py-6 md:py-8 px-6 md:px-12 rounded-xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-accent/10 overflow-hidden hover:border-primary/60 shadow-lg hover:shadow-xl transition-all duration-300">
+      <div className="relative z-10 flex flex-col items-center justify-center gap-4 md:gap-5">
         <div className="text-center">
           <h2 className="font-outfit font-bold text-2xl md:text-4xl tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2" style={{ letterSpacing: '-0.02em' }}>
             Share the Morph.
           </h2>
-          <p className="text-sm md:text-base text-muted-foreground font-medium">
+          <p className="text-xs md:text-sm text-muted-foreground font-medium">
             Spread the word about Morph Games
           </p>
         </div>
@@ -223,10 +215,10 @@ const ShareBanner = () => {
                 onClick={() => handleShare(social.platform)}
                 className="flex flex-col items-center gap-2 group/icon"
               >
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center hover:bg-primary/30 hover:border-primary/50 hover:scale-110 transition-all duration-200">
-                  <Icon className="w-6 h-6 md:w-7 md:h-7 text-primary" />
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center hover:bg-primary/30 hover:border-primary/50 hover:scale-110 transition-all duration-200">
+                  <Icon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                 </div>
-                <span className="text-xs md:text-sm font-medium text-muted-foreground group-hover/icon:text-foreground transition-colors">
+                <span className="text-xs font-medium text-muted-foreground group-hover/icon:text-foreground transition-colors">
                   {social.name}
                 </span>
               </button>
