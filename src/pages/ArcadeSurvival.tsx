@@ -4,13 +4,14 @@ import { MorphArcadeTitle } from "@/components/GameTitles";
 import { Menu, Share2 } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { getDailyArcadePuzzle } from "@/lib/arcadePuzzles";
-import { isValidWord } from "@/lib/gameLogic";
+import { isValidWord, getHints } from "@/lib/gameLogic";
 import { supabase } from "@/integrations/supabase/client";
 import { formatInTimeZone } from "date-fns-tz";
 import { toast } from "sonner";
 import { ArcadeLeaderboard } from "@/components/arcade/ArcadeLeaderboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { HintTile, TileState } from "@/components/HintTile";
 
 /**
  * MORPH CHAIN — ARCADE (Morph Mystery Mode)
@@ -161,19 +162,31 @@ function HowToPlayModal({ open, onClose }: { open: boolean; onClose: () => void 
   );
 }
 
-function WordChainDisplay({ words }: { words: string[] }) {
+function WordChainDisplay({ words, goalWord }: { words: string[]; goalWord: string }) {
   if (words.length === 0) return null;
   
   return (
-    <div className="w-full max-w-sm mx-auto mb-4">
+    <div className="w-full max-w-md mx-auto mb-4">
       <div className="text-xs text-slate-400 mb-2">Your Word Chain:</div>
-      <div className="space-y-1 max-h-48 overflow-y-auto bg-slate-800/50 rounded-lg p-3">
-        {words.map((word, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 w-6">{i + 1}.</span>
-            <span className="text-slate-200 font-mono">{word.toUpperCase()}</span>
-          </div>
-        ))}
+      <div className="space-y-2 max-h-96 overflow-y-auto bg-slate-800/50 rounded-lg p-3">
+        {words.map((word, i) => {
+          const hints = getHints(word.toUpperCase(), goalWord.toUpperCase());
+          return (
+            <div key={i} className="flex items-center gap-3">
+              <span className="text-xs text-slate-500 w-6">{i + 1}.</span>
+              <div className="flex gap-1">
+                {word.split('').map((letter, j) => (
+                  <HintTile
+                    key={j}
+                    letter={letter}
+                    state={hints[j]}
+                    delay={j * 100}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -427,14 +440,28 @@ export default function ArcadeSurvivalPage() {
 
         {state === "playing" && (
           <div className="space-y-6">
-            <div className="text-center">
-              <div className="text-sm text-slate-400 mb-1">Current Word</div>
-              <div className="text-4xl font-bold text-slate-100 tracking-wider mb-2">
-                {currentWord}
-              </div>
+            <div className="text-center space-y-4">
               <div className="text-sm text-cyan-400">
                 Moves: {wordChain.length - 1}
               </div>
+              
+              {wordChain.length > 0 && (
+                <div className="flex justify-center">
+                  <div className="flex gap-1">
+                    {currentWord.split('').map((letter, j) => {
+                      const hints = getHints(currentWord.toUpperCase(), puzzle.goalWord.toUpperCase());
+                      return (
+                        <HintTile
+                          key={j}
+                          letter={letter}
+                          state={hints[j]}
+                          delay={0}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -442,8 +469,8 @@ export default function ArcadeSurvivalPage() {
                 value={inputValue}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Enter next word..."
-                className="text-center text-lg uppercase bg-slate-800 border-slate-700"
+                placeholder="Type your next word..."
+                className="text-center text-lg uppercase bg-slate-800 border-slate-700 text-slate-100"
                 maxLength={5}
                 autoFocus
               />
@@ -459,13 +486,13 @@ export default function ArcadeSurvivalPage() {
               </Button>
             </div>
 
-            <WordChainDisplay words={wordChain} />
+            <WordChainDisplay words={wordChain} goalWord={puzzle.goalWord} />
           </div>
         )}
 
         {state === "won" && (
           <div className="space-y-6">
-            <WordChainDisplay words={wordChain} />
+            <WordChainDisplay words={wordChain} goalWord={puzzle.goalWord} />
             <ArcadeLeaderboard />
           </div>
         )}
