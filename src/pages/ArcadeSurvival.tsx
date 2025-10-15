@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatInTimeZone } from "date-fns-tz";
 import { toast } from "sonner";
 import { ArcadeLeaderboard } from "@/components/arcade/ArcadeLeaderboard";
+import { ArcadeMenuSheet } from "@/components/arcade/ArcadeMenuSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HintTile, TileState } from "@/components/HintTile";
@@ -78,30 +79,6 @@ function ArcadeHeader({
   );
 }
 
-function SideMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <aside className="absolute left-0 top-0 h-full w-72 bg-slate-900 border-r border-slate-800 p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="font-bold text-slate-100">Morph Games</div>
-          <button onClick={onClose} className="p-2 rounded-md text-slate-300 hover:bg-slate-800">
-            ✕
-          </button>
-        </div>
-        <nav className="flex flex-col gap-2 text-slate-200">
-          <a className="hover:text-cyan-300" href="/">Morph Chain (Classic)</a>
-          <a className="hover:text-cyan-300" href="/arcade-survival">
-            <MorphArcadeTitle />
-          </a>
-          <a className="hover:text-cyan-300" href="/rush">Morph Rush</a>
-          <a className="hover:text-cyan-300" href="/prism">Morph Prism</a>
-        </nav>
-      </aside>
-    </div>
-  );
-}
 
 function HowToPlayModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   if (!open) return null;
@@ -392,9 +369,9 @@ export default function ArcadeSurvivalPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <ArcadeHeader onOpenMenu={() => setMenuOpen(true)} onOpenHelp={() => setHelpOpen(true)} />
-      <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <ArcadeMenuSheet open={menuOpen} onOpenChange={setMenuOpen} />
       <HowToPlayModal open={helpOpen} onClose={() => setHelpOpen(false)} />
-      <VictoryModal 
+      <VictoryModal
         open={victoryOpen} 
         onClose={() => setVictoryOpen(false)}
         moves={wordChain.length - 1}

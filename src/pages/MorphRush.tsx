@@ -28,6 +28,7 @@ import { RushHowToPlay } from "@/components/rush/RushHowToPlay";
 import { RushStats } from "@/components/rush/RushStats";
 import { RushInitialsInput } from "@/components/rush/RushInitialsInput";
 import { RushSettingsModal } from "@/components/rush/RushSettingsModal";
+import { RushMenuSheet } from "@/components/rush/RushMenuSheet";
 import { updateRushStats, markFirstDailyAttemptComplete, hasCompletedFirstDailyAttempt } from "@/lib/rushStorage";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -66,6 +67,7 @@ const MorphRush = () => {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   
   // Modals & Settings
+  const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -293,8 +295,8 @@ const MorphRush = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setSettingsOpen(true)}
-            aria-label="Open settings"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
             className="hover:bg-muted/50 h-9 w-9"
           >
             <Menu className="h-5 w-5" />
@@ -353,6 +355,11 @@ const MorphRush = () => {
       </header>
       
       {/* Modals */}
+      <RushMenuSheet 
+        open={menuOpen} 
+        onOpenChange={setMenuOpen}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
       <RushSettingsModal
         open={settingsOpen}
         onOpenChange={setSettingsOpen}

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Share2, Clock, Sparkles, Info, Lock } from "lucide-react";
+import { Share2, Clock, Sparkles, Info, Lock, Menu } from "lucide-react";
 import { toast } from "sonner";
 import { PrismLogo } from "@/components/PrismLogo";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -14,6 +14,7 @@ import { VALID_WORDS_5 } from "@/lib/gameLogic";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import OnScreenKeyboard from "@/components/prism/OnScreenKeyboard";
+import { PrismMenuSheet } from "@/components/prism/PrismMenuSheet";
 
 const DEFAULT_TARGET = "SHINE";
 const WORD_LENGTH = 5;
@@ -39,6 +40,7 @@ export default function MorphPrism() {
   const [session, setSession] = useState<any>(null);
   
   // Modals
+  const [menuOpen, setMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [showColorGuide, setShowColorGuide] = useState(false);
@@ -187,8 +189,16 @@ export default function MorphPrism() {
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-3 md:px-4 py-3 md:py-4">
           <div className="flex items-center justify-between gap-2 md:gap-4">
-            {/* Left: Help & Color Guide */}
+            {/* Left: Menu, Help & Color Guide */}
             <div className="flex items-center gap-1 md:gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMenuOpen(true)}
+                className="gap-1.5 text-xs md:text-sm px-2 md:px-3 h-8"
+              >
+                <Menu className="h-3.5 w-3.5 md:h-4 md:w-4" />
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
@@ -235,7 +245,10 @@ export default function MorphPrism() {
                   Log In
                 </Button>
               )}
-            </div>
+          </div>
+          
+          {/* Menu Sheet */}
+          <PrismMenuSheet open={menuOpen} onOpenChange={setMenuOpen} />
           </div>
         </div>
       </header>
