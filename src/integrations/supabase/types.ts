@@ -242,6 +242,66 @@ export type Database = {
         }
         Relationships: []
       }
+      arcade_completions: {
+        Row: {
+          completed_at: string
+          date_local: string
+          id: string
+          moves: number
+          session_id: string
+          user_id: string | null
+          word_chain: Json
+        }
+        Insert: {
+          completed_at?: string
+          date_local: string
+          id?: string
+          moves: number
+          session_id: string
+          user_id?: string | null
+          word_chain?: Json
+        }
+        Update: {
+          completed_at?: string
+          date_local?: string
+          id?: string
+          moves?: number
+          session_id?: string
+          user_id?: string | null
+          word_chain?: Json
+        }
+        Relationships: []
+      }
+      arcade_daily: {
+        Row: {
+          created_at: string
+          date_local: string
+          goal_word: string
+          id: string
+          min_distance: number
+          puzzle_number: number
+          start_word: string
+        }
+        Insert: {
+          created_at?: string
+          date_local: string
+          goal_word: string
+          id?: string
+          min_distance: number
+          puzzle_number: number
+          start_word: string
+        }
+        Update: {
+          created_at?: string
+          date_local?: string
+          goal_word?: string
+          id?: string
+          min_distance?: number
+          puzzle_number?: number
+          start_word?: string
+        }
+        Relationships: []
+      }
       feature_flags: {
         Row: {
           description: string | null
@@ -580,6 +640,17 @@ export type Database = {
       }
     }
     Views: {
+      arcade_daily_leaderboard: {
+        Row: {
+          completed_at: string | null
+          date_local: string | null
+          initials: string | null
+          moves: number | null
+          rank: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       rush_best_runs: {
         Row: {
           date_local: string | null
@@ -671,6 +742,16 @@ export type Database = {
           _window_minutes?: number
         }
         Returns: boolean
+      }
+      get_arcade_daily_leaderboard: {
+        Args: { p_date: string; p_limit?: number }
+        Returns: {
+          completed_at: string
+          initials: string
+          moves: number
+          rank: number
+          user_id: string
+        }[]
       }
       get_rush_daily_leaderboard: {
         Args: { p_date: string; p_limit?: number; p_mode: string }
