@@ -139,13 +139,26 @@ function HowToPlayModal({ open, onClose }: { open: boolean; onClose: () => void 
   );
 }
 
+function HiddenWordDisplay({ goalWord }: { goalWord: string }) {
+  return (
+    <div className="text-center mb-6">
+      <div className="text-xs text-slate-400 mb-2">🗝️ Hidden Word — Unknown</div>
+      <div className="flex justify-center gap-1">
+        {goalWord.split('').map((_, i) => (
+          <div key={i} className="w-12 h-14 bg-slate-800/50 rounded border-2 border-cyan-500/30 animate-pulse" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function WordChainDisplay({ words, goalWord }: { words: string[]; goalWord: string }) {
   if (words.length === 0) return null;
   
   return (
-    <div className="w-full max-w-md mx-auto mb-4">
-      <div className="text-xs text-slate-400 mb-2">Your Word Chain:</div>
-      <div className="space-y-2 max-h-96 overflow-y-auto bg-slate-800/50 rounded-lg p-3">
+    <div className="w-full max-w-md mx-auto">
+      <div className="text-xs text-slate-400 mb-2">Your Chain:</div>
+      <div className="space-y-2 max-h-64 overflow-y-auto bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
         {words.map((word, i) => {
           const hints = getHints(word.toUpperCase(), goalWord.toUpperCase());
           return (
@@ -157,7 +170,7 @@ function WordChainDisplay({ words, goalWord }: { words: string[]; goalWord: stri
                     key={j}
                     letter={letter}
                     state={hints[j]}
-                    delay={j * 100}
+                    delay={0}
                   />
                 ))}
               </div>
@@ -387,22 +400,20 @@ export default function ArcadeSurvivalPage() {
               <p className="text-slate-400">Transform the word. Discover the hidden goal.</p>
             </div>
             
-            <div className="bg-slate-900 rounded-lg p-6 space-y-4">
+            <div className="bg-slate-900/50 rounded-lg p-6 space-y-4 border border-slate-800">
               <div>
-                <div className="text-sm text-slate-400 mb-2">Today's Starting Word:</div>
-                <div className="text-4xl font-bold text-slate-100 tracking-wider">
-                  {puzzle.startWord}
-                </div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-slate-400 mb-2">Hidden Goal Word:</div>
-                <div className="flex justify-center gap-1">
-                  {puzzle.goalWord.split('').map((_, i) => (
-                    <div key={i} className="w-10 h-12 bg-slate-800 rounded border-2 border-slate-700" />
+                <div className="text-sm text-slate-400 mb-3">🗓️ Daily Puzzle #{puzzle.puzzleNumber}</div>
+                <div className="text-sm text-slate-400 mb-2">Starting Word:</div>
+                <div className="flex justify-center gap-1 mb-4">
+                  {puzzle.startWord.split('').map((letter, i) => (
+                    <div key={i} className="w-12 h-14 bg-slate-800 rounded border-2 border-slate-700 flex items-center justify-center">
+                      <span className="text-2xl font-bold text-slate-100">{letter}</span>
+                    </div>
                   ))}
                 </div>
               </div>
+              
+              <HiddenWordDisplay goalWord={puzzle.goalWord} />
             </div>
 
             <Button 
@@ -417,13 +428,21 @@ export default function ArcadeSurvivalPage() {
 
         {state === "playing" && (
           <div className="space-y-6">
+            <HiddenWordDisplay goalWord={puzzle.goalWord} />
+
             <div className="text-center space-y-4">
-              <div className="text-sm text-cyan-400">
-                Moves: {wordChain.length - 1}
+              <div className="flex justify-between items-center max-w-md mx-auto mb-2">
+                <div className="text-sm text-slate-400">
+                  Moves: <span className="text-cyan-400 font-bold">{wordChain.length - 1}</span>
+                </div>
+                <div className="text-xs text-slate-500">
+                  🗓️ Puzzle #{puzzle.puzzleNumber}
+                </div>
               </div>
               
+              <div className="text-xs text-slate-400 mb-2">Current Word:</div>
               {wordChain.length > 0 && (
-                <div className="flex justify-center">
+                <div className="flex justify-center mb-4">
                   <div className="flex gap-1">
                     {currentWord.split('').map((letter, j) => {
                       const hints = getHints(currentWord.toUpperCase(), puzzle.goalWord.toUpperCase());
@@ -439,9 +458,10 @@ export default function ArcadeSurvivalPage() {
                   </div>
                 </div>
               )}
+              <p className="text-xs text-slate-500">Change one letter to uncover the hidden word</p>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 max-w-md mx-auto">
               <Input
                 value={inputValue}
                 onChange={handleInputChange}
@@ -456,14 +476,16 @@ export default function ArcadeSurvivalPage() {
               )}
               <Button 
                 onClick={handleSubmit}
-                className="w-full bg-cyan-400 text-slate-900 hover:bg-cyan-300"
+                className="w-full bg-cyan-400 text-slate-900 hover:bg-cyan-300 font-bold"
                 disabled={!inputValue || inputValue.length !== 5}
               >
                 Submit Word
               </Button>
             </div>
 
-            <WordChainDisplay words={wordChain} goalWord={puzzle.goalWord} />
+            {wordChain.length > 1 && (
+              <WordChainDisplay words={wordChain} goalWord={puzzle.goalWord} />
+            )}
           </div>
         )}
 
