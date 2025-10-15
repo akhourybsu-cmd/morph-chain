@@ -654,48 +654,41 @@ const Index = () => {
         {!gameCompleted && (
           <>
             {puzzle.wordLength === 5 && (
-              <>
-                <div className="px-3 md:px-6 mb-3">
-                  <div className="flex items-center justify-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Combo:</span>
-                      <div className="flex gap-1">
-                        {[0, 1, 2].map((i) => (
-                          <div
-                            key={i}
-                            className={`w-6 h-6 rounded-md border-2 transition-all duration-300 ${
-                              i < comboCount
-                                ? 'bg-primary border-primary shadow-[0_0_8px_rgba(var(--primary),0.6)]'
-                                : 'bg-muted border-muted-foreground/20'
-                            } ${
-                              comboCount === 3 && doubleSwapReady
-                                ? 'animate-pulse'
-                                : showComboFeedback === 'success' && i === comboCount - 1
-                                ? 'animate-scale-in shadow-[0_0_12px_rgba(var(--primary),0.8)]'
-                                : ''
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-xs text-muted-foreground">/ 3</span>
+              <div className="px-3 md:px-6 mb-3">
+                <div className="flex items-center justify-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Combo:</span>
+                    <div className="flex gap-1">
+                      {[0, 1, 2].map((i) => (
+                        <div
+                          key={i}
+                          className={`w-6 h-6 rounded-md border-2 transition-all duration-300 ${
+                            i < comboCount
+                              ? 'bg-primary border-primary shadow-[0_0_8px_rgba(var(--primary),0.6)]'
+                              : 'bg-muted border-muted-foreground/20'
+                          } ${
+                            comboCount === 3 && doubleSwapReady
+                              ? 'animate-pulse'
+                              : showComboFeedback === 'success' && i === comboCount - 1
+                              ? 'animate-scale-in shadow-[0_0_12px_rgba(var(--primary),0.8)]'
+                              : ''
+                          }`}
+                        />
+                      ))}
                     </div>
-                    {doubleSwapReady && (
-                      <div className="text-xs text-primary font-semibold animate-fade-in">
-                        Double Swap Ready!
-                      </div>
-                    )}
+                    <span className="text-xs text-muted-foreground">/ 3</span>
                   </div>
+                  <MorphPowerups
+                    doubleSwapUsed={!doubleSwapReady}
+                    letterSwapUsed={true}
+                    doubleSwapActive={doubleSwapActive}
+                    letterSwapActive={false}
+                    onDoubleSwap={handleDoubleSwap}
+                    onLetterSwap={() => {}}
+                    disabled={gameCompleted}
+                  />
                 </div>
-                <MorphPowerups
-                  doubleSwapUsed={!doubleSwapReady}
-                  letterSwapUsed={true}
-                  doubleSwapActive={doubleSwapActive}
-                  letterSwapActive={false}
-                  onDoubleSwap={handleDoubleSwap}
-                  onLetterSwap={() => {}}
-                  disabled={gameCompleted}
-                />
-              </>
+              </div>
             )}
             
             <div className="px-3 py-3 space-y-2 md:px-6 md:py-4 md:space-y-3">
