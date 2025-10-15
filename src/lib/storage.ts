@@ -153,14 +153,14 @@ export const loadSettings = (): GameSettings => {
         colorblindMode: false,
         vibration: true,
         backgroundTheme: "midnight",
-        useOnScreenKeyboard: true,
+        useOnScreenKeyboard: false,
       };
     }
     const parsed = JSON.parse(stored);
     return {
       ...parsed,
       backgroundTheme: parsed.backgroundTheme || "midnight",
-      useOnScreenKeyboard: parsed.useOnScreenKeyboard ?? true,
+      useOnScreenKeyboard: parsed.useOnScreenKeyboard ?? false,
     };
   } catch {
     return {
@@ -168,7 +168,7 @@ export const loadSettings = (): GameSettings => {
       colorblindMode: false,
       vibration: true,
       backgroundTheme: "midnight",
-      useOnScreenKeyboard: true,
+      useOnScreenKeyboard: false,
     };
   }
 };
