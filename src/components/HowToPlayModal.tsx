@@ -49,14 +49,25 @@ export const HowToPlayModal = ({ open, onOpenChange }: HowToPlayModalProps) => {
               </div>
               
               <div className="bg-card p-3 rounded-lg border border-border">
-                <p className="font-medium text-sm mb-1">5-Letter Words:</p>
-                <p className="text-muted-foreground text-sm mb-2">
-                  Change <strong>exactly one letter</strong> per move. You have access to two special power-ups that can be used once per puzzle:
-                </p>
-                <ul className="text-muted-foreground text-sm space-y-1 ml-4 list-disc">
-                  <li><strong>Double Swap:</strong> Activate to change two letters in your next move instead of one</li>
-                  <li><strong>Letter Swap:</strong> Swap the positions of any two letters in the current word</li>
-                </ul>
+                <p className="font-medium text-sm mb-1">5-Letter Words (Combo Swap):</p>
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <span className="text-base">✏️</span>
+                    <p className="text-muted-foreground text-sm">Change <strong>one letter per move</strong> to form a valid English word.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-base">🔄</span>
+                    <p className="text-muted-foreground text-sm">Every <strong>three correct morphs</strong> in a row, you earn a <strong>Double Swap</strong> — a chance to change two letters at once.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-base">💔</span>
+                    <p className="text-muted-foreground text-sm"><strong>Invalid or repeated words</strong> break your combo.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-base">🚫</span>
+                    <p className="text-muted-foreground text-sm">No repeats. All words must be valid modern U.S. English.</p>
+                  </div>
+                </div>
               </div>
               
             </div>

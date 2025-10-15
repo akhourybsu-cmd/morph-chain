@@ -63,6 +63,9 @@ const Index = () => {
   const [letterSwapUsed, setLetterSwapUsed] = useState(false);
   const [doubleSwapActive, setDoubleSwapActive] = useState(false);
   const [letterSwapActive, setLetterSwapActive] = useState(false);
+  const [comboCount, setComboCount] = useState(0);
+  const [doubleSwapReady, setDoubleSwapReady] = useState(false);
+  const [showComboFeedback, setShowComboFeedback] = useState<'success' | 'reset' | null>(null);
   const [swapSelection, setSwapSelection] = useState<number[]>([]);
   const [shake, setShake] = useState(false);
 
@@ -135,6 +138,9 @@ const Index = () => {
     setLetterSwapUsed(false);
     setDoubleSwapActive(false);
     setLetterSwapActive(false);
+    setComboCount(0);
+    setDoubleSwapReady(false);
+    setShowComboFeedback(null);
     setSwapSelection([]);
   };
 
@@ -185,6 +191,12 @@ const Index = () => {
         }
         setCurrentInput("");
         setIsLoading(false);
+        // Reset combo on invalid move for 5L
+        if (puzzle.wordLength === 5) {
+          setComboCount(0);
+          setShowComboFeedback('reset');
+          setTimeout(() => setShowComboFeedback(null), 500);
+        }
         return;
       }
 
@@ -202,6 +214,13 @@ const Index = () => {
           setTimeout(() => setShake(false), 500);
         }
         
+        // Reset combo on invalid word for 5L
+        if (puzzle.wordLength === 5) {
+          setComboCount(0);
+          setShowComboFeedback('reset');
+          setTimeout(() => setShowComboFeedback(null), 500);
+        }
+        
         setIsLoading(false);
         return;
       }
@@ -211,6 +230,12 @@ const Index = () => {
         setError("Already used");
         setCurrentInput("");
         setIsLoading(false);
+        // Reset combo on repeated word for 5L
+        if (puzzle.wordLength === 5) {
+          setComboCount(0);
+          setShowComboFeedback('reset');
+          setTimeout(() => setShowComboFeedback(null), 500);
+        }
         return;
       }
 
@@ -228,7 +253,33 @@ const Index = () => {
         return;
       }
 
-      // Valid move
+      // Valid move - update combo for 5L
+      if (puzzle.wordLength === 5) {
+        setShowComboFeedback('success');
+        setTimeout(() => setShowComboFeedback(null), 500);
+        
+        // If double swap is active, consume it and reset combo
+        if (doubleSwapActive) {
+          setDoubleSwapActive(false);
+          setDoubleSwapReady(false);
+          setComboCount(0);
+        } else {
+          // Increment combo count
+          const newComboCount = comboCount + 1;
+          if (newComboCount >= 3) {
+            setComboCount(0);
+            setDoubleSwapReady(true);
+            toast({
+              title: "Double Swap Ready!",
+              description: "Change two letters in one move",
+              duration: 2000,
+            });
+          } else {
+            setComboCount(newComboCount);
+          }
+        }
+      }
+      
       const newMove: Move = {
         id: `move-${moves.length}`,
         from: currentWord,
@@ -246,11 +297,7 @@ const Index = () => {
       setCurrentWord(wordToSubmit);
       setUsedWords(updatedUsedWords);
       
-      // Deactivate and mark power-ups as used
-      if (doubleSwapActive) {
-        setDoubleSwapActive(false);
-        setDoubleSwapUsed(true);
-      }
+      // Deactivate letter swap if used
       if (letterSwapActive) {
         setLetterSwapActive(false);
         setLetterSwapUsed(true);
@@ -369,7 +416,7 @@ const Index = () => {
   };
 
   const handleDoubleSwap = () => {
-    if (doubleSwapUsed || gameCompleted) return;
+    if (!doubleSwapReady || gameCompleted) return;
     setDoubleSwapActive(!doubleSwapActive);
     if (letterSwapActive) {
       setLetterSwapActive(false);
@@ -527,6 +574,9 @@ const Index = () => {
     setLetterSwapUsed(false);
     setDoubleSwapActive(false);
     setLetterSwapActive(false);
+    setComboCount(0);
+    setDoubleSwapReady(false);
+    setShowComboFeedback(null);
     setSwapSelection([]);
     clearGameState(puzzle.wordLength);
   };
@@ -683,15 +733,48 @@ const Index = () => {
         {!gameCompleted && (
           <>
             {puzzle.wordLength === 5 && (
-              <MorphPowerups
-                doubleSwapUsed={doubleSwapUsed}
-                letterSwapUsed={letterSwapUsed}
-                doubleSwapActive={doubleSwapActive}
-                letterSwapActive={letterSwapActive}
-                onDoubleSwap={handleDoubleSwap}
-                onLetterSwap={handleLetterSwap}
-                disabled={gameCompleted}
-              />
+              <>
+                <div className="px-3 md:px-6 mb-3">
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">Combo:</span>
+                      <div className="flex gap-1">
+                        {[0, 1, 2].map((i) => (
+                          <div
+                            key={i}
+                            className={`w-6 h-6 rounded-md border-2 transition-all duration-300 ${
+                              i < comboCount
+                                ? 'bg-primary border-primary shadow-[0_0_8px_rgba(var(--primary),0.6)]'
+                                : 'bg-muted border-muted-foreground/20'
+                            } ${
+                              comboCount === 3 && doubleSwapReady
+                                ? 'animate-pulse'
+                                : showComboFeedback === 'success' && i === comboCount - 1
+                                ? 'animate-scale-in shadow-[0_0_12px_rgba(var(--primary),0.8)]'
+                                : ''
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs text-muted-foreground">/ 3</span>
+                    </div>
+                    {doubleSwapReady && (
+                      <div className="text-xs text-primary font-semibold animate-fade-in">
+                        Double Swap Ready!
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <MorphPowerups
+                  doubleSwapUsed={!doubleSwapReady}
+                  letterSwapUsed={letterSwapUsed}
+                  doubleSwapActive={doubleSwapActive}
+                  letterSwapActive={letterSwapActive}
+                  onDoubleSwap={handleDoubleSwap}
+                  onLetterSwap={handleLetterSwap}
+                  disabled={gameCompleted}
+                />
+              </>
             )}
             
             <div className="px-3 py-3 space-y-2 md:px-6 md:py-4 md:space-y-3">
