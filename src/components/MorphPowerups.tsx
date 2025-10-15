@@ -21,6 +21,7 @@ export const MorphPowerups = ({
   onLetterSwap,
   disabled
 }: MorphPowerupsProps) => {
+  // Only show Double Swap, hide Letter Swap
   return (
     <TooltipProvider>
       <div className="flex items-center justify-center gap-3 py-3">
@@ -48,33 +49,6 @@ export const MorphPowerups = ({
           </TooltipTrigger>
           <TooltipContent>
             <p className="text-xs">Change 2 letters in one move</p>
-          </TooltipContent>
-        </Tooltip>
-        
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onLetterSwap}
-              disabled={letterSwapUsed || disabled}
-              className={`h-10 px-4 transition-all ${
-                letterSwapActive 
-                  ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 shadow-lg" 
-                  : ""
-              }`}
-            >
-              <ArrowLeftRight className={`h-4 w-4 mr-2 ${letterSwapActive ? "animate-pulse" : ""}`} />
-              <span className="text-sm font-medium">Letter Swap</span>
-              {!letterSwapUsed && (
-                <span className="ml-2 px-1.5 py-0.5 text-xs bg-primary/20 rounded-full">
-                  x1
-                </span>
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p className="text-xs">Swap positions of 2 letters</p>
           </TooltipContent>
         </Tooltip>
       </div>

@@ -59,15 +59,10 @@ const Index = () => {
   const [simpleMode, setSimpleMode] = useState(false);
 
   // Power-ups (5L only)
-  const [doubleSwapUsed, setDoubleSwapUsed] = useState(false);
-  const [letterSwapUsed, setLetterSwapUsed] = useState(false);
   const [doubleSwapActive, setDoubleSwapActive] = useState(false);
-  const [letterSwapActive, setLetterSwapActive] = useState(false);
   const [comboCount, setComboCount] = useState(0);
   const [doubleSwapReady, setDoubleSwapReady] = useState(false);
   const [showComboFeedback, setShowComboFeedback] = useState<'success' | 'reset' | null>(null);
-  const [swapSelection, setSwapSelection] = useState<number[]>([]);
-  const [shake, setShake] = useState(false);
 
   // Modals
   const [menuOpen, setMenuOpen] = useState(false);
@@ -134,14 +129,10 @@ const Index = () => {
     setError("");
     
     // Reset power-ups
-    setDoubleSwapUsed(false);
-    setLetterSwapUsed(false);
     setDoubleSwapActive(false);
-    setLetterSwapActive(false);
     setComboCount(0);
     setDoubleSwapReady(false);
     setShowComboFeedback(null);
-    setSwapSelection([]);
   };
 
   // Load saved game state on mount
@@ -204,15 +195,6 @@ const Index = () => {
         setInvalidGuessCount(prev => prev + 1);
         setError("Not in our modern-English list");
         setCurrentInput("");
-        
-        // If letter swap was active, consume it and show shake feedback
-        if (letterSwapActive) {
-          setLetterSwapActive(false);
-          setLetterSwapUsed(true);
-          setSwapSelection([]);
-          setShake(true);
-          setTimeout(() => setShake(false), 500);
-        }
         
         // Reset combo on invalid word for 5L
         if (puzzle.wordLength === 5) {
@@ -296,13 +278,6 @@ const Index = () => {
       setMoves(updatedMoves);
       setCurrentWord(wordToSubmit);
       setUsedWords(updatedUsedWords);
-      
-      // Deactivate letter swap if used
-      if (letterSwapActive) {
-        setLetterSwapActive(false);
-        setLetterSwapUsed(true);
-        setSwapSelection([]);
-      }
 
       // Vibration feedback
       if (settings.vibration && navigator.vibrate) {
@@ -418,56 +393,6 @@ const Index = () => {
   const handleDoubleSwap = () => {
     if (!doubleSwapReady || gameCompleted) return;
     setDoubleSwapActive(!doubleSwapActive);
-    if (letterSwapActive) {
-      setLetterSwapActive(false);
-      setSwapSelection([]);
-    }
-  };
-
-  const handleLetterSwap = () => {
-    if (letterSwapUsed || gameCompleted) return;
-    const newState = !letterSwapActive;
-    setLetterSwapActive(newState);
-    setSwapSelection([]); // Clear selection when toggling
-    if (doubleSwapActive) {
-      setDoubleSwapActive(false);
-    }
-    
-    // If we have a full swap selection when toggling off, perform the swap
-    if (!newState && swapSelection.length === 2) {
-      const wordArray = currentWord.split('');
-      const [i, j] = swapSelection;
-      [wordArray[i], wordArray[j]] = [wordArray[j], wordArray[i]];
-      const swappedWord = wordArray.join('');
-      
-      // Validate and submit the swapped word
-      if (isValidWord(swappedWord, puzzle.wordLength)) {
-        submitGuess(swappedWord);
-        setLetterSwapUsed(true);
-      } else {
-        setError("Swapped word is not valid");
-        setLetterSwapUsed(true);
-        setShake(true);
-        setTimeout(() => setShake(false), 500);
-      }
-    }
-  };
-
-  const handleTileClick = (index: number) => {
-    if (!letterSwapActive || gameCompleted) return;
-    
-    const newSelection = [...swapSelection];
-    const existingIndex = newSelection.indexOf(index);
-    
-    if (existingIndex >= 0) {
-      // Deselect if already selected
-      newSelection.splice(existingIndex, 1);
-    } else if (newSelection.length < 2) {
-      // Select if less than 2 selected
-      newSelection.push(index);
-    }
-    
-    setSwapSelection(newSelection);
   };
 
   // Track letter states for keyboard feedback
@@ -570,14 +495,10 @@ const Index = () => {
     setError("");
     setCurrentInput("");
     setInvalidGuessCount(0);
-    setDoubleSwapUsed(false);
-    setLetterSwapUsed(false);
     setDoubleSwapActive(false);
-    setLetterSwapActive(false);
     setComboCount(0);
     setDoubleSwapReady(false);
     setShowComboFeedback(null);
-    setSwapSelection([]);
     clearGameState(puzzle.wordLength);
   };
 
@@ -767,98 +688,67 @@ const Index = () => {
                 </div>
                 <MorphPowerups
                   doubleSwapUsed={!doubleSwapReady}
-                  letterSwapUsed={letterSwapUsed}
+                  letterSwapUsed={true}
                   doubleSwapActive={doubleSwapActive}
-                  letterSwapActive={letterSwapActive}
+                  letterSwapActive={false}
                   onDoubleSwap={handleDoubleSwap}
-                  onLetterSwap={handleLetterSwap}
+                  onLetterSwap={() => {}}
                   disabled={gameCompleted}
                 />
               </>
             )}
             
             <div className="px-3 py-3 space-y-2 md:px-6 md:py-4 md:space-y-3">
-              {letterSwapActive && (
-                <div className="bg-primary/10 border border-primary rounded-lg p-3 mb-3 text-sm animate-fade-in">
-                  <p className="text-center font-medium">
-                    Tap two letters on the current word to swap their positions
-                  </p>
+              <div className="space-y-2 md:space-y-3">
+                <div className="flex gap-1.5 md:gap-2">
+                  <Input
+                    value={currentWord}
+                    disabled
+                    className="flex-1 font-mono uppercase tracking-tiles bg-muted/30 border-muted cursor-not-allowed text-sm md:text-base h-10 md:h-11"
+                    placeholder="Previous"
+                    aria-label="Previous word"
+                  />
+                  
+                  <span className="flex items-center text-lg md:text-2xl text-muted-foreground">→</span>
+                  
+                  <Input
+                    value={currentInput}
+                    onChange={(e) => {
+                      if (!settings.useOnScreenKeyboard) {
+                        const value = e.target.value.toUpperCase();
+                        if (value.length <= currentWord.length) {
+                          setCurrentInput(value);
+                        }
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (!settings.useOnScreenKeyboard && e.key === 'Enter') {
+                        handleSubmit();
+                      }
+                    }}
+                    disabled={settings.useOnScreenKeyboard ?? true}
+                    className="flex-1 font-mono uppercase tracking-tiles text-sm md:text-base h-10 md:h-11 bg-background"
+                    placeholder="..."
+                    maxLength={currentWord.length}
+                    aria-label="Next word"
+                    autoFocus={!settings.useOnScreenKeyboard}
+                  />
                 </div>
-              )}
-              
-              {letterSwapActive && (
-                <div className={`flex gap-2 justify-center mb-3 ${shake ? 'animate-shake' : ''}`}>
-                  {currentWord.split('').map((letter, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleTileClick(index)}
-                      className={`
-                        w-12 h-12 md:w-14 md:h-14 rounded-lg font-mono font-bold text-lg
-                        transition-all duration-200 border-2
-                        ${swapSelection.includes(index)
-                          ? 'bg-primary text-primary-foreground border-primary scale-110 shadow-lg'
-                          : 'bg-card border-border hover:border-primary hover:scale-105'
-                        }
-                      `}
-                    >
-                      {letter}
-                    </button>
-                  ))}
-                </div>
-              )}
-              
-              {!letterSwapActive && (
-                <div className="space-y-2 md:space-y-3">
-                  <div className="flex gap-1.5 md:gap-2">
-                    <Input
-                      value={currentWord}
-                      disabled
-                      className="flex-1 font-mono uppercase tracking-tiles bg-muted/30 border-muted cursor-not-allowed text-sm md:text-base h-10 md:h-11"
-                      placeholder="Previous"
-                      aria-label="Previous word"
-                    />
-                    
-                    <span className="flex items-center text-lg md:text-2xl text-muted-foreground">→</span>
-                    
-                    <Input
-                      value={currentInput}
-                      onChange={(e) => {
-                        if (!settings.useOnScreenKeyboard) {
-                          const value = e.target.value.toUpperCase();
-                          if (value.length <= currentWord.length) {
-                            setCurrentInput(value);
-                          }
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (!settings.useOnScreenKeyboard && e.key === 'Enter') {
-                          handleSubmit();
-                        }
-                      }}
-                      disabled={settings.useOnScreenKeyboard ?? true}
-                      className="flex-1 font-mono uppercase tracking-tiles text-sm md:text-base h-10 md:h-11 bg-background"
-                      placeholder="..."
-                      maxLength={currentWord.length}
-                      aria-label="Next word"
-                      autoFocus={!settings.useOnScreenKeyboard}
-                    />
-                  </div>
 
-                  <div className="flex items-center text-xs md:text-sm">
-                    <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                      {error && (
-                        <div
-                          className="flex items-center gap-1 md:gap-1.5 text-destructive animate-slide-in truncate"
-                          role="alert"
-                        >
-                          <AlertCircle className="h-3 w-3 md:h-3.5 md:w-3.5 flex-shrink-0" />
-                          <span className="truncate text-[11px] md:text-sm">{error}</span>
-                        </div>
-                      )}
-                    </div>
+                <div className="flex items-center text-xs md:text-sm">
+                  <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                    {error && (
+                      <div
+                        className="flex items-center gap-1 md:gap-1.5 text-destructive animate-slide-in truncate"
+                        role="alert"
+                      >
+                        <AlertCircle className="h-3 w-3 md:h-3.5 md:w-3.5 flex-shrink-0" />
+                        <span className="truncate text-[11px] md:text-sm">{error}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </>
         )}
