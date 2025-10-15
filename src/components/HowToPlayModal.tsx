@@ -59,12 +59,6 @@ export const HowToPlayModal = ({ open, onOpenChange }: HowToPlayModalProps) => {
                 </ul>
               </div>
               
-              <div className="bg-card p-3 rounded-lg border border-border">
-                <p className="font-medium text-sm mb-1">6-Letter Words:</p>
-                <p className="text-muted-foreground text-sm">
-                  You can change <strong>up to two letters</strong> on any move throughout the puzzle. This provides more paths to the goal but requires careful planning.
-                </p>
-              </div>
             </div>
           </section>
 
@@ -81,7 +75,7 @@ export const HowToPlayModal = ({ open, onOpenChange }: HowToPlayModalProps) => {
                 <strong>Valid Words Only:</strong> All words must be from our curated dictionary of modern American English—no proper nouns, abbreviations, slang, or archaic terms.
               </li>
               <li>
-                <strong>Daily Puzzles:</strong> Each day features new 4-letter, 5-letter, and 6-letter puzzles. You can play one, two, or all three!
+                <strong>Daily Puzzles:</strong> Morph Chain now focuses on 4-letter and 5-letter puzzle formats for the best balance of challenge and playability.
               </li>
               <li>
                 <strong>Letter Position Matters:</strong> You must change specific letter positions while keeping others the same. Simply rearranging (anagramming) doesn't count.

@@ -91,7 +91,7 @@ export interface Puzzle {
   puzzleIndex?: number;
 }
 
-export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle & { puzzleIndex: number } => {
+export const getDailyPuzzle = (wordLength: 4 | 5 = 4): Puzzle & { puzzleIndex: number } => {
   const timezone = "America/New_York";
   
   // Get current date in NY timezone
@@ -100,12 +100,10 @@ export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle & { puzzleInde
   const today = formatInTimeZone(nowNY, timezone, "yyyy-MM-dd");
   
   // Get appropriate word set
-  const wordSet = wordLength === 4 ? VALID_WORDS_4 : wordLength === 5 ? VALID_WORDS_5 : VALID_WORDS_6;
+  const wordSet = wordLength === 4 ? VALID_WORDS_4 : VALID_WORDS_5;
   
-  // Use curated pairs with tracking for all word lengths
-  const curatedPuzzles = wordLength === 4 ? CURATED_4L_PUZZLES : 
-                         wordLength === 5 ? CURATED_5L_PUZZLES : 
-                         CURATED_6L_PUZZLES;
+  // Use curated pairs with tracking for supported word lengths only
+  const curatedPuzzles = wordLength === 4 ? CURATED_4L_PUZZLES : CURATED_5L_PUZZLES;
   
   // Launch date: October 6, 2025 (NY time) is Puzzle #1
   const launchDateNY = startOfDay(toZonedTime(new Date('2025-10-06T00:00:00'), timezone));
@@ -121,10 +119,8 @@ export const getDailyPuzzle = (wordLength: 4 | 5 | 6 = 4): Puzzle & { puzzleInde
   // Mark this puzzle as used
   markPuzzleAsUsed(candidatePuzzle.start, candidatePuzzle.goal, puzzleIndex, today, wordLength);
   
-  // Move cap formulas per recommendations:
-  // 4L/5L: clamp(minDistance + 4, 10..14)
-  // 6L: clamp(minDistance + 5, 10..14) (denser graph due to Δ≤2)
-  const moveBonus = wordLength === 6 ? 5 : 4;
+  // Move cap formula: clamp(minDistance + 4, 10..14)
+  const moveBonus = 4;
   const maxMoves = Math.min(14, Math.max(10, minDist + moveBonus));
   
   return {
@@ -142,7 +138,6 @@ export const isValidWord = (word: string, wordLength: number = 4): boolean => {
   const upperWord = word.toUpperCase();
   if (wordLength === 4) return VALID_WORDS_4.has(upperWord);
   if (wordLength === 5) return VALID_WORDS_5.has(upperWord);
-  if (wordLength === 6) return VALID_WORDS_6.has(upperWord);
   return false;
 };
 
@@ -201,7 +196,7 @@ export const hasValidNextMove = (
   wordLength: number,
   allowTwoLetters: boolean = false
 ): boolean => {
-  const wordSet = wordLength === 4 ? VALID_WORDS_4 : wordLength === 5 ? VALID_WORDS_5 : VALID_WORDS_6;
+  const wordSet = wordLength === 4 ? VALID_WORDS_4 : VALID_WORDS_5;
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   
   // Check one-letter changes

@@ -46,7 +46,7 @@ import { saveSessionToSupabase } from "@/lib/sessionSync";
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedLength, setSelectedLength] = useState<4 | 5 | 6>(4);
+  const [selectedLength, setSelectedLength] = useState<4 | 5>(4);
   const [puzzle, setPuzzle] = useState(getDailyPuzzle(4));
   const [moves, setMoves] = useState<Move[]>([]);
   const [currentWord, setCurrentWord] = useState(puzzle.startWord);
@@ -79,7 +79,7 @@ const Index = () => {
   const [invalidGuessCount, setInvalidGuessCount] = useState(0);
 
   // Handle length change
-  const handleLengthChange = (newLength: 4 | 5 | 6) => {
+  const handleLengthChange = (newLength: 4 | 5) => {
     setSelectedLength(newLength);
     const newPuzzle = getDailyPuzzle(newLength);
     setPuzzle(newPuzzle);
@@ -458,7 +458,7 @@ const Index = () => {
 
   const updateStats = (won: boolean, movesCount: number) => {
     const newStats = { ...stats };
-    const lengthKey = puzzle.wordLength as 4 | 5 | 6;
+    const lengthKey = puzzle.wordLength as 4 | 5;
     
     // Update overall stats
     newStats.overall.played += 1;
@@ -595,7 +595,7 @@ const Index = () => {
   };
 
   // Define getLengthStatus before using it in useMemo
-  const getLengthStatus = (length: 4 | 5 | 6): "empty" | "won" | "failed" | "in-progress" => {
+  const getLengthStatus = (length: 4 | 5): "empty" | "won" | "failed" | "in-progress" => {
     const state = loadGameState(length);
     if (!state || state.date !== puzzle.date) return "empty";
     if (state.completed) return state.won ? "won" : "failed";
@@ -623,7 +623,6 @@ const Index = () => {
   const lengthStatuses = useMemo(() => ({
     4: getLengthStatus(4),
     5: getLengthStatus(5),
-    6: getLengthStatus(6),
   }), [puzzle.date]);
 
   return (

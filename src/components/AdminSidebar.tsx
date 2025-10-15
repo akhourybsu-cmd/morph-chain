@@ -10,7 +10,8 @@ import {
   LogOut,
   LayoutDashboard,
   CheckCircle2,
-  CalendarDays
+  CalendarDays,
+  Archive
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
@@ -42,6 +43,7 @@ const navigation = [
   { title: "Feature Flags", url: "/admin/flags", icon: Flag },
   { title: "Audit Log", url: "/admin/audit", icon: FileText },
   { title: "Configuration", url: "/admin/config", icon: Settings },
+  { title: "Morph Archive", url: "/admin/archive", icon: Archive },
 ];
 
 export function AdminSidebar() {

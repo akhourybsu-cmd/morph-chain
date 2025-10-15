@@ -1,15 +1,14 @@
 interface LengthSwitcherProps {
-  selectedLength: 4 | 5 | 6;
-  onLengthChange: (length: 4 | 5 | 6) => void;
+  selectedLength: 4 | 5;
+  onLengthChange: (length: 4 | 5) => void;
   statuses: {
     4: "empty" | "won" | "failed" | "in-progress";
     5: "empty" | "won" | "failed" | "in-progress";
-    6: "empty" | "won" | "failed" | "in-progress";
   };
 }
 
 export const LengthSwitcher = ({ selectedLength, onLengthChange }: LengthSwitcherProps) => {
-  const lengths: Array<4 | 5 | 6> = [4, 5, 6];
+  const lengths: Array<4 | 5> = [4, 5];
 
   return (
     <div 

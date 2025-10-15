@@ -25,6 +25,7 @@ import FeatureFlags from "./pages/admin/FeatureFlags";
 import AuditLog from "./pages/admin/AuditLog";
 import Configuration from "./pages/admin/Configuration";
 import ScheduledPuzzles from "./pages/admin/ScheduledPuzzles";
+import MorphArchive from "./pages/admin/MorphArchive";
 import Rules from "./pages/Rules";
 import Kids from "./pages/Kids";
 import Press from "./pages/Press";
@@ -73,6 +74,7 @@ const App = () => {
             <Route path="flags" element={<FeatureFlags />} />
             <Route path="audit" element={<AuditLog />} />
             <Route path="config" element={<Configuration />} />
+            <Route path="archive" element={<MorphArchive />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

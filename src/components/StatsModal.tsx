@@ -29,7 +29,6 @@ interface StatsModalProps {
     byLength: {
       4: LengthStats;
       5: LengthStats;
-      6: LengthStats;
     };
   };
 }
@@ -88,11 +87,10 @@ export const StatsModal = ({ open, onOpenChange, stats }: StatsModalProps) => {
         </DialogHeader>
 
         <Tabs defaultValue="overall" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overall">Overall</TabsTrigger>
             <TabsTrigger value="4">4L</TabsTrigger>
             <TabsTrigger value="5">5L</TabsTrigger>
-            <TabsTrigger value="6">6L</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overall">
@@ -105,10 +103,6 @@ export const StatsModal = ({ open, onOpenChange, stats }: StatsModalProps) => {
 
           <TabsContent value="5">
             {renderStatsForLength(stats.byLength[5])}
-          </TabsContent>
-
-          <TabsContent value="6">
-            {renderStatsForLength(stats.byLength[6])}
           </TabsContent>
         </Tabs>
 
