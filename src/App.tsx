@@ -11,7 +11,7 @@ import SignUp from "./pages/SignUp";
 import TermsOfService from "./pages/TermsOfService";
 import MorphPrism from "./pages/MorphPrism";
 import MorphRush from "./pages/MorphRush";
-import ArcadeSurvival from "./pages/ArcadeSurvival";
+import MorphGrid from "./pages/MorphGrid";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import TodaysPuzzle from "./pages/admin/TodaysPuzzle";
@@ -49,7 +49,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<GameSelector />} />
             <Route path="/chain" element={<Index />} />
-            <Route path="/arcade-survival" element={<ArcadeSurvival />} />
+            <Route path="/grid" element={<MorphGrid />} />
             <Route path="/prism" element={<MorphPrism />} />
             <Route path="/rush" element={<MorphRush />} />
             <Route path="/rules" element={<Rules />} />
