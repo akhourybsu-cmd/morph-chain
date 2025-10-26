@@ -13,8 +13,8 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
     <button
       onClick={onClick}
       className={cn(
-        "relative w-full aspect-square rounded-lg border-2 font-outfit font-bold text-2xl transition-all duration-200",
-        "flex items-center justify-center",
+        "relative w-full aspect-square rounded-md border-2 font-outfit font-bold text-lg sm:text-xl md:text-2xl transition-all duration-200",
+        "flex items-center justify-center touch-manipulation",
         
         // Base colors
         tile.isVowel 
@@ -53,14 +53,14 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
       
       {/* Selection number */}
       {isSelected && selectionIndex !== undefined && (
-        <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-semibold">
+        <div className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-primary text-primary-foreground text-[10px] sm:text-xs flex items-center justify-center font-semibold">
           {selectionIndex + 1}
         </div>
       )}
       
       {/* Stabilization indicator */}
       {tile.stabilized && !isSelected && (
-        <div className="absolute bottom-1 right-1 w-2 h-2 rounded-full bg-gray-400" />
+        <div className="absolute bottom-0.5 right-0.5 sm:bottom-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gray-400" />
       )}
     </button>
   );

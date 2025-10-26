@@ -23,6 +23,16 @@ export const MorphArcadeTitle = ({ className = "" }: { className?: string }) => 
   </span>
 );
 
+export const MorphGridTitle = ({ className = "" }: { className?: string }) => (
+  <span 
+    className={`font-outfit font-bold tracking-tight whitespace-nowrap ${className}`}
+    style={{ letterSpacing: '-0.02em' }}
+  >
+    <span className="bg-gradient-to-r from-chain to-chain bg-clip-text text-transparent">MORPH </span>
+    <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">GRID</span>
+  </span>
+);
+
 export const MorphPrismTitle = ({ className = "" }: { className?: string }) => (
   <span 
     className={`font-outfit font-semibold tracking-tight bg-gradient-to-r from-[hsl(var(--prism-accent-start))] via-[hsl(var(--prism-accent-mid))] to-[hsl(var(--prism-accent-end))] bg-clip-text text-transparent whitespace-nowrap ${className}`}

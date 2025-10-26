@@ -21,12 +21,13 @@ export const GameControls = () => {
   };
   
   return (
-    <div className="flex gap-3 px-4 py-4">
+    <div className="flex gap-2 sm:gap-3 px-2 sm:px-4 py-3 sm:py-4">
       <Button
         variant="outline"
         onClick={clearSelection}
         disabled={selected.length === 0}
-        className="flex-1"
+        className="flex-1 text-sm sm:text-base"
+        size="lg"
       >
         Clear
       </Button>
@@ -34,7 +35,8 @@ export const GameControls = () => {
       <Button
         onClick={handleSubmit}
         disabled={selected.length < 3}
-        className="flex-1 bg-primary hover:bg-primary/90"
+        className="flex-1 bg-primary hover:bg-primary/90 text-sm sm:text-base"
+        size="lg"
       >
         Submit
       </Button>
@@ -42,8 +44,10 @@ export const GameControls = () => {
       <Button
         variant="destructive"
         onClick={endGame}
+        className="text-sm sm:text-base"
+        size="lg"
       >
-        End Game
+        End
       </Button>
     </div>
   );

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { Menu, ChevronDown, Check, Lock } from "lucide-react";
 import { useState, useEffect } from "react";
-import { MorphChainTitle, MorphPrismTitle, MorphRushTitle, MorphArcadeTitle } from "@/components/GameTitles";
+import { MorphChainTitle, MorphPrismTitle, MorphRushTitle, MorphGridTitle } from "@/components/GameTitles";
 import morphIcon from "@/assets/morph-icon.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -32,7 +32,7 @@ export const MorphHeader = () => {
   }, []);
 
   const isOnChain = location.pathname === '/chain';
-  const isOnArcade = location.pathname === '/arcade-survival';
+  const isOnGrid = location.pathname === '/grid';
   const isOnPrism = location.pathname === '/prism';
   const isOnRush = location.pathname.startsWith('/rush');
 
@@ -45,11 +45,11 @@ export const MorphHeader = () => {
       locked: false
     },
     { 
-      name: <MorphArcadeTitle className="text-sm" />,
-      path: "/arcade-survival", 
-      description: hasBetaAccess ? "Timed arcade mode" : "Coming soon",
-      active: isOnArcade,
-      locked: !hasBetaAccess
+      name: <MorphGridTitle className="text-sm" />,
+      path: "/grid", 
+      description: "Daily 5×5 puzzle",
+      active: isOnGrid,
+      locked: false
     },
     { 
       name: <MorphRushTitle className="text-sm" />,

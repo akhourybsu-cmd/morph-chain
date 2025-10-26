@@ -15,7 +15,7 @@ import { ChevronDown, Home, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { backgroundThemes, BackgroundTheme } from "@/components/SettingsModal";
-import { MorphChainTitle, MorphPrismTitle, MorphRushTitle, MorphArcadeTitle } from "@/components/GameTitles";
+import { MorphChainTitle, MorphPrismTitle, MorphRushTitle, MorphGridTitle, MorphArcadeTitle } from "@/components/GameTitles";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface GameMenuSheetProps {
@@ -84,6 +84,14 @@ export const GameMenuSheet = ({
                 onClick={() => handleNavigate("/chain")}
               >
                 <MorphChainTitle className="text-base" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-sm h-auto py-2 gap-2"
+                onClick={() => handleNavigate("/grid")}
+              >
+                <MorphGridTitle className="text-base" />
               </Button>
               
               <Button

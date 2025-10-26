@@ -64,32 +64,33 @@ const MorphGrid = () => {
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
       <header className="border-b border-border/50 bg-card/30 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <GridLogo />
+        <div className="container mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between">
+          <GridLogo className="scale-90 sm:scale-100" />
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setShowHowToPlay(true)}
               aria-label="How to play"
+              className="h-9 w-9 sm:h-10 sm:w-10"
             >
-              <HelpCircle className="w-5 h-5" />
+              <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
           </div>
         </div>
       </header>
       
       {/* Date Banner */}
-      <div className="bg-primary/10 border-b border-primary/20 py-2 text-center">
-        <div className="text-sm font-medium">
+      <div className="bg-primary/10 border-b border-primary/20 py-1.5 sm:py-2 text-center">
+        <div className="text-xs sm:text-sm font-medium">
           Daily Puzzle — {dailySeed}
         </div>
       </div>
       
       {/* Main Game */}
-      <main className="flex-1 container mx-auto px-4 py-6 max-w-2xl">
-        <div className="space-y-6">
+      <main className="flex-1 container mx-auto px-2 sm:px-4 py-3 sm:py-6 max-w-2xl">
+        <div className="space-y-3 sm:space-y-6">
           <ScoreDisplay />
           <GridView />
           <WordPreview />

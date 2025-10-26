@@ -10,7 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, Home, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { MorphChainTitle, MorphPrismTitle, MorphRushTitle, MorphArcadeTitle } from "@/components/GameTitles";
+import { MorphChainTitle, MorphPrismTitle, MorphRushTitle, MorphGridTitle, MorphArcadeTitle } from "@/components/GameTitles";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface PrismMenuSheetProps {
@@ -57,6 +57,14 @@ export const PrismMenuSheet = ({
                 onClick={() => handleNavigate("/")}
               >
                 <MorphChainTitle className="text-base" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-sm h-auto py-2 gap-2"
+                onClick={() => handleNavigate("/grid")}
+              >
+                <MorphGridTitle className="text-base" />
               </Button>
               
               <Button
