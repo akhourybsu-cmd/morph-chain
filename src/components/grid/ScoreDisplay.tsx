@@ -1,8 +1,22 @@
 import { useGridStore } from '@/stores/gridStore';
 
-export const ScoreDisplay = () => {
+interface ScoreDisplayProps {
+  compact?: boolean;
+}
+
+export const ScoreDisplay = ({ compact = false }: ScoreDisplayProps) => {
   const totalScore = useGridStore(state => state.totalScore);
   const wordsCount = useGridStore(state => state.submittedWords.length);
+  
+  if (compact) {
+    return (
+      <div className="flex items-center gap-3 text-xs sm:text-sm font-medium">
+        <span className="text-primary font-bold">{totalScore} pts</span>
+        <span className="text-muted-foreground">•</span>
+        <span className="text-foreground">{wordsCount} words</span>
+      </div>
+    );
+  }
   
   return (
     <div className="flex justify-around items-center py-3 sm:py-4 px-4 sm:px-6 bg-card/50 rounded-lg border border-border/50">

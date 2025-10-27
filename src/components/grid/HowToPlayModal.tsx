@@ -20,70 +20,72 @@ export const HowToPlayModal = ({ open, onClose }: HowToPlayModalProps) => {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-5 py-4">
           <section>
-            <h3 className="font-semibold text-lg mb-2">🎯 Objective</h3>
-            <p className="text-sm text-muted-foreground">
-              Create valid words by chaining adjacent letters. Each word morphs the grid — watch it evolve!
+            <h3 className="font-semibold text-lg mb-2">🎯 Goal</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Form as many valid words as you can on today's 5×5 grid. Everyone sees the same daily board.
             </p>
           </section>
 
           <section>
-            <h3 className="font-semibold text-lg mb-2">📋 Rules</h3>
+            <h3 className="font-semibold text-lg mb-2">🔤 Build Words</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-2">
+              Drag or tap to chain letters that touch (8 directions). You can't reuse a tile within the same word.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-lg mb-2">✅ Submit</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Tap "Submit Word" or swipe the word bar to the right. Words must be 3+ letters and in the dictionary.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-lg mb-2">🔄 Morphs</h3>
+            <p className="text-sm text-muted-foreground mb-2">When you submit a valid word:</p>
             <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
-              <li>Tap/drag letters to form words (minimum 3 letters)</li>
-              <li>Letters must be adjacent (horizontal, vertical, or diagonal)</li>
-              <li>Can't reuse tiles within the same word</li>
-              <li>Only valid English words count</li>
+              <li>The <strong>used tiles</strong> morph into new letters</li>
+              <li><strong>Neighbors</strong> (N/E/S/W) may mutate (vowel→vowel, consonant→consonant)</li>
+              <li>Tiles that mutate twice without being used become <strong>Stabilized</strong> (gray rim) until you use them</li>
+              <li>Some tiles appear as <strong>Power</strong> (purple). Use one to morph its entire row</li>
             </ul>
-          </section>
-
-          <section>
-            <h3 className="font-semibold text-lg mb-2">🔄 Shift & Spark Mechanic</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              After each valid word:
-            </p>
-            <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
-              <li><strong>Used tiles</strong> → transform into new random letters</li>
-              <li><strong>Neighbor ripple</strong> → adjacent tiles may mutate</li>
-              <li><strong>Stability counter</strong> → unused tiles that morph twice become stabilized (gray rim)</li>
-            </ul>
-          </section>
-
-          <section>
-            <h3 className="font-semibold text-lg mb-2">💎 Power Tiles</h3>
-            <p className="text-sm text-muted-foreground">
-              Purple glowing tiles are Power Tiles! Using one in a word morphs its entire row after scoring.
-              Only 2 Power Tiles exist on the grid at any time.
-            </p>
           </section>
 
           <section>
             <h3 className="font-semibold text-lg mb-2">🏆 Scoring</h3>
-            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-              <li>3 letters: 10 pts</li>
-              <li>4 letters: 20 pts</li>
-              <li>5 letters: 40 pts</li>
-              <li>6 letters: 65 pts</li>
-              <li>7+ letters: 95 pts + 15/extra letter</li>
-              <li>Rare letters (J,Q,X,Z,K,V): +10% bonus</li>
-              <li>Ripple mutations: +1 pt each</li>
-              <li>Power tile used: +20 pts</li>
-            </ul>
+            <p className="text-sm text-muted-foreground mb-2">
+              Longer words, rare letters (J,Q,X,Z,K,V), morph ripples, and power tiles increase your score.
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground bg-card/30 rounded-lg p-3">
+              <div>3 letters: <strong>10 pts</strong></div>
+              <div>4 letters: <strong>20 pts</strong></div>
+              <div>5 letters: <strong>40 pts</strong></div>
+              <div>6 letters: <strong>65 pts</strong></div>
+              <div>7+ letters: <strong>95+</strong></div>
+              <div>Power bonus: <strong>+20</strong></div>
+            </div>
           </section>
 
           <section>
-            <h3 className="font-semibold text-lg mb-2">🎨 Tile Colors</h3>
-            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-              <li><span className="text-cyan-400">Cyan/Teal</span> — Vowels</li>
-              <li><span className="text-amber-400">Amber/Orange</span> — Consonants</li>
-              <li><span className="text-purple-400">Purple</span> — Power Tiles</li>
-              <li><span className="text-gray-400">Gray rim</span> — Stabilized</li>
+            <h3 className="font-semibold text-lg mb-2">🎮 End</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Play until you're satisfied and tap "End" to see/share your results. A new grid appears each day.
+            </p>
+          </section>
+
+          <section className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+            <h3 className="font-semibold text-base mb-2 text-primary">💡 Pro Tips</h3>
+            <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
+              <li>Try using newly morphed tiles; they tend to open fresh paths</li>
+              <li>Free Stabilized tiles to re-enable mutations</li>
+              <li>Power tiles are best when they refresh a dead row</li>
             </ul>
           </section>
 
           <section className="pt-4 border-t">
-            <p className="text-center text-sm font-medium italic">
+            <p className="text-center text-sm font-semibold italic text-foreground">
               "Morph the grid. Master the word."
             </p>
           </section>

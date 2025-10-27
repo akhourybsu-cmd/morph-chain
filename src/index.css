@@ -51,6 +51,17 @@ All colors MUST be HSL.
     --rush-accent-start: 10 100% 65%;      /* Electric Coral #FF5A4D */
     --rush-accent-end: 38 100% 63%;        /* Amber #FFC043 */
 
+    /* Grid tile gradients */
+    --grid-vowel-from: 180 100% 50%;       /* Teal */
+    --grid-vowel-via: 188 100% 50%;        /* Cyan */
+    --grid-vowel-to: 197 100% 50%;         /* Sky */
+    --grid-consonant-from: 38 100% 55%;    /* Amber */
+    --grid-consonant-via: 48 100% 50%;     /* Yellow */
+    --grid-consonant-to: 25 100% 50%;      /* Orange */
+    --grid-power-from: 280 100% 60%;       /* Purple */
+    --grid-power-via: 300 100% 60%;        /* Fuchsia */
+    --grid-power-to: 260 100% 60%;         /* Indigo */
+
     --border: 218 12% 18%;            /* #2A2F38 */
     --input: 218 12% 18%;
     --ring: 213 100% 74%;

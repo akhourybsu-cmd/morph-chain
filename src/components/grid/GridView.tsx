@@ -5,7 +5,7 @@ export const GridView = () => {
   const { grid, selected, selectTile } = useGridStore();
   
   return (
-    <div className="w-full max-w-sm sm:max-w-md mx-auto px-2 sm:px-4">
+    <div className="w-full max-w-[min(92vw,420px)] mx-auto">
       <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
         {grid.map((row, rowIndex) =>
           row.map((tile, colIndex) => {

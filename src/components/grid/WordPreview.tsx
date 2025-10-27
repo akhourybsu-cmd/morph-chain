@@ -5,18 +5,26 @@ export const WordPreview = () => {
   const word = selected.map(t => t.char).join('');
   
   return (
-    <div className="min-h-12 sm:min-h-16 flex items-center justify-center px-2 sm:px-4">
-      <div className="text-center">
-        <div className="text-xs sm:text-sm text-muted-foreground mb-1">Current Word</div>
-        <div className="text-2xl sm:text-3xl font-outfit font-bold tracking-wide text-foreground">
-          {word || '—'}
+    <div className="flex items-center justify-center py-2 min-h-[3rem]">
+      {selected.length > 0 ? (
+        <div className="flex items-center gap-1.5">
+          {selected.map((tile, idx) => (
+            <span key={tile.id} className="flex items-center gap-1.5">
+              <span className="font-outfit font-bold text-lg sm:text-xl text-foreground tracking-wide">
+                {tile.char}
+              </span>
+              {idx < selected.length - 1 && (
+                <span className="text-muted-foreground text-sm">·</span>
+              )}
+            </span>
+          ))}
+          <span className="ml-2 text-xs text-muted-foreground">
+            ({selected.length})
+          </span>
         </div>
-        {selected.length > 0 && (
-          <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-            {selected.length} letter{selected.length !== 1 ? 's' : ''}
-          </div>
-        )}
-      </div>
+      ) : (
+        <div className="text-muted-foreground text-sm">Tap letters to form words</div>
+      )}
     </div>
   );
 };

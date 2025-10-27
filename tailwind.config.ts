@@ -68,10 +68,30 @@ export default {
           start: "hsl(var(--rush-accent-start))",
           end: "hsl(var(--rush-accent-end))",
         },
+        grid: {
+          vowel: {
+            from: "hsl(var(--grid-vowel-from))",
+            via: "hsl(var(--grid-vowel-via))",
+            to: "hsl(var(--grid-vowel-to))",
+          },
+          consonant: {
+            from: "hsl(var(--grid-consonant-from))",
+            via: "hsl(var(--grid-consonant-via))",
+            to: "hsl(var(--grid-consonant-to))",
+          },
+          power: {
+            from: "hsl(var(--grid-power-from))",
+            via: "hsl(var(--grid-power-via))",
+            to: "hsl(var(--grid-power-to))",
+          },
+        },
       },
       backgroundImage: {
         'gradient-prism': 'linear-gradient(135deg, hsl(var(--prism-accent-start)), hsl(var(--prism-accent-mid)), hsl(var(--prism-accent-end)))',
         'gradient-rush': 'linear-gradient(135deg, hsl(var(--rush-accent-start)), hsl(var(--rush-accent-end)))',
+        'gradient-grid-vowel': 'linear-gradient(135deg, hsl(var(--grid-vowel-from)), hsl(var(--grid-vowel-via)), hsl(var(--grid-vowel-to)))',
+        'gradient-grid-consonant': 'linear-gradient(135deg, hsl(var(--grid-consonant-from)), hsl(var(--grid-consonant-via)), hsl(var(--grid-consonant-to)))',
+        'gradient-grid-power': 'linear-gradient(135deg, hsl(var(--grid-power-from)), hsl(var(--grid-power-via)), hsl(var(--grid-power-to)))',
       },
       letterSpacing: {
         tiles: "0.12em",
@@ -104,17 +124,28 @@ export default {
         },
         "shake": {
           "0%, 100%": { transform: "translateX(0)" },
-          "25%": { transform: "translateX(-12px)" },
-          "75%": { transform: "translateX(12px)" },
+          "25%": { transform: "translateX(-4px)" },
+          "75%": { transform: "translateX(4px)" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { opacity: "0.4" },
+          "50%": { opacity: "0.7" },
+        },
+        "shimmer": {
+          "0%": { opacity: "1", filter: "brightness(1)" },
+          "50%": { opacity: "1", filter: "brightness(1.3)" },
+          "100%": { opacity: "1", filter: "brightness(1)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "flip": "flip 0.12s ease-out",
+        "flip": "flip 0.15s ease-out",
         "scale-in": "scale-in 0.09s ease-out",
         "slide-in": "slide-in 0.15s ease-out",
-        "shake": "shake 0.3s ease-in-out",
+        "shake": "shake 0.12s ease-in-out",
+        "pulse-glow": "pulse-glow 3s ease-in-out infinite",
+        "shimmer": "shimmer 0.3s ease-out",
       },
     },
   },
