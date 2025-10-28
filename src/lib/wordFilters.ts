@@ -141,51 +141,13 @@ export const isModernEnglish = (word: string): boolean => {
     return false; // Need at least one vowel and one consonant
   }
   
-  // 5. Reject words with uncommon letter patterns that suggest non-English origin
-  // Words starting with obscure combinations
-  const obscureStarts = [
-    'AAL', 'AAM', 'AAN', 'AAR', 'AAV', 'ABB', 'ABD', 'ABU',
-    'ZZ', 'XY', 'XZ', 'QQ', 'VV', 'WW', 'YY',
-  ];
-  for (const pattern of obscureStarts) {
-    if (upper.startsWith(pattern)) {
-      return false;
-    }
-  }
+  // All additional filtering is done via the explicit banlist above
+  // This keeps common words like "sock", "dock", "book" valid
   
-  // 6. Reject words with all caps pattern in lowercase (likely proper nouns)
-  // If the word is commonly capitalized, it's probably a proper noun
-  if (word === word.toUpperCase() && word.length > 2) {
-    // Exception: some acronyms that became words (like "radar", "laser")
-    const acceptedAcronyms = new Set(['RADAR', 'LASER', 'SCUBA', 'SONAR']);
-    if (!acceptedAcronyms.has(upper)) {
-      return false;
-    }
-  }
-  
-  // 7. Reject words with non-standard suffixes suggesting archaic/technical terms
-  const archaicSuffixes = [
-    'ETH', 'EST', 'IST', 'ISM', 'OUS', 'OSE', 'INE', 'ITE', 
-    'ATE', 'OID', 'OSIS', 'ITIS', 'ECTOMY', 'OTOMY', 'OSCOPY'
-  ];
-  // Only flag if word is long and has these suffixes (avoid false positives)
-  if (word.length > 8) {
-    for (const suffix of archaicSuffixes) {
-      if (upper.endsWith(suffix) && word.length > 10) {
-        // Could be technical jargon
-        // Allow common words but flag obscure ones
-        // This is a heuristic - may need tuning
-      }
-    }
-  }
-  
-  // 8. Reject words with uncommon character sequences
-  const uncommonSequences = [
-    'QU[AEIOU]', 'XY', 'XZ', 'ZX', 'ZZ', 'QQ', 'VV', 'WW', 'YY',
-    'AAA', 'EEE', 'III', 'OOO', 'UUU'
-  ];
-  for (const seq of uncommonSequences) {
-    if (upper.includes(seq)) {
+  // 8. Reject words with uncommon character sequences (triple letters only)
+  const uncommonTriples = ['AAA', 'EEE', 'III', 'OOO', 'UUU', 'ZZZ'];
+  for (const triple of uncommonTriples) {
+    if (upper.includes(triple)) {
       return false;
     }
   }
