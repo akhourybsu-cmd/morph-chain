@@ -1,6 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Move } from "@/components/MoveLog";
 
+/**
+ * Saves Morph Chain game session to Supabase
+ * Only saves for authenticated users
+ */
 export const saveSessionToSupabase = async (
   puzzleDate: string,
   wordLength: number,
@@ -9,7 +13,7 @@ export const saveSessionToSupabase = async (
   won: boolean,
   hintsUsed: number = 0,
   invalidGuesses: number = 0
-) => {
+): Promise<{ data?: any; error?: string }> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -34,8 +38,6 @@ export const saveSessionToSupabase = async (
       completed_at: completed ? new Date().toISOString() : null
     };
 
-    console.log("Saving session to backend:", sessionData);
-
     const { data, error } = await supabase
       .from('player_sessions')
       .insert(sessionData)
@@ -46,7 +48,7 @@ export const saveSessionToSupabase = async (
       return { error: error.message };
     }
 
-    console.log("Session saved successfully:", data);
+    console.log("Morph Chain session saved successfully");
     return { data };
   } catch (err: any) {
     console.error("Exception while saving session:", err);

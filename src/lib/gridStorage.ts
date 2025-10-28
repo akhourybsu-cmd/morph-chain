@@ -159,107 +159,143 @@ const calculateMedian = (values: number[]): number | null => {
     : sorted[mid];
 };
 
+/**
+ * Records the start of a Grid game play session
+ * Only increments games played once per unique date
+ */
 export const recordGridPlayStart = (dateSeed: string): void => {
-  const stats = loadGridStats();
-  
-  // Only increment if new date
-  if (stats.lastPlayedDate !== dateSeed) {
-    stats.gamesPlayed += 1;
-    stats.lastPlayedDate = dateSeed;
-    saveGridStats(stats);
+  try {
+    const stats = loadGridStats();
+    
+    // Only increment if new date
+    if (stats.lastPlayedDate !== dateSeed) {
+      stats.gamesPlayed += 1;
+      stats.lastPlayedDate = dateSeed;
+      saveGridStats(stats);
+      console.log(`Grid play started for ${dateSeed}, games played: ${stats.gamesPlayed}`);
+    }
+  } catch (e) {
+    console.error('Error recording Grid play start:', e);
   }
 };
 
+/**
+ * Records stats for each word submitted in Grid
+ * Tracks total words, power-up usage, stabilized tiles, and letter frequency
+ */
 export const recordGridSubmit = (word: string, usedPower: boolean, stabilizedFreed: number): void => {
-  const stats = loadGridStats();
-  
-  stats.totalWordsAllGames += 1;
-  if (usedPower) stats.totalPowerUses += 1;
-  stats.totalStabilizedFreed += stabilizedFreed;
-  
-  // Track longest word
-  if (!stats.longestWord || word.length > stats.longestWord.length) {
-    stats.longestWord = word;
+  try {
+    const stats = loadGridStats();
+    
+    stats.totalWordsAllGames += 1;
+    if (usedPower) stats.totalPowerUses += 1;
+    stats.totalStabilizedFreed += stabilizedFreed;
+    
+    // Track longest word
+    if (!stats.longestWord || word.length > stats.longestWord.length) {
+      stats.longestWord = word;
+    }
+    
+    // Track most used letter across all words
+    const allLetters: Record<string, number> = {};
+    // Get all letters from previous data and current word
+    stats.completedGames.forEach(game => {
+      // We don't have individual words, but we could track this differently
+    });
+    
+    // For now, just track from current word
+    const letters: Record<string, number> = {};
+    for (const char of word.toUpperCase()) {
+      letters[char] = (letters[char] || 0) + 1;
+    }
+    const mostUsed = Object.entries(letters).sort((a, b) => b[1] - a[1])[0];
+    if (mostUsed) {
+      stats.mostUsedLetter = mostUsed[0];
+    }
+    
+    saveGridStats(stats);
+  } catch (e) {
+    console.error('Error recording Grid submit:', e);
   }
-  
-  // Track letter frequency
-  const letters: Record<string, number> = {};
-  for (const char of word.toUpperCase()) {
-    letters[char] = (letters[char] || 0) + 1;
-  }
-  const mostUsed = Object.entries(letters).sort((a, b) => b[1] - a[1])[0];
-  if (mostUsed) {
-    stats.mostUsedLetter = mostUsed[0];
-  }
-  
-  saveGridStats(stats);
 };
 
+/**
+ * Records a Grid game win/completion
+ * Updates all completion stats, streaks, and leaderboard
+ */
 export const recordGridWin = (payload: {
   dateSeed: string;
   moves: number;
   wordsUsed: number;
   timeToCompleteMs?: number;
 }): void => {
-  const stats = loadGridStats();
-  const alias = loadGridAlias();
-  
-  stats.gamesCompleted += 1;
-  
-  // Update best moves
-  if (stats.bestMoves === null || payload.moves < stats.bestMoves) {
-    stats.bestMoves = payload.moves;
-    stats.bestMovesDate = payload.dateSeed;
+  try {
+    const stats = loadGridStats();
+    const alias = loadGridAlias();
+    
+    stats.gamesCompleted += 1;
+    
+    // Update best moves
+    if (stats.bestMoves === null || payload.moves < stats.bestMoves) {
+      stats.bestMoves = payload.moves;
+      stats.bestMovesDate = payload.dateSeed;
+      console.log(`New best moves record: ${payload.moves} on ${payload.dateSeed}`);
+    }
+    
+    // Add to completed games
+    stats.completedGames.push({
+      dateSeed: payload.dateSeed,
+      moves: payload.moves,
+      wordsUsed: payload.wordsUsed,
+      timeToCompleteMs: payload.timeToCompleteMs,
+      completedAt: new Date().toISOString(),
+    });
+    
+    // Keep only last 30
+    if (stats.completedGames.length > 30) {
+      stats.completedGames = stats.completedGames.slice(-30);
+    }
+    
+    // Update histogram
+    const bucket = getHistogramBucket(payload.moves);
+    stats.movesHistogram[bucket] = (stats.movesHistogram[bucket] || 0) + 1;
+    
+    // Calculate avg and median from all completed games
+    const completedMoves = stats.completedGames.map(g => g.moves);
+    stats.avgMovesCompleted = completedMoves.reduce((a, b) => a + b, 0) / completedMoves.length;
+    stats.medianMovesCompleted = calculateMedian(completedMoves);
+    
+    // Calculate completion rate
+    stats.completionRate = stats.gamesPlayed > 0 ? stats.gamesCompleted / stats.gamesPlayed : 0;
+    
+    // Update streak - consecutive daily completions
+    const today = payload.dateSeed;
+    const yesterday = new Date(new Date(today).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    if (stats.lastPlayedDate === yesterday) {
+      stats.streakDays += 1;
+    } else if (stats.lastPlayedDate !== today) {
+      stats.streakDays = 1;
+    }
+    
+    stats.lastPlayedDate = today;
+    
+    saveGridStats(stats);
+    console.log(`Grid win recorded: ${payload.moves} moves, streak: ${stats.streakDays} days`);
+    
+    // Add to leaderboard
+    addGridLeaderboardEntry({
+      id: crypto.randomUUID(),
+      dateSeed: payload.dateSeed,
+      moves: payload.moves,
+      wordsUsed: payload.wordsUsed,
+      timeToCompleteMs: payload.timeToCompleteMs,
+      completedAt: new Date().toISOString(),
+      deviceAlias: alias || undefined,
+    });
+  } catch (e) {
+    console.error('Error recording Grid win:', e);
   }
-  
-  // Add to completed games
-  stats.completedGames.push({
-    dateSeed: payload.dateSeed,
-    moves: payload.moves,
-    wordsUsed: payload.wordsUsed,
-    timeToCompleteMs: payload.timeToCompleteMs,
-    completedAt: new Date().toISOString(),
-  });
-  
-  // Keep only last 30
-  if (stats.completedGames.length > 30) {
-    stats.completedGames = stats.completedGames.slice(-30);
-  }
-  
-  // Update histogram
-  const bucket = getHistogramBucket(payload.moves);
-  stats.movesHistogram[bucket] = (stats.movesHistogram[bucket] || 0) + 1;
-  
-  // Calculate avg and median
-  const completedMoves = stats.completedGames.map(g => g.moves);
-  stats.avgMovesCompleted = completedMoves.reduce((a, b) => a + b, 0) / completedMoves.length;
-  stats.medianMovesCompleted = calculateMedian(completedMoves);
-  
-  // Calculate completion rate
-  stats.completionRate = stats.gamesPlayed > 0 ? stats.gamesCompleted / stats.gamesPlayed : 0;
-  
-  // Update streak
-  const today = payload.dateSeed;
-  const yesterday = new Date(new Date(today).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  
-  if (stats.lastPlayedDate === yesterday) {
-    stats.streakDays += 1;
-  } else if (stats.lastPlayedDate !== today) {
-    stats.streakDays = 1;
-  }
-  
-  saveGridStats(stats);
-  
-  // Add to leaderboard
-  addGridLeaderboardEntry({
-    id: crypto.randomUUID(),
-    dateSeed: payload.dateSeed,
-    moves: payload.moves,
-    wordsUsed: payload.wordsUsed,
-    timeToCompleteMs: payload.timeToCompleteMs,
-    completedAt: new Date().toISOString(),
-    deviceAlias: alias || undefined,
-  });
 };
 
 export const resetGridStats = (): void => {

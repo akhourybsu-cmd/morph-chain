@@ -55,22 +55,31 @@ export const saveRushStats = (stats: RushStats): void => {
   }
 };
 
+/**
+ * Updates Rush stats after a game completes
+ * Tracks games played, high scores, words, multipliers, and total scores
+ */
 export const updateRushStats = (
   score: number,
   wordsCount: number,
   maxMultiplier: number,
   hardMode: boolean
 ): void => {
-  const stats = loadRushStats();
-  const mode = hardMode ? 'hard' : 'normal';
-  
-  stats[mode].gamesPlayed += 1;
-  stats[mode].highScore = Math.max(stats[mode].highScore, score);
-  stats[mode].totalWords += wordsCount;
-  stats[mode].maxMultiplier = Math.max(stats[mode].maxMultiplier, maxMultiplier);
-  stats[mode].totalScore += score;
-  
-  saveRushStats(stats);
+  try {
+    const stats = loadRushStats();
+    const mode = hardMode ? 'hard' : 'normal';
+    
+    stats[mode].gamesPlayed += 1;
+    stats[mode].highScore = Math.max(stats[mode].highScore, score);
+    stats[mode].totalWords += wordsCount;
+    stats[mode].maxMultiplier = Math.max(stats[mode].maxMultiplier, maxMultiplier);
+    stats[mode].totalScore += score;
+    
+    saveRushStats(stats);
+    console.log(`Rush stats updated for ${mode} mode:`, stats[mode]);
+  } catch (e) {
+    console.error('Error updating Rush stats:', e);
+  }
 };
 
 // Track if user has completed their first daily attempt
