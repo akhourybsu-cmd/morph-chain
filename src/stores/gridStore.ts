@@ -5,12 +5,7 @@ import { generateDailyGrid } from '@/lib/grid/gridGenerator';
 import { SeededRandom } from '@/lib/grid/seededRNG';
 import { morphGrid, morphPowerRow } from '@/lib/grid/morphMechanics';
 import { isValidWord } from '@/lib/grid/dictionary';
-import { recordGridPlayStart, recordGridSubmit, recordGridWin } from '@/lib/gridStorage';
-
-interface SubmittedWord {
-  word: string;
-  timestamp: number;
-}
+import { recordGridPlayStart, recordGridSubmit, recordGridWin, saveGridGameState, loadGridGameState, clearGridGameState, type SubmittedWord } from '@/lib/gridStorage';
 
 interface GridState {
   grid: Tile[][];
@@ -52,26 +47,50 @@ export const useGridStore = create<GridState>((set, get) => ({
   startTime: null,
   
   initializeGame: (date: string) => {
-    const grid = generateDailyGrid(date);
-    const rng = new SeededRandom(date + '-morph');
+    // Try to load saved state first
+    const savedState = loadGridGameState(date);
     
-    set({
-      grid,
-      selected: [],
-      submittedWords: [],
-      moves: 0,
-      purpleCount: 0,
-      dailySeed: date,
-      rng,
-      isPlaying: true,
-      isEnded: false,
-      morphCount: 0,
-      stabilizationCount: 0,
-      startTime: Date.now()
-    });
-    
-    // Record play start for stats
-    recordGridPlayStart(date);
+    if (savedState && savedState.dailySeed === date) {
+      // Restore from saved state
+      const rng = new SeededRandom(date + '-morph');
+      set({
+        grid: savedState.grid,
+        selected: savedState.selected,
+        submittedWords: savedState.submittedWords,
+        moves: savedState.moves,
+        purpleCount: savedState.purpleCount,
+        dailySeed: date,
+        rng,
+        isPlaying: true,
+        isEnded: false,
+        morphCount: savedState.morphCount,
+        stabilizationCount: savedState.stabilizationCount,
+        startTime: savedState.startTime
+      });
+      console.log('Restored Grid game state for', date);
+    } else {
+      // Start fresh game
+      const grid = generateDailyGrid(date);
+      const rng = new SeededRandom(date + '-morph');
+      
+      set({
+        grid,
+        selected: [],
+        submittedWords: [],
+        moves: 0,
+        purpleCount: 0,
+        dailySeed: date,
+        rng,
+        isPlaying: true,
+        isEnded: false,
+        morphCount: 0,
+        stabilizationCount: 0,
+        startTime: Date.now()
+      });
+      
+      // Record play start for stats
+      recordGridPlayStart(date);
+    }
   },
   
   selectTile: (tile: Tile) => {
@@ -151,18 +170,34 @@ export const useGridStore = create<GridState>((set, get) => ({
     const stabilizedFreed = selected.filter(t => t.stabilized).length;
     recordGridSubmit(word, usedPowerRow, stabilizedFreed);
     
+    const newMoves = get().moves + 1;
+    const newMorphCount = morphCount + 1;
+    const newStabilizationCount = countStabilized(morphedGrid);
+    const newSubmittedWords = [...submittedWords, { word, timestamp: Date.now() }];
+    
     set({
       grid: morphedGrid,
       selected: [],
-      submittedWords: [...submittedWords, {
-        word,
-        timestamp: Date.now()
-      }],
-      moves: get().moves + 1,
+      submittedWords: newSubmittedWords,
+      moves: newMoves,
       purpleCount: newPurpleCount,
-      morphCount: morphCount + 1,
-      stabilizationCount: countStabilized(morphedGrid),
+      morphCount: newMorphCount,
+      stabilizationCount: newStabilizationCount,
       isEnded: isWin
+    });
+    
+    // Save game state
+    const currentState = get();
+    saveGridGameState({
+      grid: morphedGrid,
+      selected: [],
+      submittedWords: newSubmittedWords,
+      moves: newMoves,
+      purpleCount: newPurpleCount,
+      dailySeed: currentState.dailySeed,
+      morphCount: newMorphCount,
+      stabilizationCount: newStabilizationCount,
+      startTime: currentState.startTime || Date.now()
     });
     
     // Record win if game complete
@@ -176,6 +211,9 @@ export const useGridStore = create<GridState>((set, get) => ({
         wordsUsed: state.submittedWords.length,
         timeToCompleteMs: timeToComplete,
       });
+      
+      // Clear saved game state on win
+      clearGridGameState(state.dailySeed);
       
       // Store entry ID for leaderboard highlighting
       if (typeof window !== 'undefined') {
@@ -195,12 +233,14 @@ export const useGridStore = create<GridState>((set, get) => ({
   
   resetGame: () => {
     const { dailySeed } = get();
+    clearGridGameState(dailySeed);
     set({ startTime: Date.now() });
     get().initializeGame(dailySeed);
   },
   
   resetDaily: () => {
     const { dailySeed } = get();
+    clearGridGameState(dailySeed);
     set({ startTime: Date.now() });
     get().initializeGame(dailySeed);
   }

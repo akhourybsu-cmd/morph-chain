@@ -1,5 +1,10 @@
 // Grid-specific storage for stats and leaderboard
 
+export interface SubmittedWord {
+  word: string;
+  timestamp: number;
+}
+
 export interface GridLBEntry {
   id: string;
   dateSeed: string;
@@ -38,6 +43,7 @@ export interface GridStats {
 const GRID_STATS_KEY = 'morphGrid_stats';
 const GRID_ALIAS_KEY = 'morphGrid_alias';
 const GRID_LEADERBOARD_KEY = 'morphGrid_leaderboard';
+const GRID_GAME_STATE_KEY = 'morphGrid_gameState';
 
 export const loadGridStats = (): GridStats => {
   try {
@@ -295,6 +301,46 @@ export const recordGridWin = (payload: {
     });
   } catch (e) {
     console.error('Error recording Grid win:', e);
+  }
+};
+
+export interface GridGameState {
+  grid: any[][];
+  selected: any[];
+  submittedWords: SubmittedWord[];
+  moves: number;
+  purpleCount: number;
+  dailySeed: string;
+  morphCount: number;
+  stabilizationCount: number;
+  startTime: number;
+}
+
+export const saveGridGameState = (state: GridGameState): void => {
+  try {
+    localStorage.setItem(`${GRID_GAME_STATE_KEY}_${state.dailySeed}`, JSON.stringify(state));
+  } catch (e) {
+    console.error('Error saving Grid game state:', e);
+  }
+};
+
+export const loadGridGameState = (dateSeed: string): GridGameState | null => {
+  try {
+    const saved = localStorage.getItem(`${GRID_GAME_STATE_KEY}_${dateSeed}`);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (e) {
+    console.error('Error loading Grid game state:', e);
+  }
+  return null;
+};
+
+export const clearGridGameState = (dateSeed: string): void => {
+  try {
+    localStorage.removeItem(`${GRID_GAME_STATE_KEY}_${dateSeed}`);
+  } catch (e) {
+    console.error('Error clearing Grid game state:', e);
   }
 };
 
