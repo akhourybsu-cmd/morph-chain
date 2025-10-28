@@ -350,15 +350,30 @@ export default function ArcadeSurvivalPage() {
         const tz = 'America/New_York';
         const dateISO = formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
         
-        await supabase.from('arcade_completions').insert({
+        // Get user's default initials
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('default_initials')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        const { error } = await supabase.from('arcade_completions').insert({
           user_id: user.id,
           date_local: dateISO,
           moves: newChain.length - 1, // Subtract 1 because starting word doesn't count as a move
           word_chain: newChain,
           session_id: `session_${Date.now()}`,
         });
+        
+        if (error) {
+          console.error('Error saving arcade completion:', error);
+          toast.error('Failed to save completion to leaderboard');
+        } else {
+          console.log('Arcade completion saved successfully');
+        }
       } catch (err) {
         console.error('Failed to save completion:', err);
+        toast.error('Failed to save completion');
       }
     }
   };

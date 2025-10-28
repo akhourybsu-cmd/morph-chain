@@ -3,13 +3,21 @@ import { useArcadeLeaderboard } from "@/hooks/useArcadeLeaderboard";
 import { Loader2 } from "lucide-react";
 
 export const ArcadeLeaderboard = () => {
-  const { data: leaderboard, isLoading } = useArcadeLeaderboard();
+  const { data: leaderboard, isLoading, error } = useArcadeLeaderboard();
 
   const renderLeaderboard = () => {
     if (isLoading) {
       return (
         <div className="flex justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-center py-8 text-red-400">
+          Error loading leaderboard. Please try again.
         </div>
       );
     }

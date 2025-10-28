@@ -16,6 +16,8 @@ interface RushInitialsInputProps {
   multiplierMax: number;
   words: any[];
   invalidCount: number;
+  scoutUsed: boolean;
+  undoUsed: boolean;
   onSubmitted: () => void;
 }
 
@@ -26,6 +28,8 @@ export const RushInitialsInput = ({
   multiplierMax,
   words,
   invalidCount,
+  scoutUsed,
+  undoUsed,
   onSubmitted
 }: RushInitialsInputProps) => {
   const [initials, setInitials] = useState("");
@@ -37,11 +41,17 @@ export const RushInitialsInput = ({
     supabase.auth.getSession().then(async ({ data }) => {
       const user = data.session?.user;
       if (!user) return;
-      const { data: prof } = await supabase
+      const { data: prof, error } = await supabase
         .from("user_profiles")
         .select("default_initials")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error loading user profile:', error);
+        return;
+      }
+      
       if (prof?.default_initials) {
         setInitials(prof.default_initials.toUpperCase().slice(0, 3));
       }
@@ -102,6 +112,8 @@ export const RushInitialsInput = ({
           hard_mode: hardMode,
           initials: validation.data,
           words: words,
+          scout_used: scoutUsed,
+          undo_used: undoUsed,
           official_status: 'finished',
           finished_at: new Date().toISOString(),
           started_at: new Date().toISOString()

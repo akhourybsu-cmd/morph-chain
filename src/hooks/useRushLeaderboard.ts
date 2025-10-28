@@ -8,8 +8,16 @@ export function useRushLeaderboard(mode: 'daily' | 'practice' = 'daily', hardMod
 
   return useQuery({
     queryKey: ['rushLeaderboard', dateISO, mode, hardMode],
-    queryFn: () => fetchDailyLeaderboard(dateISO, mode, hardMode),
+    queryFn: async () => {
+      try {
+        return await fetchDailyLeaderboard(dateISO, mode, hardMode);
+      } catch (error) {
+        console.error('Error fetching Rush leaderboard:', error);
+        throw error;
+      }
+    },
     staleTime: 15_000, // 15s
     refetchInterval: 30_000, // 30s
+    retry: 2,
   });
 }

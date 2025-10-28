@@ -521,6 +521,8 @@ const MorphRush = () => {
                 multiplierMax={run.multiplierMax}
                 words={run.words}
                 invalidCount={run.invalidCount}
+                scoutUsed={run.scoutUsed}
+                undoUsed={run.undoUsed}
                 onSubmitted={() => setScoreSubmitted(true)}
               />
             ) : (

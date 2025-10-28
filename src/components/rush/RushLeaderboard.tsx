@@ -11,14 +11,22 @@ interface RushLeaderboardProps {
 
 export const RushLeaderboard = ({ mode = 'daily' }: RushLeaderboardProps) => {
   const [selectedMode, setSelectedMode] = useState<'normal' | 'hard'>('normal');
-  const { data: normalData, isLoading: normalLoading } = useRushLeaderboard(mode, false);
-  const { data: hardData, isLoading: hardLoading } = useRushLeaderboard(mode, true);
+  const { data: normalData, isLoading: normalLoading, error: normalError } = useRushLeaderboard(mode, false);
+  const { data: hardData, isLoading: hardLoading, error: hardError } = useRushLeaderboard(mode, true);
 
-  const renderLeaderboard = (data: any[] | undefined, isLoading: boolean, showHardBadge: boolean = false) => {
+  const renderLeaderboard = (data: any[] | undefined, isLoading: boolean, error: any, showHardBadge: boolean = false) => {
     if (isLoading) {
       return (
         <div className="p-8 text-center">
           <div className="text-sm text-muted-foreground">Loading leaderboard…</div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="p-8 text-center">
+          <div className="text-sm text-destructive">Error loading leaderboard. Please try again.</div>
         </div>
       );
     }
@@ -79,11 +87,11 @@ export const RushLeaderboard = ({ mode = 'daily' }: RushLeaderboardProps) => {
         </TabsList>
         
         <TabsContent value="normal" className="mt-3">
-          {renderLeaderboard(normalData, normalLoading)}
+          {renderLeaderboard(normalData, normalLoading, normalError)}
         </TabsContent>
         
         <TabsContent value="hard" className="mt-3">
-          {renderLeaderboard(hardData, hardLoading, true)}
+          {renderLeaderboard(hardData, hardLoading, hardError, true)}
         </TabsContent>
       </Tabs>
     </Card>

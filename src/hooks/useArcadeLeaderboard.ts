@@ -8,8 +8,16 @@ export function useArcadeLeaderboard() {
 
   return useQuery({
     queryKey: ['arcadeLeaderboard', dateISO],
-    queryFn: () => fetchArcadeDailyLeaderboard(dateISO),
+    queryFn: async () => {
+      try {
+        return await fetchArcadeDailyLeaderboard(dateISO);
+      } catch (error) {
+        console.error('Error fetching Arcade leaderboard:', error);
+        throw error;
+      }
+    },
     staleTime: 15_000, // 15s
     refetchInterval: 30_000, // 30s
+    retry: 2,
   });
 }
