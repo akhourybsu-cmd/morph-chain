@@ -15,6 +15,27 @@ interface PatchNote {
 
 const patchNotes: PatchNote[] = [
   {
+    date: "2025-10-28",
+    version: "1.3.0",
+    changes: [
+      {
+        title: "Enhanced Security",
+        description: "Implemented comprehensive security improvements including mandatory authentication for all game submissions, server-side input validation for edge functions, and strengthened database policies to protect user data.",
+        type: "improvement"
+      },
+      {
+        title: "Consistent Game Navigation",
+        description: "Standardized sandwich menus across all games (Morph Chain, Morph Grid, Morph Rush, and Morph Prism coming soon) for a more unified experience.",
+        type: "improvement"
+      },
+      {
+        title: "MORPH RUSH Logo Display",
+        description: "Fixed an issue where the italic 'H' in the MORPH RUSH title was cut off on various screens throughout the app.",
+        type: "fix"
+      }
+    ]
+  },
+  {
     date: "2025-10-13",
     version: "1.2.0",
     changes: [
