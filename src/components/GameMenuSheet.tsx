@@ -81,7 +81,7 @@ export const GameMenuSheet = ({
               <Button
                 variant="ghost"
                 className="w-full justify-start text-sm h-auto py-2"
-                onClick={() => handleNavigate("/chain")}
+                onClick={() => handleNavigate("/")}
               >
                 <MorphChainTitle className="text-base" />
               </Button>
@@ -92,21 +92,6 @@ export const GameMenuSheet = ({
                 onClick={() => handleNavigate("/grid")}
               >
                 <MorphGridTitle className="text-base" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-sm h-auto py-2 gap-2"
-                onClick={() => hasBetaAccess && handleNavigate("/arcade-survival")}
-                disabled={!hasBetaAccess}
-              >
-                <MorphArcadeTitle className="text-base" />
-                {!hasBetaAccess && (
-                  <>
-                    <Lock className="h-3 w-3 ml-auto" />
-                    <span className="text-xs text-muted-foreground">Coming Soon</span>
-                  </>
-                )}
               </Button>
               
               <Button

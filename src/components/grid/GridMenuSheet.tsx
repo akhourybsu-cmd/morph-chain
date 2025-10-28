@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Menu, Trophy, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { MorphChainTitle, MorphRushTitle, MorphGridTitle } from "@/components/GameTitles";
+import { MorphChainTitle, MorphRushTitle, MorphGridTitle, MorphPrismTitle } from "@/components/GameTitles";
 import { useState } from "react";
 import { GridLeaderboard } from "./GridLeaderboard";
 import { GridStatsModal } from "./GridStats";
@@ -17,9 +17,10 @@ export const GridMenuSheet = () => {
   const [showStats, setShowStats] = useState(false);
 
   const games = [
-    { title: <MorphChainTitle className="text-sm" />, path: "/chain", description: "Word ladder" },
-    { title: <MorphRushTitle className="text-sm" />, path: "/rush?mode=daily", description: "Score dash" },
+    { title: <MorphChainTitle className="text-sm" />, path: "/", description: "Word ladder" },
     { title: <MorphGridTitle className="text-sm" />, path: "/grid", description: "Daily 5×5 puzzle", active: true },
+    { title: <MorphRushTitle className="text-sm" />, path: "/rush?mode=daily", description: "Score dash" },
+    { title: <MorphPrismTitle className="text-sm" />, path: "/prism", description: "Coming soon", disabled: true },
   ];
 
   return (
@@ -38,11 +39,18 @@ export const GridMenuSheet = () => {
                 <button
                   key={game.path}
                   onClick={() => {
-                    navigate(game.path);
-                    setOpen(false);
+                    if (!game.disabled) {
+                      navigate(game.path);
+                      setOpen(false);
+                    }
                   }}
+                  disabled={game.disabled}
                   className={`w-full text-left px-3 py-3 rounded-lg transition-colors ${
-                    game.active ? "bg-primary/10 border border-primary/20" : "hover:bg-muted"
+                    game.active 
+                      ? "bg-primary/10 border border-primary/20" 
+                      : game.disabled
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-muted"
                   }`}
                 >
                   <div className="flex flex-col gap-0.5">
