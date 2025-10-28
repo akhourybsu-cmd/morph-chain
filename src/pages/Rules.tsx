@@ -26,16 +26,16 @@ const Rules = () => {
           </Card>
 
           <Card className="p-6">
-            <h2 className="text-2xl font-bold mb-4 bg-gradient-prism bg-clip-text text-transparent">
-              Morph Prism
+            <h2 className="text-2xl font-bold mb-4 bg-gradient-grid bg-clip-text text-transparent">
+              Morph Grid
             </h2>
             <div className="space-y-4 text-muted-foreground">
-              <p>Transform the starting color into the goal color by adjusting HSL channels.</p>
+              <p>Build words on a 5x5 grid by connecting adjacent letters.</p>
               <ul className="list-disc list-inside space-y-2 ml-4">
-                <li>Adjust Hue, Saturation, or Lightness one at a time</li>
-                <li>Each adjustment changes the value by ±10 units</li>
-                <li>Complete the transformation in the minimum number of steps</li>
-                <li>Currently in beta testing</li>
+                <li>Connect adjacent letters (horizontally, vertically, or diagonally)</li>
+                <li>Each letter can only be used once per word</li>
+                <li>Longer words score more points</li>
+                <li>Strategic morphing and word placement is key</li>
               </ul>
             </div>
           </Card>
