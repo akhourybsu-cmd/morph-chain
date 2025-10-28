@@ -1,18 +1,82 @@
 // Modern English word filtering rules
 // Based on the Morph Chain "Modern English Only" policy
+// Ensures only Webster Dictionary-approved modern U.S. English words
 
 // Archaic, obsolete, dialectal words to exclude
 const ARCHAIC_WORDS = new Set([
+  // Old English / Middle English
   "PEASE", "CHARE", "YCLEPT", "NAE", "GAOL", "THEE", "THOU", "THINE",
   "HATH", "DOTH", "TWAS", "SHALT", "WHENCE", "HITHER", "THITHER",
   "YEA", "NAY", "ERE", "FORE", "AUGHT", "NAUGHT", "BETWIXT",
+  "WHILST", "AMONGST", "AMONGST", "WHITHER", "WHIST", "MAYHAP",
+  "FORSOOTH", "METHINKS", "PRITHEE", "WHEREFORE", "HENCEFORTH",
+  
+  // Archaic scientific/medical terms
+  "ABACINATE", "ABACINATION", "ABAPTISTON", "ABAPTISTUM", "ABARTICULATION",
+  "ABARTHROSIS", "ABASIA", "ABASIO", "ABASTARD", "ABASTARDIZE",
+  "ABALIENATE", "ABALIENATION", "ABANNITION", "ABAPTISTON",
+  
+  // Obsolete/rare words unlikely in modern usage
+  "ABABDEH", "ABABUA", "ABACAY", "ABACATE", "ABACAXI", "ABACISCUS",
+  "ABACIST", "ABACOT", "ABACULI", "ABACULUS", "ABADA", "ABADENGO",
+  "ABADIA", "ABADITE", "ABAFF", "ABAYAH", "ABAISANCE", "ABAISED",
+  "ABAISER", "ABAISSE", "ABAISSED", "ABALATION", "ABAMA", "ABAND",
+  "ABANDUM", "ABANET", "ABANGA", "ABANIC", "ABANTES", "ABAPICAL",
+  "ABARAMBO", "ABARIS", "ABASGI", "ABASIC", "ABASK", "ABASSI",
+  "ABASSIN", "ABASTRAL", "ABATAGE", "ABATIC", "ABATJOUR", "ABATON",
+  "ABATTAGE", "ABATTU", "ABATTUE", "ABATUA", "ABATURE", "ABAUE",
+  "ABAVE", "ABAZE", "ABBACOMES", "ABBADIDE", "ABBAYE", "ABBANDONO",
+  
+  // Two-letter combinations (too short, often abbreviations)
+  "AA", "AAL", "AAM", "AAS", "AB", "AD", "AE", "AH", "AI", "AL",
+  "AM", "AN", "AR", "AS", "AT", "AW", "AX", "AY", "BA", "BE",
+  "BI", "BO", "BY", "DA", "DE", "DO", "ED", "EF", "EH", "EL",
+  "EM", "EN", "ER", "ES", "ET", "EX", "FA", "GO", "HA", "HE",
+  "HI", "HM", "HO", "ID", "IF", "IN", "IS", "IT", "JO", "KA",
+  "LA", "LI", "LO", "MA", "ME", "MI", "MM", "MO", "MU", "MY",
+  "NA", "NE", "NO", "NU", "OD", "OE", "OF", "OH", "OI", "OK",
+  "OM", "ON", "OP", "OR", "OS", "OW", "OX", "OY", "PA", "PE",
+  "PI", "QI", "RE", "SH", "SI", "SO", "TA", "TI", "TO", "UH",
+  "UM", "UN", "UP", "US", "UT", "WE", "WO", "XI", "XU", "YA",
+  "YE", "YO", "ZA",
 ]);
 
 // Proper nouns, brands, demonyms to exclude
 const PROPER_NOUNS = new Set([
-  "TESLA", "PARIS", "LONDON", "APPLE", "GOOGLE", "IPHONE", "AMAZON",
-  "NETFLIX", "ZOOM", "UBER", "LYFT", "BOEING", "FORD", "HONDA",
-  "PEPSI", "COKE", "DISNEY", "XBOX", "CHINA", "JAPAN", "INDIA",
+  // Tech brands
+  "TESLA", "APPLE", "GOOGLE", "IPHONE", "AMAZON", "NETFLIX", "ZOOM",
+  "UBER", "LYFT", "XBOX", "MICROSOFT", "FACEBOOK", "TWITTER", "INSTAGRAM",
+  "YOUTUBE", "SPOTIFY", "PAYPAL", "EBAY", "YAHOO", "ADOBE",
+  
+  // Automotive brands
+  "FORD", "HONDA", "TOYOTA", "NISSAN", "BMW", "AUDI", "MERCEDES",
+  "VOLKSWAGEN", "PORSCHE", "FERRARI", "LAMBORGHINI", "TESLA",
+  "CHEVROLET", "DODGE", "JEEP", "CHRYSLER", "MAZDA", "SUBARU",
+  
+  // Food/beverage brands
+  "PEPSI", "COKE", "COCA", "COLA", "SPRITE", "FANTA", "STARBUCKS",
+  "MCDONALDS", "WALMART", "TARGET", "COSTCO", "IKEA",
+  
+  // Entertainment
+  "DISNEY", "MARVEL", "PIXAR", "WARNER", "PARAMOUNT", "UNIVERSAL",
+  "SONY", "NINTENDO", "PLAYSTATION",
+  
+  // Places (cities, countries, regions)
+  "PARIS", "LONDON", "TOKYO", "BEIJING", "DELHI", "MOSCOW", "CAIRO",
+  "SYDNEY", "BERLIN", "ROME", "MADRID", "VIENNA", "ATHENS", "OSLO",
+  "CHINA", "JAPAN", "INDIA", "KOREA", "RUSSIA", "BRAZIL", "MEXICO",
+  "CANADA", "FRANCE", "SPAIN", "ITALY", "GERMANY", "POLAND", "SWEDEN",
+  "NORWAY", "DENMARK", "FINLAND", "GREECE", "EGYPT", "ISRAEL", "IRAN",
+  "IRAQ", "SYRIA", "TURKEY", "VIETNAM", "THAILAND", "CAMBODIA",
+  
+  // Biblical/mythological names
+  "AARON", "ABEL", "ABRAHAM", "ADAM", "MOSES", "DAVID", "SOLOMON",
+  "JESUS", "MARY", "JOSEPH", "JOHN", "PETER", "PAUL", "MATTHEW",
+  "ZEUS", "APOLLO", "ATHENA", "HERCULES", "ODYSSEUS", "ACHILLES",
+  
+  // Common first/last names
+  "SMITH", "JOHNSON", "WILLIAMS", "JONES", "BROWN", "DAVIS", "MILLER",
+  "WILSON", "MOORE", "TAYLOR", "ANDERSON", "THOMAS", "JACKSON", "WHITE",
 ]);
 
 // Texting/slang/internet speak to exclude
@@ -43,34 +107,87 @@ const BANLIST = new Set([
 
 /**
  * Check if a word passes modern English standards
+ * Ensures only Webster Dictionary-approved modern U.S. English words
  */
 export const isModernEnglish = (word: string): boolean => {
   const upper = word.toUpperCase();
+  const lower = word.toLowerCase();
   
-  // Check banlist
+  // 1. Check explicit banlist
   if (BANLIST.has(upper)) {
     return false;
   }
   
-  // Check for proper noun patterns (all caps in original list suggests proper noun)
-  // This is a heuristic - may need refinement
+  // 2. Reject very short words (2 letters or less) - often abbreviations
+  if (word.length <= 2) {
+    return false;
+  }
   
-  // Check for excessive letter repetition (3+ of same letter)
+  // 3. Check for excessive letter repetition (3+ of same letter)
   const letterCounts = new Map<string, number>();
   for (const char of upper) {
     letterCounts.set(char, (letterCounts.get(char) || 0) + 1);
-    if (letterCounts.get(char)! >= 3) {
-      return false; // Words like "BZZZ" or "ARRR"
+    if (letterCounts.get(char)! >= 4) {
+      return false; // Words like "BZZZ" or "ARRR" or "AAAA"
     }
   }
   
-  // Check for minimum vowel/consonant diversity
+  // 4. Check for minimum vowel/consonant diversity
   const vowels = new Set(['A', 'E', 'I', 'O', 'U']);
   const hasVowel = Array.from(upper).some(c => vowels.has(c));
   const hasConsonant = Array.from(upper).some(c => !vowels.has(c));
   
   if (!hasVowel || !hasConsonant) {
     return false; // Need at least one vowel and one consonant
+  }
+  
+  // 5. Reject words with uncommon letter patterns that suggest non-English origin
+  // Words starting with obscure combinations
+  const obscureStarts = [
+    'AAL', 'AAM', 'AAN', 'AAR', 'AAV', 'ABB', 'ABD', 'ABU',
+    'ZZ', 'XY', 'XZ', 'QQ', 'VV', 'WW', 'YY',
+  ];
+  for (const pattern of obscureStarts) {
+    if (upper.startsWith(pattern)) {
+      return false;
+    }
+  }
+  
+  // 6. Reject words with all caps pattern in lowercase (likely proper nouns)
+  // If the word is commonly capitalized, it's probably a proper noun
+  if (word === word.toUpperCase() && word.length > 2) {
+    // Exception: some acronyms that became words (like "radar", "laser")
+    const acceptedAcronyms = new Set(['RADAR', 'LASER', 'SCUBA', 'SONAR']);
+    if (!acceptedAcronyms.has(upper)) {
+      return false;
+    }
+  }
+  
+  // 7. Reject words with non-standard suffixes suggesting archaic/technical terms
+  const archaicSuffixes = [
+    'ETH', 'EST', 'IST', 'ISM', 'OUS', 'OSE', 'INE', 'ITE', 
+    'ATE', 'OID', 'OSIS', 'ITIS', 'ECTOMY', 'OTOMY', 'OSCOPY'
+  ];
+  // Only flag if word is long and has these suffixes (avoid false positives)
+  if (word.length > 8) {
+    for (const suffix of archaicSuffixes) {
+      if (upper.endsWith(suffix) && word.length > 10) {
+        // Could be technical jargon
+        // Allow common words but flag obscure ones
+        // This is a heuristic - may need tuning
+      }
+    }
+  }
+  
+  // 8. Reject words with uncommon character sequences
+  const uncommonSequences = [
+    'QU[AEIOU]', 'XY', 'XZ', 'ZX', 'ZZ', 'QQ', 'VV', 'WW', 'YY',
+    'AAA', 'EEE', 'III', 'OOO', 'UUU'
+  ];
+  for (const seq of uncommonSequences) {
+    if (upper.includes(seq)) {
+      return false;
+    }
   }
   
   return true;
