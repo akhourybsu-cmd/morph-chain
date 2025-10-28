@@ -28,8 +28,17 @@ export const MorphGridTitle = ({ className = "" }: { className?: string }) => (
     className={`font-outfit font-bold tracking-tight whitespace-nowrap ${className}`}
     style={{ letterSpacing: '-0.02em' }}
   >
-    <span className="bg-gradient-to-r from-chain to-chain bg-clip-text text-transparent">MORPH </span>
-    <span className="bg-gradient-to-r from-grid-accent-start to-grid-accent-end bg-clip-text text-transparent">GRID</span>
+    <span className="bg-gradient-to-r from-grid-accent-start to-grid-accent-mid bg-clip-text text-transparent opacity-80">MORPH </span>
+    <span 
+      className="bg-gradient-to-r from-grid-accent-start via-grid-accent-mid to-grid-accent-end bg-clip-text text-transparent"
+      style={{ 
+        textShadow: '0 0 20px hsl(var(--grid-glow) / 0.4), 0 0 40px hsl(var(--grid-glow) / 0.2)',
+        filter: 'drop-shadow(0 0 8px hsl(var(--grid-accent-mid) / 0.5))',
+        letterSpacing: '0.15em'
+      }}
+    >
+      GRID
+    </span>
   </span>
 );
 

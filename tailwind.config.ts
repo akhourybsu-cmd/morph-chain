@@ -69,7 +69,9 @@ export default {
           end: "hsl(var(--rush-accent-end))",
         },
         "grid-accent-start": "hsl(var(--grid-accent-start))",
+        "grid-accent-mid": "hsl(var(--grid-accent-mid))",
         "grid-accent-end": "hsl(var(--grid-accent-end))",
+        "grid-glow": "hsl(var(--grid-glow))",
         grid: {
           vowel: {
             from: "hsl(var(--grid-vowel-from))",
@@ -91,7 +93,7 @@ export default {
       backgroundImage: {
         'gradient-prism': 'linear-gradient(135deg, hsl(var(--prism-accent-start)), hsl(var(--prism-accent-mid)), hsl(var(--prism-accent-end)))',
         'gradient-rush': 'linear-gradient(135deg, hsl(var(--rush-accent-start)), hsl(var(--rush-accent-end)))',
-        'gradient-grid': 'linear-gradient(135deg, hsl(var(--grid-accent-start)), hsl(var(--grid-accent-end)))',
+        'gradient-grid': 'linear-gradient(135deg, hsl(var(--grid-accent-start)), hsl(var(--grid-accent-mid)), hsl(var(--grid-accent-end)))',
         'gradient-grid-vowel': 'linear-gradient(135deg, hsl(var(--grid-vowel-from)), hsl(var(--grid-vowel-via)), hsl(var(--grid-vowel-to)))',
         'gradient-grid-consonant': 'linear-gradient(135deg, hsl(var(--grid-consonant-from)), hsl(var(--grid-consonant-via)), hsl(var(--grid-consonant-to)))',
         'gradient-grid-power': 'linear-gradient(135deg, hsl(var(--grid-power-from)), hsl(var(--grid-power-via)), hsl(var(--grid-power-to)))',
