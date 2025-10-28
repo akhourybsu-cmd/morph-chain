@@ -5,6 +5,7 @@ import { generateDailyGrid } from '@/lib/grid/gridGenerator';
 import { SeededRandom } from '@/lib/grid/seededRNG';
 import { morphGrid, morphPowerRow } from '@/lib/grid/morphMechanics';
 import { isValidWord } from '@/lib/grid/dictionary';
+import { recordGridPlayStart, recordGridSubmit, recordGridWin } from '@/lib/gridStorage';
 
 interface SubmittedWord {
   word: string;
@@ -23,6 +24,7 @@ interface GridState {
   isEnded: boolean;
   morphCount: number;
   stabilizationCount: number;
+  startTime: number | null;
   
   // Actions
   initializeGame: (date: string) => void;
@@ -47,6 +49,7 @@ export const useGridStore = create<GridState>((set, get) => ({
   isEnded: false,
   morphCount: 0,
   stabilizationCount: 0,
+  startTime: null,
   
   initializeGame: (date: string) => {
     const grid = generateDailyGrid(date);
@@ -63,8 +66,12 @@ export const useGridStore = create<GridState>((set, get) => ({
       isPlaying: true,
       isEnded: false,
       morphCount: 0,
-      stabilizationCount: 0
+      stabilizationCount: 0,
+      startTime: Date.now()
     });
+    
+    // Record play start for stats
+    recordGridPlayStart(date);
   },
   
   selectTile: (tile: Tile) => {
@@ -139,6 +146,11 @@ export const useGridStore = create<GridState>((set, get) => ({
     const newPurpleCount = morphedGrid.flat().filter(t => t.progress === 2).length;
     const isWin = newPurpleCount === 25;
     
+    // Track stats
+    const usedPowerRow = selected.some(t => t.isPower);
+    const stabilizedFreed = selected.filter(t => t.stabilized).length;
+    recordGridSubmit(word, usedPowerRow, stabilizedFreed);
+    
     set({
       grid: morphedGrid,
       selected: [],
@@ -153,6 +165,27 @@ export const useGridStore = create<GridState>((set, get) => ({
       isEnded: isWin
     });
     
+    // Record win if game complete
+    if (isWin) {
+      const state = get();
+      const timeToComplete = state.startTime ? Date.now() - state.startTime : undefined;
+      
+      recordGridWin({
+        dateSeed: state.dailySeed,
+        moves: state.moves,
+        wordsUsed: state.submittedWords.length,
+        timeToCompleteMs: timeToComplete,
+      });
+      
+      // Store entry ID for leaderboard highlighting
+      if (typeof window !== 'undefined') {
+        const entries = JSON.parse(localStorage.getItem(`morphGrid_leaderboard_${state.dailySeed}`) || '[]');
+        if (entries.length > 0) {
+          localStorage.setItem('morphGrid_myEntryId', entries[entries.length - 1].id);
+        }
+      }
+    }
+    
     return true;
   },
   
@@ -162,11 +195,13 @@ export const useGridStore = create<GridState>((set, get) => ({
   
   resetGame: () => {
     const { dailySeed } = get();
+    set({ startTime: Date.now() });
     get().initializeGame(dailySeed);
   },
   
   resetDaily: () => {
     const { dailySeed } = get();
+    set({ startTime: Date.now() });
     get().initializeGame(dailySeed);
   }
 }));
