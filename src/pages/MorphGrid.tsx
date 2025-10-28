@@ -62,10 +62,10 @@ const MorphGrid = () => {
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-background max-w-2xl mx-auto">
       {/* Header - Sticky with glass blur */}
       <header className="border-b border-border/50 bg-background/95 backdrop-blur-md sticky top-0 z-50">
-        <div className="mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between">
+        <div className="px-3 md:px-4 h-14 md:h-16 flex items-center justify-between">
           <GridMenuSheet />
           
           <GridLogo />
@@ -75,27 +75,27 @@ const MorphGrid = () => {
             size="icon"
             onClick={() => setShowHowToPlay(true)}
             aria-label="How to play"
-            className="h-9 w-9 sm:h-10 sm:w-10"
+            className="h-9 w-9 md:h-10 md:w-10"
           >
-            <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+            <HelpCircle className="w-4 h-4 md:w-5 md:h-5" />
           </Button>
         </div>
       </header>
       
       {/* Date & Score Banner */}
-      <div className="bg-card/50 border-b border-border/30 px-3 py-2 flex justify-between items-center text-xs sm:text-sm">
+      <div className="bg-card/50 border-b border-border/30 px-3 md:px-4 py-2 flex justify-between items-center text-xs md:text-sm">
         <span className="text-muted-foreground">Daily #{dailySeed}</span>
         <ScoreDisplay compact />
       </div>
       
       {/* Main Game - Single screen layout */}
-      <main className="flex-1 flex flex-col px-2 sm:px-4 pt-3 pb-2 max-w-2xl mx-auto w-full">
-        <div className="flex-1 flex flex-col justify-center gap-3 sm:gap-4">
+      <main className="flex-1 flex flex-col px-3 md:px-6 pt-3 md:pt-4 pb-2">
+        <div className="flex-1 flex flex-col justify-center gap-3 md:gap-4">
           <GridView />
         </div>
         
         {/* Sticky Bottom Bar */}
-        <div className="sticky bottom-0 bg-background/95 backdrop-blur-md border-t border-border/50 -mx-2 sm:-mx-4 px-2 sm:px-4 py-2 sm:py-3">
+        <div className="sticky bottom-0 bg-background/95 backdrop-blur-md border-t border-border/50 -mx-3 md:-mx-6 px-3 md:px-6 py-2 md:py-3">
           <WordPreview />
           <GameControls />
         </div>

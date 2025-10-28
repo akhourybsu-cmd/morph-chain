@@ -15,7 +15,7 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
       className={cn(
         "relative w-full aspect-square rounded-2xl font-outfit font-bold transition-all duration-200",
         "flex items-center justify-center touch-manipulation will-change-transform",
-        "text-base xs:text-lg sm:text-xl",
+        "text-base md:text-lg",
         "shadow-[0_6px_18px_rgba(0,0,0,0.25)]",
         
         // Progress-based gradient backgrounds
@@ -60,7 +60,7 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
       
       {/* Selection number badge */}
       {isSelected && selectionIndex !== undefined && (
-        <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary text-primary-foreground text-[10px] sm:text-xs flex items-center justify-center font-bold shadow-lg border-2 border-background">
+        <div className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full bg-primary text-primary-foreground text-[10px] md:text-xs flex items-center justify-center font-bold shadow-lg border-2 border-background">
           {selectionIndex + 1}
         </div>
       )}

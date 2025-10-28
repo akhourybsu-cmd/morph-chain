@@ -26,7 +26,7 @@ export const GameControls = () => {
         variant="outline"
         onClick={clearSelection}
         disabled={selected.length === 0}
-        className="flex-1 h-11 sm:h-12 text-sm sm:text-base font-semibold"
+        className="flex-1 h-10 md:h-11 text-sm md:text-base font-semibold"
       >
         Clear
       </Button>
@@ -34,7 +34,7 @@ export const GameControls = () => {
       <Button
         onClick={handleSubmit}
         disabled={selected.length < 3}
-        className="flex-[2] h-11 sm:h-12 text-sm sm:text-base font-bold bg-primary hover:bg-primary/90 shadow-lg"
+        className="flex-[2] h-10 md:h-11 text-sm md:text-base font-bold bg-primary hover:bg-primary/90 shadow-lg"
       >
         Submit Word
       </Button>
@@ -42,7 +42,7 @@ export const GameControls = () => {
       <Button
         variant="destructive"
         onClick={endGame}
-        className="px-3 sm:px-4 h-11 sm:h-12 text-sm sm:text-base font-semibold"
+        className="px-3 md:px-4 h-10 md:h-11 text-sm md:text-base font-semibold"
       >
         End
       </Button>
