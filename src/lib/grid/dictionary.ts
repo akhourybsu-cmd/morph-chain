@@ -1,6 +1,6 @@
 // Dictionary for MORPH GRID word validation
 import { isModernEnglish } from '@/lib/wordFilters';
-import wordsAlpha from './words_alpha.txt?raw';
+import wordsAlpha from '../words_alpha.txt?raw';
 
 let wordSet: Set<string> | null = null;
 
