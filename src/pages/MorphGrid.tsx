@@ -105,8 +105,8 @@ const MorphGrid = () => {
         </div>
       </main>
       
-      {/* Bottom Bar - Fixed 88px */}
-      <div className="h-20 md:h-22 bg-background/95 backdrop-blur-md border-t border-border/50 px-3 md:px-6 py-2 md:py-3 flex flex-col gap-2 flex-shrink-0">
+      {/* Bottom Bar - Fixed with safe area */}
+      <div className="bg-background/95 backdrop-blur-md border-t border-border/50 px-3 md:px-6 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-3 flex flex-col gap-2 flex-shrink-0">
         <WordPreview />
         <GameControls />
       </div>

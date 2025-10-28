@@ -47,14 +47,12 @@ export const GameControls = () => {
   };
   
   return (
-    <div className="flex gap-2 h-12">
+    <div className="flex gap-2 h-14">
       <Button
         variant="ghost"
         onClick={clearSelection}
         disabled={selected.length === 0}
         className="flex-1 h-full text-sm font-semibold rounded-2xl"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
       >
         Clear
       </Button>

@@ -84,42 +84,7 @@ export const GridView = () => {
         )}
       </div>
       
-      {/* Selection path SVG overlay (optional enhancement) */}
-      {pathTiles.length > 1 && (
-        <svg 
-          className="absolute inset-0 pointer-events-none"
-          style={{ width: '100%', height: '100%' }}
-        >
-          <path
-            d={generatePathD(pathTiles, gridRef.current)}
-            stroke="rgba(127, 178, 255, 0.6)"
-            strokeWidth="3"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
     </div>
   );
 };
 
-// Helper to generate SVG path from tiles
-function generatePathD(tiles: any[], gridElement: HTMLElement | null): string {
-  if (!gridElement || tiles.length < 2) return '';
-  
-  const gridRect = gridElement.getBoundingClientRect();
-  const points: string[] = [];
-  
-  tiles.forEach((tile, idx) => {
-    const tileElement = gridElement.querySelector(`[data-tile-id="${tile.id}"]`);
-    if (tileElement) {
-      const rect = tileElement.getBoundingClientRect();
-      const x = rect.left + rect.width / 2 - gridRect.left;
-      const y = rect.top + rect.height / 2 - gridRect.top;
-      points.push(`${idx === 0 ? 'M' : 'L'} ${x} ${y}`);
-    }
-  });
-  
-  return points.join(' ');
-}
