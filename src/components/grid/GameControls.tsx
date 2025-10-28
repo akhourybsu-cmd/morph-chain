@@ -17,6 +17,7 @@ export const GameControls = () => {
     
     if (success) {
       toast.success('Valid word!', { duration: 1500 });
+      clearSelection(); // Clear after successful submit
     } else {
       const word = selected.map(t => t.char).join('');
       toast.error(`"${word}" is not in the dictionary`, {
@@ -60,7 +61,10 @@ export const GameControls = () => {
       <Button
         onClick={handleSubmit}
         disabled={selected.length < 3}
-        className="flex-[2] h-full text-base font-bold bg-primary hover:bg-primary/90 shadow-lg rounded-2xl disabled:opacity-50"
+        className="flex-[2] h-full text-base font-bold rounded-2xl disabled:opacity-50 bg-gradient-to-r from-[hsl(var(--grid-accent-start))] via-[hsl(var(--grid-accent-mid))] to-[hsl(var(--grid-accent-end))] hover:opacity-90 shadow-[0_0_20px_hsl(var(--grid-glow)/0.4)] transition-all"
+        style={{
+          textShadow: '0 0 10px rgba(0,0,0,0.5)'
+        }}
       >
         Submit
       </Button>

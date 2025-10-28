@@ -147,21 +147,15 @@ export const useGridGesture = (
     isDraggingRef.current = false;
     pointerIdRef.current = null;
     
-    // Complete the path
-    if (pathTilesRef.current.length >= 3) {
+    // Just complete the path, don't clear
+    if (pathTilesRef.current.length > 0) {
       onPathComplete([...pathTilesRef.current]);
-    } else if (pathTilesRef.current.length > 0) {
-      // Clear if too short
-      onPathUpdate([]);
     }
     
-    // Clear refs
-    currentPathRef.current.clear();
-    pathTilesRef.current = [];
-    lastTileRef.current = null;
+    // Don't clear refs - keep selection active
     
     e.preventDefault();
-  }, [onPathComplete, onPathUpdate]);
+  }, [onPathComplete]);
 
   // Handle pointer cancel
   const handlePointerCancel = useCallback((e: PointerEvent) => {

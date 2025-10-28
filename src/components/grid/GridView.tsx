@@ -22,21 +22,9 @@ export const GridView = () => {
         setSelected(tiles);
       },
       onPathComplete: (tiles) => {
-        if (tiles.length >= 3) {
-          const success = submitWord();
-          if (success) {
-            toast.success('Valid word!', { duration: 1500 });
-          } else {
-            const word = tiles.map(t => t.char).join('');
-            toast.error(`"${word}" is not in the dictionary`, {
-              duration: 2000,
-              className: 'shake-animation'
-            });
-          }
-        } else if (tiles.length > 0) {
-          toast.error('Word must be at least 3 letters', { duration: 1500 });
-        }
-        setPathTiles([]);
+        // Just update selection, don't auto-submit
+        setPathTiles(tiles);
+        setSelected(tiles);
       },
       onInvalidMove: () => {
         // Optional: Add haptic feedback here
@@ -56,7 +44,7 @@ export const GridView = () => {
     <div className="w-full max-w-[min(92vw,520px)] mx-auto">
       <div 
         ref={gridRef}
-        className="grid grid-cols-5 gap-2 select-none"
+        className="grid grid-cols-5 gap-3 select-none"
         style={{
           touchAction: 'none',
           WebkitUserSelect: 'none',

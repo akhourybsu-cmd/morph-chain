@@ -22,7 +22,7 @@ export const useGridLayout = () => {
       const bottomBarH = 88;
       const dateBarH = 36;
       const verticalPadding = 32;
-      const gridGaps = 8 * 4; // 4 gaps between 5 tiles
+      const gridGaps = 12 * 4; // 4 gaps between 5 tiles (gap-3)
       
       const usableHeight = svh - headerH - bottomBarH - dateBarH - verticalPadding - gridGaps;
       
