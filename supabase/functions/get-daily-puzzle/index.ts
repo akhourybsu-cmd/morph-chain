@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      console.error('Auth error:', authError);
+      console.error('Authentication failed');
       return new Response(
         JSON.stringify({ error: 'Invalid authentication' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     });
 
     if (!rateLimitOk) {
-      console.warn('Rate limit exceeded for user:', user.id);
+      console.warn('Rate limit exceeded');
       return new Response(
         JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (puzzleError || !puzzle) {
-      console.error('Puzzle fetch error:', puzzleError);
+      console.error('Puzzle not found for requested parameters');
       return new Response(
         JSON.stringify({ error: 'Puzzle not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -108,9 +108,10 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in get-daily-puzzle:', error);
+    const errorId = crypto.randomUUID();
+    console.error(`[${errorId}] Error in get-daily-puzzle`);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'An error occurred. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { feedbackTextSchema } from "@/lib/validation";
 
 interface PrismFeedbackModalProps {
   open: boolean;
@@ -28,12 +29,19 @@ export const PrismFeedbackModal = ({ open, onOpenChange }: PrismFeedbackModalPro
       return;
     }
 
+    // Validate feedback text
+    const validation = feedbackTextSchema.safeParse(feedback);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const { error } = await supabase
         .from('prism_feedback')
         .insert({
-          feedback_text: feedback.trim(),
+          feedback_text: validation.data,
           rating: rating,
         });
 
@@ -96,7 +104,11 @@ export const PrismFeedbackModal = ({ open, onOpenChange }: PrismFeedbackModalPro
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               className="min-h-[120px]"
+              maxLength={1000}
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              {feedback.length}/1000 characters
+            </p>
           </div>
 
           <div className="flex gap-2 justify-end">

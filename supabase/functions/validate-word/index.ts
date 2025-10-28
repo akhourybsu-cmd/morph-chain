@@ -97,6 +97,7 @@ Deno.serve(async (req) => {
     });
 
     if (!rateLimitOk) {
+      console.warn('Rate limit exceeded');
       return new Response(
         JSON.stringify({ valid: false, reason: 'Rate limit exceeded' }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -170,9 +171,10 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in validate-word:', error);
+    const errorId = crypto.randomUUID();
+    console.error(`[${errorId}] Error in validate-word`);
     return new Response(
-      JSON.stringify({ valid: false, reason: 'Internal server error' }),
+      JSON.stringify({ valid: false, reason: 'An error occurred. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { AlertCircle } from "lucide-react";
+import { disputeReasonSchema } from "@/lib/validation";
+import { useToast } from "@/hooks/use-toast";
 
 interface WordDisputeModalProps {
   open: boolean;
@@ -18,13 +20,25 @@ export const WordDisputeModal = ({
   onSubmitDispute 
 }: WordDisputeModalProps) => {
   const [reason, setReason] = useState("");
+  const { toast } = useToast();
 
   const handleSubmit = () => {
-    if (word && reason.trim()) {
-      onSubmitDispute(word, reason.trim());
-      setReason("");
-      onOpenChange(false);
+    if (!word || !reason.trim()) return;
+
+    // Validate input
+    const validation = disputeReasonSchema.safeParse(reason);
+    if (!validation.success) {
+      toast({
+        title: "Invalid Input",
+        description: validation.error.errors[0].message,
+        variant: "destructive",
+      });
+      return;
     }
+
+    onSubmitDispute(word, validation.data);
+    setReason("");
+    onOpenChange(false);
   };
 
   return (

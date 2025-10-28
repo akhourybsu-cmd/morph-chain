@@ -352,9 +352,10 @@ Deno.serve(async (req) => {
     );
 
   } catch (error: any) {
-    console.error('Error in check-puzzle-solvability:', error);
+    const errorId = crypto.randomUUID();
+    console.error(`[${errorId}] Error in check-puzzle-solvability`);
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error?.message || 'Unknown error' }),
+      JSON.stringify({ error: 'An error occurred while checking puzzle solvability. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

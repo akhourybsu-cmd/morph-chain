@@ -83,12 +83,46 @@ Deno.serve(async (req) => {
           ignoreDuplicates: true
         });
 
-      if (error) {
-        console.error('Batch import error:', error);
-        skipped += batch.length;
-      } else {
-        imported += batch.length;
-      }
+        if (error) {
+          console.error(`[Batch ${Math.floor(i / 50) + 1}] Import error`);
+          skipped += batch.length;
+          
+          // Log detailed audit of failed batch
+          await supabase.from('admin_audit_log').insert({
+            user_id: user.id,
+            action: 'import_puzzle_batch_failed',
+            entity_type: 'puzzle_vault',
+            details: {
+              batch_number: Math.floor(i / 50) + 1,
+              puzzles: batch.map(p => ({
+                start: p.start_word,
+                goal: p.goal_word,
+                length: p.word_length,
+                index: p.puzzle_index
+              })),
+              error_message: 'Batch import failed'
+            }
+          });
+        } else {
+          imported += batch.length;
+          
+          // Log detailed audit of successful batch
+          await supabase.from('admin_audit_log').insert({
+            user_id: user.id,
+            action: 'import_puzzle_batch_success',
+            entity_type: 'puzzle_vault',
+            details: {
+              batch_number: Math.floor(i / 50) + 1,
+              puzzles: batch.map(p => ({
+                start: p.start_word,
+                goal: p.goal_word,
+                length: p.word_length,
+                index: p.puzzle_index
+              })),
+              count: batch.length
+            }
+          });
+        }
     }
 
     console.log(`Import complete: ${imported} imported, ${skipped} skipped`);

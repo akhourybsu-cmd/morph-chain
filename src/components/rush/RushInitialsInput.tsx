@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatInTimeZone } from "date-fns-tz";
 import { markFirstDailyAttemptComplete, hasCompletedFirstDailyAttempt } from "@/lib/rushStorage";
+import { initialsSchema } from "@/lib/validation";
 
 interface RushInitialsInputProps {
   score: number;
@@ -51,6 +52,17 @@ export const RushInitialsInput = ({
     e.preventDefault();
     if (initials.length !== 3) return;
 
+    // Validate initials
+    const validation = initialsSchema.safeParse(initials);
+    if (!validation.success) {
+      toast({
+        title: "Invalid Initials",
+        description: validation.error.errors[0].message,
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Only allow submission if this is the first daily attempt
     if (mode === 'daily' && hasCompletedFirstDailyAttempt()) {
       toast({
@@ -82,7 +94,7 @@ export const RushInitialsInput = ({
           multiplier_max: multiplierMax,
           invalid_count: invalidCount,
           hard_mode: hardMode,
-          initials: initials.toUpperCase(),
+          initials: validation.data,
           words: words,
           official_status: 'finished',
           finished_at: new Date().toISOString(),
@@ -98,7 +110,7 @@ export const RushInitialsInput = ({
 
       toast({
         title: "Score Submitted! 🎉",
-        description: `${initials.toUpperCase()} - ${score.toLocaleString()} pts`,
+        description: `${validation.data} - ${score.toLocaleString()} pts`,
       });
 
       onSubmitted();
