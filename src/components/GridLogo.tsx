@@ -17,7 +17,7 @@ export const GridLogo = ({ className = "" }: { className?: string }) => {
           MORPH 
         </span>
         {' '}
-        <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-grid-accent-start to-grid-accent-end bg-clip-text text-transparent">
           GRID
         </span>
       </span>

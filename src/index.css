@@ -44,6 +44,9 @@ All colors MUST be HSL.
     --arcade-bg-mid: 20 35% 18%;      /* Warmer mid tone */
     --arcade-accent: 25 90% 55%;      /* Orange #F7931E */
     
+    --grid-accent-start: 0 84% 60%;   /* Red #F87171 */
+    --grid-accent-end: 14 91% 57%;    /* Orange-Red #FF6B35 */
+    
     --prism-accent-start: 180 100% 50%;    /* Cyan */
     --prism-accent-mid: 300 100% 50%;      /* Magenta */
     --prism-accent-end: 60 100% 50%;       /* Yellow */
