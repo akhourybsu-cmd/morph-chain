@@ -21,25 +21,28 @@ export const useGridLayout = () => {
       const headerH = 64;
       const bottomBarH = 88;
       const dateBarH = 36;
-      const verticalPadding = 32;
+      const verticalPadding = 48; // Increased padding for better spacing
       const gridGaps = 12 * 4; // 4 gaps between 5 tiles (gap-3)
       
       const usableHeight = svh - headerH - bottomBarH - dateBarH - verticalPadding - gridGaps;
       
-      // Get viewport width with padding
+      // Get viewport width with more conservative padding
       const vw = window.innerWidth;
-      const sidePadding = 24;
+      const sidePadding = vw < 400 ? 32 : 48; // More padding on small screens
       const usableWidth = Math.min(vw - sidePadding, 520); // Max 520px wide
       
       // Calculate tile size that fits both constraints
       const tileSizeFromHeight = Math.floor(usableHeight / 5);
-      const tileSizeFromWidth = Math.floor(usableWidth / 5);
+      const tileSizeFromWidth = Math.floor((usableWidth - gridGaps) / 5);
       
-      // Use smaller of the two, with min/max bounds
+      // Use smaller of the two, with adaptive min/max bounds
+      const minSize = vw < 380 ? 48 : 54; // Smaller min for very small screens
+      const maxSize = 80; // Slightly reduced max
+      
       const calculatedTileSize = Math.max(
-        56, // minimum
+        minSize,
         Math.min(
-          84, // maximum
+          maxSize,
           Math.min(tileSizeFromHeight, tileSizeFromWidth)
         )
       );
