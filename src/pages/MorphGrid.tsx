@@ -13,12 +13,16 @@ import { Button } from '@/components/ui/button';
 import { HelpCircle } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { toast } from 'sonner';
+import { useGridLayout } from '@/hooks/useGridLayout';
 
 const MorphGrid = () => {
   const { initializeGame, isEnded, dailySeed } = useGridStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showEndScreen, setShowEndScreen] = useState(false);
+  
+  // Calculate responsive grid layout
+  useGridLayout();
   
   useEffect(() => {
     const init = async () => {
@@ -52,7 +56,7 @@ const MorphGrid = () => {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-svh flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="text-2xl font-outfit font-bold mb-2">Loading MORPH GRID...</div>
           <div className="text-muted-foreground">Preparing today's puzzle</div>
@@ -62,10 +66,16 @@ const MorphGrid = () => {
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-background max-w-2xl mx-auto">
-      {/* Header - Sticky with glass blur */}
-      <header className="border-b border-border/50 bg-background/95 backdrop-blur-md sticky top-0 z-50">
-        <div className="px-3 md:px-4 h-14 md:h-16 flex items-center justify-between">
+    <div 
+      className="min-h-svh max-h-svh flex flex-col bg-background overflow-hidden"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)'
+      }}
+    >
+      {/* Header - Fixed 64px */}
+      <header className="h-14 md:h-16 border-b border-border/50 bg-background/95 backdrop-blur-md flex-shrink-0">
+        <div className="px-3 md:px-4 h-full flex items-center justify-between">
           <GridMenuSheet />
           
           <GridLogo />
@@ -82,24 +92,24 @@ const MorphGrid = () => {
         </div>
       </header>
       
-      {/* Date & Score Banner */}
-      <div className="bg-card/50 border-b border-border/30 px-3 md:px-4 py-2 flex justify-between items-center text-xs md:text-sm">
+      {/* Date & Score Bar - Fixed 36px */}
+      <div className="h-9 bg-card/50 border-b border-border/30 px-3 md:px-4 flex justify-between items-center text-xs md:text-sm flex-shrink-0">
         <span className="text-muted-foreground">Daily #{dailySeed}</span>
         <ScoreDisplay compact />
       </div>
       
-      {/* Main Game - Single screen layout */}
-      <main className="flex-1 flex flex-col px-3 md:px-6 pt-3 md:pt-4 pb-2">
-        <div className="flex-1 flex flex-col justify-center gap-3 md:gap-4">
+      {/* Main Game - Flexible, centered grid */}
+      <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4">
           <GridView />
         </div>
-        
-        {/* Sticky Bottom Bar */}
-        <div className="sticky bottom-0 bg-background/95 backdrop-blur-md border-t border-border/50 -mx-3 md:-mx-6 px-3 md:px-6 py-2 md:py-3">
-          <WordPreview />
-          <GameControls />
-        </div>
       </main>
+      
+      {/* Bottom Bar - Fixed 88px */}
+      <div className="h-20 md:h-22 bg-background/95 backdrop-blur-md border-t border-border/50 px-3 md:px-6 py-2 md:py-3 flex flex-col gap-2 flex-shrink-0">
+        <WordPreview />
+        <GameControls />
+      </div>
       
       {/* Modals */}
       <HowToPlayModal open={showHowToPlay} onClose={() => setShowHowToPlay(false)} />

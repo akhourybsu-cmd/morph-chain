@@ -77,6 +77,10 @@ All colors MUST be HSL.
 
     /* Transitions */
     --transition-smooth: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Grid sizing (dynamic, updated by JS) */
+    --tile-size: 64px;
+    --grid-size: 340px;
 
     /* Chromaword theme */
     --cw-bg1:#0b0f19;
@@ -150,5 +154,103 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  html {
+    /* Support for svh (small viewport height) */
+    height: 100svh;
+  }
+  
+  /* Prevent pull-to-refresh and overscroll on mobile */
+  body {
+    overscroll-behavior: none;
+    touch-action: pan-x pan-y;
+  }
+}
+
+@layer utilities {
+  /* Grid gradients */
+  .bg-gradient-grid-orange {
+    background: linear-gradient(135deg, hsl(var(--gradient-grid-orange-start)) 0%, hsl(var(--gradient-grid-orange-end)) 100%);
+  }
+  
+  .bg-gradient-grid-blue {
+    background: linear-gradient(135deg, hsl(var(--gradient-grid-blue-start)) 0%, hsl(var(--gradient-grid-blue-end)) 100%);
+  }
+  
+  .bg-gradient-grid-purple {
+    background: linear-gradient(135deg, hsl(var(--gradient-grid-purple-start)) 0%, hsl(var(--gradient-grid-purple-end)) 100%);
+  }
+  
+  /* Scale utilities */
+  .scale-102 {
+    transform: scale(1.02);
+  }
+  
+  .scale-104 {
+    transform: scale(1.04);
+  }
+  
+  .scale-108 {
+    transform: scale(1.08);
+  }
+  
+  /* Shake animation for invalid words */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+    20%, 40%, 60%, 80% { transform: translateX(4px); }
+  }
+  
+  .shake-animation {
+    animation: shake 0.4s ease-in-out;
+  }
+  
+  /* Pulse glow for power tiles */
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.7; }
+  }
+  
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+}
+
+/* Prevent text selection during drag */
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Support for safe-area-inset (notch/home indicator) */
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Smooth font rendering */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -27,6 +27,7 @@ interface GridState {
   // Actions
   initializeGame: (date: string) => void;
   selectTile: (tile: Tile) => void;
+  setSelected: (tiles: Tile[]) => void;
   clearSelection: () => void;
   submitWord: () => boolean;
   endGame: () => void;
@@ -89,6 +90,10 @@ export const useGridStore = create<GridState>((set, get) => ({
     }
     
     set({ selected: [...selected, tile] });
+  },
+  
+  setSelected: (tiles: Tile[]) => {
+    set({ selected: tiles });
   },
   
   clearSelection: () => {
