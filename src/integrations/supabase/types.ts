@@ -249,7 +249,7 @@ export type Database = {
           id: string
           moves: number
           session_id: string
-          user_id: string | null
+          user_id: string
           word_chain: Json
         }
         Insert: {
@@ -258,7 +258,7 @@ export type Database = {
           id?: string
           moves: number
           session_id: string
-          user_id?: string | null
+          user_id: string
           word_chain?: Json
         }
         Update: {
@@ -267,7 +267,7 @@ export type Database = {
           id?: string
           moves?: number
           session_id?: string
-          user_id?: string | null
+          user_id?: string
           word_chain?: Json
         }
         Relationships: []
@@ -343,7 +343,7 @@ export type Database = {
           puzzle_date: string
           session_id: string
           started_at: string
-          user_id: string | null
+          user_id: string
           won: boolean | null
           word_length: number
         }
@@ -357,7 +357,7 @@ export type Database = {
           puzzle_date: string
           session_id: string
           started_at?: string
-          user_id?: string | null
+          user_id: string
           won?: boolean | null
           word_length: number
         }
@@ -371,7 +371,7 @@ export type Database = {
           puzzle_date?: string
           session_id?: string
           started_at?: string
-          user_id?: string | null
+          user_id?: string
           won?: boolean | null
           word_length?: number
         }
@@ -451,7 +451,7 @@ export type Database = {
           session_id: string
           started_at: string
           undo_used: boolean
-          user_id: string | null
+          user_id: string
           words: Json
         }
         Insert: {
@@ -470,7 +470,7 @@ export type Database = {
           session_id: string
           started_at?: string
           undo_used?: boolean
-          user_id?: string | null
+          user_id: string
           words?: Json
         }
         Update: {
@@ -489,7 +489,7 @@ export type Database = {
           session_id?: string
           started_at?: string
           undo_used?: boolean
-          user_id?: string | null
+          user_id?: string
           words?: Json
         }
         Relationships: []

@@ -83,11 +83,17 @@ export const RushInitialsInput = ({
       // Generate session ID
       const sessionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Authentication required');
+      }
+
       const { error } = await supabase
         .from('rush_runs')
         .insert({
           session_id: sessionId,
-          user_id: (await supabase.auth.getUser()).data.user?.id || null,
+          user_id: user.id,
           date_local: dateLocal,
           mode,
           score,

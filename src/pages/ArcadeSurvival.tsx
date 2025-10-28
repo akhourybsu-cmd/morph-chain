@@ -341,11 +341,17 @@ export default function ArcadeSurvivalPage() {
       // Save completion to database
       try {
         const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          console.warn('Cannot save completion: User not authenticated');
+          return;
+        }
+        
         const tz = 'America/New_York';
         const dateISO = formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
         
         await supabase.from('arcade_completions').insert({
-          user_id: user?.id || null,
+          user_id: user.id,
           date_local: dateISO,
           moves: newChain.length - 1, // Subtract 1 because starting word doesn't count as a move
           word_chain: newChain,

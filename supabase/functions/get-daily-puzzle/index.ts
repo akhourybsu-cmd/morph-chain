@@ -54,6 +54,14 @@ Deno.serve(async (req) => {
 
     const { wordLength = 4 } = await req.json();
 
+    // Validate wordLength is one of the allowed values
+    if (![4, 5, 6].includes(wordLength)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid word length. Must be 4, 5, or 6.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Get today's puzzle from vault
     const today = new Date().toISOString().split('T')[0];
     const daysSinceEpoch = Math.floor(new Date(today).getTime() / (1000 * 60 * 60 * 24));

@@ -113,6 +113,30 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Validate wordLength is one of the allowed values
+    if (![4, 5, 6].includes(wordLength)) {
+      return new Response(
+        JSON.stringify({ valid: false, reason: 'Invalid word length' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate word is a string and has reasonable length
+    if (typeof word !== 'string' || word.length < 3 || word.length > 10) {
+      return new Response(
+        JSON.stringify({ valid: false, reason: 'Invalid word format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate word contains only letters
+    if (!/^[A-Za-z]+$/.test(word)) {
+      return new Response(
+        JSON.stringify({ valid: false, reason: 'Word must contain only letters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const upperWord = word.toUpperCase();
 
     // Check hardcoded banlist
