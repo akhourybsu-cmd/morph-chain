@@ -51,7 +51,7 @@ const GameSelector = () => {
           <GameBanner
             game="grid"
             title={<MorphGridTitle className="text-2xl md:text-4xl" />}
-            description="A letter changes everything — daily 5×5 word puzzle"
+            description="Color Changing daily 5x5 word puzzle"
             onClick={() => navigate('/grid')}
           />
           

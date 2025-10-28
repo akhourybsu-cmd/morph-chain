@@ -81,7 +81,7 @@ export const GameMenuSheet = ({
               <Button
                 variant="ghost"
                 className="w-full justify-start text-sm h-auto py-2"
-                onClick={() => handleNavigate("/")}
+                onClick={() => handleNavigate("/chain")}
               >
                 <MorphChainTitle className="text-base" />
               </Button>

@@ -67,7 +67,7 @@ const MorphGrid = () => {
   
   return (
     <div 
-      className="min-h-svh max-h-svh flex flex-col bg-background overflow-hidden"
+      className="min-h-svh max-h-svh flex flex-col bg-background overflow-hidden max-w-2xl mx-auto"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'env(safe-area-inset-bottom)'
