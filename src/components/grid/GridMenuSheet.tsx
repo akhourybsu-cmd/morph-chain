@@ -1,13 +1,20 @@
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Menu, Trophy, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MorphChainTitle, MorphRushTitle, MorphGridTitle } from "@/components/GameTitles";
 import { useState } from "react";
+import { GridLeaderboard } from "./GridLeaderboard";
+import { GridStatsModal } from "./GridStats";
+import { useGridStore } from "@/stores/gridStore";
 
 export const GridMenuSheet = () => {
   const navigate = useNavigate();
+  const { dailySeed } = useGridStore();
   const [open, setOpen] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showStats, setShowStats] = useState(false);
 
   const games = [
     { title: <MorphChainTitle className="text-sm" />, path: "/chain", description: "Word ladder" },
@@ -48,8 +55,28 @@ export const GridMenuSheet = () => {
           </div>
 
           <div className="pt-4 border-t border-border">
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">INFO</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">STATS & INFO</h3>
             <div className="space-y-1">
+              <button
+                onClick={() => {
+                  setShowLeaderboard(true);
+                  setOpen(false);
+                }}
+                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+              >
+                <Trophy className="w-4 h-4" />
+                Leaderboard
+              </button>
+              <button
+                onClick={() => {
+                  setShowStats(true);
+                  setOpen(false);
+                }}
+                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+              >
+                <BarChart3 className="w-4 h-4" />
+                Stats
+              </button>
               <button
                 onClick={() => {
                   navigate("/rules");
@@ -72,6 +99,19 @@ export const GridMenuSheet = () => {
           </div>
         </div>
       </SheetContent>
+
+      {/* Leaderboard Dialog */}
+      <Dialog open={showLeaderboard} onOpenChange={setShowLeaderboard}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Leaderboard</DialogTitle>
+          </DialogHeader>
+          <GridLeaderboard dateSeed={dailySeed} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Stats Modal */}
+      <GridStatsModal open={showStats} onOpenChange={setShowStats} />
     </Sheet>
   );
 };

@@ -9,10 +9,7 @@ import { EndScreen } from '@/components/grid/EndScreen';
 import { HowToPlayModal } from '@/components/grid/HowToPlayModal';
 import { GridLogo } from '@/components/GridLogo';
 import { GridMenuSheet } from '@/components/grid/GridMenuSheet';
-import { GridLeaderboard } from '@/components/grid/GridLeaderboard';
-import { GridStatsModal } from '@/components/grid/GridStats';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { HelpCircle } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { toast } from 'sonner';
@@ -23,8 +20,6 @@ const MorphGrid = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showEndScreen, setShowEndScreen] = useState(false);
-  const [showStats, setShowStats] = useState(false);
-  const [activeTab, setActiveTab] = useState("play");
   
   // Calculate responsive grid layout
   useGridLayout();
@@ -97,44 +92,28 @@ const MorphGrid = () => {
         </div>
       </header>
       
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-        <TabsList className="w-full grid grid-cols-3 rounded-none border-b flex-shrink-0">
-          <TabsTrigger value="play">Play</TabsTrigger>
-          <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-          <TabsTrigger value="stats" onClick={() => setShowStats(true)}>Stats</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="play" className="flex-1 flex flex-col min-h-0 mt-0">
-          {/* Date & Score Bar - Fixed 36px */}
-          <div className="h-9 bg-card/50 border-b border-border/30 px-3 md:px-4 flex justify-between items-center text-xs md:text-sm flex-shrink-0">
-            <span className="text-muted-foreground">Daily #{dailySeed}</span>
-            <ScoreDisplay compact />
-          </div>
-          
-          {/* Main Game - Flexible, centered grid */}
-          <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4">
-              <GridView />
-            </div>
-          </main>
-          
-          {/* Bottom Bar - Fixed with safe area */}
-          <div className="bg-background/95 backdrop-blur-md border-t border-border/50 px-3 md:px-6 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-3 flex flex-col gap-2 flex-shrink-0">
-            <WordPreview />
-            <GameControls />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="leaderboard" className="flex-1 overflow-y-auto mt-0 px-3 md:px-6 py-3">
-          <GridLeaderboard dateSeed={dailySeed} />
-        </TabsContent>
-      </Tabs>
+      {/* Date & Score Bar - Fixed 36px */}
+      <div className="h-9 bg-card/50 border-b border-border/30 px-3 md:px-4 flex justify-between items-center text-xs md:text-sm flex-shrink-0">
+        <span className="text-muted-foreground">Daily #{dailySeed}</span>
+        <ScoreDisplay compact />
+      </div>
+      
+      {/* Main Game - Flexible, centered grid */}
+      <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4">
+          <GridView />
+        </div>
+      </main>
+      
+      {/* Bottom Bar - Fixed with safe area */}
+      <div className="bg-background/95 backdrop-blur-md border-t border-border/50 px-3 md:px-6 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-3 flex flex-col gap-2 flex-shrink-0">
+        <WordPreview />
+        <GameControls />
+      </div>
       
       {/* Modals */}
       <HowToPlayModal open={showHowToPlay} onClose={() => setShowHowToPlay(false)} />
       <EndScreen open={showEndScreen} onClose={() => setShowEndScreen(false)} />
-      <GridStatsModal open={showStats} onOpenChange={setShowStats} />
     </div>
   );
 };
