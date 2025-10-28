@@ -30,7 +30,7 @@ const Rules = () => {
               Morph Grid
             </h2>
             <div className="space-y-4 text-muted-foreground">
-              <p>Build words on a 5x5 grid by connecting adjacent letters.</p>
+              <p>Color Changing daily 5x5 word puzzle</p>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>Connect adjacent letters (horizontally, vertically, or diagonally)</li>
                 <li>Each letter can only be used once per word</li>
