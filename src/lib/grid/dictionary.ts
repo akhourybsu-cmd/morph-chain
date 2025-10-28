@@ -1,5 +1,6 @@
 // Dictionary for MORPH GRID word validation
 import { isModernEnglish } from '@/lib/wordFilters';
+import wordsAlpha from './words_alpha.txt?raw';
 
 let wordSet: Set<string> | null = null;
 
@@ -7,26 +8,21 @@ export async function loadDictionary(): Promise<void> {
   if (wordSet) return;
   
   try {
-    const response = await fetch('/dict/manifest.json');
-    const manifest = await response.json();
-    
     const allWords = new Set<string>();
     
-    // Load all dictionary files
-    for (const file of manifest.files) {
-      const wordsResponse = await fetch(`/dict/${file}`);
-      const words = await wordsResponse.json();
-      words.forEach((word: string) => {
-        const normalizedWord = word.toLowerCase();
-        // Only add words that pass modern English filters
-        if (isModernEnglish(normalizedWord)) {
-          allWords.add(normalizedWord);
-        }
-      });
+    // Load words from the same source as Morph Chain
+    const words = wordsAlpha.split('\n');
+    
+    for (const word of words) {
+      const trimmed = word.trim().toLowerCase();
+      // Only add words that pass modern English filters (3+ letters for GRID)
+      if (trimmed.length >= 3 && isModernEnglish(trimmed)) {
+        allWords.add(trimmed);
+      }
     }
     
     wordSet = allWords;
-    console.log(`Dictionary loaded: ${wordSet.size} valid words`);
+    console.log(`MORPH GRID Dictionary loaded: ${wordSet.size} valid words (3+ letters)`);
   } catch (error) {
     console.error('Failed to load dictionary:', error);
     wordSet = new Set();
