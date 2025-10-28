@@ -24,6 +24,7 @@ export function morphGrid(
     tile.isVowel = isVowelChar(tile.char);
     tile.morphCount = 0;
     tile.stabilized = false;
+    // PRESERVE progress state - morphing doesn't change color
     
     // 5% chance for power tile (max 2 on grid)
     const powerCount = countPowerTiles(newGrid);

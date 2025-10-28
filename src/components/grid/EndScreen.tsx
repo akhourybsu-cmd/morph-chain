@@ -10,15 +10,15 @@ interface EndScreenProps {
 }
 
 export const EndScreen = ({ open, onClose }: EndScreenProps) => {
-  const { totalScore, submittedWords, dailySeed, morphCount, stabilizationCount } = useGridStore();
+  const { moves, submittedWords, dailySeed, morphCount, stabilizationCount } = useGridStore();
   
   const longestWord = submittedWords.reduce((longest, current) => 
     current.word.length > longest.length ? current.word : longest
   , '');
   
   const handleShare = () => {
-    const text = `🎮 MORPH GRID — Daily ${dailySeed}
-📊 Score: ${totalScore}
+    const text = `💎 MORPH GRID — Daily ${dailySeed}
+🏆 Completed in ${moves} moves
 📝 ${submittedWords.length} words | Longest: "${longestWord}"
 🔄 ${morphCount} morphs | 🔒 ${stabilizationCount} stabilized
 
@@ -33,17 +33,17 @@ morphgames.io`;
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl font-outfit font-bold text-center">
-            Game Complete!
+            You turned the grid Purple!
           </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6 py-4">
-          {/* Final Score */}
+          {/* Moves Display */}
           <div className="text-center">
             <div className="text-6xl font-outfit font-bold text-primary mb-2">
-              {totalScore}
+              {moves}
             </div>
-            <div className="text-muted-foreground">Final Score</div>
+            <div className="text-muted-foreground">Moves Used</div>
           </div>
           
           {/* Stats Grid */}
@@ -88,7 +88,7 @@ morphgames.io`;
                   key={i}
                   className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-medium"
                 >
-                  {w.word} <span className="text-xs opacity-70">+{w.score.total}</span>
+                  {w.word}
                 </div>
               ))}
             </div>

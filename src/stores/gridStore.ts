@@ -4,12 +4,10 @@ import { Tile } from '@/lib/grid/gridGenerator';
 import { generateDailyGrid } from '@/lib/grid/gridGenerator';
 import { SeededRandom } from '@/lib/grid/seededRNG';
 import { morphGrid, morphPowerRow } from '@/lib/grid/morphMechanics';
-import { calculateWordScore, WordScore } from '@/lib/grid/scoring';
 import { isValidWord } from '@/lib/grid/dictionary';
 
 interface SubmittedWord {
   word: string;
-  score: WordScore;
   timestamp: number;
 }
 
@@ -17,7 +15,8 @@ interface GridState {
   grid: Tile[][];
   selected: Tile[];
   submittedWords: SubmittedWord[];
-  totalScore: number;
+  moves: number;
+  purpleCount: number;
   dailySeed: string;
   rng: SeededRandom | null;
   isPlaying: boolean;
@@ -32,13 +31,15 @@ interface GridState {
   submitWord: () => boolean;
   endGame: () => void;
   resetGame: () => void;
+  resetDaily: () => void;
 }
 
 export const useGridStore = create<GridState>((set, get) => ({
   grid: [],
   selected: [],
   submittedWords: [],
-  totalScore: 0,
+  moves: 0,
+  purpleCount: 0,
   dailySeed: '',
   rng: null,
   isPlaying: false,
@@ -54,7 +55,8 @@ export const useGridStore = create<GridState>((set, get) => ({
       grid,
       selected: [],
       submittedWords: [],
-      totalScore: 0,
+      moves: 0,
+      purpleCount: 0,
       dailySeed: date,
       rng,
       isPlaying: true,
@@ -94,7 +96,7 @@ export const useGridStore = create<GridState>((set, get) => ({
   },
   
   submitWord: () => {
-    const { selected, grid, rng, submittedWords, totalScore, morphCount, stabilizationCount } = get();
+    const { selected, grid, rng, submittedWords, morphCount, stabilizationCount } = get();
     
     if (selected.length < 3 || !rng) return false;
     
@@ -104,44 +106,46 @@ export const useGridStore = create<GridState>((set, get) => ({
       return false;
     }
     
-    // Check if word already submitted
-    if (submittedWords.some(w => w.word === word)) {
-      return false;
-    }
+    // Step 1: Advance progress for all used tiles
+    const newGrid = grid.map(row => row.map(tile => {
+      const isUsed = selected.some(s => s.id === tile.id);
+      if (isUsed) {
+        return {
+          ...tile,
+          progress: Math.min(2, tile.progress + 1) as 0 | 1 | 2
+        };
+      }
+      return { ...tile };
+    }));
     
-    // Calculate ripple mutations (count neighbors of used tiles)
+    // Step 2: Morph the grid (letters change, neighbors mutate)
     const usedCoords = selected.map(t => ({ row: t.row, col: t.col }));
-    const rippleMutations = countPotentialMutations(grid, usedCoords);
+    let morphedGrid = morphGrid(newGrid, usedCoords, rng);
     
-    // Check if word contains power tile
+    // Step 3: Check for power tile usage
     const hasPowerTile = selected.some(t => t.isPower);
-    const powerTileRow = hasPowerTile ? selected.find(t => t.isPower)?.row : null;
-    
-    // Calculate score
-    const scoreBreakdown = calculateWordScore(word, selected, rippleMutations, hasPowerTile);
-    
-    // Morph the grid
-    let newGrid = morphGrid(grid, usedCoords, rng);
-    
-    // If power tile was used, morph its entire row
-    if (powerTileRow !== null) {
-      newGrid = morphPowerRow(newGrid, powerTileRow, rng);
+    if (hasPowerTile) {
+      const powerTile = selected.find(t => t.isPower);
+      if (powerTile) {
+        morphedGrid = morphPowerRow(morphedGrid, powerTile.row, rng);
+      }
     }
     
-    // Count stabilizations
-    const newStabilizations = countStabilized(newGrid);
+    const newPurpleCount = morphedGrid.flat().filter(t => t.progress === 2).length;
+    const isWin = newPurpleCount === 25;
     
     set({
-      grid: newGrid,
+      grid: morphedGrid,
       selected: [],
       submittedWords: [...submittedWords, {
         word,
-        score: scoreBreakdown,
         timestamp: Date.now()
       }],
-      totalScore: totalScore + scoreBreakdown.total,
+      moves: get().moves + 1,
+      purpleCount: newPurpleCount,
       morphCount: morphCount + 1,
-      stabilizationCount: newStabilizations
+      stabilizationCount: countStabilized(morphedGrid),
+      isEnded: isWin
     });
     
     return true;
@@ -152,6 +156,11 @@ export const useGridStore = create<GridState>((set, get) => ({
   },
   
   resetGame: () => {
+    const { dailySeed } = get();
+    get().initializeGame(dailySeed);
+  },
+  
+  resetDaily: () => {
     const { dailySeed } = get();
     get().initializeGame(dailySeed);
   }

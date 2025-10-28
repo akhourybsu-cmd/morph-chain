@@ -1,6 +1,8 @@
 // Generate 5x5 grid for MORPH GRID
 import { SeededRandom } from './seededRNG';
 
+export type ProgressState = 0 | 1 | 2; // 0=Orange, 1=Blue, 2=Purple
+
 export interface Tile {
   id: string;
   char: string;
@@ -10,6 +12,7 @@ export interface Tile {
   stabilized: boolean;
   row: number;
   col: number;
+  progress: ProgressState;
 }
 
 const VOWELS = ['A', 'E', 'I', 'O', 'U'];
@@ -45,7 +48,8 @@ export function generateDailyGrid(date: string): Tile[][] {
         morphCount: 0,
         stabilized: false,
         row,
-        col
+        col,
+        progress: 0 // Start all tiles as Orange
       });
     }
     grid.push(gridRow);

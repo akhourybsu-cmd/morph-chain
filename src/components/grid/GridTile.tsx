@@ -18,12 +18,12 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
         "text-base xs:text-lg sm:text-xl",
         "shadow-[0_6px_18px_rgba(0,0,0,0.25)]",
         
-        // Base gradient backgrounds with aura
-        tile.isPower
-          ? "bg-gradient-grid-power"
-          : tile.isVowel 
-            ? "bg-gradient-grid-vowel"
-            : "bg-gradient-grid-consonant",
+        // Progress-based gradient backgrounds
+        tile.progress === 0
+          ? "bg-gradient-grid-orange"
+          : tile.progress === 1
+            ? "bg-gradient-grid-blue"
+            : "bg-gradient-grid-purple",
         
         // Stabilized state
         tile.stabilized && "ring-2 ring-neutral-300/80 brightness-90",
@@ -43,22 +43,17 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
       <div 
         className={cn(
           "absolute inset-0 rounded-2xl blur-xl opacity-40 pointer-events-none",
-          tile.isPower && "bg-gradient-grid-power animate-pulse-glow",
-          !tile.isPower && tile.isVowel && "bg-gradient-grid-vowel",
-          !tile.isPower && !tile.isVowel && "bg-gradient-grid-consonant",
+          tile.isPower && "animate-pulse-glow",
+          tile.progress === 0 && "bg-gradient-grid-orange",
+          tile.progress === 1 && "bg-gradient-grid-blue",
+          tile.progress === 2 && "bg-gradient-grid-purple",
           isSelected && "opacity-60"
         )}
       />
       
       {/* Letter with drop shadow */}
       <span 
-        className={cn(
-          "relative z-10 uppercase tracking-wide select-none",
-          "drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]",
-          tile.isPower && "text-white",
-          !tile.isPower && tile.isVowel && "text-cyan-50",
-          !tile.isPower && !tile.isVowel && "text-amber-50"
-        )}
+        className="relative z-10 uppercase tracking-wide select-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] text-white"
       >
         {tile.char}
       </span>

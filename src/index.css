@@ -56,16 +56,18 @@ All colors MUST be HSL.
     --rush-accent-start: 10 100% 65%;      /* Electric Coral #FF5A4D */
     --rush-accent-end: 38 100% 63%;        /* Amber #FFC043 */
 
-    /* Grid tile gradients */
-    --grid-vowel-from: 180 100% 50%;       /* Teal */
-    --grid-vowel-via: 188 100% 50%;        /* Cyan */
-    --grid-vowel-to: 197 100% 50%;         /* Sky */
-    --grid-consonant-from: 38 100% 55%;    /* Amber */
-    --grid-consonant-via: 48 100% 50%;     /* Yellow */
-    --grid-consonant-to: 25 100% 50%;      /* Orange */
-    --grid-power-from: 280 100% 60%;       /* Purple */
-    --grid-power-via: 300 100% 60%;        /* Fuchsia */
-    --grid-power-to: 260 100% 60%;         /* Indigo */
+    /* MORPH GRID progress state gradients */
+    --gradient-grid-orange-start: 36 100% 55%;     /* #F5A623 deep orange */
+    --gradient-grid-orange-mid: 38 97% 63%;        /* #F8B24C bright orange */
+    --gradient-grid-orange-end: 40 93% 70%;        /* #F5C36C light coral */
+    
+    --gradient-grid-blue-start: 194 100% 56%;      /* #1EC8FF cyan */
+    --gradient-grid-blue-mid: 199 100% 60%;        /* #27B1FF bright blue */
+    --gradient-grid-blue-end: 204 100% 50%;        /* #00A3FF blue */
+    
+    --gradient-grid-purple-start: 270 89% 64%;     /* #A24DF7 purple */
+    --gradient-grid-purple-mid: 265 100% 65%;      /* #8E4CFF bright purple */
+    --gradient-grid-purple-end: 252 100% 64%;      /* #6E44FF deep purple */
 
     --border: 218 12% 18%;            /* #2A2F38 */
     --input: 218 12% 18%;

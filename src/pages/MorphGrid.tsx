@@ -68,12 +68,7 @@ const MorphGrid = () => {
         <div className="mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between">
           <GridMenuSheet />
           
-          <div className="flex flex-col items-center gap-0.5">
-            <GridLogo />
-            <span className="text-[10px] sm:text-xs text-muted-foreground tracking-wide">
-              A letter changes everything.
-            </span>
-          </div>
+          <GridLogo />
           
           <Button
             variant="ghost"

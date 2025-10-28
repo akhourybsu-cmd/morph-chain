@@ -24,63 +24,52 @@ export const HowToPlayModal = ({ open, onClose }: HowToPlayModalProps) => {
           <section>
             <h3 className="font-semibold text-lg mb-2">🎯 Goal</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Form as many valid words as you can on today's 5×5 grid. Everyone sees the same daily board.
+              Turn every tile <strong>Purple</strong>. The whole board starts <strong>Orange</strong>. Use words to advance colors <strong>Orange → Blue → Purple</strong>. Fewest <strong>moves</strong> wins.
             </p>
           </section>
 
           <section>
-            <h3 className="font-semibold text-lg mb-2">🔤 Build Words</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-2">
-              Drag or tap to chain letters that touch (8 directions). You can't reuse a tile within the same word.
-            </p>
-          </section>
-
-          <section>
-            <h3 className="font-semibold text-lg mb-2">✅ Submit</h3>
+            <h3 className="font-semibold text-lg mb-2">🔤 Build words</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Tap "Submit Word" or swipe the word bar to the right. Words must be 3+ letters and in the dictionary.
+              Drag or tap to chain letters that <strong>touch</strong> (diagonals allowed). Words must be <strong>3+ letters</strong> and in the dictionary. You can't reuse a tile within the same word.
             </p>
           </section>
 
           <section>
-            <h3 className="font-semibold text-lg mb-2">🔄 Morphs</h3>
-            <p className="text-sm text-muted-foreground mb-2">When you submit a valid word:</p>
-            <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
-              <li>The <strong>used tiles</strong> morph into new letters</li>
-              <li><strong>Neighbors</strong> (N/E/S/W) may mutate (vowel→vowel, consonant→consonant)</li>
-              <li>Tiles that mutate twice without being used become <strong>Stabilized</strong> (gray rim) until you use them</li>
-              <li>Some tiles appear as <strong>Power</strong> (purple). Use one to morph its entire row</li>
+            <h3 className="font-semibold text-lg mb-2">🎨 Advance colors</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-2">
+              When you submit a valid word, <strong>each tile you used advances one step</strong>:
+            </p>
+            <ul className="text-sm text-muted-foreground space-y-1.5 list-disc list-inside">
+              <li><strong>Orange → Blue</strong>, <strong>Blue → Purple</strong>, <strong>Purple stays Purple</strong>.</li>
+              <li>Purple tiles can be reused as much as you like.</li>
             </ul>
           </section>
 
           <section>
-            <h3 className="font-semibold text-lg mb-2">🏆 Scoring</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              Longer words, rare letters (J,Q,X,Z,K,V), morph ripples, and power tiles increase your score.
-            </p>
-            <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground bg-card/30 rounded-lg p-3">
-              <div>3 letters: <strong>10 pts</strong></div>
-              <div>4 letters: <strong>20 pts</strong></div>
-              <div>5 letters: <strong>40 pts</strong></div>
-              <div>6 letters: <strong>65 pts</strong></div>
-              <div>7+ letters: <strong>95+</strong></div>
-              <div>Power bonus: <strong>+20</strong></div>
-            </div>
+            <h3 className="font-semibold text-lg mb-2">🔄 Morph the board</h3>
+            <p className="text-sm text-muted-foreground mb-2">Every valid word <strong>morphs letters</strong> to keep the grid fresh:</p>
+            <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
+              <li>Used tiles become <strong>new letters</strong></li>
+              <li><strong>Neighbors (N/E/S/W)</strong> might mutate (vowel→vowel, consonant→consonant)</li>
+              <li>Tiles mutated twice without being used become <strong>Stabilized</strong> (gray rim) until you use them</li>
+              <li><strong>Power tiles</strong> sometimes appear. Use one to <strong>morph its entire row</strong></li>
+            </ul>
           </section>
 
           <section>
-            <h3 className="font-semibold text-lg mb-2">🎮 End</h3>
+            <h3 className="font-semibold text-lg mb-2">🏆 Win & Leaderboard</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Play until you're satisfied and tap "End" to see/share your results. A new grid appears each day.
+              When <strong>all tiles are Purple</strong>, you win! Your result is measured in <strong>Moves</strong> (submissions). Lower is better. Share your result and compare on the leaderboard.
             </p>
           </section>
 
           <section className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-            <h3 className="font-semibold text-base mb-2 text-primary">💡 Pro Tips</h3>
+            <h3 className="font-semibold text-base mb-2 text-primary">💡 Tips</h3>
             <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
-              <li>Try using newly morphed tiles; they tend to open fresh paths</li>
-              <li>Free Stabilized tiles to re-enable mutations</li>
-              <li>Power tiles are best when they refresh a dead row</li>
+              <li>Target clusters of Orange/Blue to advance many tiles per move</li>
+              <li>Reuse Purple tiles to reach stubborn Orange corners</li>
+              <li>Free Stabilized tiles by using them in a word</li>
             </ul>
           </section>
 
