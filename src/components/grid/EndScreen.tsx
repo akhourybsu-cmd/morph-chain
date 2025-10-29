@@ -30,17 +30,20 @@ morphgames.io`;
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-outfit font-bold text-center">
-            You turned the grid Purple!
+      <DialogContent className="max-w-md relative overflow-hidden">
+        {/* Purple ambient glow background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-500/20 via-purple-600/10 to-transparent pointer-events-none animate-pulse-glow" />
+        
+        <DialogHeader className="relative z-10">
+          <DialogTitle className="text-3xl font-outfit font-bold text-center bg-gradient-to-r from-purple-400 via-purple-300 to-purple-400 bg-clip-text text-transparent animate-shimmer">
+            All Purple!
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-4 relative z-10">
           {/* Moves Display */}
           <div className="text-center">
-            <div className="text-6xl font-outfit font-bold text-primary mb-2">
+            <div className="text-6xl font-outfit font-bold bg-gradient-to-br from-purple-400 to-purple-600 bg-clip-text text-transparent mb-2 drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]">
               {moves}
             </div>
             <div className="text-muted-foreground">Moves Used</div>

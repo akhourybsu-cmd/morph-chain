@@ -1,20 +1,25 @@
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Menu, Trophy, BarChart3 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Menu, Trophy, BarChart3, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MorphChainTitle, MorphRushTitle, MorphGridTitle, MorphPrismTitle } from "@/components/GameTitles";
 import { useState } from "react";
 import { GridLeaderboard } from "./GridLeaderboard";
 import { GridStatsModal } from "./GridStats";
 import { useGridStore } from "@/stores/gridStore";
+import { useGridSettings } from "@/hooks/useGridSettings";
 
 export const GridMenuSheet = () => {
   const navigate = useNavigate();
   const { dailySeed } = useGridStore();
+  const { settings, updateSetting } = useGridSettings();
   const [open, setOpen] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const games = [
     { title: <MorphChainTitle className="text-sm" />, path: "/", description: "Word ladder" },
@@ -87,6 +92,16 @@ export const GridMenuSheet = () => {
               </button>
               <button
                 onClick={() => {
+                  setShowSettings(true);
+                  setOpen(false);
+                }}
+                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+              >
+                <Settings className="w-4 h-4" />
+                Settings
+              </button>
+              <button
+                onClick={() => {
                   navigate("/rules");
                   setOpen(false);
                 }}
@@ -120,6 +135,59 @@ export const GridMenuSheet = () => {
 
       {/* Stats Modal */}
       <GridStatsModal open={showStats} onOpenChange={setShowStats} />
+      
+      {/* Settings Dialog */}
+      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Settings</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="animations" className="cursor-pointer">
+                <div className="font-medium">Animations</div>
+                <div className="text-sm text-muted-foreground">Enable tile animations</div>
+              </Label>
+              <Switch
+                id="animations"
+                checked={settings.animations}
+                onCheckedChange={(checked) => updateSetting('animations', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="sound-haptics" className="cursor-pointer">
+                <div className="font-medium">Sound & Haptics</div>
+                <div className="text-sm text-muted-foreground">Vibration feedback</div>
+              </Label>
+              <Switch
+                id="sound-haptics"
+                checked={settings.soundHaptics}
+                onCheckedChange={(checked) => updateSetting('soundHaptics', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="colorblind" className="cursor-pointer">
+                <div className="font-medium">Colorblind Mode</div>
+                <div className="text-sm text-muted-foreground">Alternative color palette</div>
+              </Label>
+              <Switch
+                id="colorblind"
+                checked={settings.colorblindMode}
+                onCheckedChange={(checked) => updateSetting('colorblindMode', checked)}
+              />
+            </div>
+            
+            <div className="pt-4 border-t">
+              <div className="text-sm text-muted-foreground space-y-2">
+                <p className="font-medium">About Morph Grid</p>
+                <p>Turn all 25 tiles Purple in the fewest moves by forming words. Today's board uses a balanced letter generator so every grid is fair and word-friendly. During play, morphs subtly keep vowels and consonants in a healthy mix.</p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Sheet>
   );
 };

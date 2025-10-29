@@ -8,6 +8,7 @@ export const GridView = () => {
   const { grid, selected, selectTile, setSelected, submitWord, clearSelection } = useGridStore();
   const gridRef = useRef<HTMLDivElement>(null);
   const [pathTiles, setPathTiles] = useState(selected);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Drag gesture handling
   useGridGesture(
@@ -20,14 +21,14 @@ export const GridView = () => {
       onPathUpdate: (tiles) => {
         setPathTiles(tiles);
         setSelected(tiles);
+        drawConnectionPath(tiles);
       },
       onPathComplete: (tiles) => {
-        // Just update selection, don't auto-submit
         setPathTiles(tiles);
         setSelected(tiles);
+        clearConnectionPath();
       },
       onInvalidMove: () => {
-        // Optional: Add haptic feedback here
         if ('vibrate' in navigator) {
           navigator.vibrate(50);
         }
@@ -35,20 +36,83 @@ export const GridView = () => {
     }
   );
 
+  // Draw connection path on canvas
+  const drawConnectionPath = (tiles: typeof selected) => {
+    const canvas = canvasRef.current;
+    const gridElement = gridRef.current;
+    if (!canvas || !gridElement || tiles.length < 2) {
+      clearConnectionPath();
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = gridElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.6)';
+    ctx.shadowBlur = 4;
+
+    ctx.beginPath();
+    tiles.forEach((tile, index) => {
+      const tileElement = gridElement.querySelector(`[data-tile-id="${tile.id}"]`);
+      if (!tileElement) return;
+
+      const tileRect = tileElement.getBoundingClientRect();
+      const x = tileRect.left - rect.left + tileRect.width / 2;
+      const y = tileRect.top - rect.top + tileRect.height / 2;
+
+      if (index === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    });
+    ctx.stroke();
+  };
+
+  const clearConnectionPath = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  };
+
   // Sync path tiles with selected from store
   useEffect(() => {
     setPathTiles(selected);
+    if (selected.length === 0) {
+      clearConnectionPath();
+    }
   }, [selected]);
   
   return (
-    <div className="w-full max-w-[min(92vw,520px)] mx-auto">
+    <div className="w-full max-w-[min(92vw,520px)] mx-auto relative">
+      {/* Connection path canvas overlay */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 pointer-events-none z-10"
+        style={{ width: '100%', height: '100%' }}
+      />
+      
+      {/* Grid with dark radial gradient background */}
       <div 
         ref={gridRef}
-        className="grid grid-cols-5 gap-3 select-none"
+        className="grid grid-cols-5 gap-3 select-none relative rounded-3xl p-3"
         style={{
           touchAction: 'none',
           WebkitUserSelect: 'none',
-          userSelect: 'none'
+          userSelect: 'none',
+          background: 'radial-gradient(circle at center, #181818 0%, #111 50%, #000 100%)'
         }}
       >
         {grid.map((row, rowIndex) =>
@@ -63,7 +127,6 @@ export const GridView = () => {
                 isSelected={isSelected}
                 selectionIndex={isSelected ? selectedIndex : undefined}
                 onClick={() => {
-                  // Tap-to-add mode (optional fallback)
                   selectTile(tile);
                 }}
               />
@@ -71,7 +134,6 @@ export const GridView = () => {
           })
         )}
       </div>
-      
     </div>
   );
 };

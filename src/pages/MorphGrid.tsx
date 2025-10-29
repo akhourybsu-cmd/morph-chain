@@ -78,7 +78,9 @@ const MorphGrid = () => {
         <div className="px-3 md:px-4 h-full flex items-center justify-between">
           <GridMenuSheet />
           
-          <GridLogo />
+          <div className="logo-pulse">
+            <GridLogo />
+          </div>
           
           <Button
             variant="ghost"
@@ -92,9 +94,10 @@ const MorphGrid = () => {
         </div>
       </header>
       
-      {/* Date & Score Bar - Fixed 36px */}
-      <div className="h-9 bg-card/50 border-b border-border/30 px-3 md:px-4 flex justify-between items-center text-xs md:text-sm flex-shrink-0">
+      {/* Info Row - Compact stats */}
+      <div className="h-9 bg-card/50 border-b border-border/30 px-3 md:px-4 flex justify-center items-center gap-3 text-xs md:text-sm flex-shrink-0">
         <span className="text-muted-foreground">Daily #{dailySeed}</span>
+        <span className="text-muted-foreground">·</span>
         <ScoreDisplay compact />
       </div>
       

@@ -9,6 +9,23 @@ interface GridTileProps {
 }
 
 export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTileProps) => {
+  // Calculate progress ring fill percentage
+  const progressPercent = tile.progress === 0 ? 33 : tile.progress === 1 ? 66 : 100;
+  
+  // Text colors by progress
+  const textColor = tile.progress === 0 
+    ? "text-[#3C2A00]" 
+    : tile.progress === 1 
+      ? "text-[#001730]" 
+      : "text-white";
+  
+  // Glow shadow by progress
+  const glowShadow = tile.progress === 0
+    ? "shadow-[0_0_12px_hsl(var(--grid-orange-glow)/0.6)]"
+    : tile.progress === 1
+      ? "shadow-[0_0_12px_hsl(var(--grid-blue-glow)/0.55)]"
+      : "shadow-[0_0_12px_hsl(var(--grid-purple-glow)/0.5)]";
+  
   return (
     <button
       onClick={onClick}
@@ -16,8 +33,7 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
       className={cn(
         "grid-tile relative w-full aspect-square rounded-2xl font-outfit font-bold",
         "flex items-center justify-center touch-manipulation will-change-transform",
-        "text-base md:text-lg transition-all duration-150",
-        "shadow-[0_6px_18px_rgba(0,0,0,0.25)]",
+        "text-xl md:text-2xl transition-all duration-150",
         
         // Progress-based gradient backgrounds
         tile.progress === 0
@@ -26,14 +42,23 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
             ? "bg-gradient-grid-blue"
             : "bg-gradient-grid-purple",
         
+        // Glow shadows
+        glowShadow,
+        
         // Stabilized state
         tile.stabilized && "ring-2 ring-neutral-300/80 brightness-90",
         
-        // Selected state - enhanced with scale and glow
-        isSelected && "scale-108 shadow-[0_0_32px_rgba(127,178,255,0.7)] ring-2 ring-white/90 z-10",
+        // Selected state - enhanced with scale and bright white outline
+        isSelected && "scale-105 shadow-[0_0_24px_rgba(255,255,255,0.8)] ring-2 ring-white/70 z-10",
+        
+        // Breathing animation for Blue tiles
+        tile.progress === 1 && !isSelected && "animate-breathe",
         
         // Hover/Active states (only when not selected)
-        !isSelected && "hover:scale-102 hover:brightness-110 active:scale-95"
+        !isSelected && "hover:scale-102 hover:brightness-110 active:scale-95",
+        
+        // Text color
+        textColor
       )}
       style={{
         width: 'var(--tile-size, 64px)',
@@ -52,6 +77,40 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
         )}
       />
       
+      {/* Progress ring indicator */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
+        <circle
+          cx="50"
+          cy="50"
+          r="46"
+          fill="none"
+          stroke="rgba(0,0,0,0.2)"
+          strokeWidth="2"
+        />
+        <circle
+          cx="50"
+          cy="50"
+          r="46"
+          fill="none"
+          stroke={tile.progress === 2 ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.25)"}
+          strokeWidth="2"
+          strokeDasharray={`${progressPercent * 2.89} 289`}
+          strokeDashoffset="72.25"
+          strokeLinecap="round"
+          className="transition-all duration-300"
+          style={{
+            filter: tile.progress === 2 ? 'drop-shadow(0 0 2px rgba(255,255,255,0.6))' : 'none'
+          }}
+        />
+      </svg>
+      
+      {/* Shimmer effect for Purple tiles */}
+      {tile.progress === 2 && !isSelected && (
+        <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 animate-shimmer" />
+        </div>
+      )}
+      
       {/* Power star indicator */}
       {tile.isPower && !isSelected && (
         <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center text-[8px]">
@@ -61,14 +120,17 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
       
       {/* Letter with drop shadow */}
       <span 
-        className="relative z-10 uppercase tracking-wide select-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] text-white"
+        className={cn(
+          "relative z-10 uppercase tracking-wide select-none",
+          "drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+        )}
       >
         {tile.char}
       </span>
       
       {/* Selection number badge */}
       {isSelected && selectionIndex !== undefined && (
-        <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold shadow-lg border-2 border-background z-20">
+        <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-white text-black text-xs flex items-center justify-center font-bold shadow-lg border-2 border-white/90 z-20">
           {selectionIndex + 1}
         </div>
       )}

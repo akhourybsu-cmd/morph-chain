@@ -49,6 +49,22 @@ All colors MUST be HSL.
     --grid-accent-end: 0 100% 71%;    /* Light coral #FF6B6B */
     --grid-glow: 25 100% 60%;         /* Soft white-to-orange glow */
     
+    /* Grid Tile State Gradients */
+    --grid-orange-start: 38 92% 60%;    /* #F6B23E */
+    --grid-orange-mid: 39 91% 66%;      /* #F7C25A */
+    --grid-orange-end: 40 90% 72%;      /* #F8D172 */
+    --grid-orange-glow: 37 92% 59%;     /* Orange glow */
+    
+    --grid-blue-start: 196 100% 58%;    /* #29C3FF */
+    --grid-blue-mid: 196 100% 55%;      /* #1EB4FF */
+    --grid-blue-end: 196 100% 50%;      /* #009AFF */
+    --grid-blue-glow: 196 100% 52%;     /* Blue glow */
+    
+    --grid-purple-start: 265 100% 65%;  /* #9E4CFF */
+    --grid-purple-mid: 265 95% 59%;     /* #7E39F6 */
+    --grid-purple-end: 265 90% 52%;     /* #5D28DD */
+    --grid-purple-glow: 265 95% 61%;    /* Purple glow */
+    
     --prism-accent-start: 180 100% 50%;    /* Cyan */
     --prism-accent-mid: 300 100% 50%;      /* Magenta */
     --prism-accent-end: 60 100% 50%;       /* Yellow */
@@ -174,15 +190,15 @@ All colors MUST be HSL.
 @layer utilities {
   /* Grid gradients */
   .bg-gradient-grid-orange {
-    background: linear-gradient(135deg, hsl(var(--gradient-grid-orange-start)) 0%, hsl(var(--gradient-grid-orange-end)) 100%);
+    background: linear-gradient(135deg, hsl(var(--grid-orange-start)), hsl(var(--grid-orange-mid)), hsl(var(--grid-orange-end)));
   }
   
   .bg-gradient-grid-blue {
-    background: linear-gradient(135deg, hsl(var(--gradient-grid-blue-start)) 0%, hsl(var(--gradient-grid-blue-end)) 100%);
+    background: linear-gradient(135deg, hsl(var(--grid-blue-start)), hsl(var(--grid-blue-mid)), hsl(var(--grid-blue-end)));
   }
   
   .bg-gradient-grid-purple {
-    background: linear-gradient(135deg, hsl(var(--gradient-grid-purple-start)) 0%, hsl(var(--gradient-grid-purple-end)) 100%);
+    background: linear-gradient(135deg, hsl(var(--grid-purple-start)), hsl(var(--grid-purple-mid)), hsl(var(--grid-purple-end)));
   }
   
   /* Scale utilities */
@@ -217,6 +233,90 @@ All colors MUST be HSL.
   
   .animate-pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite;
+  }
+  
+  /* Breathe animation for Blue tiles */
+  @keyframes breathe {
+    0%, 100% {
+      opacity: 0.95;
+      filter: brightness(1);
+    }
+    50% {
+      opacity: 1;
+      filter: brightness(1.05);
+    }
+  }
+
+  .animate-breathe {
+    animation: breathe 3s ease-in-out infinite;
+  }
+
+  /* Shimmer animation for Purple tiles */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+  }
+
+  /* Wiggle animation for invalid words */
+  @keyframes wiggle {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  .animate-wiggle {
+    animation: wiggle 0.15s ease-in-out;
+  }
+
+  /* Flip animation for tile transitions */
+  @keyframes flip-y {
+    0% { transform: rotateY(0deg); }
+    50% { transform: rotateY(90deg); }
+    100% { transform: rotateY(0deg); }
+  }
+
+  .animate-flip-y {
+    animation: flip-y 0.4s ease-in-out;
+  }
+
+  /* Ripple pulse effect */
+  @keyframes ripple-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+
+  .animate-ripple {
+    animation: ripple-pulse 0.3s ease-out;
+  }
+
+  /* Logo pulse effect */
+  @keyframes logo-pulse {
+    0%, 100% { 
+      text-shadow: 0 0 10px hsl(var(--grid-accent-mid)), 0 0 20px hsl(var(--grid-accent-mid)/0.5);
+    }
+    50% { 
+      text-shadow: 0 0 20px hsl(var(--grid-accent-mid)), 0 0 40px hsl(var(--grid-accent-mid)/0.7);
+    }
+  }
+
+  .logo-pulse {
+    animation: logo-pulse 2s ease-in-out infinite;
   }
 }
 
