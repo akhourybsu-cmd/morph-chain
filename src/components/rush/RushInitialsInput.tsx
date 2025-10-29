@@ -73,17 +73,6 @@ export const RushInitialsInput = ({
       return;
     }
 
-    // Only allow submission if this is the first daily attempt
-    if (mode === 'daily' && hasCompletedFirstDailyAttempt()) {
-      toast({
-        title: "Already Submitted",
-        description: "Only your first daily attempt counts for the leaderboard.",
-        variant: "destructive"
-      });
-      onSubmitted();
-      return;
-    }
-
     setSubmitting(true);
     
     try {
