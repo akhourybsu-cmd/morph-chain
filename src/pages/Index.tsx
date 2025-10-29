@@ -636,8 +636,8 @@ const Index = () => {
                   <p className="font-medium text-foreground text-xs md:text-sm">
                      {puzzle.wordLength === 4 ? (
                       <>Change <strong>ONE</strong> letter each step. Every step must be a real word.</>
-                    ) : puzzle.wordLength === 5 ? (
-                      <>Change <strong>ONE</strong> letter each step. Use power-ups to change two letters or swap positions. Every step must be a real word.</>
+                     ) : puzzle.wordLength === 5 ? (
+                      <>Change <strong>ONE</strong> letter each step. After three one-letter changes, Combo Swap activates to change two letters. Every step must be a real word.</>
                     ) : (
                       <>Change <strong>ONE or TWO</strong> letters each step. Every step must be a real word.</>
                     )}
