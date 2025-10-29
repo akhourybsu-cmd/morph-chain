@@ -84,14 +84,6 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
           cy="50"
           r="46"
           fill="none"
-          stroke="rgba(0,0,0,0.2)"
-          strokeWidth="2"
-        />
-        <circle
-          cx="50"
-          cy="50"
-          r="46"
-          fill="none"
           stroke={tile.progress === 2 ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.25)"}
           strokeWidth="2"
           strokeDasharray={`${progressPercent * 2.89} 289`}
