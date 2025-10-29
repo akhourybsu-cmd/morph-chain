@@ -85,12 +85,6 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
         </div>
       )}
       
-      {/* Power star indicator */}
-      {tile.isPower && !isSelected && (
-        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center text-[8px]">
-          ⭐
-        </div>
-      )}
       
       {/* Letter with drop shadow */}
       <span 

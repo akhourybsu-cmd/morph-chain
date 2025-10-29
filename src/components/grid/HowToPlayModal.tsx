@@ -53,7 +53,6 @@ export const HowToPlayModal = ({ open, onClose }: HowToPlayModalProps) => {
               <li>Used tiles become <strong>new letters</strong></li>
               <li><strong>Neighbors (N/E/S/W)</strong> might mutate (vowel→vowel, consonant→consonant)</li>
               <li>Tiles mutated twice without being used become <strong>Stabilized</strong> (gray rim) until you use them</li>
-              <li><strong>Power tiles</strong> sometimes appear. Use one to <strong>morph its entire row</strong></li>
             </ul>
           </section>
 
