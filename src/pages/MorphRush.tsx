@@ -581,6 +581,9 @@ const MorphRush = () => {
               puzzleNumber={puzzle.puzzleNumber}
               sessionAchievements={completedRun.sessionAchievements}
               newAchievements={[]}
+              hardMode={hardMode}
+              dateLocal={puzzle.date}
+              alreadySubmitted={completedRun.submitted}
             />
             <div className="p-6 text-center bg-muted/30 rounded-lg border border-muted">
               <p className="text-muted-foreground font-medium">
@@ -714,6 +717,8 @@ const MorphRush = () => {
                     puzzleNumber={puzzle.puzzleNumber}
                     sessionAchievements={sessionAchievements}
                     newAchievements={newAchievements}
+                    hardMode={hardMode}
+                    dateLocal={puzzle.date}
                   />
                 )}
                 

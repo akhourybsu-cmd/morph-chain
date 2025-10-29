@@ -1,8 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Share2, Trophy, TrendingUp, Target, AlertCircle, Zap } from "lucide-react";
+import { Share2, Trophy, TrendingUp, Target, Zap, Upload } from "lucide-react";
 import { RushWord } from "@/lib/rushLogic";
 import { useToast } from "@/hooks/use-toast";
 import { ACHIEVEMENTS } from "@/lib/rushAchievements";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface EnhancedResultsPanelProps {
   score: number;
@@ -21,6 +25,9 @@ interface EnhancedResultsPanelProps {
   puzzleNumber: number;
   sessionAchievements: string[];
   newAchievements: string[];
+  hardMode: boolean;
+  dateLocal: string;
+  alreadySubmitted?: boolean;
 }
 
 export const EnhancedResultsPanel = ({
@@ -35,9 +42,15 @@ export const EnhancedResultsPanel = ({
   mode,
   puzzleNumber,
   sessionAchievements,
-  newAchievements
+  newAchievements,
+  hardMode,
+  dateLocal,
+  alreadySubmitted = false
 }: EnhancedResultsPanelProps) => {
   const { toast } = useToast();
+  const [initials, setInitials] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(alreadySubmitted);
   
   const handleShare = () => {
     if (navigator.share) {
@@ -61,9 +74,61 @@ export const EnhancedResultsPanel = ({
     ? Math.min(...morphTimes).toFixed(1) 
     : 'N/A';
   
-  // Neural pathway flavor text
-  const neuralPaths = words.length * 7;
-  const efficiency = Math.min(100, Math.round((words.length / (words.length + invalidCount)) * 100));
+  const handleSubmitToLeaderboard = async () => {
+    if (!initials.trim() || initials.length > 3) {
+      toast({ 
+        title: "Invalid initials", 
+        description: "Please enter 1-3 characters",
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ 
+          title: "Authentication required", 
+          description: "Please sign in to submit your score",
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      const { error } = await supabase.from('rush_runs').insert([{
+        user_id: user.id,
+        session_id: crypto.randomUUID(),
+        date_local: dateLocal,
+        score: finalScore,
+        multiplier_max: multiplierMax,
+        invalid_count: invalidCount,
+        hard_mode: hardMode,
+        initials: initials.toUpperCase(),
+        mode: 'daily',
+        official_status: 'finished',
+        finished_at: new Date().toISOString(),
+        words: words as any
+      }]);
+
+      if (error) throw error;
+
+      setHasSubmitted(true);
+      toast({ 
+        title: "Success!", 
+        description: "Your score has been submitted to the leaderboard" 
+      });
+    } catch (error: any) {
+      console.error('Submission error:', error);
+      toast({ 
+        title: "Submission failed", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   return (
     <div className="px-3 py-4 md:px-6 md:py-6 space-y-6">
@@ -135,29 +200,32 @@ export const EnhancedResultsPanel = ({
       
       {/* Achievements */}
       {sessionAchievements.length > 0 && (
-        <div className="space-y-2 p-4 rounded-xl"
+        <div className="space-y-3 p-4 rounded-xl"
           style={{
             background: 'linear-gradient(135deg, hsl(var(--rush-violet) / 0.1) 0%, hsl(var(--rush-orange) / 0.1) 100%)',
             border: '1px solid hsl(var(--rush-violet) / 0.3)'
           }}
         >
           <p className="text-sm font-semibold text-center text-rush-violet">Achievements Earned</p>
-          <div className="flex flex-wrap gap-2 justify-center">
+          <div className="space-y-2">
             {sessionAchievements.map(id => {
               const achievement = ACHIEVEMENTS[id];
               const isNew = newAchievements.includes(id);
               return (
                 <div 
                   key={id}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card border border-border relative"
+                  className="flex items-start gap-3 px-3 py-2 rounded-lg bg-card border border-border relative"
                 >
                   {isNew && (
                     <span className="absolute -top-2 -right-2 text-[10px] bg-rush-orange text-white px-2 py-0.5 rounded-full font-bold">
                       NEW
                     </span>
                   )}
-                  <span className="text-xl">{achievement.icon}</span>
-                  <span className="text-xs font-medium">{achievement.title}</span>
+                  <span className="text-2xl flex-shrink-0">{achievement.icon}</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold">{achievement.title}</p>
+                    <p className="text-xs text-muted-foreground">{achievement.description}</p>
+                  </div>
                 </div>
               );
             })}
@@ -165,15 +233,36 @@ export const EnhancedResultsPanel = ({
         </div>
       )}
       
-      {/* Flavor Text */}
-      <div className="text-center p-4 rounded-lg bg-muted/30">
-        <p className="text-sm text-muted-foreground italic">
-          Your brain generated <span className="text-rush-blue font-semibold">{neuralPaths}</span> new neural pathways today.
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          Synaptic efficiency: <span className="text-rush-orange font-semibold">{efficiency}%</span>
-        </p>
-      </div>
+      {/* Leaderboard Submission */}
+      {mode === 'daily' && !hasSubmitted && (
+        <div className="space-y-3 p-4 rounded-xl bg-muted/30">
+          <Label htmlFor="initials" className="text-sm font-semibold">Submit to Leaderboard</Label>
+          <div className="flex gap-2">
+            <Input
+              id="initials"
+              value={initials}
+              onChange={(e) => setInitials(e.target.value.slice(0, 3))}
+              placeholder="ABC"
+              maxLength={3}
+              className="text-center text-lg font-bold uppercase"
+            />
+            <Button 
+              onClick={handleSubmitToLeaderboard}
+              disabled={isSubmitting || !initials.trim()}
+              className="bg-rush-orange hover:bg-rush-orange/90"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {hasSubmitted && mode === 'daily' && (
+        <div className="text-center p-3 rounded-lg bg-rush-green/10 border border-rush-green/30">
+          <p className="text-sm text-rush-green font-semibold">✓ Score submitted to leaderboard!</p>
+        </div>
+      )}
       
       {/* Action Buttons */}
       <div className="flex gap-2">

@@ -93,6 +93,7 @@ export interface CompletedDailyRun {
   words: any[];
   sessionAchievements: string[];
   completedAt: string;
+  submitted?: boolean;
 }
 
 const DAILY_RUN_KEY = 'morphchain_rush_daily_run';
