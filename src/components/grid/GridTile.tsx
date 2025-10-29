@@ -77,24 +77,6 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
         )}
       />
       
-      {/* Progress ring indicator */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
-        <circle
-          cx="50"
-          cy="50"
-          r="46"
-          fill="none"
-          stroke={tile.progress === 2 ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.25)"}
-          strokeWidth="2"
-          strokeDasharray={`${progressPercent * 2.89} 289`}
-          strokeDashoffset="72.25"
-          strokeLinecap="round"
-          className="transition-all duration-300"
-          style={{
-            filter: tile.progress === 2 ? 'drop-shadow(0 0 2px rgba(255,255,255,0.6))' : 'none'
-          }}
-        />
-      </svg>
       
       {/* Shimmer effect for Purple tiles */}
       {tile.progress === 2 && !isSelected && (
