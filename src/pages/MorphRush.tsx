@@ -513,7 +513,7 @@ const MorphRush = () => {
         {/* Results */}
         {run.isFinished && (
           <div className="space-y-4 px-3 md:px-6">
-            {!scoreSubmitted && mode === 'daily' && !hasCompletedFirstDailyAttempt() ? (
+            {!scoreSubmitted && mode === 'daily' ? (
               <RushInitialsInput
                 score={finalScore}
                 mode={mode}
@@ -539,7 +539,7 @@ const MorphRush = () => {
               />
             )}
             
-            {(scoreSubmitted || mode === 'practice' || hasCompletedFirstDailyAttempt()) && mode === 'daily' && (
+            {(scoreSubmitted || mode === 'practice') && mode === 'daily' && (
               <RushLeaderboard mode="daily" />
             )}
           </div>
