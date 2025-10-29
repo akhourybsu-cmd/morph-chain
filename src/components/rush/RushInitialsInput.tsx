@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trophy } from "lucide-react";
+import { Trophy, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatInTimeZone } from "date-fns-tz";
 import { markFirstDailyAttemptComplete, hasCompletedFirstDailyAttempt } from "@/lib/rushStorage";
 import { initialsSchema } from "@/lib/validation";
+import { useNavigate } from "react-router-dom";
 
 interface RushInitialsInputProps {
   score: number;
@@ -34,13 +35,21 @@ export const RushInitialsInput = ({
 }: RushInitialsInputProps) => {
   const [initials, setInitials] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Preload default initials from profile
+  // Check authentication and preload default initials from profile
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       const user = data.session?.user;
-      if (!user) return;
+      if (!user) {
+        setIsAuthenticated(false);
+        return;
+      }
+      
+      setIsAuthenticated(true);
+      
       const { data: prof, error } = await supabase
         .from("user_profiles")
         .select("default_initials")
@@ -132,6 +141,43 @@ export const RushInitialsInput = ({
       setSubmitting(false);
     }
   };
+
+  // If not authenticated, show sign-in prompt
+  if (!isAuthenticated) {
+    return (
+      <Card className="p-6 space-y-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+        <div className="text-center space-y-2">
+          <Trophy className="h-12 w-12 text-primary mx-auto" />
+          <h3 className="text-2xl font-bold">High Score!</h3>
+          <p className="text-3xl font-bold text-primary">{score.toLocaleString()}</p>
+          <p className="text-sm text-muted-foreground">
+            Sign in to submit your score to the leaderboard
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <Button
+            onClick={() => navigate('/login')}
+            className="w-full"
+            size="lg"
+          >
+            <User className="h-4 w-4 mr-2" />
+            Sign In to Submit Score
+          </Button>
+          
+          <p className="text-xs text-center text-muted-foreground">
+            Create a free account to save your scores and compete on the leaderboard
+          </p>
+        </div>
+
+        <p className="text-xs text-center text-muted-foreground">
+          {mode === 'daily' 
+            ? "First daily attempt only • Resets at midnight ET" 
+            : "Arcade-style leaderboard • Resets daily at midnight ET"}
+        </p>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-6 space-y-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
