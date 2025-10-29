@@ -82,13 +82,66 @@ export const updateRushStats = (
   }
 };
 
-// Track if user has completed their first daily attempt
-export const hasCompletedFirstDailyAttempt = (): boolean => {
-  const key = 'morphchain_rush_first_daily_attempt';
-  return localStorage.getItem(key) === 'true';
+export interface CompletedDailyRun {
+  date: string;
+  mode: 'daily' | 'practice';
+  hardMode: boolean;
+  score: number;
+  wordsCount: number;
+  maxMultiplier: number;
+  invalidCount: number;
+  words: any[];
+  sessionAchievements: string[];
+  completedAt: string;
+}
+
+const DAILY_RUN_KEY = 'morphchain_rush_daily_run';
+
+export const getTodayDateString = (): string => {
+  const tz = 'America/New_York';
+  const now = new Date();
+  const year = now.toLocaleString('en-US', { timeZone: tz, year: 'numeric' });
+  const month = now.toLocaleString('en-US', { timeZone: tz, month: '2-digit' });
+  const day = now.toLocaleString('en-US', { timeZone: tz, day: '2-digit' });
+  return `${year}-${month}-${day}`;
 };
 
-export const markFirstDailyAttemptComplete = (): void => {
-  const key = 'morphchain_rush_first_daily_attempt';
-  localStorage.setItem(key, 'true');
+export const saveDailyCompletion = (run: Omit<CompletedDailyRun, 'date' | 'completedAt'>): void => {
+  try {
+    const completedRun: CompletedDailyRun = {
+      ...run,
+      date: getTodayDateString(),
+      completedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(DAILY_RUN_KEY, JSON.stringify(completedRun));
+  } catch (e) {
+    console.error('Error saving daily completion:', e);
+  }
+};
+
+export const loadTodayCompletion = (): CompletedDailyRun | null => {
+  try {
+    const saved = localStorage.getItem(DAILY_RUN_KEY);
+    if (!saved) return null;
+    
+    const run: CompletedDailyRun = JSON.parse(saved);
+    
+    // Check if it's from today
+    if (run.date === getTodayDateString()) {
+      return run;
+    }
+    
+    // Clear old completion
+    localStorage.removeItem(DAILY_RUN_KEY);
+    return null;
+  } catch (e) {
+    console.error('Error loading daily completion:', e);
+    return null;
+  }
+};
+
+export const hasDailyCompletion = (hardMode: boolean): boolean => {
+  const completion = loadTodayCompletion();
+  if (!completion) return false;
+  return completion.hardMode === hardMode;
 };

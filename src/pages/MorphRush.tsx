@@ -32,7 +32,7 @@ import { RushStats } from "@/components/rush/RushStats";
 import { RushInitialsInput } from "@/components/rush/RushInitialsInput";
 import { RushSettingsModal } from "@/components/rush/RushSettingsModal";
 import { RushMenuSheet } from "@/components/rush/RushMenuSheet";
-import { updateRushStats, markFirstDailyAttemptComplete, hasCompletedFirstDailyAttempt } from "@/lib/rushStorage";
+import { updateRushStats, saveDailyCompletion, loadTodayCompletion, type CompletedDailyRun } from "@/lib/rushStorage";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Trophy } from "lucide-react";
 import { 
@@ -93,6 +93,9 @@ const MorphRush = () => {
     consecutiveValid: 0,
     consecutiveSamePosition: 0
   });
+  
+  // Daily completion tracking
+  const [completedRun, setCompletedRun] = useState<CompletedDailyRun | null>(null);
 
   // Auth listener
   useEffect(() => {
@@ -107,6 +110,15 @@ const MorphRush = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Check for existing daily completion on mount
+  useEffect(() => {
+    const existingCompletion = loadTodayCompletion();
+    if (existingCompletion && existingCompletion.mode === mode && existingCompletion.hardMode === hardMode) {
+      setCompletedRun(existingCompletion);
+      setScoreSubmitted(true); // Mark as already submitted
+    }
+  }, [mode, hardMode]);
+
   
   // Timer tick
   const handleTimerTick = useCallback(() => {
@@ -115,11 +127,24 @@ const MorphRush = () => {
       if (newTime === 0 && !prev.isFinished) {
         // Save stats when game finishes
         updateRushStats(prev.score, prev.words.length, prev.multiplierMax, hardMode);
+        
+        // Save daily completion
+        saveDailyCompletion({
+          mode,
+          hardMode,
+          score: prev.score,
+          wordsCount: prev.words.length,
+          maxMultiplier: prev.multiplierMax,
+          invalidCount: prev.invalidCount,
+          words: prev.words,
+          sessionAchievements,
+        });
+        
         return { ...prev, timeRemaining: 0, isFinished: true };
       }
       return { ...prev, timeRemaining: newTime };
     });
-  }, [hardMode]);
+  }, [hardMode, mode, sessionAchievements]);
   
   // Handle submission
   const handleSubmit = (e?: React.FormEvent) => {
@@ -323,6 +348,17 @@ const MorphRush = () => {
   );
   
   const handlePlayAgain = () => {
+    // Check if already completed today
+    const existingCompletion = loadTodayCompletion();
+    if (existingCompletion && existingCompletion.mode === mode && existingCompletion.hardMode === hardMode) {
+      toast({
+        title: "Already Completed",
+        description: "You've already completed today's puzzle. Come back tomorrow!",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     navigate('/rush?mode=practice');
     window.location.reload();
   };
@@ -523,31 +559,66 @@ const MorphRush = () => {
       </div>
       
       <main className="flex-1 pb-16 md:pb-24">
-        {/* Header with timer and score */}
-        <div className="px-3 py-4 md:px-6 md:py-6 flex items-center justify-between">
-          <CircularTimer
-            timeRemaining={run.timeRemaining}
-            totalTime={120}
-            isRunning={run.timerStarted}
-            onTick={handleTimerTick}
-            mode={mode}
-          />
-          <div className="flex items-center gap-3 md:gap-4">
-            <div className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 bg-muted/30 rounded-lg">
-              <Trophy className="h-3.5 w-3.5 md:h-4 md:w-4 text-rush-orange" />
-              <span className="text-sm md:text-base font-semibold tabular-nums">
-                {finalScore.toLocaleString()}
-              </span>
-            </div>
-            <BrainChargeOrb
-              multiplier={run.currentMultiplier}
-              isActive={!run.isFinished}
+        {completedRun ? (
+          // Show completed run results
+          <div className="space-y-4 px-3 md:px-6">
+            <EnhancedResultsPanel
+              score={completedRun.score}
+              words={[]} // We don't save words in completed run for simplicity
+              multiplierMax={completedRun.maxMultiplier}
+              invalidCount={completedRun.invalidCount}
+              endBonuses={calculateEndBonuses([], completedRun.invalidCount)}
+              finalScore={completedRun.score}
+              shareText={generateRushShareText(
+                puzzle.puzzleNumber,
+                puzzle.date,
+                completedRun.score,
+                completedRun.wordsCount,
+                completedRun.maxMultiplier,
+                mode
+              )}
+              mode={completedRun.mode}
+              puzzleNumber={puzzle.puzzleNumber}
+              sessionAchievements={completedRun.sessionAchievements}
+              newAchievements={[]}
             />
+            <div className="p-6 text-center bg-muted/30 rounded-lg border border-muted">
+              <p className="text-muted-foreground font-medium">
+                You've completed today's {hardMode ? 'Hard Mode ' : ''}puzzle!
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Come back tomorrow for a new challenge
+              </p>
+            </div>
+            <RushLeaderboard mode="daily" />
           </div>
-        </div>
-        
-        {/* Current word + Input */}
-        {!run.isFinished && (
+        ) : (
+          <>
+            {/* Header with timer and score */}
+            <div className="px-3 py-4 md:px-6 md:py-6 flex items-center justify-between">
+              <CircularTimer
+                timeRemaining={run.timeRemaining}
+                totalTime={120}
+                isRunning={run.timerStarted}
+                onTick={handleTimerTick}
+                mode={mode}
+              />
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 bg-muted/30 rounded-lg">
+                  <Trophy className="h-3.5 w-3.5 md:h-4 md:w-4 text-rush-orange" />
+                  <span className="text-sm md:text-base font-semibold tabular-nums">
+                    {finalScore.toLocaleString()}
+                  </span>
+                </div>
+                <BrainChargeOrb
+                  multiplier={run.currentMultiplier}
+                  isActive={!run.isFinished}
+                />
+              </div>
+            </div>
+            
+            {/* Current word + Input */}
+            {!run.isFinished && (
           <div className="px-3 py-3 md:px-6 md:py-4 space-y-4">
             <MorphingWordDisplay 
               word={currentWord} 
@@ -597,59 +668,61 @@ const MorphRush = () => {
           </div>
         )}
         
-        {/* Word ribbon */}
-        <RushWordRibbon words={run.words} />
-        
-        {/* View Leaderboard Button (only show during gameplay in daily mode) */}
-        {!run.isFinished && mode === 'daily' && (
-          <div className="px-3 py-4 md:px-6">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setShowLeaderboard(true)}
-            >
-              <Trophy className="h-4 w-4 mr-2" />
-              View Leaderboard
-            </Button>
-          </div>
-        )}
-        
-        {/* Results */}
-        {run.isFinished && (
-          <div className="space-y-4 px-3 md:px-6">
-            {!scoreSubmitted && mode === 'daily' ? (
-              <RushInitialsInput
-                score={finalScore}
-                mode={mode}
-                hardMode={hardMode}
-                multiplierMax={run.multiplierMax}
-                words={run.words}
-                invalidCount={run.invalidCount}
-                scoutUsed={run.scoutUsed}
-                undoUsed={run.undoUsed}
-                onSubmitted={() => setScoreSubmitted(true)}
-              />
-            ) : (
-              <EnhancedResultsPanel
-                score={run.score}
-                words={run.words}
-                multiplierMax={run.multiplierMax}
-                invalidCount={run.invalidCount}
-                endBonuses={endBonuses}
-                finalScore={finalScore}
-                shareText={shareText}
-                onPlayAgain={mode === 'practice' ? handlePlayAgain : undefined}
-                mode={mode}
-                puzzleNumber={puzzle.puzzleNumber}
-                sessionAchievements={sessionAchievements}
-                newAchievements={newAchievements}
-              />
+            {/* Word ribbon */}
+            <RushWordRibbon words={run.words} />
+            
+            {/* View Leaderboard Button (only show during gameplay in daily mode) */}
+            {!run.isFinished && mode === 'daily' && (
+              <div className="px-3 py-4 md:px-6">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowLeaderboard(true)}
+                >
+                  <Trophy className="h-4 w-4 mr-2" />
+                  View Leaderboard
+                </Button>
+              </div>
             )}
             
-            {(scoreSubmitted || mode === 'practice') && mode === 'daily' && (
-              <RushLeaderboard mode="daily" />
+            {/* Results */}
+            {run.isFinished && (
+              <div className="space-y-4 px-3 md:px-6">
+                {!scoreSubmitted && mode === 'daily' ? (
+                  <RushInitialsInput
+                    score={finalScore}
+                    mode={mode}
+                    hardMode={hardMode}
+                    multiplierMax={run.multiplierMax}
+                    words={run.words}
+                    invalidCount={run.invalidCount}
+                    scoutUsed={run.scoutUsed}
+                    undoUsed={run.undoUsed}
+                    onSubmitted={() => setScoreSubmitted(true)}
+                  />
+                ) : (
+                  <EnhancedResultsPanel
+                    score={run.score}
+                    words={run.words}
+                    multiplierMax={run.multiplierMax}
+                    invalidCount={run.invalidCount}
+                    endBonuses={endBonuses}
+                    finalScore={finalScore}
+                    shareText={shareText}
+                    onPlayAgain={mode === 'practice' ? handlePlayAgain : undefined}
+                    mode={mode}
+                    puzzleNumber={puzzle.puzzleNumber}
+                    sessionAchievements={sessionAchievements}
+                    newAchievements={newAchievements}
+                  />
+                )}
+                
+                {(scoreSubmitted || mode === 'practice') && mode === 'daily' && (
+                  <RushLeaderboard mode="daily" />
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
       </main>
     </div>

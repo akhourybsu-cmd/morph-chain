@@ -6,7 +6,6 @@ import { Trophy, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatInTimeZone } from "date-fns-tz";
-import { markFirstDailyAttemptComplete, hasCompletedFirstDailyAttempt } from "@/lib/rushStorage";
 import { initialsSchema } from "@/lib/validation";
 import { useNavigate } from "react-router-dom";
 
@@ -118,11 +117,6 @@ export const RushInitialsInput = ({
         });
 
       if (error) throw error;
-
-      // Mark first daily attempt as complete
-      if (mode === 'daily') {
-        markFirstDailyAttemptComplete();
-      }
 
       toast({
         title: "Score Submitted! 🎉",
