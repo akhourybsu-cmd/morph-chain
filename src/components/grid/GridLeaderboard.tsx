@@ -1,18 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { loadGridLeaderboard, GridLBEntry } from "@/lib/gridStorage";
-import { Info } from "lucide-react";
+import { useGridLeaderboard } from "@/hooks/useGridLeaderboard";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 interface GridLeaderboardProps {
   dateSeed: string;
 }
 
 export const GridLeaderboard = ({ dateSeed }: GridLeaderboardProps) => {
-  const entries = loadGridLeaderboard(dateSeed).slice(0, 10);
-  const myEntryId = typeof window !== 'undefined' 
-    ? localStorage.getItem('morphGrid_myEntryId') 
-    : null;
+  const { data: entries = [], isLoading } = useGridLeaderboard();
+  const [myUserId, setMyUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setMyUserId(user?.id || null);
+    });
+  }, []);
 
   const formatTime = (ms?: number) => {
     if (!ms) return "—";
@@ -21,15 +25,20 @@ export const GridLeaderboard = ({ dateSeed }: GridLeaderboardProps) => {
     return `${minutes}:${String(seconds).padStart(2, '0')}`;
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-4 pb-6">
+        <Card>
+          <CardContent className="py-8">
+            <p className="text-center text-muted-foreground">Loading leaderboard...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 pb-6">
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          Global leaderboard unavailable—showing local device results.
-        </AlertDescription>
-      </Alert>
-
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -54,21 +63,21 @@ export const GridLeaderboard = ({ dateSeed }: GridLeaderboardProps) => {
               </div>
 
               {/* Rows */}
-              {entries.map((entry, index) => {
-                const isMe = entry.id === myEntryId;
+              {entries.slice(0, 10).map((entry, index) => {
+                const isMe = entry.user_id === myUserId;
                 return (
                   <div
-                    key={entry.id}
+                  key={entry.user_id}
                     className={`grid grid-cols-[40px_1fr_60px_60px_60px] gap-2 items-center py-2 rounded ${
                       isMe ? 'bg-primary/10 ring-1 ring-primary/20' : ''
                     }`}
                   >
                     <div className="font-semibold text-sm">
-                      {index + 1}
+                      {entry.rank}
                     </div>
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="truncate text-sm">
-                        {entry.deviceAlias || "Anonymous"}
+                        {entry.initials || "Anonymous"}
                       </span>
                       {isMe && <Badge variant="secondary" className="text-xs">You</Badge>}
                     </div>
@@ -76,10 +85,10 @@ export const GridLeaderboard = ({ dateSeed }: GridLeaderboardProps) => {
                       {entry.moves}
                     </div>
                     <div className="text-right text-xs text-muted-foreground">
-                      {entry.wordsUsed}
+                      {entry.words_used}
                     </div>
                     <div className="text-right text-xs text-muted-foreground">
-                      {formatTime(entry.timeToCompleteMs)}
+                      {formatTime(entry.time_to_complete_ms)}
                     </div>
                   </div>
                 );
@@ -95,13 +104,13 @@ export const GridLeaderboard = ({ dateSeed }: GridLeaderboardProps) => {
           <CardTitle className="text-sm">Your Personal Best</CardTitle>
         </CardHeader>
         <CardContent>
-          {entries.filter(e => e.id === myEntryId).length > 0 ? (
+          {myUserId && entries.find(e => e.user_id === myUserId) ? (
             <div className="text-center">
               <p className="text-2xl font-semibold">
-                {entries.find(e => e.id === myEntryId)?.moves} moves
+                {entries.find(e => e.user_id === myUserId)?.moves} moves
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {entries.find(e => e.id === myEntryId)?.wordsUsed} words
+                {entries.find(e => e.user_id === myUserId)?.words_used} words · Rank #{entries.find(e => e.user_id === myUserId)?.rank}
               </p>
             </div>
           ) : (

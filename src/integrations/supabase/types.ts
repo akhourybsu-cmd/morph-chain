@@ -332,6 +332,45 @@ export type Database = {
         }
         Relationships: []
       }
+      grid_daily_leaderboard: {
+        Row: {
+          completed_at: string
+          created_at: string
+          date_local: string
+          id: string
+          initials: string | null
+          moves: number
+          rank: number | null
+          time_to_complete_ms: number | null
+          user_id: string
+          words_used: number
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          date_local: string
+          id?: string
+          initials?: string | null
+          moves: number
+          rank?: number | null
+          time_to_complete_ms?: number | null
+          user_id: string
+          words_used: number
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          date_local?: string
+          id?: string
+          initials?: string | null
+          moves?: number
+          rank?: number | null
+          time_to_complete_ms?: number | null
+          user_id?: string
+          words_used?: number
+        }
+        Relationships: []
+      }
       player_sessions: {
         Row: {
           completed: boolean | null
@@ -751,6 +790,18 @@ export type Database = {
           moves: number
           rank: number
           user_id: string
+        }[]
+      }
+      get_grid_daily_leaderboard: {
+        Args: { p_date: string; p_limit?: number }
+        Returns: {
+          completed_at: string
+          initials: string
+          moves: number
+          rank: number
+          time_to_complete_ms: number
+          user_id: string
+          words_used: number
         }[]
       }
       get_rush_daily_leaderboard: {

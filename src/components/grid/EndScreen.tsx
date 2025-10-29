@@ -1,8 +1,13 @@
+import { useState, useEffect } from 'react';
 import { useGridStore } from '@/stores/gridStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Share2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { GridInitialsInput } from './GridInitialsInput';
+import { GridLeaderboard } from './GridLeaderboard';
+import { checkGridSubmissionExists } from '@/integrations/supabase/gridLeaderboard';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EndScreenProps {
   open: boolean;
@@ -10,7 +15,30 @@ interface EndScreenProps {
 }
 
 export const EndScreen = ({ open, onClose }: EndScreenProps) => {
-  const { moves, submittedWords, dailySeed, morphCount, stabilizationCount } = useGridStore();
+  const { moves, submittedWords, dailySeed, morphCount, stabilizationCount, startTime } = useGridStore();
+  const [showInitialsInput, setShowInitialsInput] = useState(false);
+  const [scoreSubmitted, setScoreSubmitted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+      
+      if (user && open) {
+        const exists = await checkGridSubmissionExists(dailySeed);
+        setScoreSubmitted(exists);
+        
+        if (!exists) {
+          setShowInitialsInput(true);
+        }
+      }
+    };
+    
+    if (open) {
+      checkAuth();
+    }
+  }, [open, dailySeed]);
   
   const longestWord = submittedWords.reduce((longest, current) => 
     current.word.length > longest.length ? current.word : longest
@@ -106,7 +134,33 @@ morphgames.io`;
             <Share2 className="w-4 h-4 mr-2" />
             Share Results
           </Button>
+
+          {/* Leaderboard Section */}
+          {isAuthenticated && (
+            <div className="mt-6">
+              <GridLeaderboard dateSeed={dailySeed} />
+            </div>
+          )}
+
+          {!isAuthenticated && (
+            <div className="mt-6 p-4 bg-card/30 rounded-lg border border-border/30 text-center">
+              <p className="text-sm text-muted-foreground">
+                Sign in to submit your score to the global leaderboard
+              </p>
+            </div>
+          )}
         </div>
+
+        {/* Initials Input Modal */}
+        <GridInitialsInput
+          open={showInitialsInput}
+          onClose={() => setShowInitialsInput(false)}
+          onSubmitted={() => setScoreSubmitted(true)}
+          moves={moves}
+          wordsUsed={submittedWords.length}
+          timeToCompleteMs={startTime ? Date.now() - startTime : undefined}
+          dateSeed={dailySeed}
+        />
       </DialogContent>
     </Dialog>
   );

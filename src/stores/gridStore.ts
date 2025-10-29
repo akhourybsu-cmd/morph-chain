@@ -127,7 +127,13 @@ export const useGridStore = create<GridState>((set, get) => ({
   },
   
   submitWord: () => {
-    const { selected, grid, rng, submittedWords, morphCount, stabilizationCount } = get();
+    const { selected, grid, rng, submittedWords, morphCount, stabilizationCount, isEnded } = get();
+    
+    // Prevent submissions after game ends
+    if (isEnded) {
+      console.log('Game already ended, no more submissions allowed');
+      return false;
+    }
     
     if (selected.length < 3 || !rng) return false;
     
