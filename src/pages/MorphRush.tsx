@@ -4,7 +4,7 @@ import { DailyBanner } from "@/components/DailyBanner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertCircle, Menu, HelpCircle, TrendingUp, User, Trophy } from "lucide-react";
+import { AlertCircle, Menu, HelpCircle, TrendingUp, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -18,9 +18,12 @@ import {
 } from "@/lib/rushLogic";
 import { scoreWord } from "@/lib/rushScoring";
 import { isValidMorphHard } from "@/lib/rushHardMode";
-import { RushTimer } from "@/components/rush/RushTimer";
-import { RushScoreDisplay } from "@/components/rush/RushScoreDisplay";
-import { RushPowerups } from "@/components/rush/RushPowerups";
+import { CircularTimer } from "@/components/rush/CircularTimer";
+import { BrainChargeOrb } from "@/components/rush/BrainChargeOrb";
+import { FloatingPowerups } from "@/components/rush/FloatingPowerups";
+import { MorphingWordDisplay } from "@/components/rush/MorphingWordDisplay";
+import { AchievementPopup } from "@/components/rush/AchievementPopup";
+import { EnhancedResultsPanel } from "@/components/rush/EnhancedResultsPanel";
 import { RushWordRibbon } from "@/components/rush/RushWordRibbon";
 import { RushResultsPanel } from "@/components/rush/RushResultsPanel";
 import { RushLeaderboard } from "@/components/rush/RushLeaderboard";
@@ -31,6 +34,14 @@ import { RushSettingsModal } from "@/components/rush/RushSettingsModal";
 import { RushMenuSheet } from "@/components/rush/RushMenuSheet";
 import { updateRushStats, markFirstDailyAttemptComplete, hasCompletedFirstDailyAttempt } from "@/lib/rushStorage";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { Trophy } from "lucide-react";
+import { 
+  checkAchievements, 
+  saveUnlockedAchievements, 
+  getUnlockedAchievements,
+  getNewAchievements,
+  AchievementProgress 
+} from "@/lib/rushAchievements";
 
 const MorphRush = () => {
   const { toast } = useToast();
@@ -65,6 +76,7 @@ const MorphRush = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [previousWord, setPreviousWord] = useState<string | undefined>();
   
   // Modals & Settings
   const [menuOpen, setMenuOpen] = useState(false);
@@ -72,6 +84,15 @@ const MorphRush = () => {
   const [statsOpen, setStatsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  
+  // Achievement system
+  const [sessionAchievements, setSessionAchievements] = useState<string[]>([]);
+  const [achievementQueue, setAchievementQueue] = useState<string[]>([]);
+  const [currentAchievement, setCurrentAchievement] = useState<string | null>(null);
+  const [achievementProgress, setAchievementProgress] = useState<AchievementProgress>({
+    consecutiveValid: 0,
+    consecutiveSamePosition: 0
+  });
 
   // Auth listener
   useEffect(() => {
@@ -196,6 +217,35 @@ const MorphRush = () => {
       };
     });
     
+    // Update achievement progress
+    const changedIndex = word.split('').findIndex((letter, i) => letter !== currentWord[i]);
+    setAchievementProgress(prev => {
+      const newProgress = {
+        ...prev,
+        consecutiveValid: prev.consecutiveValid + 1,
+        lastInputTime: now,
+        consecutiveSamePosition: changedIndex === prev.lastChangedPosition 
+          ? (prev.consecutiveSamePosition || 0) + 1 
+          : 0,
+        lastChangedPosition: changedIndex
+      };
+      
+      // Check for brainwave (3 within 10s)
+      if (!prev.brainwaveStreak) {
+        newProgress.brainwaveStreak = { count: 1, firstTime: now };
+      } else if ((now - prev.brainwaveStreak.firstTime) / 1000 <= 10) {
+        newProgress.brainwaveStreak = { 
+          count: prev.brainwaveStreak.count + 1, 
+          firstTime: prev.brainwaveStreak.firstTime 
+        };
+      } else {
+        newProgress.brainwaveStreak = { count: 1, firstTime: now };
+      }
+      
+      return newProgress;
+    });
+    
+    setPreviousWord(currentWord);
     setCurrentWord(word);
     setInput("");
     setIsSubmitting(false);
@@ -211,6 +261,9 @@ const MorphRush = () => {
   const triggerShake = () => {
     setShake(true);
     setTimeout(() => setShake(false), 300);
+    
+    // Reset consecutive valid on error
+    setAchievementProgress(prev => ({ ...prev, consecutiveValid: 0 }));
   };
   
   // Scout powerup
@@ -288,8 +341,53 @@ const MorphRush = () => {
     return () => clearTimeout(timeout);
   }, [run.lastValidTime, run.isFinished]);
   
+  // Check for achievements continuously
+  useEffect(() => {
+    if (run.isFinished) return;
+    
+    const newAchievements = checkAchievements(
+      run.words,
+      run.invalidCount,
+      run.timeRemaining,
+      run.currentMultiplier,
+      achievementProgress
+    );
+    
+    // Find achievements not yet in session
+    const justEarned = newAchievements.filter(id => !sessionAchievements.includes(id));
+    
+    if (justEarned.length > 0) {
+      setSessionAchievements(prev => [...prev, ...justEarned]);
+      setAchievementQueue(prev => [...prev, ...justEarned]);
+    }
+  }, [run.words.length, run.currentMultiplier, run.timeRemaining, achievementProgress]);
+  
+  // Display achievements from queue
+  useEffect(() => {
+    if (achievementQueue.length > 0 && !currentAchievement) {
+      const [next, ...rest] = achievementQueue;
+      setCurrentAchievement(next);
+      setAchievementQueue(rest);
+    }
+  }, [achievementQueue, currentAchievement]);
+  
+  // Save achievements when game ends
+  useEffect(() => {
+    if (run.isFinished && sessionAchievements.length > 0) {
+      saveUnlockedAchievements(sessionAchievements);
+    }
+  }, [run.isFinished, sessionAchievements]);
+  
+  const allUnlockedAchievements = getUnlockedAchievements();
+  const newAchievements = getNewAchievements(sessionAchievements, allUnlockedAchievements);
+  
   return (
-    <div className="min-h-screen flex flex-col max-w-2xl mx-auto">
+    <div 
+      className="min-h-screen flex flex-col max-w-2xl mx-auto"
+      style={{
+        background: 'linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--background-gradient-end)) 100%)'
+      }}
+    >
       <header className="h-14 grid grid-cols-3 items-center px-4 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center gap-1 justify-start">
           <Button
@@ -427,49 +525,55 @@ const MorphRush = () => {
       <main className="flex-1 pb-16 md:pb-24">
         {/* Header with timer and score */}
         <div className="px-3 py-4 md:px-6 md:py-6 flex items-center justify-between">
-          <RushTimer
+          <CircularTimer
             timeRemaining={run.timeRemaining}
+            totalTime={120}
             isRunning={run.timerStarted}
             onTick={handleTimerTick}
             mode={mode}
           />
-          <RushScoreDisplay
-            score={finalScore}
-            multiplier={run.currentMultiplier}
-            isActive={!run.isFinished}
-          />
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 bg-muted/30 rounded-lg">
+              <Trophy className="h-3.5 w-3.5 md:h-4 md:w-4 text-rush-orange" />
+              <span className="text-sm md:text-base font-semibold tabular-nums">
+                {finalScore.toLocaleString()}
+              </span>
+            </div>
+            <BrainChargeOrb
+              multiplier={run.currentMultiplier}
+              isActive={!run.isFinished}
+            />
+          </div>
         </div>
         
         {/* Current word + Input */}
         {!run.isFinished && (
-          <div className="px-3 py-3 md:px-6 md:py-4 space-y-3">
-            <div className="text-center">
-              <p className="text-xs md:text-sm text-muted-foreground mb-2">Current Word</p>
-              <div className="flex justify-center">
-                <div className="flex gap-1 px-3 py-2 bg-card border border-border rounded-lg">
-                  {currentWord.split("").map((letter, i) => (
-                    <span
-                      key={i}
-                      className="text-xl md:text-2xl font-mono font-semibold uppercase"
-                    >
-                      {letter}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+          <div className="px-3 py-3 md:px-6 md:py-4 space-y-4">
+            <MorphingWordDisplay 
+              word={currentWord} 
+              previousWord={previousWord}
+            />
             
             <form onSubmit={handleSubmit} className={shake ? "animate-shake" : ""}>
-              <div className="flex gap-2">
+              <div className="flex gap-2 relative">
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value.replace(/[^a-zA-Z]/g, "").toUpperCase())}
                   maxLength={4}
                   placeholder="Next word..."
-                  className="flex-1 font-mono uppercase text-base md:text-lg text-center tracking-wider"
+                  className="flex-1 font-mono uppercase text-base md:text-lg text-center tracking-wider focus:ring-2 focus:ring-rush-blue/50 transition-all"
                   autoFocus
+                  style={{
+                    boxShadow: input.length > 0 
+                      ? '0 0 12px hsl(var(--synapse-pulse) / 0.2)' 
+                      : 'none'
+                  }}
                 />
-                <Button type="submit" disabled={!input.trim()}>
+                <Button 
+                  type="submit" 
+                  disabled={!input.trim()}
+                  className="bg-rush-orange hover:bg-rush-orange/90 transition-all hover:scale-105"
+                >
                   Submit
                 </Button>
               </div>
@@ -482,7 +586,7 @@ const MorphRush = () => {
               )}
             </form>
             
-            <RushPowerups
+            <FloatingPowerups
               scoutUsed={run.scoutUsed}
               undoUsed={run.undoUsed}
               onScout={handleScout}
@@ -526,7 +630,7 @@ const MorphRush = () => {
                 onSubmitted={() => setScoreSubmitted(true)}
               />
             ) : (
-              <RushResultsPanel
+              <EnhancedResultsPanel
                 score={run.score}
                 words={run.words}
                 multiplierMax={run.multiplierMax}
@@ -536,6 +640,9 @@ const MorphRush = () => {
                 shareText={shareText}
                 onPlayAgain={mode === 'practice' ? handlePlayAgain : undefined}
                 mode={mode}
+                puzzleNumber={puzzle.puzzleNumber}
+                sessionAchievements={sessionAchievements}
+                newAchievements={newAchievements}
               />
             )}
             

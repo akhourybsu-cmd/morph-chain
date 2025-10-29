@@ -44,6 +44,11 @@ export default {
         },
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
+        'rush-blue': 'hsl(var(--rush-blue))',
+        'rush-orange': 'hsl(var(--rush-orange))',
+        'rush-red': 'hsl(var(--rush-red))',
+        'rush-violet': 'hsl(var(--rush-violet))',
+        'rush-green': 'hsl(var(--rush-green))',
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
@@ -141,6 +146,33 @@ export default {
           "50%": { opacity: "1", filter: "brightness(1.3)" },
           "100%": { opacity: "1", filter: "brightness(1)" },
         },
+        "neural-spark": {
+          "0%": { transform: "scale(0.8)", opacity: "0" },
+          "50%": { transform: "scale(1.2)", opacity: "1" },
+          "100%": { transform: "scale(1)", opacity: "0.8" },
+        },
+        "ripple": {
+          "0%": { transform: "translateX(-100%)", opacity: "0" },
+          "50%": { opacity: "1" },
+          "100%": { transform: "translateX(100%)", opacity: "0" },
+        },
+        "breathe": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.05)" },
+        },
+        "charge-fill": {
+          "0%": { transform: "scale(0)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        "achievement-pop": {
+          "0%": { transform: "translateY(20px) scale(0.8)", opacity: "0" },
+          "50%": { transform: "translateY(0) scale(1.05)", opacity: "1" },
+          "100%": { transform: "translateY(0) scale(1)", opacity: "1" },
+        },
+        "confetti": {
+          "0%": { transform: "translateY(0) rotate(0deg)", opacity: "1" },
+          "100%": { transform: "translateY(-100px) rotate(360deg)", opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -151,6 +183,12 @@ export default {
         "shake": "shake 0.12s ease-in-out",
         "pulse-glow": "pulse-glow 3s ease-in-out infinite",
         "shimmer": "shimmer 0.3s ease-out",
+        "neural-spark": "neural-spark 0.5s ease-out",
+        "ripple": "ripple 1s ease-out",
+        "breathe": "breathe 2s ease-in-out infinite",
+        "charge-fill": "charge-fill 0.3s ease-out forwards",
+        "achievement-pop": "achievement-pop 0.4s ease-out",
+        "confetti": "confetti 1s ease-out forwards",
       },
     },
   },
