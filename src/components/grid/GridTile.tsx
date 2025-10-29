@@ -45,8 +45,6 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
         // Glow shadows
         glowShadow,
         
-        // Stabilized state
-        tile.stabilized && "ring-2 ring-neutral-300/80 brightness-90",
         
         // Selected state - enhanced with scale and bright white outline
         isSelected && "scale-105 shadow-[0_0_24px_rgba(255,255,255,0.8)] ring-2 ring-white/70 z-10",
@@ -103,10 +101,6 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
         </div>
       )}
       
-      {/* Stabilization indicator */}
-      {tile.stabilized && !isSelected && (
-        <div className="absolute bottom-1 right-1 w-2 h-2 rounded-full bg-neutral-400 border border-neutral-200" />
-      )}
     </button>
   );
 };

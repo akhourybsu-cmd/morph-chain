@@ -52,7 +52,6 @@ export const HowToPlayModal = ({ open, onClose }: HowToPlayModalProps) => {
             <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
               <li>Used tiles become <strong>new letters</strong></li>
               <li><strong>Neighbors (N/E/S/W)</strong> might mutate (vowel→vowel, consonant→consonant)</li>
-              <li>Tiles mutated twice without being used become <strong>Stabilized</strong> (gray rim) until you use them</li>
             </ul>
           </section>
 
@@ -68,7 +67,6 @@ export const HowToPlayModal = ({ open, onClose }: HowToPlayModalProps) => {
             <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
               <li>Target clusters of Orange/Blue to advance many tiles per move</li>
               <li>Reuse Purple tiles to reach stubborn Orange corners</li>
-              <li>Free Stabilized tiles by using them in a word</li>
               <li className="pt-2 border-t border-primary/20 mt-2">Today's board uses a <strong>balanced letter generator</strong> so every grid is fair and word-friendly. During play, morphs subtly keep vowels and consonants in a healthy mix.</li>
             </ul>
           </section>
