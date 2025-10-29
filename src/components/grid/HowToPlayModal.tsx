@@ -65,11 +65,12 @@ export const HowToPlayModal = ({ open, onClose }: HowToPlayModalProps) => {
           </section>
 
           <section className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-            <h3 className="font-semibold text-base mb-2 text-primary">💡 Tips</h3>
+            <h3 className="font-semibold text-base mb-2 text-primary">💡 Tips & Fairness</h3>
             <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
               <li>Target clusters of Orange/Blue to advance many tiles per move</li>
               <li>Reuse Purple tiles to reach stubborn Orange corners</li>
               <li>Free Stabilized tiles by using them in a word</li>
+              <li className="pt-2 border-t border-primary/20 mt-2">Today's board uses a <strong>balanced letter generator</strong> so every grid is fair and word-friendly. During play, morphs subtly keep vowels and consonants in a healthy mix.</li>
             </ul>
           </section>
 

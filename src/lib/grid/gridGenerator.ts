@@ -1,5 +1,17 @@
-// Generate 5x5 grid for MORPH GRID
+// Generate 5x5 grid for MORPH GRID with balanced vowel/consonant placement
 import { SeededRandom } from './seededRNG';
+import {
+  VOWEL_RATIO_TARGET,
+  LETTER_WEIGHTS,
+  VOWELS,
+  SUPPORT_LETTERS,
+  HARD_CLUSTER,
+  MAX_HARD_CLUSTER_IN_3x3,
+  MAX_VOWEL_RUN,
+  GRID_SIZE,
+  MAX_GENERATION_RETRIES
+} from './gridConfig';
+import { validateGridConstraints, repairGridConstraints, generateSafeTemplate } from './gridValidation';
 
 export type ProgressState = 0 | 1 | 2; // 0=Orange, 1=Blue, 2=Purple
 
@@ -15,27 +27,51 @@ export interface Tile {
   progress: ProgressState;
 }
 
-const VOWELS = ['A', 'E', 'I', 'O', 'U'];
-const CONSONANTS = ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'];
-
-// Weighted letter distribution for better gameplay
-const LETTER_WEIGHTS = {
-  vowels: ['A', 'E', 'E', 'I', 'O', 'U'], // More E's
-  consonants: [
-    'R', 'R', 'S', 'S', 'T', 'T', 'T', 'N', 'N', 'L', 'L', 'D', 'D',
-    'C', 'C', 'M', 'P', 'H', 'G', 'B', 'F', 'W', 'Y', 'V', 'K',
-    'J', 'Q', 'X', 'Z'
-  ]
-};
-
 export function generateDailyGrid(date: string): Tile[][] {
   const rng = new SeededRandom(date);
-  const grid: Tile[][] = [];
   
-  for (let row = 0; row < 5; row++) {
+  // Try to generate a balanced grid
+  for (let attempt = 0; attempt < MAX_GENERATION_RETRIES; attempt++) {
+    const attemptRng = new SeededRandom(`${date}-gen-${attempt}`);
+    const grid = generateGridAttempt(attemptRng);
+    
+    if (validateGridConstraints(grid)) {
+      console.log(`✓ Grid generated successfully on attempt ${attempt + 1}`);
+      return grid;
+    }
+    
+    // Try to repair instead of regenerating
+    if (attempt > 10 && attempt % 5 === 0) {
+      const repaired = repairGridConstraints(grid, attemptRng);
+      if (validateGridConstraints(repaired)) {
+        console.log(`✓ Grid repaired successfully on attempt ${attempt + 1}`);
+        return repaired;
+      }
+    }
+  }
+  
+  // Fallback: generate a safe template
+  console.warn('Using fallback safe template');
+  return generateSafeTemplate(rng);
+}
+
+function generateGridAttempt(rng: SeededRandom): Tile[][] {
+  const grid: Tile[][] = [];
+  const totalCells = GRID_SIZE * GRID_SIZE;
+  const targetVowels = Math.floor(totalCells * VOWEL_RATIO_TARGET);
+  
+  // Pre-allocate vowel positions
+  const vowelPositions = new Set<string>();
+  while (vowelPositions.size < targetVowels) {
+    const row = rng.nextInt(0, GRID_SIZE);
+    const col = rng.nextInt(0, GRID_SIZE);
+    vowelPositions.add(`${row}-${col}`);
+  }
+  
+  for (let row = 0; row < GRID_SIZE; row++) {
     const gridRow: Tile[] = [];
-    for (let col = 0; col < 5; col++) {
-      const isVowel = rng.next() < 0.4; // 40% vowels
+    for (let col = 0; col < GRID_SIZE; col++) {
+      const isVowel = vowelPositions.has(`${row}-${col}`);
       const char = isVowel 
         ? rng.choice(LETTER_WEIGHTS.vowels)
         : rng.choice(LETTER_WEIGHTS.consonants);
@@ -49,7 +85,7 @@ export function generateDailyGrid(date: string): Tile[][] {
         stabilized: false,
         row,
         col,
-        progress: 0 // Start all tiles as Orange
+        progress: 0
       });
     }
     grid.push(gridRow);
