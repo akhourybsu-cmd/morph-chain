@@ -120,6 +120,11 @@ All colors MUST be HSL.
     --rush-accent-start: 10 100% 65%;      /* Electric Coral #FF5A4D */
     --rush-accent-end: 38 100% 63%;        /* Amber #FFC043 */
 
+    /* Morph Games Brand Gradient */
+    --morph-orange: 24 100% 50%;      /* #FF7A00 */
+    --morph-magenta: 329 82% 60%;     /* #E74C9F */
+    --morph-violet: 262 100% 65%;     /* #8A4FFF */
+
     /* MORPH GRID progress state gradients */
     --gradient-grid-orange-start: 36 100% 55%;     /* #F5A623 deep orange */
     --gradient-grid-orange-mid: 38 97% 63%;        /* #F8B24C bright orange */
@@ -365,6 +370,46 @@ All colors MUST be HSL.
 
   .logo-pulse {
     animation: logo-pulse 2s ease-in-out infinite;
+  }
+
+  /* Morph Games Brand Gradient Animations */
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  @keyframes pulse-gradient {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
+  /* Morph Games Brand Utilities */
+  .morph-gradient {
+    background: linear-gradient(93deg, hsl(var(--morph-orange)), hsl(var(--morph-magenta)), hsl(var(--morph-violet)));
+    background-size: 200% 200%;
+  }
+
+  .morph-gradient-animated {
+    background: linear-gradient(93deg, hsl(var(--morph-orange)), hsl(var(--morph-magenta)), hsl(var(--morph-violet)));
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+  }
+
+  .morph-text-gradient {
+    background: linear-gradient(93deg, hsl(var(--morph-orange)), hsl(var(--morph-magenta)), hsl(var(--morph-violet)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .morph-text-gradient-animated {
+    background: linear-gradient(93deg, hsl(var(--morph-orange)), hsl(var(--morph-magenta)), hsl(var(--morph-violet)));
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-shift 8s ease infinite;
   }
 }
 

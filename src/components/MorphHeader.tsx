@@ -75,21 +75,24 @@ export const MorphHeader = () => {
   const currentGame = games.find(game => game.active);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-[#0E0E0E]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0E0E0E]/60">
       <div className="container mx-auto flex h-16 md:h-18 items-center justify-between px-4 md:px-6">
         {/* Brand Wordmark with Logo */}
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity"
+          className="flex items-center gap-2 md:gap-3 group transition-all duration-300"
         >
           <img 
             src={morphIcon}
             alt="" 
             aria-hidden="true"
-            className="w-7 h-7 md:w-8 md:h-8 object-contain"
+            className="w-7 h-7 md:w-8 md:h-8 object-contain morph-gradient-animated rounded-sm"
+            style={{
+              animation: 'pulse-gradient 3s ease-in-out infinite'
+            }}
           />
           <span 
-            className="font-outfit font-bold text-lg md:text-xl tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent whitespace-nowrap"
+            className="font-outfit font-bold text-lg md:text-xl tracking-tight morph-text-gradient-animated whitespace-nowrap"
             style={{ letterSpacing: '-0.02em' }}
           >
             MORPH GAMES
@@ -146,15 +149,15 @@ export const MorphHeader = () => {
           {/* Auth Button */}
           {session ? (
             <Button
-              variant="default"
               onClick={() => navigate('/profile')}
+              className="bg-[hsl(var(--morph-magenta))] hover:bg-[hsl(var(--morph-orange))] text-white rounded-2xl font-medium transition-all duration-300"
             >
               View Profile
             </Button>
           ) : (
             <Button
-              variant="default"
               onClick={() => navigate('/login')}
+              className="bg-[hsl(var(--morph-magenta))] hover:bg-[hsl(var(--morph-orange))] text-white rounded-2xl font-medium transition-all duration-300"
             >
               Log In
             </Button>

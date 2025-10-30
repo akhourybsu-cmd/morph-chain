@@ -25,14 +25,14 @@ const GameSelector = () => {
         {/* Hero Section */}
         <section className="text-center mb-12 md:mb-16">
           <h1 className="font-outfit font-bold text-3xl md:text-5xl tracking-tight mb-3" style={{ letterSpacing: '-0.02em' }}>
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <span className="morph-text-gradient-animated">
               MORPH GAMES
             </span>
           </h1>
-          <p className="text-lg md:text-xl text-foreground font-medium mb-2">
+          <p className="text-lg md:text-xl font-medium mb-2" style={{ color: '#E0E0E0' }}>
             A letter changes everything.
           </p>
-          <div className="flex items-center justify-center gap-2 text-sm md:text-base text-muted-foreground font-medium">
+          <div className="flex items-center justify-center gap-2 text-sm md:text-base font-medium" style={{ color: '#9A9A9A' }}>
             <span>{formattedDate}</span>
             <span>•</span>
             <span>Puzzle #{puzzle.puzzleIndex}</span>
