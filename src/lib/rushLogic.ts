@@ -121,15 +121,17 @@ export const calculateEndBonuses = (words: RushWord[], invalidCount: number): {
   let cleanRun = 0;
   let explorer = 0;
   
-  // Clean run: +100 if 0 invalid submissions
-  if (invalidCount === 0) {
+  // Clean run: +100 if 0 invalid submissions AND at least 5 words
+  if (invalidCount === 0 && words.length >= 5) {
     cleanRun = 100;
   }
   
-  // Explorer: +1% per unique first letter, cap at 26%
+  // Explorer: +1% per unique first letter (minimum 10 letters), cap at 26%
   const firstLetters = new Set(words.map(w => w.word[0]));
-  const totalScore = words.reduce((sum, w) => sum + w.totalScore, 0);
-  explorer = Math.floor(totalScore * firstLetters.size * 0.01);
+  if (firstLetters.size >= 10) {
+    const totalScore = words.reduce((sum, w) => sum + w.totalScore, 0);
+    explorer = Math.floor(totalScore * firstLetters.size * 0.01);
+  }
   
   return {
     cleanRun,

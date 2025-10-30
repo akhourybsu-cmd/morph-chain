@@ -106,7 +106,7 @@ export const checkAchievements = (
   }
   
   // Synapse Surge: 5 morphs, no errors
-  if (words.length >= 5 && progress.consecutiveValid >= 5) {
+  if (progress.consecutiveValid >= 5) {
     earned.push('synapse_surge');
   }
   
@@ -115,8 +115,8 @@ export const checkAchievements = (
     earned.push('neuron_burst');
   }
   
-  // Flawless Flow: no mistakes entire session
-  if (words.length > 0 && invalidCount === 0) {
+  // Flawless Flow: no mistakes entire session (check at end only)
+  if (words.length >= 5 && invalidCount === 0 && timeRemaining === 0) {
     earned.push('flawless_flow');
   }
   
@@ -139,6 +139,20 @@ export const checkAchievements = (
   if (progress.consecutiveSamePosition >= 2) {
     earned.push('double_helix');
   }
+  
+  // Speed Demon: 5 morphs in 15 seconds
+  if (words.length >= 5) {
+    // Check if last 5 words were within 15 seconds
+    const lastFive = words.slice(-5);
+    if (lastFive.length === 5) {
+      const timeSpan = (lastFive[4].timestamp.getTime() - lastFive[0].timestamp.getTime()) / 1000;
+      if (timeSpan <= 15) {
+        earned.push('speed_demon');
+      }
+    }
+  }
+  
+  // Hyperfocus: 10-second streak without typing pause (handled separately in game logic)
   
   return earned;
 };

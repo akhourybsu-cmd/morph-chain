@@ -128,11 +128,15 @@ const MorphRush = () => {
         // Save stats when game finishes
         updateRushStats(prev.score, prev.words.length, prev.multiplierMax, hardMode);
         
+        // Calculate final bonuses
+        const finalBonuses = calculateEndBonuses(prev.words, prev.invalidCount);
+        const finalScoreWithBonuses = prev.score + finalBonuses.total;
+        
         // Save daily completion
         saveDailyCompletion({
           mode,
           hardMode,
-          score: prev.score,
+          score: finalScoreWithBonuses,
           wordsCount: prev.words.length,
           maxMultiplier: prev.multiplierMax,
           invalidCount: prev.invalidCount,
@@ -379,8 +383,6 @@ const MorphRush = () => {
   
   // Check for achievements continuously
   useEffect(() => {
-    if (run.isFinished) return;
-    
     const newAchievements = checkAchievements(
       run.words,
       run.invalidCount,
@@ -396,7 +398,7 @@ const MorphRush = () => {
       setSessionAchievements(prev => [...prev, ...justEarned]);
       setAchievementQueue(prev => [...prev, ...justEarned]);
     }
-  }, [run.words.length, run.currentMultiplier, run.timeRemaining, achievementProgress]);
+  }, [run.words.length, run.currentMultiplier, run.timeRemaining, run.isFinished, achievementProgress]);
   
   // Display achievements from queue
   useEffect(() => {
@@ -563,11 +565,29 @@ const MorphRush = () => {
           // Show completed run results
           <div className="space-y-4 px-3 md:px-6">
             <EnhancedResultsPanel
-              score={completedRun.score}
-              words={[]} // We don't save words in completed run for simplicity
+              score={completedRun.score - (completedRun.invalidCount === 0 && completedRun.wordsCount >= 5 ? 100 : 0) - (completedRun.words && completedRun.words.length > 0 ? Math.floor(completedRun.words.reduce((sum: number, w: any) => sum + w.totalScore, 0) * (new Set(completedRun.words.map((w: any) => w.word[0])).size >= 10 ? new Set(completedRun.words.map((w: any) => w.word[0])).size * 0.01 : 0)) : 0)}
+              words={completedRun.words || []}
               multiplierMax={completedRun.maxMultiplier}
               invalidCount={completedRun.invalidCount}
-              endBonuses={calculateEndBonuses([], completedRun.invalidCount)}
+              endBonuses={{
+                cleanRun: completedRun.invalidCount === 0 && completedRun.wordsCount >= 5 ? 100 : 0,
+                explorer: completedRun.words && completedRun.words.length > 0 ? (() => {
+                  const firstLetters = new Set(completedRun.words.map((w: any) => w.word[0]));
+                  if (firstLetters.size >= 10) {
+                    const totalScore = completedRun.words.reduce((sum: number, w: any) => sum + w.totalScore, 0);
+                    return Math.floor(totalScore * firstLetters.size * 0.01);
+                  }
+                  return 0;
+                })() : 0,
+                total: (completedRun.invalidCount === 0 && completedRun.wordsCount >= 5 ? 100 : 0) + (completedRun.words && completedRun.words.length > 0 ? (() => {
+                  const firstLetters = new Set(completedRun.words.map((w: any) => w.word[0]));
+                  if (firstLetters.size >= 10) {
+                    const totalScore = completedRun.words.reduce((sum: number, w: any) => sum + w.totalScore, 0);
+                    return Math.floor(totalScore * firstLetters.size * 0.01);
+                  }
+                  return 0;
+                })() : 0)
+              }}
               finalScore={completedRun.score}
               shareText={generateRushShareText(
                 puzzle.puzzleNumber,

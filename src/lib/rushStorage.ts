@@ -90,7 +90,7 @@ export interface CompletedDailyRun {
   wordsCount: number;
   maxMultiplier: number;
   invalidCount: number;
-  words: any[];
+  words?: any[]; // Store words for calculating bonuses
   sessionAchievements: string[];
   completedAt: string;
   submitted?: boolean;
