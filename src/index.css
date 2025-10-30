@@ -120,10 +120,11 @@ All colors MUST be HSL.
     --rush-accent-start: 10 100% 65%;      /* Electric Coral #FF5A4D */
     --rush-accent-end: 38 100% 63%;        /* Amber #FFC043 */
 
-    /* Morph Games Brand Gradient */
-    --morph-orange: 24 100% 50%;      /* #FF7A00 */
-    --morph-magenta: 329 82% 60%;     /* #E74C9F */
-    --morph-violet: 262 100% 65%;     /* #8A4FFF */
+    /* Morph Games Brand Gradient - Refined Spectrum */
+    --morph-orange: 18 100% 58%;      /* #FF6A2A - Softer orange */
+    --morph-magenta: 331 62% 57%;     /* #D54C8E - Harmonious bridge */
+    --morph-violet: 251 100% 68%;     /* #7A5CFF - Calmer blue-violet */
+    --morph-glow: 23 100% 68%;        /* #FF9B5E - Warm hover glow */
 
     /* MORPH GRID progress state gradients */
     --gradient-grid-orange-start: 36 100% 55%;     /* #F5A623 deep orange */
