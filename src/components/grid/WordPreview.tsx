@@ -23,7 +23,7 @@ export const WordPreview = () => {
           </span>
         </div>
       ) : (
-        <div className="text-muted-foreground text-sm">Tap letters to form words</div>
+        <div className="text-muted-foreground text-sm">​</div>
       )}
     </div>
   );
