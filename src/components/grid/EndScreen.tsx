@@ -58,7 +58,7 @@ morphgames.io`;
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md relative overflow-hidden">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         {/* Purple ambient glow background */}
         <div className="absolute inset-0 bg-gradient-to-b from-purple-500/20 via-purple-600/10 to-transparent pointer-events-none animate-pulse-glow" />
         

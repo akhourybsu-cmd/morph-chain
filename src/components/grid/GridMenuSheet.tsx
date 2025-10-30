@@ -183,6 +183,7 @@ export const GridMenuSheet = () => {
               <div className="text-sm text-muted-foreground space-y-2">
                 <p className="font-medium">About Morph Grid</p>
                 <p>Turn all 25 tiles Purple in the fewest moves by forming words. Today's board uses a balanced letter generator so every grid is fair and word-friendly. During play, morphs subtly keep vowels and consonants in a healthy mix.</p>
+                <p className="text-xs mt-3">To manage game data and settings across all games, visit your Profile page.</p>
               </div>
             </div>
           </div>

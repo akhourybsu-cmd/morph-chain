@@ -262,6 +262,32 @@ export default function ProfilePage() {
           </Card>
         </section>
 
+        <Card>
+          <CardHeader><CardTitle>Data Management</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Clear all local game data, progress, and settings. This action cannot be undone.
+              </p>
+              <Button 
+                variant="destructive" 
+                onClick={() => {
+                  if (confirm('Are you sure you want to clear all local data? This cannot be undone.')) {
+                    localStorage.clear();
+                    toast({
+                      title: "Data Cleared",
+                      description: "All local game data has been reset"
+                    });
+                    window.location.reload();
+                  }
+                }}
+              >
+                Reset Local Data
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="pt-6 border-t">
           <Button variant="ghost" className="text-destructive hover:text-destructive" onClick={() => {
             supabase.auth.signOut();
