@@ -110,6 +110,18 @@ const MorphGrid = () => {
       
       {/* Bottom Bar - Fixed with safe area */}
       <div className="bg-background/95 backdrop-blur-md border-t border-border/50 px-3 md:px-6 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-3 flex flex-col gap-2 flex-shrink-0">
+        {/* Objective Snapshot */}
+        <div className="flex items-center justify-center gap-2 text-xs md:text-sm mb-1">
+          <span className="text-muted-foreground">Swipe to form words:</span>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 md:w-4 md:h-4 rounded-sm bg-[hsl(var(--grid-accent-start))]" />
+            <span className="text-muted-foreground">→</span>
+            <div className="w-3 h-3 md:w-4 md:h-4 rounded-sm bg-[hsl(var(--grid-accent-mid))]" />
+            <span className="text-muted-foreground">→</span>
+            <div className="w-3 h-3 md:w-4 md:h-4 rounded-sm bg-[hsl(var(--grid-accent-end))]" />
+          </div>
+        </div>
+        
         <WordPreview />
         <GameControls />
       </div>
