@@ -44,7 +44,7 @@ export const EndScreen = ({ open, onClose }: EndScreenProps) => {
     current.word.length > longest.length ? current.word : longest
   , '');
   
-  const handleShare = () => {
+  const handleShare = async () => {
     const text = `💎 MORPH GRID — Daily ${dailySeed}
 🏆 Completed in ${moves} moves
 📝 ${submittedWords.length} words | Longest: "${longestWord}"
@@ -52,8 +52,23 @@ export const EndScreen = ({ open, onClose }: EndScreenProps) => {
 
 morphgames.io`;
     
-    navigator.clipboard.writeText(text);
-    toast.success('Results copied to clipboard!');
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          text: text,
+          title: "Morph Grid",
+        });
+      } catch (error) {
+        // User cancelled or share failed
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(text);
+        toast.success('Results copied to clipboard!');
+      } catch (error) {
+        toast.error('Failed to copy to clipboard');
+      }
+    }
   };
   
   return (
