@@ -228,6 +228,11 @@ export default function ProfilePage() {
               <Button onClick={onSaveProfile} disabled={saving} className="w-full">
                 {saving ? "Saving..." : "Save Changes"}
               </Button>
+              {user.email === "acorybsu@gmail.com" && (
+                <Button onClick={() => navigate('/admin/analytics')} variant="outline" className="w-full">
+                  Analytics
+                </Button>
+              )}
             </CardContent>
           </Card>
 
