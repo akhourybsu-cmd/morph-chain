@@ -8,46 +8,68 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 
 interface AnalyticsData {
-  // Morph Chain Stats
-  chainSessions: number;
-  chainCompleted: number;
-  chainWinRate: number;
-  chainAvgMoves: number;
-  chainAvgHints: number;
+  // Morph Chain Stats - by word length
+  chain4L_completed: number;
+  chain4L_won: number;
+  chain4L_uniqueCompleters: number;
+  chain4L_avgMoves: number;
+  chain5L_completed: number;
+  chain5L_won: number;
+  chain5L_uniqueCompleters: number;
+  chain5L_avgMoves: number;
   
-  // Morph Rush Stats
-  rushRuns: number;
-  rushCompleted: number;
-  rushAvgScore: number;
-  rushMaxScore: number;
-  rushHardModeRuns: number;
+  // Morph Rush Stats - by mode
+  rushDaily_runs: number;
+  rushDaily_completed: number;
+  rushDaily_uniquePlayers: number;
+  rushDaily_avgScore: number;
+  rushDailyHard_runs: number;
+  rushDailyHard_completed: number;
   
-  // Prism Stats
-  prismFeedback: number;
-  prismAvgRating: number;
+  // Morph Grid Stats
+  gridTotalCompletions: number;
+  gridUniqueCompleters: number;
+  gridAvgMoves: number;
+  gridBestMoves: number;
+  
+  // Morph Arcade Stats
+  arcadeTotalCompletions: number;
+  arcadeUniqueCompleters: number;
+  arcadeAvgMoves: number;
   
   // Overall Stats
   totalUsers: number;
   totalGamesPlayed: number;
+  totalGamesCompleted: number;
   dailyActiveUsers: number;
 }
 
 export default function Analytics() {
   const [stats, setStats] = useState<AnalyticsData>({
-    chainSessions: 0,
-    chainCompleted: 0,
-    chainWinRate: 0,
-    chainAvgMoves: 0,
-    chainAvgHints: 0,
-    rushRuns: 0,
-    rushCompleted: 0,
-    rushAvgScore: 0,
-    rushMaxScore: 0,
-    rushHardModeRuns: 0,
-    prismFeedback: 0,
-    prismAvgRating: 0,
+    chain4L_completed: 0,
+    chain4L_won: 0,
+    chain4L_uniqueCompleters: 0,
+    chain4L_avgMoves: 0,
+    chain5L_completed: 0,
+    chain5L_won: 0,
+    chain5L_uniqueCompleters: 0,
+    chain5L_avgMoves: 0,
+    rushDaily_runs: 0,
+    rushDaily_completed: 0,
+    rushDaily_uniquePlayers: 0,
+    rushDaily_avgScore: 0,
+    rushDailyHard_runs: 0,
+    rushDailyHard_completed: 0,
+    gridTotalCompletions: 0,
+    gridUniqueCompleters: 0,
+    gridAvgMoves: 0,
+    gridBestMoves: 0,
+    arcadeTotalCompletions: 0,
+    arcadeUniqueCompleters: 0,
+    arcadeAvgMoves: 0,
     totalUsers: 0,
     totalGamesPlayed: 0,
+    totalGamesCompleted: 0,
     dailyActiveUsers: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -59,82 +81,87 @@ export default function Analytics() {
 
   const fetchAnalytics = async () => {
     try {
-      // Fetch Morph Chain data
-      const { data: sessions, error: sessionsError } = await supabase
-        .from("player_sessions")
+      // Fetch Chain completions by word length
+      const { data: chainData, error: chainError } = await supabase
+        .from("v_chain_completions")
         .select("*");
+      if (chainError) throw chainError;
 
-      if (sessionsError) throw sessionsError;
-
-      // Fetch Morph Rush data
-      const { data: rushRuns, error: rushError } = await supabase
-        .from("rush_runs")
+      // Fetch Rush completions by mode
+      const { data: rushData, error: rushError } = await supabase
+        .from("v_rush_completions")
         .select("*");
-
       if (rushError) throw rushError;
 
-      // Fetch Prism feedback
-      const { data: prismData, error: prismError } = await supabase
-        .from("prism_feedback")
+      // Fetch Grid completions
+      const { data: gridData, error: gridError } = await supabase
+        .from("v_grid_completions")
+        .select("*")
+        .maybeSingle();
+      if (gridError) throw gridError;
+
+      // Fetch Arcade completions
+      const { data: arcadeData, error: arcadeError } = await supabase
+        .from("v_arcade_completions")
+        .select("*")
+        .maybeSingle();
+      if (arcadeError) throw arcadeError;
+
+      // Fetch overall activity
+      const { data: overallData, error: overallError } = await supabase
+        .from("v_overall_activity")
         .select("*");
+      if (overallError) throw overallError;
 
-      if (prismError) throw prismError;
+      // Fetch user engagement for DAU calculation
+      const { data: engagementData, error: engagementError } = await supabase
+        .from("v_user_engagement")
+        .select("*");
+      if (engagementError) throw engagementError;
 
-      // Calculate Morph Chain stats
-      const completed = sessions?.filter((s) => s.completed) || [];
-      const won = sessions?.filter((s) => s.won) || [];
-      const totalMoves = won.reduce((sum, s) => {
-        const moves = Array.isArray(s.moves) ? s.moves.length : 0;
-        return sum + moves;
-      }, 0);
-      const totalHints = sessions?.reduce((sum, s) => sum + (s.hints_used || 0), 0) || 0;
+      // Process Chain data with proper typing
+      const chain4L: any = chainData?.find((c: any) => c.word_length === 4);
+      const chain5L: any = chainData?.find((c: any) => c.word_length === 5);
 
-      // Calculate Morph Rush stats
-      const rushCompleted = rushRuns?.filter((r) => r.finished_at) || [];
-      const rushScores = rushCompleted.map(r => r.score || 0);
-      const rushAvgScore = rushScores.length > 0 
-        ? rushScores.reduce((a, b) => a + b, 0) / rushScores.length 
-        : 0;
-      const rushMaxScore = rushScores.length > 0 ? Math.max(...rushScores) : 0;
-      const rushHardMode = rushRuns?.filter((r) => r.hard_mode) || [];
+      // Process Rush data with proper typing
+      const rushDaily: any = rushData?.find((r: any) => r.mode === 'daily' && r.hard_mode === false);
+      const rushDailyHard: any = rushData?.find((r: any) => r.mode === 'daily' && r.hard_mode === true);
 
-      // Calculate Prism stats
-      const prismRatings = prismData?.filter(p => p.rating).map(p => p.rating) || [];
-      const prismAvgRating = prismRatings.length > 0
-        ? prismRatings.reduce((a, b) => a + b, 0) / prismRatings.length
-        : 0;
+      // Calculate totals from overall activity
+      const totalGamesPlayed = overallData?.reduce((sum: number, game: any) => sum + (game.sessions_started || 0), 0) || 0;
+      const totalGamesCompleted = overallData?.reduce((sum: number, game: any) => sum + (game.sessions_completed || 0), 0) || 0;
+      const allUniqueUsers = new Set(overallData?.flatMap((game: any) => game.unique_users || []));
 
-      // Calculate overall stats
-      const uniqueChainUsers = new Set(sessions?.filter(s => s.user_id).map(s => s.user_id));
-      const uniqueRushUsers = new Set(rushRuns?.filter(r => r.user_id).map(r => r.user_id));
-      const allUsers = new Set([...uniqueChainUsers, ...uniqueRushUsers]);
-
-      // Get recent activity (last 24 hours)
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const recentSessions = sessions?.filter(s => new Date(s.started_at) > yesterday) || [];
-      const recentRush = rushRuns?.filter(r => new Date(r.started_at) > yesterday) || [];
-      const recentUsers = new Set([
-        ...recentSessions.filter(s => s.user_id).map(s => s.user_id),
-        ...recentRush.filter(r => r.user_id).map(r => r.user_id)
-      ]);
+      // Calculate DAU (users active today)
+      const today = new Date().toISOString().split('T')[0];
+      const activeToday = engagementData?.filter((e: any) => e.last_active_date === today).length || 0;
 
       setStats({
-        chainSessions: sessions?.length || 0,
-        chainCompleted: completed.length,
-        chainWinRate: completed.length > 0 ? (won.length / completed.length) * 100 : 0,
-        chainAvgMoves: won.length > 0 ? totalMoves / won.length : 0,
-        chainAvgHints: sessions?.length > 0 ? totalHints / sessions.length : 0,
-        rushRuns: rushRuns?.length || 0,
-        rushCompleted: rushCompleted.length,
-        rushAvgScore,
-        rushMaxScore,
-        rushHardModeRuns: rushHardMode.length,
-        prismFeedback: prismData?.length || 0,
-        prismAvgRating,
-        totalUsers: allUsers.size,
-        totalGamesPlayed: (sessions?.length || 0) + (rushRuns?.length || 0),
-        dailyActiveUsers: recentUsers.size,
+        chain4L_completed: chain4L?.total_completed || 0,
+        chain4L_won: chain4L?.total_won || 0,
+        chain4L_uniqueCompleters: chain4L?.unique_completers || 0,
+        chain4L_avgMoves: chain4L?.avg_moves_to_win || 0,
+        chain5L_completed: chain5L?.total_completed || 0,
+        chain5L_won: chain5L?.total_won || 0,
+        chain5L_uniqueCompleters: chain5L?.unique_completers || 0,
+        chain5L_avgMoves: chain5L?.avg_moves_to_win || 0,
+        rushDaily_runs: rushDaily?.total_runs || 0,
+        rushDaily_completed: rushDaily?.total_completed || 0,
+        rushDaily_uniquePlayers: rushDaily?.unique_players || 0,
+        rushDaily_avgScore: rushDaily?.avg_score || 0,
+        rushDailyHard_runs: rushDailyHard?.total_runs || 0,
+        rushDailyHard_completed: rushDailyHard?.total_completed || 0,
+        gridTotalCompletions: gridData?.total_completions || 0,
+        gridUniqueCompleters: gridData?.unique_completers || 0,
+        gridAvgMoves: gridData?.avg_moves || 0,
+        gridBestMoves: gridData?.best_moves || 0,
+        arcadeTotalCompletions: arcadeData?.total_completions || 0,
+        arcadeUniqueCompleters: arcadeData?.unique_completers || 0,
+        arcadeAvgMoves: arcadeData?.avg_moves || 0,
+        totalUsers: allUniqueUsers.size,
+        totalGamesPlayed,
+        totalGamesCompleted,
+        dailyActiveUsers: activeToday,
       });
     } catch (error: any) {
       toast({
@@ -227,26 +254,26 @@ export default function Analytics() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rush High Score</CardTitle>
+            <CardTitle className="text-sm font-medium">Completed Games</CardTitle>
             <Trophy className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.rushMaxScore.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{stats.totalGamesCompleted}</div>
             <p className="text-xs text-muted-foreground">
-              Avg: {stats.rushAvgScore.toFixed(0)}
+              Out of {stats.totalGamesPlayed} started
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Prism Feedback</CardTitle>
-            <Sparkles className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Grid Completions</CardTitle>
+            <Gamepad2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.prismFeedback}</div>
+            <div className="text-2xl font-bold">{stats.gridTotalCompletions}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.prismAvgRating > 0 ? `Avg rating: ${stats.prismAvgRating.toFixed(1)}` : 'No ratings yet'}
+              {stats.gridUniqueCompleters} unique players
             </p>
           </CardContent>
         </Card>
@@ -262,31 +289,38 @@ export default function Analytics() {
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Morph Chain - Sessions</span>
-                <span className="text-sm text-muted-foreground">{stats.chainSessions}</span>
+                <span className="text-sm font-medium">Morph Chain - 4L Completions</span>
+                <span className="text-sm text-muted-foreground">{stats.chain4L_completed} ({stats.chain4L_uniqueCompleters} unique)</span>
               </div>
-              <Progress value={(stats.chainSessions / stats.totalGamesPlayed) * 100} />
+              <Progress value={(stats.chain4L_completed / Math.max(stats.totalGamesCompleted, 1)) * 100} />
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Morph Chain - Completed</span>
-                <span className="text-sm text-muted-foreground">{stats.chainCompleted}</span>
+                <span className="text-sm font-medium">Morph Chain - 5L Completions</span>
+                <span className="text-sm text-muted-foreground">{stats.chain5L_completed} ({stats.chain5L_uniqueCompleters} unique)</span>
               </div>
-              <Progress value={(stats.chainCompleted / stats.totalGamesPlayed) * 100} className="bg-secondary" />
+              <Progress value={(stats.chain5L_completed / Math.max(stats.totalGamesCompleted, 1)) * 100} className="bg-secondary" />
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Morph Rush - Sessions</span>
-                <span className="text-sm text-muted-foreground">{stats.rushRuns}</span>
+                <span className="text-sm font-medium">Morph Rush - Daily Completions</span>
+                <span className="text-sm text-muted-foreground">{stats.rushDaily_completed} ({stats.rushDaily_uniquePlayers} unique)</span>
               </div>
-              <Progress value={(stats.rushRuns / stats.totalGamesPlayed) * 100} />
+              <Progress value={(stats.rushDaily_completed / Math.max(stats.totalGamesCompleted, 1)) * 100} />
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Morph Rush - Completed</span>
-                <span className="text-sm text-muted-foreground">{stats.rushCompleted}</span>
+                <span className="text-sm font-medium">Morph Grid - Completions</span>
+                <span className="text-sm text-muted-foreground">{stats.gridTotalCompletions} ({stats.gridUniqueCompleters} unique)</span>
               </div>
-              <Progress value={(stats.rushCompleted / stats.totalGamesPlayed) * 100} className="bg-secondary" />
+              <Progress value={(stats.gridTotalCompletions / Math.max(stats.totalGamesCompleted, 1)) * 100} className="bg-secondary" />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Morph Arcade - Completions</span>
+                <span className="text-sm text-muted-foreground">{stats.arcadeTotalCompletions} ({stats.arcadeUniqueCompleters} unique)</span>
+              </div>
+              <Progress value={(stats.arcadeTotalCompletions / Math.max(stats.totalGamesCompleted, 1)) * 100} />
             </div>
           </div>
         </CardContent>
@@ -304,39 +338,42 @@ export default function Analytics() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Sessions</CardTitle>
+                <CardTitle className="text-sm font-medium">4L Completed</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.chainSessions}</div>
+                <div className="text-2xl font-bold">{stats.chain4L_completed}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.chainCompleted} completed
+                  {stats.chain4L_won} won
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
+                <CardTitle className="text-sm font-medium">5L Completed</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.chainWinRate.toFixed(1)}%</div>
+                <div className="text-2xl font-bold">{stats.chain5L_completed}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.chain5L_won} won
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Avg Moves</CardTitle>
+                <CardTitle className="text-sm font-medium">4L Avg Moves</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.chainAvgMoves.toFixed(1)}</div>
+                <div className="text-2xl font-bold">{stats.chain4L_avgMoves.toFixed(1)}</div>
                 <p className="text-xs text-muted-foreground">Per win</p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Avg Hints</CardTitle>
+                <CardTitle className="text-sm font-medium">5L Avg Moves</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.chainAvgHints.toFixed(2)}</div>
-                <p className="text-xs text-muted-foreground">Per session</p>
+                <div className="text-2xl font-bold">{stats.chain5L_avgMoves.toFixed(1)}</div>
+                <p className="text-xs text-muted-foreground">Per win</p>
               </CardContent>
             </Card>
           </div>
@@ -346,40 +383,40 @@ export default function Analytics() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Runs</CardTitle>
+                <CardTitle className="text-sm font-medium">Daily Runs</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.rushRuns}</div>
+                <div className="text-2xl font-bold">{stats.rushDaily_runs}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.rushCompleted} finished
+                  {stats.rushDaily_completed} finished
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Avg Score</CardTitle>
+                <CardTitle className="text-sm font-medium">Daily Avg Score</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.rushAvgScore.toFixed(0)}</div>
+                <div className="text-2xl font-bold">{stats.rushDaily_avgScore.toFixed(0)}</div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">High Score</CardTitle>
+                <CardTitle className="text-sm font-medium">Hard Mode Runs</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.rushMaxScore.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Hard Mode</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.rushHardModeRuns}</div>
+                <div className="text-2xl font-bold">{stats.rushDailyHard_runs}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.rushRuns > 0 ? `${((stats.rushHardModeRuns / stats.rushRuns) * 100).toFixed(1)}%` : '0%'}
+                  {stats.rushDailyHard_completed} finished
                 </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Unique Players</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.rushDaily_uniquePlayers}</div>
               </CardContent>
             </Card>
           </div>
@@ -389,25 +426,23 @@ export default function Analytics() {
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Feedback</CardTitle>
+                <CardTitle className="text-sm font-medium">Grid Completions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.prismFeedback}</div>
+                <div className="text-2xl font-bold">{stats.gridTotalCompletions}</div>
                 <p className="text-xs text-muted-foreground">
-                  Submissions received
+                  {stats.gridUniqueCompleters} unique players
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Avg Rating</CardTitle>
+                <CardTitle className="text-sm font-medium">Arcade Completions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {stats.prismAvgRating > 0 ? stats.prismAvgRating.toFixed(1) : 'N/A'}
-                </div>
+                <div className="text-2xl font-bold">{stats.arcadeTotalCompletions}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.prismAvgRating > 0 ? 'Out of 5' : 'No ratings yet'}
+                  {stats.arcadeUniqueCompleters} unique players
                 </p>
               </CardContent>
             </Card>

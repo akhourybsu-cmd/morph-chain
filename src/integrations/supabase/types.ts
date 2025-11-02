@@ -720,6 +720,40 @@ export type Database = {
         }
         Relationships: []
       }
+      v_arcade_completions: {
+        Row: {
+          avg_moves: number | null
+          best_moves: number | null
+          total_completions: number | null
+          unique_completers: number | null
+          worst_moves: number | null
+        }
+        Relationships: []
+      }
+      v_chain_completions: {
+        Row: {
+          avg_moves_to_win: number | null
+          best_moves: number | null
+          total_completed: number | null
+          total_won: number | null
+          unique_completers: number | null
+          unique_winners: number | null
+          word_length: number | null
+          worst_moves: number | null
+        }
+        Relationships: []
+      }
+      v_grid_completions: {
+        Row: {
+          avg_moves: number | null
+          avg_time_seconds: number | null
+          best_moves: number | null
+          total_completions: number | null
+          unique_completers: number | null
+          worst_moves: number | null
+        }
+        Relationships: []
+      }
       v_my_stats: {
         Row: {
           chain_avg_time_ms: number | null
@@ -731,6 +765,41 @@ export type Database = {
           rush_best_score: number | null
           rush_plays: number | null
           rush_time_ms: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      v_overall_activity: {
+        Row: {
+          game: string | null
+          sessions_completed: number | null
+          sessions_started: number | null
+          unique_users: number | null
+        }
+        Relationships: []
+      }
+      v_rush_completions: {
+        Row: {
+          avg_max_multiplier: number | null
+          avg_score: number | null
+          best_multiplier: number | null
+          hard_mode: boolean | null
+          max_score: number | null
+          mode: string | null
+          total_completed: number | null
+          total_runs: number | null
+          unique_completers: number | null
+          unique_players: number | null
+        }
+        Relationships: []
+      }
+      v_user_engagement: {
+        Row: {
+          chain_days_played: number | null
+          grid_days_played: number | null
+          last_active_date: string | null
+          rush_days_played: number | null
+          total_days_played: number | null
           user_id: string | null
         }
         Relationships: []
