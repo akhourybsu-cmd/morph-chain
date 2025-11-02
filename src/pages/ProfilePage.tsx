@@ -97,10 +97,10 @@ export default function ProfilePage() {
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="grid grid-cols-2 gap-3 pt-2">
-                        <Stat label="Plays" value={localChainStats["4L"].played + localChainStats["5L"].played} />
-                        <Stat label="Wins" value={localChainStats["4L"].won + localChainStats["5L"].won} />
-                        <Stat label="Current Streak" value={localChainStats["4L"].currentStreak} />
-                        <Stat label="Best Streak" value={localChainStats["4L"].bestStreak} />
+                        <Stat label="Plays" value={localChainStats.overall.played} />
+                        <Stat label="Wins" value={localChainStats.overall.won} />
+                        <Stat label="Current Streak" value={localChainStats.overall.currentStreak} />
+                        <Stat label="Best Streak" value={localChainStats.overall.maxStreak} />
                       </div>
                     </AccordionContent>
                   </AccordionItem>
