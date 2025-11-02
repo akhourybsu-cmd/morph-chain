@@ -6,6 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { MorphHeader } from "@/components/MorphHeader";
+import { MorphChainTitle, MorphGridTitle, MorphRushTitle } from "@/components/GameTitles";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { loadRushStats } from "@/lib/rushStorage";
+import { loadGridStats } from "@/lib/gridStorage";
+import { loadStats } from "@/lib/storage";
 
 type MyStats = {
   user_id: string;
@@ -60,6 +65,11 @@ export default function ProfilePage() {
     });
   }, [user?.id]);
 
+  // Load local stats for displaying when not signed in or as backup
+  const [localRushStats] = useState(() => loadRushStats());
+  const [localGridStats] = useState(() => loadGridStats());
+  const [localChainStats] = useState(() => loadStats());
+
   const rushTime = useMemo(() => {
     if (!stats) return "0m";
     const minutes = Math.round((stats.rush_time_ms || 0) / 60000);
@@ -70,11 +80,62 @@ export default function ProfilePage() {
     return (
       <>
         <MorphHeader />
-        <main className="max-w-3xl mx-auto p-6">
-          <Card><CardContent className="p-6">
-            <p>Please log in to view your profile.</p>
-            <Button onClick={() => navigate('/login')} className="mt-4">Log In</Button>
-          </CardContent></Card>
+        <main className="max-w-4xl mx-auto p-6 space-y-8">
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <h2 className="text-xl font-bold">Create a profile to save these stats</h2>
+              <p className="text-muted-foreground">Your local stats are tracked on this device. Sign up to sync them across devices!</p>
+              <Button onClick={() => navigate('/login')} className="mt-4">Log In or Sign Up</Button>
+              
+              {/* Show local stats */}
+              <div className="pt-6 border-t">
+                <h3 className="text-lg font-semibold mb-4">Your Local Stats</h3>
+                <Accordion type="single" collapsible defaultValue="chain" className="space-y-2">
+                  <AccordionItem value="chain" className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      <MorphChainTitle className="text-xl" />
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-2 gap-3 pt-2">
+                        <Stat label="Plays" value={localChainStats["4L"].played + localChainStats["5L"].played} />
+                        <Stat label="Wins" value={localChainStats["4L"].won + localChainStats["5L"].won} />
+                        <Stat label="Current Streak" value={localChainStats["4L"].currentStreak} />
+                        <Stat label="Best Streak" value={localChainStats["4L"].bestStreak} />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="rush" className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      <MorphRushTitle className="text-xl" />
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-2 gap-3 pt-2">
+                        <Stat label="Plays" value={localRushStats.normal.gamesPlayed + localRushStats.hard.gamesPlayed} />
+                        <Stat label="Best Score" value={Math.max(localRushStats.normal.highScore, localRushStats.hard.highScore)} />
+                        <Stat label="Total Words" value={localRushStats.normal.totalWords + localRushStats.hard.totalWords} />
+                        <Stat label="Max Multiplier" value={`${Math.max(localRushStats.normal.maxMultiplier, localRushStats.hard.maxMultiplier).toFixed(1)}x`} />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="grid" className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      <MorphGridTitle className="text-xl" />
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-2 gap-3 pt-2">
+                        <Stat label="Plays" value={localGridStats.gamesPlayed} />
+                        <Stat label="Completed" value={localGridStats.gamesCompleted} />
+                        <Stat label="Best Moves" value={localGridStats.bestMoves ?? 0} />
+                        <Stat label="Completion Rate" value={`${Math.round(localGridStats.completionRate * 100)}%`} />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            </CardContent>
+          </Card>
         </main>
       </>
     );
@@ -244,25 +305,53 @@ export default function ProfilePage() {
           </Card>
         </section>
 
-        <section className="grid md:grid-cols-2 gap-4">
+        <section>
           <Card>
-            <CardHeader><CardTitle>Morph Rush</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3">
-              <Stat label="Plays" value={stats?.rush_plays ?? 0} />
-              <Stat label="Best Score" value={stats?.rush_best_score ?? 0} />
-              <Stat label="Avg Score" value={stats?.rush_avg_score ?? 0} />
-              <Stat label="Best Multiplier" value={`${stats?.rush_best_multiplier ?? 0}x`} />
-              <Stat label="Time Played" value={rushTime} />
-            </CardContent>
-          </Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">My Stats</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible defaultValue="chain" className="space-y-2">
+                <AccordionItem value="chain" className="border rounded-lg px-4">
+                  <AccordionTrigger className="hover:no-underline">
+                    <MorphChainTitle className="text-xl" />
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <Stat label="Plays" value={stats?.chain_plays ?? 0} />
+                      <Stat label="Best Moves" value={stats?.chain_best_moves ?? 0} />
+                      <Stat label="Clears" value={stats?.chain_clears ?? 0} />
+                      <Stat label="Avg Time" value={`${Math.round((stats?.chain_avg_time_ms ?? 0)/1000)}s`} />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
-          <Card>
-            <CardHeader><CardTitle>Morph Chain</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3">
-              <Stat label="Plays" value={stats?.chain_plays ?? 0} />
-              <Stat label="Best Moves" value={stats?.chain_best_moves ?? 0} />
-              <Stat label="Clears" value={stats?.chain_clears ?? 0} />
-              <Stat label="Avg Time" value={`${Math.round((stats?.chain_avg_time_ms ?? 0)/1000)}s`} />
+                <AccordionItem value="rush" className="border rounded-lg px-4">
+                  <AccordionTrigger className="hover:no-underline">
+                    <MorphRushTitle className="text-xl" />
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <Stat label="Plays" value={stats?.rush_plays ?? 0} />
+                      <Stat label="Best Score" value={stats?.rush_best_score ?? 0} />
+                      <Stat label="Avg Score" value={stats?.rush_avg_score ?? 0} />
+                      <Stat label="Best Multiplier" value={`${stats?.rush_best_multiplier ?? 0}x`} />
+                      <Stat label="Time Played" value={rushTime} />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="grid" className="border rounded-lg px-4">
+                  <AccordionTrigger className="hover:no-underline">
+                    <MorphGridTitle className="text-xl" />
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <Stat label="Coming Soon" value="Track Grid stats" />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </CardContent>
           </Card>
         </section>
