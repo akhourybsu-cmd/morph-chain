@@ -560,6 +560,33 @@ export type Database = {
         }
         Relationships: []
       }
+      security_config_status: {
+        Row: {
+          id: string
+          is_enabled: boolean
+          last_checked_at: string
+          notes: string | null
+          setting_name: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          is_enabled?: boolean
+          last_checked_at?: string
+          notes?: string | null
+          setting_name: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          is_enabled?: boolean
+          last_checked_at?: string
+          notes?: string | null
+          setting_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           avatar_path: string | null
