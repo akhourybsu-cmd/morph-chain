@@ -17,6 +17,7 @@ import { MorphChainTitle, MorphPrismTitle, MorphRushTitle, MorphGridTitle } from
 import morphIcon from "@/assets/morph-icon.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const MorphHeader = () => {
   const navigate = useNavigate();
@@ -75,7 +76,7 @@ export const MorphHeader = () => {
   const currentGame = games.find(game => game.active);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-[#0E0E0E]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0E0E0E]/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 md:h-18 items-center justify-between px-4 md:px-6">
         {/* Brand Wordmark with Logo */}
         <button
@@ -145,6 +146,9 @@ export const MorphHeader = () => {
               {link.name}
             </Button>
           ))}
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
 
           {/* Auth Button */}
           {session ? (
@@ -222,6 +226,14 @@ export const MorphHeader = () => {
                     {link.name}
                   </button>
                 ))}
+              </div>
+
+              {/* Theme Toggle */}
+              <div className="space-y-2 pt-4 border-t border-border">
+                <div className="flex items-center justify-between px-2 py-3">
+                  <span className="font-medium">Theme</span>
+                  <ThemeToggle />
+                </div>
               </div>
 
               {/* Auth Section */}
