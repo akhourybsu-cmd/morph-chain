@@ -684,6 +684,17 @@ const Index = () => {
                     aria-label="Next word"
                     autoFocus={!settings.useOnScreenKeyboard}
                   />
+
+                  {/* MORPH button for physical keyboard users */}
+                  {!settings.useOnScreenKeyboard && (
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={!currentInput.trim() || isLoading}
+                      className="h-10 md:h-11 px-4 bg-chain hover:bg-chain/90 text-chain-foreground font-bold shadow-[0_0_10px_hsl(var(--chain-accent)/0.3)]"
+                    >
+                      MORPH
+                    </Button>
+                  )}
                 </div>
 
                 <div className="flex items-center text-xs md:text-sm">
