@@ -1,5 +1,5 @@
 import { HintTile, TileState } from "./HintTile";
-import { TrendingDown, TrendingUp, Minus, Flag } from "lucide-react";
+import { TrendingDown, TrendingUp, Flag, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export interface Move {
@@ -23,8 +23,16 @@ interface MoveLogProps {
 export const MoveLog = ({ moves, simpleMode = false, colorblindMode, onDisputeWord }: MoveLogProps) => {
   if (moves.length === 0) {
     return (
-      <div className="px-6 py-6 text-center text-muted-foreground">
-        <p className="text-sm">Your moves will appear here</p>
+      <div className="px-6 py-8 text-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-chain/10 flex items-center justify-center">
+            <Sparkles className="h-6 w-6 text-chain" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">Ready to morph!</p>
+            <p className="text-xs text-muted-foreground">Type your first word below</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -39,7 +47,7 @@ export const MoveLog = ({ moves, simpleMode = false, colorblindMode, onDisputeWo
         return (
         <div
           key={move.id}
-          className="bg-card border border-border rounded-md p-2 animate-slide-in"
+          className="bg-card border border-border rounded-md p-2 animate-fade-in"
         >
           <div className="flex items-center gap-2">
             <div className="w-5 text-xs font-bold text-muted-foreground flex-shrink-0">
@@ -76,7 +84,7 @@ export const MoveLog = ({ moves, simpleMode = false, colorblindMode, onDisputeWo
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {move.isComplete ? (
-                    <Flag className="h-4 w-4 text-success" />
+                    <span className="text-success text-xs font-bold">✓</span>
                   ) : move.closerToGoal ? (
                     <TrendingUp className="h-4 w-4 text-success" />
                   ) : move.isWorse ? (
@@ -114,7 +122,7 @@ export const MoveLog = ({ moves, simpleMode = false, colorblindMode, onDisputeWo
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {move.isComplete ? (
-                    <Flag className="h-4 w-4 text-success" />
+                    <span className="text-success text-xs font-bold">✓</span>
                   ) : move.closerToGoal ? (
                     <TrendingUp className="h-4 w-4 text-success" />
                   ) : move.isWorse ? (

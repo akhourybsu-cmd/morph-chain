@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AddToHomeScreen } from "@/components/AddToHomeScreen";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Home, Lock } from "lucide-react";
+import { ChevronDown, Home, Lock, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { backgroundThemes, BackgroundTheme } from "@/components/SettingsModal";
@@ -32,6 +32,7 @@ interface GameMenuSheetProps {
   backgroundTheme: BackgroundTheme;
   onChangeBackgroundTheme: (theme: BackgroundTheme) => void;
   onResetData: () => void;
+  onOpenAchievements?: () => void;
 }
 
 export const GameMenuSheet = ({
@@ -48,6 +49,7 @@ export const GameMenuSheet = ({
   backgroundTheme,
   onChangeBackgroundTheme,
   onResetData,
+  onOpenAchievements,
 }: GameMenuSheetProps) => {
   const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -118,6 +120,21 @@ export const GameMenuSheet = ({
               </Button>
             </div>
           </div>
+
+          {/* Achievements Button */}
+          {onOpenAchievements && (
+            <Button
+              variant="ghost"
+              className="w-full justify-start px-2 py-2 h-auto"
+              onClick={() => {
+                onOpenAchievements();
+                onOpenChange(false);
+              }}
+            >
+              <Trophy className="h-4 w-4 mr-2 text-chain" />
+              <span className="font-medium text-sm">Achievements</span>
+            </Button>
+          )}
 
           <Separator />
 

@@ -1,4 +1,4 @@
-import { Menu, TrendingUp, HelpCircle, User } from "lucide-react";
+import { Menu, TrendingUp, HelpCircle, User, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { useNavigate } from "react-router-dom";
@@ -10,9 +10,10 @@ interface GameHeaderProps {
   onOpenSettings: () => void;
   onOpenStats: () => void;
   onOpenHelp: () => void;
+  streak?: number;
 }
 
-export const GameHeader = ({ onOpenSettings, onOpenStats, onOpenHelp }: GameHeaderProps) => {
+export const GameHeader = ({ onOpenSettings, onOpenStats, onOpenHelp, streak = 0 }: GameHeaderProps) => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
 
@@ -59,8 +60,17 @@ export const GameHeader = ({ onOpenSettings, onOpenStats, onOpenHelp }: GameHead
         </Button>
       </div>
       
-      <div className="flex justify-center">
+      <div className="flex justify-center items-center gap-2">
         <Logo />
+        {streak > 0 && (
+          <div 
+            className="flex items-center gap-1 px-2 py-1 bg-warning/10 rounded-full"
+            title={`${streak} day streak`}
+          >
+            <Flame className="h-4 w-4 text-warning" />
+            <span className="text-xs font-bold text-warning">{streak}</span>
+          </div>
+        )}
       </div>
       
       <div className="flex items-center gap-1 justify-end">

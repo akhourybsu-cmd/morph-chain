@@ -18,6 +18,7 @@ import { WordDisputeModal } from "@/components/WordDisputeModal";
 import { MobileActionBar } from "@/components/MobileActionBar";
 import { ChainAchievementPopup } from "@/components/chain/ChainAchievementPopup";
 import { WinCelebration } from "@/components/chain/WinCelebration";
+import { AchievementGallery } from "@/components/chain/AchievementGallery";
 
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -81,6 +82,7 @@ const Index = () => {
   const [helpOpen, setHelpOpen] = useState(false);
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [disputedWord, setDisputedWord] = useState<string | undefined>();
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
 
   // Settings
   const [settings, setSettings] = useState(loadSettings());
@@ -601,6 +603,7 @@ const Index = () => {
         onOpenSettings={() => setMenuOpen(true)}
         onOpenStats={() => setStatsOpen(true)}
         onOpenHelp={() => setHelpOpen(true)}
+        streak={stats.byLength[selectedLength].currentStreak}
       />
 
       <PuzzleTopBar
@@ -753,13 +756,25 @@ const Index = () => {
         </div>
       )}
 
-      <footer className="hidden md:block fixed bottom-0 left-0 right-0 bg-card border-t border-border py-2 px-3 md:py-4 md:px-6">
-        <div className="max-w-2xl mx-auto text-center">
-          <p className="text-xs md:text-sm text-muted-foreground">
-            New puzzle in {getTimeUntilMidnight()}
-          </p>
-        </div>
-      </footer>
+      {/* Footer - visible on desktop always, on mobile when keyboard is hidden */}
+      {(gameCompleted || !settings.useOnScreenKeyboard) && (
+        <footer className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border py-3 px-3 md:py-4 md:px-6 z-10">
+          <div className="max-w-2xl mx-auto text-center">
+            <p className="text-xs md:text-sm text-muted-foreground">
+              New puzzle in {getTimeUntilMidnight()}
+            </p>
+          </div>
+        </footer>
+      )}
+      {!gameCompleted && settings.useOnScreenKeyboard && (
+        <footer className="hidden md:block fixed bottom-0 left-0 right-0 bg-card border-t border-border py-4 px-6">
+          <div className="max-w-2xl mx-auto text-center">
+            <p className="text-sm text-muted-foreground">
+              New puzzle in {getTimeUntilMidnight()}
+            </p>
+          </div>
+        </footer>
+      )}
 
       <GameMenuSheet
         open={menuOpen}
@@ -775,6 +790,7 @@ const Index = () => {
         backgroundTheme={(settings.backgroundTheme as BackgroundTheme) || "midnight"}
         onChangeBackgroundTheme={handleChangeBackgroundTheme}
         onResetData={handleResetData}
+        onOpenAchievements={() => setAchievementsOpen(true)}
       />
 
       <HowToPlayModal open={helpOpen} onOpenChange={setHelpOpen} />
@@ -790,6 +806,11 @@ const Index = () => {
         open={statsOpen}
         onOpenChange={setStatsOpen}
         stats={stats}
+      />
+
+      <AchievementGallery
+        open={achievementsOpen}
+        onOpenChange={setAchievementsOpen}
       />
     </div>
   );
