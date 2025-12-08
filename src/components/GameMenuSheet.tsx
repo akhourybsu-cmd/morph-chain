@@ -11,11 +11,10 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AddToHomeScreen } from "@/components/AddToHomeScreen";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Home, Trophy } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ChevronDown, Trophy } from "lucide-react";
 import { useState } from "react";
 import { backgroundThemes, BackgroundTheme } from "@/components/SettingsModal";
-import { MorphChainTitle, MorphRushTitle, MorphGridTitle } from "@/components/GameTitles";
+import { GamesNavigation } from "@/components/shared/GamesNavigation";
 
 interface GameMenuSheetProps {
   open: boolean;
@@ -50,13 +49,7 @@ export const GameMenuSheet = ({
   onResetData,
   onOpenAchievements,
 }: GameMenuSheetProps) => {
-  const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
-
-  const handleNavigate = (path: string) => {
-    navigate(path);
-    onOpenChange(false);
-  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -65,60 +58,30 @@ export const GameMenuSheet = ({
           <SheetTitle>Menu</SheetTitle>
         </SheetHeader>
 
-        <div className="space-y-4 py-4">
-          {/* Morph Games Section */}
-          <div className="space-y-2">
-            <Button
-              variant="ghost"
-              className="w-full justify-start px-2 py-1 h-auto"
-              onClick={() => handleNavigate("/")}
-            >
-              <Home className="h-4 w-4 mr-2 text-primary" />
-              <h3 className="font-semibold text-sm">Morph Games</h3>
-            </Button>
+        <div className="space-y-6 py-4">
+          {/* Games Section */}
+          <GamesNavigation currentGame="chain" onNavigate={() => onOpenChange(false)} />
 
-            <div className="pl-4 space-y-1">
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-sm h-auto py-2"
-                onClick={() => handleNavigate("/chain")}
-              >
-                <MorphChainTitle className="text-base" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-sm h-auto py-2 gap-2"
-                onClick={() => handleNavigate("/grid")}
-              >
-                <MorphGridTitle className="text-base" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-sm h-auto py-2"
-                onClick={() => handleNavigate("/rush?mode=daily")}
-              >
-                <MorphRushTitle className="text-base" />
-              </Button>
-              
+          <Separator />
+
+          {/* Chain-specific: Achievements */}
+          <div>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">MORPH CHAIN</h3>
+            <div className="space-y-1">
+              {onOpenAchievements && (
+                <button
+                  onClick={() => {
+                    onOpenAchievements();
+                    onOpenChange(false);
+                  }}
+                  className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+                >
+                  <Trophy className="w-4 h-4 text-chain" />
+                  Achievements
+                </button>
+              )}
             </div>
           </div>
-
-          {/* Achievements Button */}
-          {onOpenAchievements && (
-            <Button
-              variant="ghost"
-              className="w-full justify-start px-2 py-2 h-auto"
-              onClick={() => {
-                onOpenAchievements();
-                onOpenChange(false);
-              }}
-            >
-              <Trophy className="h-4 w-4 mr-2 text-chain" />
-              <span className="font-medium text-sm">Achievements</span>
-            </Button>
-          )}
 
           <Separator />
 

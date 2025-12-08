@@ -3,14 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Menu, Trophy, BarChart3, Settings } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Menu, Trophy, BarChart3, Settings, HelpCircle, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { MorphChainTitle, MorphRushTitle, MorphGridTitle, MorphPrismTitle } from "@/components/GameTitles";
 import { useState } from "react";
 import { GridLeaderboard } from "./GridLeaderboard";
 import { GridStatsModal } from "./GridStats";
 import { useGridStore } from "@/stores/gridStore";
 import { useGridSettings } from "@/hooks/useGridSettings";
+import { GamesNavigation } from "@/components/shared/GamesNavigation";
 
 export const GridMenuSheet = () => {
   const navigate = useNavigate();
@@ -21,13 +22,6 @@ export const GridMenuSheet = () => {
   const [showStats, setShowStats] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  const games = [
-    { title: <MorphChainTitle className="text-sm" />, path: "/", description: "Word ladder" },
-    { title: <MorphGridTitle className="text-sm" />, path: "/grid", description: "Daily 5×5 puzzle", active: true },
-    { title: <MorphRushTitle className="text-sm" />, path: "/rush?mode=daily", description: "Score dash" },
-    { title: <MorphPrismTitle className="text-sm" />, path: "/prism", description: "Coming soon", disabled: true },
-  ];
-
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -35,40 +29,16 @@ export const GridMenuSheet = () => {
           <Menu className="w-5 h-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-80">
+      <SheetContent side="left" className="w-80 overflow-y-auto">
         <div className="flex flex-col gap-6 mt-8">
-          <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">GAMES</h3>
-            <div className="space-y-1">
-              {games.map((game) => (
-                <button
-                  key={game.path}
-                  onClick={() => {
-                    if (!game.disabled) {
-                      navigate(game.path);
-                      setOpen(false);
-                    }
-                  }}
-                  disabled={game.disabled}
-                  className={`w-full text-left px-3 py-3 rounded-lg transition-colors ${
-                    game.active 
-                      ? "bg-primary/10 border border-primary/20" 
-                      : game.disabled
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-muted"
-                  }`}
-                >
-                  <div className="flex flex-col gap-0.5">
-                    {game.title}
-                    <span className="text-xs text-muted-foreground">{game.description}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Games Section */}
+          <GamesNavigation currentGame="grid" onNavigate={() => setOpen(false)} />
 
-          <div className="pt-4 border-t border-border">
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">STATS & INFO</h3>
+          <Separator />
+
+          {/* Grid-specific section */}
+          <div>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">MORPH GRID</h3>
             <div className="space-y-1">
               <button
                 onClick={() => {
@@ -100,13 +70,23 @@ export const GridMenuSheet = () => {
                 <Settings className="w-4 h-4" />
                 Settings
               </button>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Info Section */}
+          <div>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">INFO</h3>
+            <div className="space-y-1">
               <button
                 onClick={() => {
                   navigate("/rules");
                   setOpen(false);
                 }}
-                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors"
+                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
               >
+                <HelpCircle className="w-4 h-4" />
                 Rules
               </button>
               <button
@@ -114,8 +94,9 @@ export const GridMenuSheet = () => {
                   navigate("/whats-new");
                   setOpen(false);
                 }}
-                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors"
+                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
               >
+                <Sparkles className="w-4 h-4" />
                 What's New
               </button>
             </div>
