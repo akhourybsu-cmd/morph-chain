@@ -10,7 +10,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import TermsOfService from "./pages/TermsOfService";
-import MorphPrism from "./pages/MorphPrism";
+// MorphPrism removed - hidden from app
 import MorphRush from "./pages/MorphRush";
 import MorphGrid from "./pages/MorphGrid";
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -52,7 +52,7 @@ const App = () => {
             <Route path="/" element={<GameSelector />} />
             <Route path="/chain" element={<Index />} />
             <Route path="/grid" element={<MorphGrid />} />
-            <Route path="/prism" element={<MorphPrism />} />
+            {/* Prism route removed - hidden from app */}
             <Route path="/rush" element={<MorphRush />} />
             <Route path="/rules" element={<Rules />} />
             <Route path="/kids" element={<Kids />} />

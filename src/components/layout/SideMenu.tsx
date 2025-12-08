@@ -32,15 +32,6 @@ export function SideMenu({ open, onClose }: { open: boolean; onClose: () => void
             </div>
           )}
           <a className="hover:text-cyan-300" href="/rush">Morph Rush</a>
-          {hasBetaAccess ? (
-            <a className="hover:text-cyan-300" href="/prism">Morph Prism</a>
-          ) : (
-            <div className="flex items-center gap-2 opacity-50 cursor-not-allowed">
-              <span>Morph Prism</span>
-              <Lock className="h-3 w-3" />
-              <span className="text-xs">(Coming Soon)</span>
-            </div>
-          )}
         </nav>
       </aside>
     </div>
