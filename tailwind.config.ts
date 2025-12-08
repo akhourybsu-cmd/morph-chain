@@ -42,8 +42,14 @@ export default {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
-        success: "hsl(var(--success))",
-        warning: "hsl(var(--warning))",
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
         'rush-blue': 'hsl(var(--rush-blue))',
         'rush-orange': 'hsl(var(--rush-orange))',
         'rush-red': 'hsl(var(--rush-red))',
