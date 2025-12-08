@@ -2,7 +2,7 @@
 // Verifies solvability and generates reserve queue
 
 import { validatePuzzlePair, precomputePuzzleData } from './puzzleValidatorV2';
-import { VALID_WORDS_4, VALID_WORDS_5, VALID_WORDS_6 } from './gameLogic';
+import { VALID_WORDS_4, VALID_WORDS_5 } from './gameLogic';
 
 export interface PreflightResult {
   success: boolean;
@@ -28,10 +28,8 @@ export const runPreflightCheck = (
   const errors: string[] = [];
   const warnings: string[] = [];
   
-  // Get appropriate word set
-  const wordSet = wordLength === 4 ? VALID_WORDS_4 : 
-                  wordLength === 5 ? VALID_WORDS_5 : 
-                  VALID_WORDS_6;
+  // Get appropriate word set (Core spec: only 4L and 5L supported)
+  const wordSet = wordLength === 4 ? VALID_WORDS_4 : VALID_WORDS_5;
   
   // Letter sanity checks
   const checkLetterSanity = (word: string): string[] => {

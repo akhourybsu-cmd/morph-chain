@@ -4,7 +4,6 @@ import { filterModernEnglish } from "./wordFilters";
 import { isPuzzleSolvable, calculateMinDistance } from "./puzzleValidator";
 import { CURATED_4L_PUZZLES } from "./curatedPuzzles4L";
 import { CURATED_5L_PUZZLES } from "./curatedPuzzles5L";
-import { CURATED_6L_PUZZLES } from "./curatedPuzzles6L";
 import { markPuzzleAsUsed, getCurrentPuzzleIndex } from "./puzzleTracking";
 import { toZonedTime, formatInTimeZone } from "date-fns-tz";
 import { startOfDay, differenceInDays } from "date-fns";
@@ -12,16 +11,14 @@ import { startOfDay, differenceInDays } from "date-fns";
 // Lazy-load and cache the word list to improve initial page load performance
 let cachedWords4: Set<string> | null = null;
 let cachedWords5: Set<string> | null = null;
-let cachedWords6: Set<string> | null = null;
 
 const ensureWordsLoaded = () => {
-  if (cachedWords4 && cachedWords5 && cachedWords6) {
+  if (cachedWords4 && cachedWords5) {
     return;
   }
   
   const words4Raw = new Set<string>();
   const words5Raw = new Set<string>();
-  const words6Raw = new Set<string>();
   
   const lines = wordsAlphaText.split("\n");
   
@@ -31,17 +28,14 @@ const ensureWordsLoaded = () => {
       words4Raw.add(word);
     } else if (word.length === 5) {
       words5Raw.add(word);
-    } else if (word.length === 6) {
-      words6Raw.add(word);
     }
   }
   
   // Apply Modern English filters
   cachedWords4 = filterModernEnglish(words4Raw);
   cachedWords5 = filterModernEnglish(words5Raw);
-  cachedWords6 = filterModernEnglish(words6Raw);
   
-  console.log(`Word counts after filtering: 4L=${cachedWords4.size}, 5L=${cachedWords5.size}, 6L=${cachedWords6.size}`);
+  console.log(`Word counts after filtering: 4L=${cachedWords4.size}, 5L=${cachedWords5.size}`);
 };
 
 // Proxy objects that load on first access
@@ -66,18 +60,6 @@ export const VALID_WORDS_5 = new Proxy(new Set<string>(), {
     ensureWordsLoaded();
     const value = (cachedWords5 as any)[prop];
     return typeof value === 'function' ? value.bind(cachedWords5) : value;
-  }
-}) as Set<string>;
-
-export const VALID_WORDS_6 = new Proxy(new Set<string>(), {
-  has(_, key) {
-    ensureWordsLoaded();
-    return cachedWords6!.has(key as string);
-  },
-  get(_, prop) {
-    ensureWordsLoaded();
-    const value = (cachedWords6 as any)[prop];
-    return typeof value === 'function' ? value.bind(cachedWords6) : value;
   }
 }) as Set<string>;
 
@@ -114,7 +96,7 @@ export const getDailyPuzzle = (wordLength: 4 | 5 = 4): Puzzle & { puzzleIndex: n
   // Use pre-calculated minDist (fallback to runtime calculation if missing)
   const minDist = candidatePuzzle.minDist || 
     calculateMinDistance(candidatePuzzle.start, candidatePuzzle.goal, wordSet) || 
-    (wordLength === 4 ? 4 : wordLength === 5 ? 5 : 6);
+    (wordLength === 4 ? 4 : 5);
   
   // Mark this puzzle as used
   markPuzzleAsUsed(candidatePuzzle.start, candidatePuzzle.goal, puzzleIndex, today, wordLength);
@@ -210,7 +192,7 @@ export const hasValidNextMove = (
     }
   }
   
-  // Check two-letter changes if allowed
+  // Check two-letter changes if allowed (not used in Core spec)
   if (allowTwoLetters) {
     for (let i = 0; i < word.length; i++) {
       for (let j = i + 1; j < word.length; j++) {
@@ -236,12 +218,29 @@ export const hasValidNextMove = (
   return false;
 };
 
+// Direction indicators for share text
+const getDirectionIndicator = (
+  currentHints: TileState[],
+  prevHints: TileState[] | null,
+  isWin: boolean
+): string => {
+  if (isWin) return "✓";
+  
+  // Count matches in current vs previous
+  const currentMatches = currentHints.filter(h => h === "match").length;
+  const prevMatches = prevHints ? prevHints.filter(h => h === "match").length : 0;
+  
+  if (currentMatches > prevMatches) return "↑";
+  if (currentMatches < prevMatches) return "↓";
+  return "↔";
+};
+
 export const generateShareText = (
   date: string,
   movesUsed: number,
   won: boolean,
   wordLength: number,
-  sampleHints: TileState[][],
+  moveHints: TileState[][],
   maxMoves: number,
   puzzleIndex: number
 ): string => {
@@ -255,18 +254,31 @@ export const generateShareText = (
   const timezone = "America/New_York";
   const formattedDate = formatInTimeZone(new Date(), timezone, 'MMMM d, yyyy');
   
-  // Build the result line with boxes
-  let resultLine = "";
-  if (won) {
-    // Show green boxes equal to word length
-    resultLine = "🟩".repeat(wordLength) + ` ${movesUsed}`;
-  } else {
-    // Show the final attempt's hint pattern
-    const finalHints = sampleHints[sampleHints.length - 1] || [];
-    resultLine = finalHints.map((h) => emojiMap[h]).join("");
+  // Header line per spec
+  const header = `Morph Chain #${puzzleIndex + 1} – ${formattedDate} (${wordLength}-letter)`;
+  
+  // Build per-move lines with hints and direction indicators
+  const moveLines: string[] = [];
+  
+  for (let i = 0; i < moveHints.length; i++) {
+    const hints = moveHints[i];
+    const prevHints = i > 0 ? moveHints[i - 1] : null;
+    const isWin = i === moveHints.length - 1 && won;
+    
+    const hintEmojis = hints.map(h => emojiMap[h]).join("");
+    const direction = getDirectionIndicator(hints, prevHints, isWin);
+    
+    moveLines.push(`${hintEmojis} ${direction}`);
   }
   
-  return `Puzzle #${puzzleIndex + 1} - ${formattedDate} - ${maxMoves} Max Attempts
-${wordLength}L ${resultLine}
+  // Final result line
+  const resultLine = won 
+    ? `(Solved in ${movesUsed} moves)` 
+    : `(Failed - ${movesUsed}/${maxMoves} moves)`;
+  
+  return `${header}
+START → GOAL
+${moveLines.join("\n")}
+${resultLine}
 morphchaingame.com`;
 };

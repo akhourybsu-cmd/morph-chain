@@ -1,5 +1,5 @@
 // Morph Rush Game Logic
-import { VALID_WORDS_4, VALID_WORDS_5, VALID_WORDS_6 } from "./gameLogic";
+import { VALID_WORDS_4, VALID_WORDS_5 } from "./gameLogic";
 import { toZonedTime, formatInTimeZone } from "date-fns-tz";
 import { startOfDay, differenceInDays } from "date-fns";
 
@@ -35,7 +35,6 @@ export const isValidWordByLen = (word: string): boolean => {
   const n = word.length;
   if (n === 4) return VALID_WORDS_4.has(word);
   if (n === 5) return VALID_WORDS_5.has(word);
-  if (n === 6) return VALID_WORDS_6.has(word);
   return false;
 };
 
@@ -43,9 +42,7 @@ export const isValidWordByLen = (word: string): boolean => {
 export const getNeighbors = (word: string): string[] => {
   const neighbors: string[] = [];
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const wordSet = word.length === 4 ? VALID_WORDS_4 : 
-                  word.length === 5 ? VALID_WORDS_5 : 
-                  VALID_WORDS_6;
+  const wordSet = word.length === 4 ? VALID_WORDS_4 : VALID_WORDS_5;
   
   for (let i = 0; i < word.length; i++) {
     for (const letter of letters) {
