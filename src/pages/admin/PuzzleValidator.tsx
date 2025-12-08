@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, XCircle, AlertTriangle, PlayCircle } from "lucide-react";
 import { validatePuzzlePair } from "@/lib/puzzleValidatorV2";
 import { runPreflightCheck, generatePreflightReport, runBatchPreflightCheck } from "@/lib/puzzlePreflightCheck";
-import { VALID_WORDS_4, VALID_WORDS_5, VALID_WORDS_6 } from "@/lib/gameLogic";
+import { VALID_WORDS_4, VALID_WORDS_5 } from "@/lib/gameLogic";
 import { CURATED_4L_PUZZLES } from "@/lib/curatedPuzzles4L";
 import { CURATED_5L_PUZZLES } from "@/lib/curatedPuzzles5L";
 import { CURATED_6L_PUZZLES } from "@/lib/curatedPuzzles6L";
@@ -73,31 +73,13 @@ export default function PuzzleValidator() {
         });
       }
 
-      // Validate 6L puzzles
-      toast({
-        title: "Validating 6L puzzles...",
-        description: `Checking ${CURATED_6L_PUZZLES.length} puzzles`
-      });
-      
-      for (let i = 0; i < CURATED_6L_PUZZLES.length; i++) {
-        const puzzle = CURATED_6L_PUZZLES[i];
-        const result = validatePuzzlePair(
-          puzzle.start,
-          puzzle.goal,
-          6,
-          VALID_WORDS_6
-        );
-        results6L.push({
-          index: i,
-          ...puzzle,
-          ...result
-        });
-      }
+
+      // 6L puzzles removed for Core spec - only 4L and 5L supported
 
       setResults({
         fourLetter: results4L,
         fiveLetter: results5L,
-        sixLetter: results6L
+        sixLetter: []
       });
 
       // Count failures

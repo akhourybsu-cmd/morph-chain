@@ -18,7 +18,6 @@ export interface GameStats {
   byLength: {
     4: LengthStats;
     5: LengthStats;
-    6: LengthStats;
   };
   lastPlayedDate?: string;
 }
@@ -32,7 +31,7 @@ export interface GameSettings {
 }
 
 interface GameState {
-  schemaVersion?: number; // Track schema version for rule changes (optional for backwards compatibility)
+  schemaVersion?: number;
   date: string;
   wordLength: number;
   moves: Array<{
@@ -45,10 +44,10 @@ interface GameState {
 }
 
 // Schema version - increment when game rules change
-export const SCHEMA_VERSION = 1; // v1: 6L allows Δ≤2 on all moves
+export const SCHEMA_VERSION = 2; // v2: Core spec - 4L and 5L only, one-letter changes only
 
 // Game version - increment this to force reset for all users
-export const GAME_VERSION = "2.1.0"; // Incremented for new 5L/6L puzzles with acceptance gates // Modern English Only update
+export const GAME_VERSION = "3.0.0"; // Core spec alignment - removed combo/power-ups, 6L
 
 const STATS_KEY = "morphchain_stats";
 const SETTINGS_KEY = "morphchain_settings";
@@ -75,7 +74,7 @@ const createEmptyLengthStats = (): LengthStats => ({
 });
 
 export const loadStats = (): GameStats => {
-  checkVersionAndReset(); // Auto-reset if version changed
+  checkVersionAndReset();
   
   try {
     const stored = localStorage.getItem(STATS_KEY);
@@ -92,7 +91,6 @@ export const loadStats = (): GameStats => {
         byLength: {
           4: createEmptyLengthStats(),
           5: createEmptyLengthStats(),
-          6: createEmptyLengthStats(),
         },
       };
     }
@@ -111,10 +109,13 @@ export const loadStats = (): GameStats => {
         byLength: {
           4: createEmptyLengthStats(),
           5: createEmptyLengthStats(),
-          6: createEmptyLengthStats(),
         },
         lastPlayedDate: parsed.lastPlayedDate,
       };
+    }
+    // Remove 6L if present from old data
+    if (parsed.byLength && parsed.byLength[6]) {
+      delete parsed.byLength[6];
     }
     return parsed;
   } catch {
@@ -130,7 +131,6 @@ export const loadStats = (): GameStats => {
       byLength: {
         4: createEmptyLengthStats(),
         5: createEmptyLengthStats(),
-        6: createEmptyLengthStats(),
       },
     };
   }
@@ -182,7 +182,7 @@ export const saveSettings = (settings: GameSettings): void => {
 };
 
 export const loadGameState = (wordLength: number): GameState | null => {
-  checkVersionAndReset(); // Auto-reset if version changed
+  checkVersionAndReset();
   
   try {
     const key = `${STATE_KEY}_${wordLength}`;
@@ -191,7 +191,7 @@ export const loadGameState = (wordLength: number): GameState | null => {
     
     const parsed = JSON.parse(stored);
     
-    // Drop incompatible schemas (e.g., old 6L saves before Δ≤2 rule change)
+    // Drop incompatible schemas
     if (!parsed.schemaVersion || parsed.schemaVersion < SCHEMA_VERSION) {
       console.log(`Dropping incompatible saved game (schema v${parsed.schemaVersion || 0} < v${SCHEMA_VERSION})`);
       clearGameState(wordLength);
@@ -207,7 +207,6 @@ export const loadGameState = (wordLength: number): GameState | null => {
 export const saveGameState = (state: GameState): void => {
   try {
     const key = `${STATE_KEY}_${state.wordLength}`;
-    // Ensure schema version is saved
     const stateWithSchema = { ...state, schemaVersion: SCHEMA_VERSION };
     localStorage.setItem(key, JSON.stringify(stateWithSchema));
   } catch (error) {
@@ -230,7 +229,7 @@ export const resetAllData = (): void => {
     localStorage.removeItem(SETTINGS_KEY);
     localStorage.removeItem(`${STATE_KEY}_4`);
     localStorage.removeItem(`${STATE_KEY}_5`);
-    localStorage.removeItem(`${STATE_KEY}_6`);
+    localStorage.removeItem(`${STATE_KEY}_6`); // Clean up old 6L data
     localStorage.removeItem("morphchain_word_disputes");
     localStorage.setItem(VERSION_KEY, GAME_VERSION);
     console.log(`All game data reset to version ${GAME_VERSION}`);

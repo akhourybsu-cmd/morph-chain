@@ -8,7 +8,7 @@ import { CURATED_4L_PUZZLES } from "@/lib/curatedPuzzles4L";
 import { CURATED_5L_PUZZLES } from "@/lib/curatedPuzzles5L";
 import { CURATED_6L_PUZZLES } from "@/lib/curatedPuzzles6L";
 import { validatePuzzlePair } from "@/lib/puzzleValidatorV2";
-import { VALID_WORDS_4, VALID_WORDS_5, VALID_WORDS_6 } from "@/lib/gameLogic";
+import { VALID_WORDS_4, VALID_WORDS_5 } from "@/lib/gameLogic";
 import { Badge } from "@/components/ui/badge";
 import { PuzzleVaultCleaner } from "./PuzzleVaultCleaner";
 
@@ -104,19 +104,7 @@ export default function PuzzleVault() {
         });
       }
       
-      // Validate 6L puzzles
-      for (const puzzle of CURATED_6L_PUZZLES) {
-        const validation = validatePuzzlePair(puzzle.start, puzzle.goal, 6, VALID_WORDS_6);
-        results.push({
-          puzzle: { start: puzzle.start, goal: puzzle.goal, wordLength: 6 },
-          valid: validation.solvable && validation.meetsGates && validation.minDistance >= 3,
-          reason: !validation.solvable ? validation.failureReason : 
-                  validation.minDistance < 3 ? `Distance too short (${validation.minDistance})` :
-                  !validation.meetsGates ? validation.failureReason : undefined,
-          minDistance: validation.minDistance,
-          pathCount: validation.pathCount
-        });
-      }
+      // 6L puzzles removed for Core spec - only 4L and 5L supported
       
       setValidationResults(results);
       

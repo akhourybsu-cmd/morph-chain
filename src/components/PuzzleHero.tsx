@@ -1,13 +1,10 @@
-import { ArrowRight, Type } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 interface PuzzleHeroProps {
   startWord: string;
   goalWord: string;
   movesUsed: number;
   maxMoves: number;
-  onToggleSimpleMode?: () => void;
-  simpleMode?: boolean;
 }
 
 export const PuzzleHero = ({
@@ -15,10 +12,10 @@ export const PuzzleHero = ({
   goalWord,
   movesUsed,
   maxMoves,
-  onToggleSimpleMode,
-  simpleMode,
 }: PuzzleHeroProps) => {
   const dots = Array(maxMoves).fill(0);
+  // Hide goal word per Core spec - show ???? of matching length
+  const hiddenGoal = "?".repeat(goalWord.length);
 
   return (
     <div className="px-3 py-4 space-y-3 md:px-6 md:py-6 md:space-y-4">
@@ -42,7 +39,7 @@ export const PuzzleHero = ({
             />
           </svg>
         </div>
-        <WordBadge label="GOAL" word={goalWord} />
+        <WordBadge label="GOAL" word={hiddenGoal} isHidden />
       </div>
 
       <div className="flex items-center justify-center gap-1">
@@ -62,7 +59,7 @@ export const PuzzleHero = ({
   );
 };
 
-const WordBadge = ({ label, word }: { label: string; word: string }) => {
+const WordBadge = ({ label, word, isHidden = false }: { label: string; word: string; isHidden?: boolean }) => {
   const letters = word.split("");
 
   return (
@@ -70,11 +67,11 @@ const WordBadge = ({ label, word }: { label: string; word: string }) => {
       <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wide">
         {label}
       </span>
-      <div className="flex gap-0.5 md:gap-1 px-2 py-1.5 md:px-3 md:py-2 bg-card border border-border rounded-lg">
+      <div className={`flex gap-0.5 md:gap-1 px-2 py-1.5 md:px-3 md:py-2 bg-card border border-border rounded-lg ${isHidden ? 'opacity-80' : ''}`}>
         {letters.map((letter, i) => (
           <span
             key={i}
-            className="text-base md:text-xl font-mono font-semibold tracking-tiles uppercase"
+            className={`text-base md:text-xl font-mono font-semibold tracking-tiles uppercase ${isHidden ? 'text-muted-foreground' : ''}`}
           >
             {letter}
           </span>

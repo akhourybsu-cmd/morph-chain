@@ -16,7 +16,7 @@ import { StatsModal } from "@/components/StatsModal";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
 import { WordDisputeModal } from "@/components/WordDisputeModal";
 import { MobileActionBar } from "@/components/MobileActionBar";
-import { MorphPowerups } from "@/components/MorphPowerups";
+
 import { useToast } from "@/hooks/use-toast";
 import {
   getDailyPuzzle,
@@ -58,11 +58,7 @@ const Index = () => {
   const [gameWon, setGameWon] = useState(false);
   const [simpleMode, setSimpleMode] = useState(false);
 
-  // Power-ups (5L only)
-  const [doubleSwapActive, setDoubleSwapActive] = useState(false);
-  const [comboCount, setComboCount] = useState(0);
-  const [doubleSwapReady, setDoubleSwapReady] = useState(false);
-  const [showComboFeedback, setShowComboFeedback] = useState<'success' | 'reset' | null>(null);
+  // Power-ups removed for Core spec - 5L now uses same rules as 4L
 
   // Modals
   const [menuOpen, setMenuOpen] = useState(false);
@@ -128,11 +124,6 @@ const Index = () => {
     }
     setError("");
     
-    // Reset power-ups
-    setDoubleSwapActive(false);
-    setComboCount(0);
-    setDoubleSwapReady(false);
-    setShowComboFeedback(null);
   };
 
   // Load saved game state on mount
@@ -161,33 +152,14 @@ const Index = () => {
 
     // Simulate network delay
     setTimeout(() => {
-      // Validation rules:
-      // 4L: always one letter
-      // 5L: one letter (removed two-letter first move rule, now using power-ups)
-      // 6L: two letters anytime
-      const allowTwoLetters = 
-        (puzzle.wordLength === 5 && doubleSwapActive) || 
-        (puzzle.wordLength === 6);
-      
-      const isValid = allowTwoLetters
-        ? (isOneLetterDifferent(currentWord, wordToSubmit) || isTwoLettersDifferent(currentWord, wordToSubmit))
-        : isOneLetterDifferent(currentWord, wordToSubmit);
+    // Core spec: 4L and 5L both require exactly one letter change
+      const isValid = isOneLetterDifferent(currentWord, wordToSubmit);
       
       if (!isValid) {
         setInvalidGuessCount(prev => prev + 1);
-        if (allowTwoLetters) {
-          setError("Must change 1 or 2 letters");
-        } else {
-          setError("Must change exactly 1 letter");
-        }
+        setError("Must change exactly 1 letter");
         setCurrentInput("");
         setIsLoading(false);
-        // Reset combo on invalid move for 5L
-        if (puzzle.wordLength === 5) {
-          setComboCount(0);
-          setShowComboFeedback('reset');
-          setTimeout(() => setShowComboFeedback(null), 500);
-        }
         return;
       }
 
@@ -195,14 +167,6 @@ const Index = () => {
         setInvalidGuessCount(prev => prev + 1);
         setError("Not in our modern-English list");
         setCurrentInput("");
-        
-        // Reset combo on invalid word for 5L
-        if (puzzle.wordLength === 5) {
-          setComboCount(0);
-          setShowComboFeedback('reset');
-          setTimeout(() => setShowComboFeedback(null), 500);
-        }
-        
         setIsLoading(false);
         return;
       }
@@ -212,12 +176,6 @@ const Index = () => {
         setError("Already used");
         setCurrentInput("");
         setIsLoading(false);
-        // Reset combo on repeated word for 5L
-        if (puzzle.wordLength === 5) {
-          setComboCount(0);
-          setShowComboFeedback('reset');
-          setTimeout(() => setShowComboFeedback(null), 500);
-        }
         return;
       }
 
@@ -235,33 +193,6 @@ const Index = () => {
         return;
       }
 
-      // Valid move - update combo for 5L
-      if (puzzle.wordLength === 5) {
-        setShowComboFeedback('success');
-        setTimeout(() => setShowComboFeedback(null), 500);
-        
-        // If double swap is active, consume it and reset combo
-        if (doubleSwapActive) {
-          setDoubleSwapActive(false);
-          setDoubleSwapReady(false);
-          setComboCount(0);
-        } else {
-          // Increment combo count
-          const newComboCount = comboCount + 1;
-          if (newComboCount >= 3) {
-            setComboCount(0);
-            setDoubleSwapReady(true);
-            toast({
-              title: "Double Swap Ready!",
-              description: "Change two letters in one move",
-              duration: 2000,
-            });
-          } else {
-            setComboCount(newComboCount);
-          }
-        }
-      }
-      
       const newMove: Move = {
         id: `move-${moves.length}`,
         from: currentWord,
@@ -286,12 +217,8 @@ const Index = () => {
 
       // Check for dead-end (word with no valid next moves)
       if (word !== puzzle.goalWord && updatedMoves.length < puzzle.maxMoves) {
-        // Dead-end rules match submit validation:
-        // 4L: always one letter only
-        // 5L: after first move, one letter only (first move already done)
-        // 6L: one or two letters anytime
-        const allowTwoLetters = puzzle.wordLength === 6;
-        const hasNext = hasValidNextMove(word, updatedUsedWords, puzzle.wordLength, allowTwoLetters);
+        // Core spec: both 4L and 5L use one-letter changes only
+        const hasNext = hasValidNextMove(word, updatedUsedWords, puzzle.wordLength, false);
         
         if (!hasNext) {
           toast({
@@ -390,10 +317,6 @@ const Index = () => {
     setCurrentInput(currentInput.slice(0, -1));
   };
 
-  const handleDoubleSwap = () => {
-    if (!doubleSwapReady || gameCompleted) return;
-    setDoubleSwapActive(!doubleSwapActive);
-  };
 
   // Track letter states for keyboard feedback
   const usedLetters = useMemo(() => {
@@ -478,7 +401,7 @@ const Index = () => {
   };
   
   const hasWonAnyLengthToday = (date: string): boolean => {
-    const lengths: Array<4 | 5 | 6> = [4, 5, 6];
+    const lengths: Array<4 | 5> = [4, 5];
     return lengths.some(length => {
       const state = loadGameState(length);
       return state?.date === date && state?.won;
@@ -495,10 +418,6 @@ const Index = () => {
     setError("");
     setCurrentInput("");
     setInvalidGuessCount(0);
-    setDoubleSwapActive(false);
-    setComboCount(0);
-    setDoubleSwapReady(false);
-    setShowComboFeedback(null);
     clearGameState(puzzle.wordLength);
   };
 
@@ -653,44 +572,6 @@ const Index = () => {
 
         {!gameCompleted && (
           <>
-            {puzzle.wordLength === 5 && (
-              <div className="px-3 md:px-6 mb-3">
-                <div className="flex items-center justify-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Combo:</span>
-                    <div className="flex gap-1">
-                      {[0, 1, 2].map((i) => (
-                        <div
-                          key={i}
-                          className={`w-6 h-6 rounded-md border-2 transition-all duration-300 ${
-                            i < comboCount
-                              ? 'bg-primary border-primary shadow-[0_0_8px_rgba(var(--primary),0.6)]'
-                              : 'bg-muted border-muted-foreground/20'
-                          } ${
-                            comboCount === 3 && doubleSwapReady
-                              ? 'animate-pulse'
-                              : showComboFeedback === 'success' && i === comboCount - 1
-                              ? 'animate-scale-in shadow-[0_0_12px_rgba(var(--primary),0.8)]'
-                              : ''
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs text-muted-foreground">/ 3</span>
-                  </div>
-                  <MorphPowerups
-                    doubleSwapUsed={!doubleSwapReady}
-                    letterSwapUsed={true}
-                    doubleSwapActive={doubleSwapActive}
-                    letterSwapActive={false}
-                    onDoubleSwap={handleDoubleSwap}
-                    onLetterSwap={() => {}}
-                    disabled={gameCompleted}
-                  />
-                </div>
-              </div>
-            )}
-            
             <div className="px-3 py-3 space-y-2 md:px-6 md:py-4 md:space-y-3">
               <div className="space-y-2 md:space-y-3">
                 <div className="flex gap-1.5 md:gap-2">
