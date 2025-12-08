@@ -628,21 +628,15 @@ const Index = () => {
 
         {!gameCompleted && moves.length === 0 && (
           <div className="px-3 mb-3 md:px-6 md:mb-4">
-            <div className="bg-card border border-primary/20 rounded-lg p-3 text-sm animate-slide-in md:p-4">
+            <div className="bg-card border border-chain/20 rounded-lg p-3 text-sm animate-fade-in md:p-4">
               <div className="flex items-start gap-2 md:gap-3">
                 <div className="text-xl md:text-2xl">💡</div>
                 <div className="space-y-1">
                   <p className="font-medium text-foreground text-xs md:text-sm">
-                     {puzzle.wordLength === 4 ? (
-                      <>Change <strong>ONE</strong> letter each step. Every step must be a real word.</>
-                     ) : puzzle.wordLength === 5 ? (
-                      <>Change <strong>ONE</strong> letter each step. After three one-letter changes, Combo Swap activates to change two letters. Every step must be a real word.</>
-                    ) : (
-                      <>Change <strong>ONE or TWO</strong> letters each step. Every step must be a real word.</>
-                    )}
+                    Change <strong className="text-chain">ONE</strong> letter each step. Every step must be a real word.
                   </p>
                   <p className="text-muted-foreground text-[11px] md:text-xs">
-                    Example: COLD → C<span className="text-warning">O</span>RD → C<span className="text-warning">A</span>RD → C<span className="text-warning">A</span>R<span className="text-warning">E</span>
+                    Example: COLD → C<span className="text-chain">O</span>RD → C<span className="text-chain">A</span>RD → C<span className="text-chain">A</span>R<span className="text-chain">E</span>
                   </p>
                 </div>
               </div>

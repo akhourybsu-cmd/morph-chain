@@ -28,7 +28,19 @@ export default function OnScreenKeyboard({
 }: OnScreenKeyboardProps) {
   
   const getKeyStyle = (key: string) => {
-    // Remove color feedback - just show neutral styling for all keys
+    // Green for correct position
+    if (correctLetters.has(key)) {
+      return "bg-success text-success-foreground hover:bg-success/90 border-success/50";
+    }
+    // Yellow/orange for wrong position
+    if (wrongPositionLetters.has(key)) {
+      return "bg-warning text-warning-foreground hover:bg-warning/90 border-warning/50";
+    }
+    // Dimmed for used but not in goal
+    if (usedLetters.has(key)) {
+      return "bg-muted/60 text-muted-foreground/60 hover:bg-muted/70 border-muted";
+    }
+    // Default neutral state
     return "bg-card hover:bg-accent text-foreground border-border";
   };
 
@@ -47,9 +59,9 @@ export default function OnScreenKeyboard({
             <Button
               onClick={onEnter}
               disabled={disabled}
-              className="h-11 md:h-12 min-w-[3.5rem] md:min-w-[4rem] px-2 md:px-3 font-bold text-xs md:text-sm bg-gradient-to-r from-chain to-chain hover:opacity-90 text-white flex-shrink-0"
+              className="h-11 md:h-12 min-w-[3.5rem] md:min-w-[4rem] px-2 md:px-3 font-bold text-xs md:text-sm bg-chain hover:bg-chain/90 text-chain-foreground flex-shrink-0 shadow-[0_0_10px_hsl(var(--chain-accent)/0.3)]"
             >
-              ENTER
+              MORPH
             </Button>
           )}
           
@@ -58,7 +70,7 @@ export default function OnScreenKeyboard({
               key={key}
               onClick={() => onKeyPress(key)}
               disabled={disabled}
-              className={`h-11 md:h-12 min-w-[1.75rem] md:min-w-[2.25rem] flex-1 max-w-[2.5rem] md:max-w-[3rem] px-0 md:px-1 font-bold text-base md:text-lg transition-all ${getKeyStyle(key)} border`}
+              className={`h-11 md:h-12 min-w-[1.75rem] md:min-w-[2.25rem] flex-1 max-w-[2.5rem] md:max-w-[3rem] px-0 md:px-1 font-bold text-base md:text-lg transition-all duration-200 ${getKeyStyle(key)} border`}
             >
               {key}
             </Button>
