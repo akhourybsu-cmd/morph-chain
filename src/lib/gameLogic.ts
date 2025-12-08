@@ -297,7 +297,9 @@ export const generateShareText = (
   wordLength: number,
   moveHints: TileState[][],
   maxMoves: number,
-  puzzleIndex: number
+  puzzleIndex: number,
+  minDistance?: number,
+  streak?: number
 ): string => {
   const emojiMap: Record<TileState, string> = {
     match: "🟩",
@@ -326,14 +328,33 @@ export const generateShareText = (
     moveLines.push(`${hintEmojis} ${direction}`);
   }
   
+  // Par calculation
+  const par = minDistance !== undefined ? minDistance + 2 : null;
+  const parText = par !== null ? ` (Par: ${par})` : '';
+  
+  // Performance badge
+  let badge = '';
+  if (won && minDistance !== undefined) {
+    if (movesUsed === minDistance) badge = ' 💎';
+    else if (movesUsed < minDistance + 2) badge = ' ⭐';
+  }
+  
   // Final result line
   const resultLine = won 
-    ? `(Solved in ${movesUsed} moves)` 
-    : `(Failed - ${movesUsed}/${maxMoves} moves)`;
+    ? `Solved in ${movesUsed}${parText}${badge}` 
+    : `Failed - ${movesUsed}/${maxMoves} moves`;
   
-  return `${header}
-START → GOAL
-${moveLines.join("\n")}
-${resultLine}
-morphchaingame.com`;
+  // Streak info
+  const streakLine = streak && streak >= 3 ? `🔥 ${streak} day streak!` : '';
+  
+  const lines = [
+    header,
+    'START → GOAL',
+    ...moveLines,
+    resultLine,
+    streakLine,
+    'morphchaingame.com'
+  ].filter(Boolean);
+  
+  return lines.join('\n');
 };
