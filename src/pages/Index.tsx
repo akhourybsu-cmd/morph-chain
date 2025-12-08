@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { GameHeader } from "@/components/GameHeader";
 import { PuzzleTopBar } from "@/components/PuzzleTopBar";
@@ -16,6 +16,8 @@ import { StatsModal } from "@/components/StatsModal";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
 import { WordDisputeModal } from "@/components/WordDisputeModal";
 import { MobileActionBar } from "@/components/MobileActionBar";
+import { ChainAchievementPopup } from "@/components/chain/ChainAchievementPopup";
+import { WinCelebration } from "@/components/chain/WinCelebration";
 
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -42,6 +44,13 @@ import { saveDispute } from "@/lib/disputeStorage";
 import { isRateLimited } from "@/lib/rateLimit";
 import { syncStatsToSupabase } from "@/lib/supabaseSync";
 import { saveSessionToSupabase } from "@/lib/sessionSync";
+import {
+  checkChainAchievements,
+  getChainAchievements,
+  getNewChainAchievements,
+  saveChainAchievements,
+  ChainAchievementContext,
+} from "@/lib/chainAchievements";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -57,6 +66,12 @@ const Index = () => {
   const [gameCompleted, setGameCompleted] = useState(false);
   const [gameWon, setGameWon] = useState(false);
   const [simpleMode, setSimpleMode] = useState(false);
+
+  // Achievement and celebration state
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [achievementQueue, setAchievementQueue] = useState<string[]>([]);
+  const [currentAchievement, setCurrentAchievement] = useState<string | null>(null);
+  const gameStartTime = useRef<number>(Date.now());
 
   // Power-ups removed for Core spec - 5L now uses same rules as 4L
 
@@ -234,6 +249,49 @@ const Index = () => {
       if (word === puzzle.goalWord) {
         setGameCompleted(true);
         setGameWon(true);
+        setShowCelebration(true);
+        
+        // Calculate time elapsed
+        const timeElapsedSeconds = Math.floor((Date.now() - gameStartTime.current) / 1000);
+        
+        // Check for worse moves (moved away from goal)
+        const hadWorseMove = updatedMoves.some(m => m.isWorse);
+        
+        // Get updated stats for achievement checking
+        const currentStats = loadStats();
+        const lengthKey = puzzle.wordLength as 4 | 5;
+        const newTotalWins = currentStats.overall.won + 1;
+        const newStreak = currentStats.byLength[lengthKey].currentStreak + 1;
+        
+        // Check if won both lengths today
+        const otherLength = puzzle.wordLength === 4 ? 5 : 4;
+        const otherState = loadGameState(otherLength);
+        const wonBothToday = otherState?.date === puzzle.date && otherState?.won === true;
+        
+        // Check achievements
+        const achievementContext: ChainAchievementContext = {
+          won: true,
+          movesUsed: updatedMoves.length,
+          minDistance: puzzle.minDistance,
+          maxMoves: puzzle.maxMoves,
+          hardMode: settings.hardMode,
+          currentStreak: newStreak,
+          totalWins: newTotalWins,
+          wordLength: puzzle.wordLength as 4 | 5,
+          wonBothToday,
+          timeElapsedSeconds,
+          hadWorseMove,
+        };
+        
+        const earnedAchievements = checkChainAchievements(achievementContext);
+        const alreadyUnlocked = getChainAchievements();
+        const newAchievements = getNewChainAchievements(earnedAchievements, alreadyUnlocked);
+        
+        if (newAchievements.length > 0) {
+          saveChainAchievements(newAchievements);
+          setAchievementQueue(newAchievements);
+        }
+        
         updateStats(true, updatedMoves.length);
         saveGameState({
           date: puzzle.date,
@@ -415,10 +473,30 @@ const Index = () => {
     setUsedWords(new Set([puzzle.startWord]));
     setGameCompleted(false);
     setGameWon(false);
+    setShowCelebration(false);
+    setAchievementQueue([]);
+    setCurrentAchievement(null);
     setError("");
     setCurrentInput("");
     setInvalidGuessCount(0);
+    gameStartTime.current = Date.now();
     clearGameState(puzzle.wordLength);
+  };
+
+  // Handle achievement queue
+  useEffect(() => {
+    if (achievementQueue.length > 0 && !currentAchievement) {
+      // Show next achievement after a delay
+      const timer = setTimeout(() => {
+        setCurrentAchievement(achievementQueue[0]);
+        setAchievementQueue(prev => prev.slice(1));
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [achievementQueue, currentAchievement]);
+
+  const handleAchievementComplete = () => {
+    setCurrentAchievement(null);
   };
 
   const handleToggleSetting = (key: keyof typeof settings) => {
@@ -503,10 +581,12 @@ const Index = () => {
           puzzle.wordLength,
           moves.map((m) => m.hints),
           puzzle.maxMoves,
-          puzzle.puzzleIndex || 0
+          puzzle.puzzleIndex || 0,
+          puzzle.minDistance,
+          stats.byLength[selectedLength].currentStreak
         )
       : "",
-    [moves.length, gameWon, puzzle.date, puzzle.wordLength, puzzle.maxMoves, puzzle.puzzleIndex, moves]
+    [moves.length, gameWon, puzzle.date, puzzle.wordLength, puzzle.maxMoves, puzzle.puzzleIndex, puzzle.minDistance, stats.byLength, selectedLength, moves]
   );
 
   // Memoize length status checks to avoid repeated localStorage reads
@@ -642,6 +722,24 @@ const Index = () => {
             minDistance={puzzle.minDistance}
             shareText={shareText}
             onPlayAgain={handlePlayAgain}
+            streak={stats.byLength[selectedLength].currentStreak}
+          />
+        )}
+        
+        {/* Win celebration effects */}
+        {showCelebration && gameWon && (
+          <WinCelebration
+            movesUsed={moves.length}
+            minDistance={puzzle.minDistance}
+            streak={stats.byLength[selectedLength].currentStreak}
+          />
+        )}
+        
+        {/* Achievement popup */}
+        {currentAchievement && (
+          <ChainAchievementPopup
+            achievementId={currentAchievement}
+            onComplete={handleAchievementComplete}
           />
         )}
       </main>

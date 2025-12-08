@@ -9,6 +9,7 @@ interface ResultPanelProps {
   minDistance: number;
   shareText: string;
   onPlayAgain: () => void;
+  streak?: number;
 }
 
 export const ResultPanel = ({
@@ -18,6 +19,7 @@ export const ResultPanel = ({
   minDistance,
   shareText,
   onPlayAgain,
+  streak,
 }: ResultPanelProps) => {
   const { toast } = useToast();
 
@@ -80,6 +82,20 @@ export const ResultPanel = ({
     );
   };
 
+  const par = minDistance + 2;
+  const isPerfect = movesUsed === minDistance;
+  const isUnderPar = movesUsed < par;
+  const isAtPar = movesUsed === par;
+  
+  const getPerformanceBadge = () => {
+    if (isPerfect) return { icon: '💎', label: 'Perfect!', color: 'text-primary' };
+    if (isUnderPar) return { icon: '⭐', label: 'Under Par!', color: 'text-primary' };
+    if (isAtPar) return { icon: '✓', label: 'Par', color: 'text-muted-foreground' };
+    return { icon: '', label: '', color: '' };
+  };
+  
+  const badge = getPerformanceBadge();
+
   return (
     <div className="px-6 py-8 space-y-6 bg-card/50 border-y border-border">
       <div className="text-center space-y-2">
@@ -91,6 +107,27 @@ export const ResultPanel = ({
             <h2 className="text-2xl font-semibold">
               Reached {goalWord} in {movesUsed}!
             </h2>
+            
+            {/* Par display */}
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <span className="text-muted-foreground">
+                {movesUsed} moves (Par: {par})
+              </span>
+              {badge.icon && (
+                <span className={`flex items-center gap-1 font-medium ${badge.color}`}>
+                  <span>{badge.icon}</span>
+                  <span>{badge.label}</span>
+                </span>
+              )}
+            </div>
+            
+            {/* Streak display */}
+            {streak && streak >= 2 && (
+              <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
+                <span>🔥</span>
+                <span>{streak} day streak</span>
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -98,6 +135,9 @@ export const ResultPanel = ({
               <X className="h-12 w-12 text-destructive animate-scale-in" />
             </div>
             <h2 className="text-2xl font-semibold">Out of moves</h2>
+            <p className="text-sm text-muted-foreground">
+              The goal was {minDistance} moves away (Par: {par})
+            </p>
           </>
         )}
       </div>
