@@ -30,20 +30,20 @@ export const HowToPlayModal = ({ open, onOpenChange }: HowToPlayModalProps) => {
           <section>
             <h3 className="font-semibold mb-2">Goal</h3>
             <p className="text-muted-foreground">
-              Turn the START word into the hidden GOAL word by changing one letter at a time.
+              You're given a START word and a GOAL word (both shown). Your job is to transform the start into the goal by changing one letter at a time. Every step must be a valid English word, and you must reach the goal within the move limit.
             </p>
           </section>
 
           <section>
             <h3 className="font-semibold mb-2">How It Works</h3>
             <p className="text-muted-foreground mb-3">
-              Transform the START word into the GOAL word by changing <strong>exactly one letter</strong> per move. Each intermediate word must be a valid English word from our dictionary.
+              Both the START and GOAL words are visible from the beginning. Transform the START word into the GOAL word by changing <strong>exactly one letter</strong> per move. Each intermediate word must be a valid English word from our dictionary.
             </p>
             
             <div className="bg-card p-3 rounded-lg border border-border">
               <p className="font-medium text-sm mb-2">The Rule:</p>
               <p className="text-muted-foreground text-sm">
-                Change <strong>exactly one letter</strong> per move. For example: LAKE → MAKE → MARE → CARE → CART
+                Change <strong>exactly one letter</strong> per move. For example: COLD → CORD → CARD → WARD → WARM
               </p>
             </div>
           </section>
@@ -72,7 +72,7 @@ export const HowToPlayModal = ({ open, onOpenChange }: HowToPlayModalProps) => {
           <section>
             <h3 className="font-semibold mb-2">Letter Feedback (Hints)</h3>
             <p className="text-muted-foreground mb-3">
-              After each valid move, the tiles change color to show how your current word compares to the GOAL word:
+              After each valid move, the tiles change color to show how your current word compares to the visible GOAL word:
             </p>
             <div className="space-y-2 bg-card p-3 rounded-lg border border-border">
               <div className="flex items-center gap-3">
@@ -142,11 +142,11 @@ export const HowToPlayModal = ({ open, onOpenChange }: HowToPlayModalProps) => {
           <section className="pt-2 border-t border-border">
             <h3 className="font-semibold mb-2">Example</h3>
             <div className="bg-muted/30 p-3 rounded text-xs font-mono space-y-1">
-              <div>START: <strong>LAKE</strong></div>
-              <div>Step 1: LAKE → MAKE (change L to M)</div>
-              <div>Step 2: MAKE → MARE (change K to R)</div>
-              <div>Step 3: MARE → CARE (change M to C)</div>
-              <div>GOAL: <strong>CART</strong> ✓</div>
+              <div>START: <strong>COLD</strong> → GOAL: <strong>WARM</strong></div>
+              <div>Step 1: COLD → CORD (change L to R)</div>
+              <div>Step 2: CORD → CARD (change O to A)</div>
+              <div>Step 3: CARD → WARD (change C to W)</div>
+              <div>Step 4: WARD → WARM (change D to M) ✓</div>
             </div>
           </section>
         </div>

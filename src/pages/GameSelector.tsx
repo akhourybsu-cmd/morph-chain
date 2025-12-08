@@ -2,17 +2,13 @@ import { useNavigate } from "react-router-dom";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
 import { MorphHeader } from "@/components/MorphHeader";
-import { MorphChainTitle, MorphGridTitle, MorphPrismTitle, MorphRushTitle } from "@/components/GameTitles";
-import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Palette, Zap, Gamepad2 } from "lucide-react";
+import { MorphChainTitle, MorphGridTitle, MorphRushTitle } from "@/components/GameTitles";
+import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Gamepad2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
-import { useUserRole } from "@/hooks/useUserRole";
 
 const GameSelector = () => {
   const navigate = useNavigate();
   const puzzle = getDailyPuzzle(4);
-  const { hasBetaAccess } = useUserRole();
   
   const timezone = "America/New_York";
   const formattedDate = formatInTimeZone(new Date(), timezone, 'MMMM d, yyyy');
@@ -62,14 +58,6 @@ const GameSelector = () => {
             onClick={() => navigate('/rush?mode=daily')}
           />
           
-          <GameBanner
-            game="prism"
-            title={<MorphPrismTitle className="text-2xl md:text-4xl" />}
-            description="Decode words through chromatic clues"
-            onClick={() => navigate('/prism')}
-            comingSoon={!hasBetaAccess}
-          />
-
           <ShareBanner />
         </section>
       </main>
@@ -93,7 +81,7 @@ const GameSelector = () => {
 };
 
 interface GameBannerProps {
-  game: 'chain' | 'prism' | 'rush' | 'grid';
+  game: 'chain' | 'rush' | 'grid';
   title: React.ReactNode;
   description: string;
   onClick: () => void;
@@ -104,28 +92,24 @@ const GameBanner = ({ game, title, description, onClick, comingSoon }: GameBanne
   const gradientClasses = {
     chain: "from-[hsl(var(--chain-accent)_/_0.15)] to-[hsl(var(--chain-accent)_/_0.05)]",
     grid: "from-[hsl(var(--grid-accent-start)_/_0.15)] to-[hsl(var(--grid-accent-end)_/_0.15)]",
-    prism: "from-[hsl(var(--prism-accent-start)_/_0.15)] via-[hsl(var(--prism-accent-mid)_/_0.10)] to-[hsl(var(--prism-accent-end)_/_0.15)]",
     rush: "from-[hsl(var(--rush-accent-start)_/_0.15)] to-[hsl(var(--rush-accent-end)_/_0.15)]"
   };
 
   const glowClasses = {
     chain: "hover:shadow-[0_0_40px_hsl(var(--chain-accent)_/_0.3),0_0_80px_hsl(var(--chain-accent)_/_0.15)]",
     grid: "hover:shadow-[0_0_40px_hsl(var(--grid-accent-start)_/_0.3),0_0_80px_hsl(var(--grid-accent-start)_/_0.15)]",
-    prism: "hover:shadow-[0_0_40px_hsl(var(--prism-accent-mid)_/_0.3),0_0_80px_hsl(var(--prism-accent-mid)_/_0.15)]",
     rush: "hover:shadow-[0_0_40px_hsl(var(--rush-accent-start)_/_0.3),0_0_80px_hsl(var(--rush-accent-start)_/_0.15)]"
   };
 
   const borderClasses = {
     chain: "border-[hsl(var(--chain-accent)_/_0.3)] hover:border-[hsl(var(--chain-accent)_/_0.6)]",
     grid: "border-[hsl(var(--grid-accent-start)_/_0.3)] hover:border-[hsl(var(--grid-accent-start)_/_0.6)]",
-    prism: "border-[hsl(var(--prism-accent-mid)_/_0.3)] hover:border-[hsl(var(--prism-accent-mid)_/_0.6)]",
     rush: "border-[hsl(var(--rush-accent-start)_/_0.3)] hover:border-[hsl(var(--rush-accent-start)_/_0.6)]"
   };
 
   const iconConfig = {
     chain: { Icon: Link2, color: "hsl(var(--chain))" },
     grid: { Icon: Gamepad2, color: "hsl(var(--grid))" },
-    prism: { Icon: Palette, color: "hsl(var(--prism))" },
     rush: { Icon: Zap, color: "hsl(var(--rush))" }
   };
 
