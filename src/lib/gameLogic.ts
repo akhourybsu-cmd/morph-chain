@@ -7,6 +7,7 @@ import { CURATED_5L_PUZZLES } from "./curatedPuzzles5L";
 import { markPuzzleAsUsed, getCurrentPuzzleIndex } from "./puzzleTracking";
 import { toZonedTime, formatInTimeZone } from "date-fns-tz";
 import { startOfDay, differenceInDays } from "date-fns";
+import { loadDailyPuzzle, VaultPuzzle } from "./puzzleVaultLoader";
 
 // Lazy-load and cache the word list to improve initial page load performance
 let cachedWords4: Set<string> | null = null;
@@ -73,6 +74,60 @@ export interface Puzzle {
   puzzleIndex?: number;
 }
 
+// Cache for async-loaded puzzles
+const puzzlePromiseCache = new Map<string, Promise<Puzzle & { puzzleIndex: number }>>();
+
+// Async version - loads from vault with curated fallback
+export const getDailyPuzzleAsync = async (wordLength: 4 | 5 = 4): Promise<Puzzle & { puzzleIndex: number }> => {
+  const timezone = "America/New_York";
+  const nowNY = toZonedTime(new Date(), timezone);
+  const today = formatInTimeZone(nowNY, timezone, "yyyy-MM-dd");
+  const cacheKey = `${wordLength}-${today}`;
+  
+  // Check cache
+  if (puzzlePromiseCache.has(cacheKey)) {
+    return puzzlePromiseCache.get(cacheKey)!;
+  }
+  
+  const promise = (async () => {
+    try {
+      // Try to load from vault
+      const vaultPuzzle = await loadDailyPuzzle(wordLength, nowNY);
+      
+      // Move cap formula: clamp(minDistance + 4, 10..14)
+      const moveBonus = 4;
+      const maxMoves = Math.min(14, Math.max(10, vaultPuzzle.minDistance + moveBonus));
+      
+      // Mark as used for tracking
+      markPuzzleAsUsed(
+        vaultPuzzle.startWord, 
+        vaultPuzzle.goalWord, 
+        vaultPuzzle.puzzleIndex - 1, 
+        today, 
+        wordLength
+      );
+      
+      return {
+        date: today,
+        startWord: vaultPuzzle.startWord,
+        goalWord: vaultPuzzle.goalWord,
+        wordLength,
+        maxMoves,
+        minDistance: vaultPuzzle.minDistance,
+        puzzleIndex: vaultPuzzle.puzzleIndex - 1, // 0-indexed internally
+      };
+    } catch (err) {
+      console.warn('Failed to load from vault, using curated fallback:', err);
+      // Fall back to sync version
+      return getDailyPuzzle(wordLength);
+    }
+  })();
+  
+  puzzlePromiseCache.set(cacheKey, promise);
+  return promise;
+};
+
+// Sync version - uses curated puzzles only (for backward compatibility)
 export const getDailyPuzzle = (wordLength: 4 | 5 = 4): Puzzle & { puzzleIndex: number } => {
   const timezone = "America/New_York";
   
