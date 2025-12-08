@@ -14,3 +14,6 @@ verify_jwt = true
 
 [functions.populate-dictionary]
 verify_jwt = true
+
+[functions.generate-puzzles]
+verify_jwt = true

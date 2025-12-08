@@ -120,11 +120,15 @@ export type Database = {
         Row: {
           created_at: string | null
           created_by: string | null
+          generated_at: string | null
+          generation_batch: string | null
           goal_word: string
           id: string
           is_active: boolean | null
+          last_served_date: string | null
           min_distance: number
           puzzle_index: number
+          quality_score: number | null
           start_word: string
           theme_tags: string[] | null
           word_length: number
@@ -132,11 +136,15 @@ export type Database = {
         Insert: {
           created_at?: string | null
           created_by?: string | null
+          generated_at?: string | null
+          generation_batch?: string | null
           goal_word: string
           id?: string
           is_active?: boolean | null
+          last_served_date?: string | null
           min_distance: number
           puzzle_index: number
+          quality_score?: number | null
           start_word: string
           theme_tags?: string[] | null
           word_length: number
@@ -144,11 +152,15 @@ export type Database = {
         Update: {
           created_at?: string | null
           created_by?: string | null
+          generated_at?: string | null
+          generation_batch?: string | null
           goal_word?: string
           id?: string
           is_active?: boolean | null
+          last_served_date?: string | null
           min_distance?: number
           puzzle_index?: number
+          quality_score?: number | null
           start_word?: string
           theme_tags?: string[] | null
           word_length?: number
