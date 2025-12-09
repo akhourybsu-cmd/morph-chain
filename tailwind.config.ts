@@ -211,11 +211,7 @@ export default {
           "100%": { transform: "scale(1)", filter: "brightness(1)", boxShadow: "0 0 0 rgba(255,255,255,0)" },
         },
         "color-wipe": {
-          "0%": { 
-            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
-            opacity: "1"
-          },
-          "20%": { 
+          "0%, 10%": { 
             clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
             opacity: "1"
           },
