@@ -6,9 +6,11 @@ import {
   SUPPORT_LETTERS,
   HARD_CLUSTER,
   MAX_HARD_CLUSTER_IN_3x3,
+  MAX_HARD_CLUSTER_GLOBAL,
   MAX_VOWEL_RUN,
   GRID_SIZE,
-  LETTER_WEIGHTS
+  LETTER_WEIGHTS,
+  LETTER_LIMITS
 } from './gridConfig';
 import { isVowelChar } from './gridGenerator';
 
@@ -71,6 +73,31 @@ export function validateGridConstraints(grid: Tile[][]): boolean {
         }
       }
       if (hardCount > MAX_HARD_CLUSTER_IN_3x3) return false;
+    }
+  }
+  
+  // 7. Check total hard cluster count for entire grid
+  let totalHardCount = 0;
+  for (let row = 0; row < GRID_SIZE; row++) {
+    for (let col = 0; col < GRID_SIZE; col++) {
+      if (HARD_CLUSTER.includes(grid[row][col].char)) {
+        totalHardCount++;
+      }
+    }
+  }
+  if (totalHardCount > MAX_HARD_CLUSTER_GLOBAL) return false;
+  
+  // 8. Check letter occurrence limits (no more than max allowed per letter)
+  const letterCounts: Record<string, number> = {};
+  for (let row = 0; row < GRID_SIZE; row++) {
+    for (let col = 0; col < GRID_SIZE; col++) {
+      const char = grid[row][col].char;
+      letterCounts[char] = (letterCounts[char] || 0) + 1;
+    }
+  }
+  for (const [letter, limit] of Object.entries(LETTER_LIMITS)) {
+    if ((letterCounts[letter] || 0) > limit) {
+      return false;
     }
   }
   

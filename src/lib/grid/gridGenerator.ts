@@ -4,12 +4,11 @@ import {
   VOWEL_RATIO_TARGET,
   LETTER_WEIGHTS,
   VOWELS,
-  SUPPORT_LETTERS,
-  HARD_CLUSTER,
-  MAX_HARD_CLUSTER_IN_3x3,
-  MAX_VOWEL_RUN,
   GRID_SIZE,
-  MAX_GENERATION_RETRIES
+  MAX_GENERATION_RETRIES,
+  LETTER_LIMITS,
+  RARE_LETTERS,
+  RARE_LETTER_CHANCE
 } from './gridConfig';
 import { validateGridConstraints, repairGridConstraints, generateSafeTemplate } from './gridValidation';
 
@@ -60,6 +59,9 @@ function generateGridAttempt(rng: SeededRandom): Tile[][] {
   const totalCells = GRID_SIZE * GRID_SIZE;
   const targetVowels = Math.floor(totalCells * VOWEL_RATIO_TARGET);
   
+  // Track letter counts for limiting uncommon letters
+  const letterCounts: Record<string, number> = {};
+  
   // Pre-allocate vowel positions
   const vowelPositions = new Set<string>();
   while (vowelPositions.size < targetVowels) {
@@ -73,8 +75,11 @@ function generateGridAttempt(rng: SeededRandom): Tile[][] {
     for (let col = 0; col < GRID_SIZE; col++) {
       const isVowel = vowelPositions.has(`${row}-${col}`);
       const char = isVowel 
-        ? rng.choice(LETTER_WEIGHTS.vowels)
-        : rng.choice(LETTER_WEIGHTS.consonants);
+        ? getConstrainedLetter(LETTER_WEIGHTS.vowels, letterCounts, rng, true)
+        : getConstrainedLetter(LETTER_WEIGHTS.consonants, letterCounts, rng, false);
+      
+      // Track the letter count
+      letterCounts[char] = (letterCounts[char] || 0) + 1;
       
       gridRow.push({
         id: `${row}-${col}`,
@@ -91,7 +96,53 @@ function generateGridAttempt(rng: SeededRandom): Tile[][] {
     grid.push(gridRow);
   }
   
+  // Optionally add one rare letter (J, Q, X, Z) with 10% chance
+  if (rng.next() < RARE_LETTER_CHANCE) {
+    const rareLetter = rng.choice(RARE_LETTERS);
+    // Only add if we haven't already hit the limit (shouldn't happen, but safety check)
+    if ((letterCounts[rareLetter] || 0) < (LETTER_LIMITS[rareLetter] || 1)) {
+      // Find a random consonant position to replace
+      const consonantPositions: { row: number; col: number }[] = [];
+      for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+          if (!grid[r][c].isVowel) {
+            consonantPositions.push({ row: r, col: c });
+          }
+        }
+      }
+      if (consonantPositions.length > 0) {
+        const pos = consonantPositions[rng.nextInt(0, consonantPositions.length)];
+        grid[pos.row][pos.col].char = rareLetter;
+      }
+    }
+  }
+  
   return grid;
+}
+
+/**
+ * Get a letter from the pool that respects occurrence limits
+ */
+function getConstrainedLetter(
+  pool: string[], 
+  counts: Record<string, number>, 
+  rng: SeededRandom,
+  isVowel: boolean
+): string {
+  const maxAttempts = 20;
+  
+  for (let i = 0; i < maxAttempts; i++) {
+    const letter = rng.choice(pool);
+    const limit = LETTER_LIMITS[letter];
+    
+    // If no limit defined, or under the limit, use this letter
+    if (limit === undefined || (counts[letter] || 0) < limit) {
+      return letter;
+    }
+  }
+  
+  // Fallback: pick a safe common letter that won't have limits
+  return isVowel ? 'E' : rng.choice(['R', 'S', 'T', 'N', 'L']);
 }
 
 export function getRandomLetter(isVowel: boolean, rng: SeededRandom): string {
