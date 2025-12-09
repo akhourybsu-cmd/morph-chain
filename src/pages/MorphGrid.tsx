@@ -10,6 +10,7 @@ import { HowToPlayModal } from '@/components/grid/HowToPlayModal';
 import { GridLogo } from '@/components/GridLogo';
 import { GridMenuSheet } from '@/components/grid/GridMenuSheet';
 import { WordLengthTracker } from '@/components/grid/WordLengthTracker';
+import { WordCelebration } from '@/components/grid/WordCelebration';
 import { Button } from '@/components/ui/button';
 import { HelpCircle } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
@@ -129,6 +130,9 @@ const MorphGrid = () => {
         <WordPreview />
         <GameControls />
       </div>
+      
+      {/* Word Celebration Overlay */}
+      <WordCelebration />
       
       {/* Modals */}
       <HowToPlayModal open={showHowToPlay} onClose={() => setShowHowToPlay(false)} />

@@ -28,6 +28,7 @@ interface GridState {
   stabilizationCount: number;
   startTime: number | null;
   lastSubmission: LastSubmission | null;
+  highlightTrackerLength: number | null;
   
   // Actions
   initializeGame: (date: string) => void;
@@ -39,6 +40,7 @@ interface GridState {
   resetGame: () => void;
   resetDaily: () => void;
   clearLastSubmission: () => void;
+  setHighlightTrackerLength: (length: number | null) => void;
 }
 
 export const useGridStore = create<GridState>((set, get) => ({
@@ -55,6 +57,7 @@ export const useGridStore = create<GridState>((set, get) => ({
   stabilizationCount: 0,
   startTime: null,
   lastSubmission: null,
+  highlightTrackerLength: null,
   
   initializeGame: (date: string) => {
     // Try to load saved state first
@@ -308,6 +311,10 @@ export const useGridStore = create<GridState>((set, get) => ({
   
   clearLastSubmission: () => {
     set({ lastSubmission: null });
+  },
+  
+  setHighlightTrackerLength: (length: number | null) => {
+    set({ highlightTrackerLength: length });
   }
 }));
 

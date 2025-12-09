@@ -216,6 +216,24 @@ export default {
           "0%": { transform: "scale(0.5)", opacity: "0.8" },
           "100%": { transform: "scale(2.5)", opacity: "0" },
         },
+        "score-pop": {
+          "0%": { transform: "scale(0.5)", opacity: "0" },
+          "40%": { transform: "scale(1.3)", opacity: "1" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        "score-travel": {
+          "0%": { transform: "scale(1) translateY(0)", opacity: "1" },
+          "100%": { transform: "scale(0.4) translateY(35vh)", opacity: "0" },
+        },
+        "badge-pulse": {
+          "0%": { transform: "scale(1)", boxShadow: "0 0 0 transparent" },
+          "50%": { transform: "scale(1.25)", boxShadow: "0 0 16px hsl(var(--chain-accent) / 0.7)" },
+          "100%": { transform: "scale(1)", boxShadow: "0 0 0 transparent" },
+        },
+        "fade-in": {
+          "0%": { opacity: "0", transform: "translateY(8px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -240,6 +258,10 @@ export default {
         "upgrade-spark": "upgrade-spark 0.5s ease-out",
         "float-score": "float-score 0.8s ease-out forwards",
         "word-burst": "word-burst 0.5s ease-out forwards",
+        "score-pop": "score-pop 0.5s ease-out forwards",
+        "score-travel": "score-travel 0.5s ease-out forwards",
+        "badge-pulse": "badge-pulse 0.5s ease-out",
+        "fade-in": "fade-in 0.3s ease-out",
       },
     },
   },

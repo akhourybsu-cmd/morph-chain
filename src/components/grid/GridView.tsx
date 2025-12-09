@@ -2,7 +2,6 @@ import { useRef, useEffect, useState } from 'react';
 import { useGridStore } from '@/stores/gridStore';
 import { GridTile } from './GridTile';
 import { useGridGesture } from '@/hooks/useGridGesture';
-import { WordCelebration } from './WordCelebration';
 
 export const GridView = () => {
   const { grid, selected, selectTile, setSelected, submitWord, clearSelection, lastSubmission } = useGridStore();
@@ -140,9 +139,6 @@ export const GridView = () => {
         className="absolute inset-0 pointer-events-none z-10"
         style={{ width: '100%', height: '100%' }}
       />
-      
-      {/* Word celebration overlay */}
-      <WordCelebration />
       
       {/* Grid with dark radial gradient background */}
       <div 
