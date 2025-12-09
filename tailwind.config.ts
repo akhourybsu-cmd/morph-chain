@@ -222,10 +222,6 @@ export default {
           "100%": { 
             clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
             opacity: "1"
-          }
-          "100%": { 
-            clipPath: "polygon(100% 0, 100% 0, 100% 100%, 100% 100%)",
-            opacity: "0.8"
           },
         },
         "float-score": {
