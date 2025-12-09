@@ -50,8 +50,8 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick, animationC
         // Animation class for word submission feedback
         animationClass,
         
-        // Upgrade spark animation
-        isUpgrading && "animate-upgrade-spark",
+        // Upgrade pulse-glow animation
+        isUpgrading && "animate-tile-upgrade",
         
         // Selected state - enhanced with scale and bright white outline
         isSelected && "scale-105 shadow-[0_0_24px_rgba(255,255,255,0.8)] ring-2 ring-white/70 z-10",
@@ -106,22 +106,6 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick, animationC
         <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-white text-black text-xs flex items-center justify-center font-bold shadow-lg border-2 border-white/90 z-20">
           {selectionIndex + 1}
         </div>
-      )}
-      
-      {/* Color wipe overlay for upgrades - shows OLD color wiping away */}
-      {isUpgrading && (
-        <div 
-          className={cn(
-            "absolute inset-0 rounded-2xl pointer-events-none z-[5] overflow-hidden",
-            // Show the PREVIOUS color (current progress - 1)
-            tile.progress === 1 && "bg-gradient-grid-orange",
-            tile.progress === 2 && "bg-gradient-grid-blue"
-          )}
-          style={{
-            boxShadow: "0 0 20px rgba(255,255,255,0.6)",
-            animation: "color-wipe 2s ease-in-out forwards"
-          }}
-        />
       )}
       
     </button>

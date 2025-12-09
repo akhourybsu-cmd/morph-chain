@@ -210,19 +210,23 @@ export default {
           "85%": { transform: "scale(1.1)", filter: "brightness(1.3)", boxShadow: "0 0 10px rgba(255,255,255,0.4)" },
           "100%": { transform: "scale(1)", filter: "brightness(1)", boxShadow: "0 0 0 rgba(255,255,255,0)" },
         },
-        "color-wipe": {
+        "tile-upgrade": {
           "0%": { 
-            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
-            opacity: "1"
+            transform: "scale(1)",
+            boxShadow: "0 0 0 rgba(255,255,255,0)"
           },
-          "30%": { 
-            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
-            opacity: "1"
+          "25%": { 
+            transform: "scale(1.15)",
+            boxShadow: "0 0 30px rgba(255,255,255,0.9)"
+          },
+          "50%": { 
+            transform: "scale(1.1)",
+            boxShadow: "0 0 20px rgba(255,255,255,0.6)"
           },
           "100%": { 
-            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
-            opacity: "0"
-          },
+            transform: "scale(1)",
+            boxShadow: "0 0 0 rgba(255,255,255,0)"
+          }
         },
         "float-score": {
           "0%": { transform: "translateY(0) scale(1)", opacity: "1" },
@@ -272,7 +276,7 @@ export default {
         "tile-pop-large": "tile-pop-large 0.35s ease-out",
         "tile-pop-epic": "tile-pop-epic 0.4s ease-out",
         "upgrade-spark": "upgrade-spark 1.2s ease-in-out",
-        "color-wipe": "color-wipe 1s ease-in-out forwards",
+        "tile-upgrade": "tile-upgrade 0.6s ease-out",
         "float-score": "float-score 0.8s ease-out forwards",
         "word-burst": "word-burst 0.5s ease-out forwards",
         "score-pop": "score-pop 0.5s ease-out forwards",
