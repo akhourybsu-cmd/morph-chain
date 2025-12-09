@@ -7,6 +7,13 @@ import { morphGrid, morphPowerRow } from '@/lib/grid/morphMechanics';
 import { isValidWord } from '@/lib/grid/dictionary';
 import { recordGridPlayStart, recordGridSubmit, recordGridWin, saveGridGameState, loadGridGameState, clearGridGameState, type SubmittedWord } from '@/lib/gridStorage';
 
+interface LastSubmission {
+  wordLength: number;
+  usedTileIds: string[];
+  upgradedTileIds: string[];
+  timestamp: number;
+}
+
 interface GridState {
   grid: Tile[][];
   selected: Tile[];
@@ -20,6 +27,7 @@ interface GridState {
   morphCount: number;
   stabilizationCount: number;
   startTime: number | null;
+  lastSubmission: LastSubmission | null;
   
   // Actions
   initializeGame: (date: string) => void;
@@ -30,6 +38,7 @@ interface GridState {
   endGame: () => void;
   resetGame: () => void;
   resetDaily: () => void;
+  clearLastSubmission: () => void;
 }
 
 export const useGridStore = create<GridState>((set, get) => ({
@@ -45,6 +54,7 @@ export const useGridStore = create<GridState>((set, get) => ({
   morphCount: 0,
   stabilizationCount: 0,
   startTime: null,
+  lastSubmission: null,
   
   initializeGame: (date: string) => {
     // Try to load saved state first
@@ -170,18 +180,21 @@ export const useGridStore = create<GridState>((set, get) => ({
     
     // Step 4: Cascade Upgrade bonus for 5+ letter words
     const wordLength = selected.length;
+    const usedTileIds = selected.map(t => t.id);
+    let upgradedTileIds: string[] = [];
+    
     if (wordLength >= 5) {
       const bonusTiles = wordLength === 5 ? 1 : wordLength === 6 ? 2 : 3;
       
       // Find non-purple tiles that weren't just used
-      const usedIds = new Set(selected.map(t => t.id));
-      const upgradeCandidates: { row: number; col: number }[] = [];
+      const usedIds = new Set(usedTileIds);
+      const upgradeCandidates: { row: number; col: number; id: string }[] = [];
       
       for (let row = 0; row < 5; row++) {
         for (let col = 0; col < 5; col++) {
           const tile = morphedGrid[row][col];
           if (tile.progress < 2 && !usedIds.has(tile.id)) {
-            upgradeCandidates.push({ row, col });
+            upgradeCandidates.push({ row, col, id: tile.id });
           }
         }
       }
@@ -194,15 +207,14 @@ export const useGridStore = create<GridState>((set, get) => ({
       }
       
       const tilesToUpgrade = shuffled.slice(0, bonusTiles);
+      upgradedTileIds = tilesToUpgrade.map(t => t.id);
+      
       for (const { row, col } of tilesToUpgrade) {
         morphedGrid[row][col] = {
           ...morphedGrid[row][col],
           progress: Math.min(2, morphedGrid[row][col].progress + 1) as 0 | 1 | 2
         };
       }
-      
-      // Log the bonus for feedback (could be used for toast in UI)
-      console.log(`🔥 Long word bonus! ${bonusTiles} tile(s) upgraded`);
     }
     
     const newPurpleCount = morphedGrid.flat().filter(t => t.progress === 2).length;
@@ -226,7 +238,13 @@ export const useGridStore = create<GridState>((set, get) => ({
       purpleCount: newPurpleCount,
       morphCount: newMorphCount,
       stabilizationCount: newStabilizationCount,
-      isEnded: isWin
+      isEnded: isWin,
+      lastSubmission: {
+        wordLength,
+        usedTileIds,
+        upgradedTileIds,
+        timestamp: Date.now()
+      }
     });
     
     // Save game state
@@ -286,6 +304,10 @@ export const useGridStore = create<GridState>((set, get) => ({
     clearGridGameState(dailySeed);
     set({ startTime: Date.now() });
     get().initializeGame(dailySeed);
+  },
+  
+  clearLastSubmission: () => {
+    set({ lastSubmission: null });
   }
 }));
 

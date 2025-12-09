@@ -6,9 +6,11 @@ interface GridTileProps {
   isSelected: boolean;
   selectionIndex?: number;
   onClick: () => void;
+  animationClass?: string;
+  isUpgrading?: boolean;
 }
 
-export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTileProps) => {
+export const GridTile = ({ tile, isSelected, selectionIndex, onClick, animationClass, isUpgrading }: GridTileProps) => {
   // Calculate progress ring fill percentage
   const progressPercent = tile.progress === 0 ? 33 : tile.progress === 1 ? 66 : 100;
   
@@ -45,12 +47,17 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick }: GridTile
         // Glow shadows
         glowShadow,
         
+        // Animation class for word submission feedback
+        animationClass,
+        
+        // Upgrade spark animation
+        isUpgrading && "animate-upgrade-spark",
         
         // Selected state - enhanced with scale and bright white outline
         isSelected && "scale-105 shadow-[0_0_24px_rgba(255,255,255,0.8)] ring-2 ring-white/70 z-10",
         
-        // Breathing animation for Blue tiles
-        tile.progress === 1 && !isSelected && "animate-breathe",
+        // Breathing animation for Blue tiles (only when not animating)
+        tile.progress === 1 && !isSelected && !animationClass && !isUpgrading && "animate-breathe",
         
         // Hover/Active states (only when not selected)
         !isSelected && "hover:scale-102 hover:brightness-110 active:scale-95",

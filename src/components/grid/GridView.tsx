@@ -2,13 +2,15 @@ import { useRef, useEffect, useState } from 'react';
 import { useGridStore } from '@/stores/gridStore';
 import { GridTile } from './GridTile';
 import { useGridGesture } from '@/hooks/useGridGesture';
-import { toast } from 'sonner';
+import { WordCelebration } from './WordCelebration';
 
 export const GridView = () => {
-  const { grid, selected, selectTile, setSelected, submitWord, clearSelection } = useGridStore();
+  const { grid, selected, selectTile, setSelected, submitWord, clearSelection, lastSubmission } = useGridStore();
   const gridRef = useRef<HTMLDivElement>(null);
   const [pathTiles, setPathTiles] = useState(selected);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [animatingTiles, setAnimatingTiles] = useState<Set<string>>(new Set());
+  const [upgradingTiles, setUpgradingTiles] = useState<Set<string>>(new Set());
 
   // Drag gesture handling
   useGridGesture(
@@ -94,6 +96,41 @@ export const GridView = () => {
       clearConnectionPath();
     }
   }, [selected]);
+
+  // Handle tile animations on word submission
+  useEffect(() => {
+    if (lastSubmission) {
+      // Set animating tiles
+      setAnimatingTiles(new Set(lastSubmission.usedTileIds));
+      
+      // Set upgrading tiles with a slight delay
+      if (lastSubmission.upgradedTileIds.length > 0) {
+        setTimeout(() => {
+          setUpgradingTiles(new Set(lastSubmission.upgradedTileIds));
+        }, 200);
+      }
+
+      // Clear animations after they complete
+      const timer = setTimeout(() => {
+        setAnimatingTiles(new Set());
+        setUpgradingTiles(new Set());
+      }, 600);
+
+      return () => clearTimeout(timer);
+    }
+  }, [lastSubmission]);
+
+  // Get animation class based on word length
+  const getAnimationClass = (tileId: string) => {
+    if (!animatingTiles.has(tileId) || !lastSubmission) return undefined;
+    
+    const { wordLength } = lastSubmission;
+    if (wordLength >= 7) return 'animate-tile-pop-epic';
+    if (wordLength >= 6) return 'animate-tile-pop-large';
+    if (wordLength >= 5) return 'animate-tile-pop-large';
+    if (wordLength >= 4) return 'animate-tile-pop-medium';
+    return 'animate-tile-pop-small';
+  };
   
   return (
     <div className="w-full max-w-[min(92vw,520px)] mx-auto relative">
@@ -103,6 +140,9 @@ export const GridView = () => {
         className="absolute inset-0 pointer-events-none z-10"
         style={{ width: '100%', height: '100%' }}
       />
+      
+      {/* Word celebration overlay */}
+      <WordCelebration />
       
       {/* Grid with dark radial gradient background */}
       <div 
@@ -126,6 +166,8 @@ export const GridView = () => {
                 tile={tile}
                 isSelected={isSelected}
                 selectionIndex={isSelected ? selectedIndex : undefined}
+                animationClass={getAnimationClass(tile.id)}
+                isUpgrading={upgradingTiles.has(tile.id)}
                 onClick={() => {
                   selectTile(tile);
                 }}

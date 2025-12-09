@@ -16,8 +16,8 @@ export const GameControls = () => {
     const success = submitWord();
     
     if (success) {
-      toast.success('Valid word!', { duration: 1500 });
-      clearSelection(); // Clear after successful submit
+      // Visual feedback handled by WordCelebration component
+      clearSelection();
     } else {
       const word = selected.map(t => t.char).join('');
       toast.error(`"${word}" is not in the dictionary`, {
