@@ -117,10 +117,10 @@ export const GridView = () => {
           setUpgradingTiles(new Set(lastSubmission.upgradedTileIds));
         }, 800);
         
-        // Clear upgrade animations after extended stall period
+        // Clear upgrade animations after animation completes (800ms delay + 2s animation)
         upgradeClearTimer = setTimeout(() => {
           setUpgradingTiles(new Set());
-        }, 2200);
+        }, 2800);
       }
 
       return () => {
