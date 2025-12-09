@@ -112,7 +112,7 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick, animationC
       {isUpgrading && (
         <div 
           className={cn(
-            "absolute inset-0 rounded-2xl pointer-events-none z-20 overflow-hidden",
+            "absolute inset-0 rounded-2xl pointer-events-none z-[5] overflow-hidden",
             // Show the PREVIOUS color (current progress - 1)
             tile.progress === 1 && "bg-gradient-grid-orange",
             tile.progress === 2 && "bg-gradient-grid-blue"
