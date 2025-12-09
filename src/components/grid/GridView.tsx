@@ -107,21 +107,26 @@ export const GridView = () => {
         setAnimatingTiles(new Set());
       }, 500);
       
-      // Set upgrading tiles with delay (after word celebration starts traveling)
+      // Only set up upgrade animations if there are upgraded tiles
+      let upgradeStartTimer: ReturnType<typeof setTimeout> | null = null;
+      let upgradeClearTimer: ReturnType<typeof setTimeout> | null = null;
+      
       if (lastSubmission.upgradedTileIds.length > 0) {
-        setTimeout(() => {
+        // Set upgrading tiles with delay (after word celebration starts traveling)
+        upgradeStartTimer = setTimeout(() => {
           setUpgradingTiles(new Set(lastSubmission.upgradedTileIds));
         }, 800);
+        
+        // Clear upgrade animations after extended stall period
+        upgradeClearTimer = setTimeout(() => {
+          setUpgradingTiles(new Set());
+        }, 2200);
       }
-
-      // Clear upgrade animations after extended stall period
-      const upgradeTimer = setTimeout(() => {
-        setUpgradingTiles(new Set());
-      }, 2200);
 
       return () => {
         clearTimeout(popTimer);
-        clearTimeout(upgradeTimer);
+        if (upgradeStartTimer) clearTimeout(upgradeStartTimer);
+        if (upgradeClearTimer) clearTimeout(upgradeClearTimer);
       };
     }
   }, [lastSubmission]);
