@@ -204,9 +204,11 @@ export default {
           "100%": { transform: "scale(1)", filter: "brightness(1)" },
         },
         "upgrade-spark": {
-          "0%": { transform: "scale(0.8)", opacity: "0", filter: "brightness(1)" },
-          "40%": { transform: "scale(1.3)", opacity: "1", filter: "brightness(1.6)" },
-          "100%": { transform: "scale(1)", opacity: "1", filter: "brightness(1)" },
+          "0%": { transform: "scale(1)", filter: "brightness(1)", boxShadow: "0 0 0 rgba(255,255,255,0)" },
+          "15%": { transform: "scale(1.2)", filter: "brightness(1.6)", boxShadow: "0 0 20px rgba(255,255,255,0.8)" },
+          "50%": { transform: "scale(1.15)", filter: "brightness(1.4)", boxShadow: "0 0 15px rgba(255,255,255,0.6)" },
+          "85%": { transform: "scale(1.1)", filter: "brightness(1.3)", boxShadow: "0 0 10px rgba(255,255,255,0.4)" },
+          "100%": { transform: "scale(1)", filter: "brightness(1)", boxShadow: "0 0 0 rgba(255,255,255,0)" },
         },
         "float-score": {
           "0%": { transform: "translateY(0) scale(1)", opacity: "1" },
@@ -255,7 +257,7 @@ export default {
         "tile-pop-medium": "tile-pop-medium 0.3s ease-out",
         "tile-pop-large": "tile-pop-large 0.35s ease-out",
         "tile-pop-epic": "tile-pop-epic 0.4s ease-out",
-        "upgrade-spark": "upgrade-spark 0.5s ease-out",
+        "upgrade-spark": "upgrade-spark 1.2s ease-in-out",
         "float-score": "float-score 0.8s ease-out forwards",
         "word-burst": "word-burst 0.5s ease-out forwards",
         "score-pop": "score-pop 0.5s ease-out forwards",

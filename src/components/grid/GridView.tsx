@@ -99,23 +99,30 @@ export const GridView = () => {
   // Handle tile animations on word submission
   useEffect(() => {
     if (lastSubmission) {
-      // Set animating tiles
+      // Set animating tiles for used tiles
       setAnimatingTiles(new Set(lastSubmission.usedTileIds));
       
-      // Set upgrading tiles with a slight delay
+      // Clear used tile animations after pop completes
+      const popTimer = setTimeout(() => {
+        setAnimatingTiles(new Set());
+      }, 500);
+      
+      // Set upgrading tiles with delay (after word celebration starts traveling)
       if (lastSubmission.upgradedTileIds.length > 0) {
         setTimeout(() => {
           setUpgradingTiles(new Set(lastSubmission.upgradedTileIds));
-        }, 200);
+        }, 800);
       }
 
-      // Clear animations after they complete
-      const timer = setTimeout(() => {
-        setAnimatingTiles(new Set());
+      // Clear upgrade animations after extended stall period
+      const upgradeTimer = setTimeout(() => {
         setUpgradingTiles(new Set());
-      }, 600);
+      }, 2200);
 
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(popTimer);
+        clearTimeout(upgradeTimer);
+      };
     }
   }, [lastSubmission]);
 

@@ -108,6 +108,13 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick, animationC
         </div>
       )}
       
+      {/* Upgrade sparkle overlay */}
+      {isUpgrading && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+          <span className="text-2xl animate-pulse drop-shadow-[0_0_8px_rgba(255,255,255,0.9)]">✨</span>
+        </div>
+      )}
+      
     </button>
   );
 };
