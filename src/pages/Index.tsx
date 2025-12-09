@@ -75,9 +75,10 @@ const Index = () => {
   const [currentAchievement, setCurrentAchievement] = useState<string | null>(null);
   const gameStartTime = useRef<number>(Date.now());
 
-  // Double Swap power-up for 5L only
+  // Double Swap power-up for 5L only - earned after 3 consecutive single-letter moves
   const [doubleSwapUsed, setDoubleSwapUsed] = useState(false);
-  const [doubleSwapActive, setDoubleSwapActive] = useState(false);
+  const [consecutiveSingleSwaps, setConsecutiveSingleSwaps] = useState(0);
+  const doubleSwapReady = consecutiveSingleSwaps >= 3 && !doubleSwapUsed;
   // Modals
   const [menuOpen, setMenuOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
@@ -144,7 +145,7 @@ const Index = () => {
     setError("");
     // Reset double swap state on length change
     setDoubleSwapUsed(false);
-    setDoubleSwapActive(false);
+    setConsecutiveSingleSwaps(0);
   };
 
   // Load saved game state on mount
@@ -173,11 +174,12 @@ const Index = () => {
 
     // Simulate network delay
     setTimeout(() => {
-      // Check if double swap is active (5L only)
-      const allowTwoLetters = selectedLength === 5 && doubleSwapActive;
+      // Check if double swap is ready (5L only, earned after 3 single-letter moves)
       const isOneDiff = isOneLetterDifferent(currentWord, wordToSubmit);
       const isTwoDiff = isTwoLettersDifferent(currentWord, wordToSubmit);
       
+      // Allow two-letter change only if double swap is ready and not used
+      const allowTwoLetters = selectedLength === 5 && doubleSwapReady;
       const isValid = allowTwoLetters ? (isOneDiff || isTwoDiff) : isOneDiff;
       
       if (!isValid) {
@@ -191,13 +193,16 @@ const Index = () => {
         return;
       }
       
-      // If double swap was active and used, mark it as used
-      if (doubleSwapActive && isTwoDiff) {
-        setDoubleSwapUsed(true);
-      }
-      // Always deactivate double swap after a successful move
-      if (doubleSwapActive) {
-        setDoubleSwapActive(false);
+      // Track consecutive single swaps for 5L
+      if (selectedLength === 5) {
+        if (isTwoDiff && doubleSwapReady) {
+          // Used the double swap power-up
+          setDoubleSwapUsed(true);
+          setConsecutiveSingleSwaps(0);
+        } else if (isOneDiff) {
+          // Single letter change - increment counter
+          setConsecutiveSingleSwaps(prev => prev + 1);
+        }
       }
 
       if (!isValidWord(wordToSubmit, puzzle.wordLength)) {
@@ -503,7 +508,7 @@ const Index = () => {
     setCurrentInput("");
     setInvalidGuessCount(0);
     setDoubleSwapUsed(false);
-    setDoubleSwapActive(false);
+    setConsecutiveSingleSwaps(0);
     gameStartTime.current = Date.now();
     clearGameState(puzzle.wordLength);
   };
@@ -735,15 +740,12 @@ const Index = () => {
                 </div>
               </div>
               
-              {/* Double Swap power-up for 5L only */}
+              {/* Double Swap power-up for 5L only - shows progress toward earning it */}
               {selectedLength === 5 && (
                 <MorphPowerups
                   doubleSwapUsed={doubleSwapUsed}
-                  letterSwapUsed={true}
-                  doubleSwapActive={doubleSwapActive}
-                  letterSwapActive={false}
-                  onDoubleSwap={() => setDoubleSwapActive(!doubleSwapActive)}
-                  onLetterSwap={() => {}}
+                  consecutiveSingleSwaps={consecutiveSingleSwaps}
+                  doubleSwapReady={doubleSwapReady}
                   disabled={gameCompleted}
                 />
               )}

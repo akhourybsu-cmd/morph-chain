@@ -1,54 +1,69 @@
-import { Button } from "@/components/ui/button";
-import { RefreshCw, ArrowLeftRight } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MorphPowerupsProps {
   doubleSwapUsed: boolean;
-  letterSwapUsed: boolean;
-  doubleSwapActive: boolean;
-  letterSwapActive: boolean;
-  onDoubleSwap: () => void;
-  onLetterSwap: () => void;
+  consecutiveSingleSwaps: number;
+  doubleSwapReady: boolean;
   disabled: boolean;
 }
 
 export const MorphPowerups = ({
   doubleSwapUsed,
-  letterSwapUsed,
-  doubleSwapActive,
-  letterSwapActive,
-  onDoubleSwap,
-  onLetterSwap,
+  consecutiveSingleSwaps,
+  doubleSwapReady,
   disabled
 }: MorphPowerupsProps) => {
-  // Only show Double Swap, hide Letter Swap
+  // Progress dots (3 needed to unlock)
+  const progressDots = [0, 1, 2].map((i) => (
+    <div
+      key={i}
+      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+        consecutiveSingleSwaps > i
+          ? "bg-chain shadow-[0_0_6px_hsl(var(--chain-accent)/0.6)]"
+          : "bg-muted-foreground/30"
+      }`}
+    />
+  ));
+
+  if (doubleSwapUsed) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-2 text-muted-foreground">
+        <RefreshCw className="h-4 w-4 opacity-50" />
+        <span className="text-xs">Double Swap used</span>
+      </div>
+    );
+  }
+
   return (
     <TooltipProvider>
-      <div className="flex items-center justify-center gap-3 py-3">
+      <div className="flex items-center justify-center gap-3 py-2">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onDoubleSwap}
-              disabled={doubleSwapUsed || disabled}
-              className={`h-10 px-4 transition-all ${
-                doubleSwapActive 
-                  ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 shadow-lg" 
-                  : ""
+            <div
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                doubleSwapReady
+                  ? "bg-chain/20 border-chain text-chain shadow-[0_0_12px_hsl(var(--chain-accent)/0.4)] animate-pulse"
+                  : "bg-card/50 border-border/50 text-muted-foreground"
               }`}
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${doubleSwapActive ? "animate-pulse" : ""}`} />
-              <span className="text-sm font-medium">Double Swap</span>
-              {!doubleSwapUsed && (
-                <span className="ml-2 px-1.5 py-0.5 text-xs bg-primary/20 rounded-full">
-                  x1
-                </span>
+              <RefreshCw className={`h-4 w-4 ${doubleSwapReady ? "animate-spin" : ""}`} />
+              <span className="text-sm font-medium">
+                {doubleSwapReady ? "READY! Change 2 letters" : "Double Swap"}
+              </span>
+              {!doubleSwapReady && (
+                <div className="flex items-center gap-1 ml-1">
+                  {progressDots}
+                </div>
               )}
-            </Button>
+            </div>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">Change 2 letters in one move</p>
+            <p className="text-xs">
+              {doubleSwapReady
+                ? "Your next move can change 2 letters!"
+                : `Make ${3 - consecutiveSingleSwaps} more single-letter moves to unlock`}
+            </p>
           </TooltipContent>
         </Tooltip>
       </div>

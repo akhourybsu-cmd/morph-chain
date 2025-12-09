@@ -168,6 +168,43 @@ export const useGridStore = create<GridState>((set, get) => ({
       }
     }
     
+    // Step 4: Cascade Upgrade bonus for 5+ letter words
+    const wordLength = selected.length;
+    if (wordLength >= 5) {
+      const bonusTiles = wordLength === 5 ? 1 : wordLength === 6 ? 2 : 3;
+      
+      // Find non-purple tiles that weren't just used
+      const usedIds = new Set(selected.map(t => t.id));
+      const upgradeCandidates: { row: number; col: number }[] = [];
+      
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 5; col++) {
+          const tile = morphedGrid[row][col];
+          if (tile.progress < 2 && !usedIds.has(tile.id)) {
+            upgradeCandidates.push({ row, col });
+          }
+        }
+      }
+      
+      // Randomly upgrade tiles using the RNG
+      const shuffled = [...upgradeCandidates];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(rng.next() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      
+      const tilesToUpgrade = shuffled.slice(0, bonusTiles);
+      for (const { row, col } of tilesToUpgrade) {
+        morphedGrid[row][col] = {
+          ...morphedGrid[row][col],
+          progress: Math.min(2, morphedGrid[row][col].progress + 1) as 0 | 1 | 2
+        };
+      }
+      
+      // Log the bonus for feedback (could be used for toast in UI)
+      console.log(`🔥 Long word bonus! ${bonusTiles} tile(s) upgraded`);
+    }
+    
     const newPurpleCount = morphedGrid.flat().filter(t => t.progress === 2).length;
     const isWin = newPurpleCount === 25;
     

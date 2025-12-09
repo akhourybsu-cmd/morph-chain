@@ -9,6 +9,7 @@ import { EndScreen } from '@/components/grid/EndScreen';
 import { HowToPlayModal } from '@/components/grid/HowToPlayModal';
 import { GridLogo } from '@/components/GridLogo';
 import { GridMenuSheet } from '@/components/grid/GridMenuSheet';
+import { WordLengthTracker } from '@/components/grid/WordLengthTracker';
 import { Button } from '@/components/ui/button';
 import { HelpCircle } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
@@ -16,7 +17,7 @@ import { toast } from 'sonner';
 import { useGridLayout } from '@/hooks/useGridLayout';
 
 const MorphGrid = () => {
-  const { initializeGame, isEnded, dailySeed } = useGridStore();
+  const { initializeGame, isEnded, dailySeed, submittedWords } = useGridStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showEndScreen, setShowEndScreen] = useState(false);
@@ -110,6 +111,9 @@ const MorphGrid = () => {
       
       {/* Bottom Bar - Fixed with safe area */}
       <div className="bg-background/95 backdrop-blur-md border-t border-border/50 px-3 md:px-6 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-3 flex flex-col gap-2 flex-shrink-0">
+        {/* Word Length Tracker */}
+        <WordLengthTracker submittedWords={submittedWords} />
+        
         {/* Objective Snapshot */}
         <div className="flex items-center justify-center gap-2 text-xs md:text-sm mb-1">
           <span className="text-muted-foreground">Change tiles:</span>
