@@ -5,11 +5,10 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Settings } from "lucide-react";
+import { Settings, Award } from "lucide-react";
 import { useState } from "react";
 import { GamesNavigation } from "@/components/shared/GamesNavigation";
-import { Button } from "@/components/ui/button";
+import { AchievementGallery } from "@/components/chain/AchievementGallery";
 
 interface RushMenuSheetProps {
   open: boolean;
@@ -22,39 +21,57 @@ export const RushMenuSheet = ({
   onOpenChange,
   onOpenSettings,
 }: RushMenuSheetProps) => {
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-[280px] sm:w-[320px] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Menu</SheetTitle>
-        </SheetHeader>
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="left" className="w-[280px] sm:w-[320px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Menu</SheetTitle>
+          </SheetHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Games Section */}
-          <GamesNavigation currentGame="rush" onNavigate={() => onOpenChange(false)} />
+          <div className="space-y-6 py-4">
+            {/* Games Section */}
+            <GamesNavigation currentGame="rush" onNavigate={() => onOpenChange(false)} />
 
-          <Separator />
+            <Separator />
 
-          {/* Rush-specific section */}
-          <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">MORPH RUSH</h3>
-            <div className="space-y-1">
-              <button
-                onClick={() => {
-                  onOpenSettings();
-                  onOpenChange(false);
-                }}
-                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
-              >
-                <Settings className="w-4 h-4" />
-                Settings & Leaderboard
-              </button>
+            {/* Rush-specific section */}
+            <div>
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">MORPH RUSH</h3>
+              <div className="space-y-1">
+                <button
+                  onClick={() => {
+                    setShowAchievements(true);
+                    onOpenChange(false);
+                  }}
+                  className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+                >
+                  <Award className="w-4 h-4 text-rush" />
+                  Achievements
+                </button>
+                <button
+                  onClick={() => {
+                    onOpenSettings();
+                    onOpenChange(false);
+                  }}
+                  className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+                >
+                  <Settings className="w-4 h-4" />
+                  Settings & Leaderboard
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </SheetContent>
+      </Sheet>
+
+      {/* Achievements Modal */}
+      <AchievementGallery 
+        open={showAchievements} 
+        onOpenChange={setShowAchievements} 
+      />
+    </>
   );
 };

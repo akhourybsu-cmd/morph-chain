@@ -19,6 +19,7 @@ import { MobileActionBar } from "@/components/MobileActionBar";
 import { ChainAchievementPopup } from "@/components/chain/ChainAchievementPopup";
 import { WinCelebration } from "@/components/chain/WinCelebration";
 import { AchievementGallery } from "@/components/chain/AchievementGallery";
+import { MorphPowerups } from "@/components/MorphPowerups";
 
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -74,8 +75,9 @@ const Index = () => {
   const [currentAchievement, setCurrentAchievement] = useState<string | null>(null);
   const gameStartTime = useRef<number>(Date.now());
 
-  // Power-ups removed for Core spec - 5L now uses same rules as 4L
-
+  // Double Swap power-up for 5L only
+  const [doubleSwapUsed, setDoubleSwapUsed] = useState(false);
+  const [doubleSwapActive, setDoubleSwapActive] = useState(false);
   // Modals
   const [menuOpen, setMenuOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
@@ -140,7 +142,9 @@ const Index = () => {
       setGameWon(false);
     }
     setError("");
-    
+    // Reset double swap state on length change
+    setDoubleSwapUsed(false);
+    setDoubleSwapActive(false);
   };
 
   // Load saved game state on mount
@@ -169,15 +173,31 @@ const Index = () => {
 
     // Simulate network delay
     setTimeout(() => {
-    // Core spec: 4L and 5L both require exactly one letter change
-      const isValid = isOneLetterDifferent(currentWord, wordToSubmit);
+      // Check if double swap is active (5L only)
+      const allowTwoLetters = selectedLength === 5 && doubleSwapActive;
+      const isOneDiff = isOneLetterDifferent(currentWord, wordToSubmit);
+      const isTwoDiff = isTwoLettersDifferent(currentWord, wordToSubmit);
+      
+      const isValid = allowTwoLetters ? (isOneDiff || isTwoDiff) : isOneDiff;
       
       if (!isValid) {
         setInvalidGuessCount(prev => prev + 1);
-        setError("Must change exactly 1 letter");
+        const errorMsg = allowTwoLetters 
+          ? "Must change 1 or 2 letters" 
+          : "Must change exactly 1 letter";
+        setError(errorMsg);
         setCurrentInput("");
         setIsLoading(false);
         return;
+      }
+      
+      // If double swap was active and used, mark it as used
+      if (doubleSwapActive && isTwoDiff) {
+        setDoubleSwapUsed(true);
+      }
+      // Always deactivate double swap after a successful move
+      if (doubleSwapActive) {
+        setDoubleSwapActive(false);
       }
 
       if (!isValidWord(wordToSubmit, puzzle.wordLength)) {
@@ -234,8 +254,9 @@ const Index = () => {
 
       // Check for dead-end (word with no valid next moves)
       if (word !== puzzle.goalWord && updatedMoves.length < puzzle.maxMoves) {
-        // Core spec: both 4L and 5L use one-letter changes only
-        const hasNext = hasValidNextMove(word, updatedUsedWords, puzzle.wordLength, false);
+        // For 5L, allow two-letter moves if double swap is still available
+        const canUseTwoLetters = selectedLength === 5 && !doubleSwapUsed;
+        const hasNext = hasValidNextMove(word, updatedUsedWords, puzzle.wordLength, canUseTwoLetters);
         
         if (!hasNext) {
           toast({
@@ -481,6 +502,8 @@ const Index = () => {
     setError("");
     setCurrentInput("");
     setInvalidGuessCount(0);
+    setDoubleSwapUsed(false);
+    setDoubleSwapActive(false);
     gameStartTime.current = Date.now();
     clearGameState(puzzle.wordLength);
   };
@@ -711,6 +734,19 @@ const Index = () => {
                   </div>
                 </div>
               </div>
+              
+              {/* Double Swap power-up for 5L only */}
+              {selectedLength === 5 && (
+                <MorphPowerups
+                  doubleSwapUsed={doubleSwapUsed}
+                  letterSwapUsed={true}
+                  doubleSwapActive={doubleSwapActive}
+                  letterSwapActive={false}
+                  onDoubleSwap={() => setDoubleSwapActive(!doubleSwapActive)}
+                  onLetterSwap={() => {}}
+                  disabled={gameCompleted}
+                />
+              )}
             </div>
           </>
         )}

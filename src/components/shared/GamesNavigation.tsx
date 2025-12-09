@@ -7,7 +7,7 @@ interface GamesNavigationProps {
 }
 
 const games = [
-  { id: 'chain', title: MorphChainTitle, path: "/", description: "Word ladder puzzle" },
+  { id: 'chain', title: MorphChainTitle, path: "/chain", description: "Word ladder puzzle" },
   { id: 'grid', title: MorphGridTitle, path: "/grid", description: "Daily 5×5 puzzle" },
   { id: 'rush', title: MorphRushTitle, path: "/rush?mode=daily", description: "Timed score dash" },
 ];

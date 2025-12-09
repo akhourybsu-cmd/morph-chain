@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Menu, Trophy, BarChart3, Settings, HelpCircle, Sparkles } from "lucide-react";
+import { Menu, Trophy, BarChart3, Settings, HelpCircle, Sparkles, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { GridLeaderboard } from "./GridLeaderboard";
@@ -12,6 +12,7 @@ import { GridStatsModal } from "./GridStats";
 import { useGridStore } from "@/stores/gridStore";
 import { useGridSettings } from "@/hooks/useGridSettings";
 import { GamesNavigation } from "@/components/shared/GamesNavigation";
+import { AchievementGallery } from "@/components/chain/AchievementGallery";
 
 export const GridMenuSheet = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export const GridMenuSheet = () => {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -40,6 +42,16 @@ export const GridMenuSheet = () => {
           <div>
             <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">MORPH GRID</h3>
             <div className="space-y-1">
+              <button
+                onClick={() => {
+                  setShowAchievements(true);
+                  setOpen(false);
+                }}
+                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+              >
+                <Award className="w-4 h-4 text-grid" />
+                Achievements
+              </button>
               <button
                 onClick={() => {
                   setShowLeaderboard(true);
@@ -103,6 +115,12 @@ export const GridMenuSheet = () => {
           </div>
         </div>
       </SheetContent>
+
+      {/* Achievements Modal */}
+      <AchievementGallery 
+        open={showAchievements} 
+        onOpenChange={setShowAchievements} 
+      />
 
       {/* Leaderboard Dialog */}
       <Dialog open={showLeaderboard} onOpenChange={setShowLeaderboard}>
