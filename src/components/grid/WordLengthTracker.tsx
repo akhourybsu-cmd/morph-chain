@@ -1,11 +1,15 @@
 import { useMemo } from 'react';
 import { SubmittedWord } from '@/lib/gridStorage';
+import { useGridStore } from '@/stores/gridStore';
+import { cn } from '@/lib/utils';
 
 interface WordLengthTrackerProps {
   submittedWords: SubmittedWord[];
 }
 
 export const WordLengthTracker = ({ submittedWords }: WordLengthTrackerProps) => {
+  const { highlightTrackerLength } = useGridStore();
+  
   const lengthCounts = useMemo(() => {
     const counts: Record<number, number> = {};
     
@@ -33,11 +37,13 @@ export const WordLengthTracker = ({ submittedWords }: WordLengthTrackerProps) =>
         {usedLengths.map((len) => (
           <div
             key={len}
-            className={`px-1.5 py-0.5 rounded-md font-medium ${
+            className={cn(
+              "px-1.5 py-0.5 rounded-md font-medium transition-all duration-300",
               len >= 5
                 ? "bg-chain/20 text-chain border border-chain/30"
-                : "bg-muted/50 text-muted-foreground"
-            }`}
+                : "bg-muted/50 text-muted-foreground",
+              highlightTrackerLength === len && "animate-badge-pulse scale-110"
+            )}
           >
             {len}L
             <span className="ml-0.5 opacity-80">({lengthCounts[len]})</span>
