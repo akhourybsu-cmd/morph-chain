@@ -108,11 +108,20 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick, animationC
         </div>
       )}
       
-      {/* Upgrade sparkle overlay */}
+      {/* Color wipe overlay for upgrades - shows OLD color wiping away */}
       {isUpgrading && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-          <span className="text-2xl animate-pulse drop-shadow-[0_0_8px_rgba(255,255,255,0.9)]">✨</span>
-        </div>
+        <div 
+          className={cn(
+            "absolute inset-0 rounded-2xl pointer-events-none z-15 animate-color-wipe",
+            // Show the PREVIOUS color (current progress - 1)
+            tile.progress === 1 && "bg-gradient-grid-orange",
+            tile.progress === 2 && "bg-gradient-grid-blue"
+          )}
+          style={{
+            filter: "brightness(1.4)",
+            boxShadow: "0 0 20px rgba(255,255,255,0.6)"
+          }}
+        />
       )}
       
     </button>

@@ -210,6 +210,20 @@ export default {
           "85%": { transform: "scale(1.1)", filter: "brightness(1.3)", boxShadow: "0 0 10px rgba(255,255,255,0.4)" },
           "100%": { transform: "scale(1)", filter: "brightness(1)", boxShadow: "0 0 0 rgba(255,255,255,0)" },
         },
+        "color-wipe": {
+          "0%": { 
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+            opacity: "1"
+          },
+          "20%": { 
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+            opacity: "1"
+          },
+          "100%": { 
+            clipPath: "polygon(100% 0, 100% 0, 100% 100%, 100% 100%)",
+            opacity: "0.8"
+          },
+        },
         "float-score": {
           "0%": { transform: "translateY(0) scale(1)", opacity: "1" },
           "100%": { transform: "translateY(-50px) scale(0.8)", opacity: "0" },
@@ -258,6 +272,7 @@ export default {
         "tile-pop-large": "tile-pop-large 0.35s ease-out",
         "tile-pop-epic": "tile-pop-epic 0.4s ease-out",
         "upgrade-spark": "upgrade-spark 1.2s ease-in-out",
+        "color-wipe": "color-wipe 1s ease-in-out forwards",
         "float-score": "float-score 0.8s ease-out forwards",
         "word-burst": "word-burst 0.5s ease-out forwards",
         "score-pop": "score-pop 0.5s ease-out forwards",
