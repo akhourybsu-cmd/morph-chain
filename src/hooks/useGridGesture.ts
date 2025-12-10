@@ -20,8 +20,9 @@ interface GridGestureOptions {
   enabled: boolean;
 }
 
-const HIT_ZONE_PADDING = 16; // Increased for easier diagonal selection
-const DIAGONAL_BIAS = 1.15; // Boost diagonal tiles in distance calculation
+const HIT_ZONE_PADDING = 12; // Reduced for tighter boundaries
+const DIAGONAL_BIAS = 1.10; // Slight boost for diagonal tiles
+const CENTER_COMMITMENT_RADIUS = 28; // Must be within 28px of center to select
 
 export const useGridGesture = (
   options: GridGestureOptions,
@@ -89,16 +90,20 @@ export const useGridGesture = (
     return rowDiff === 1 && colDiff === 1;
   };
 
-  // Helper: Get tile at coordinates with expanded hit zones and diagonal-friendly detection
+  // Helper: Get tile at coordinates with center commitment threshold
   const getTileAtPoint = useCallback((x: number, y: number): Tile | null => {
     if (!gridElement) return null;
     
     const tileElements = getTileElements();
     
-    // First try exact hit
+    // First try exact hit (pointer directly over tile)
     for (const [, { tile, rect }] of tileElements) {
       if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-        return tile;
+        // Even for exact hits, require center commitment to prevent edge grazing
+        const distance = getDistanceToRectCenter(x, y, rect);
+        if (distance <= CENTER_COMMITMENT_RADIUS) {
+          return tile;
+        }
       }
     }
     
@@ -106,32 +111,35 @@ export const useGridGesture = (
       ? pathTilesRef.current[pathTilesRef.current.length - 1] 
       : null;
     
-    // Collect all adjacent tiles within expanded bounds
+    // Collect adjacent tiles within expanded bounds AND center commitment radius
     const candidates: { tile: Tile; distance: number; isDiag: boolean }[] = [];
     
     for (const [, { tile, rect }] of tileElements) {
-      // Use larger hit zone for better diagonal reach
+      // Check expanded hit zone first
       if (!isPointInExpandedRect(x, y, rect, HIT_ZONE_PADDING)) continue;
       
       // Skip non-adjacent tiles when we have a path
       if (lastTile && !isAdjacent(lastTile, tile)) continue;
       
       const distance = getDistanceToRectCenter(x, y, rect);
-      const isDiag = lastTile ? isDiagonal(lastTile, tile) : false;
       
+      // CRITICAL: Only consider tiles within center commitment radius
+      // This prevents accidental selections when grazing tile edges
+      if (distance > CENTER_COMMITMENT_RADIUS) continue;
+      
+      const isDiag = lastTile ? isDiagonal(lastTile, tile) : false;
       candidates.push({ tile, distance, isDiag });
     }
     
     if (candidates.length === 0) return null;
     
-    // If we have a last tile, apply diagonal bias to make diagonals easier to hit
+    // If we have a last tile, apply slight diagonal bias
     if (lastTile) {
-      // Find the best candidate - diagonal tiles get a distance bonus
       let bestCandidate = candidates[0];
       let bestScore = bestCandidate.distance;
       
       for (const candidate of candidates) {
-        // Diagonal tiles get their distance reduced (lower is better)
+        // Diagonal tiles get slight distance reduction (lower is better)
         const score = candidate.isDiag 
           ? candidate.distance / DIAGONAL_BIAS 
           : candidate.distance;
@@ -145,7 +153,7 @@ export const useGridGesture = (
       return bestCandidate.tile;
     }
     
-    // No path yet, just return closest
+    // No path yet, just return closest within commitment radius
     candidates.sort((a, b) => a.distance - b.distance);
     return candidates[0].tile;
   }, [gridElement, getTileElements, isAdjacent]);
