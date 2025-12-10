@@ -165,6 +165,16 @@ All colors MUST be HSL.
     --gradient-grid-purple-end: 262 51% 84%;
 
     --radius: 0.75rem;                /* 12px */
+
+    /* Home Page - Prestige Theme (reuse grid tokens) */
+    --home-page-bg: var(--grid-page-bg);
+    --home-card-bg: var(--grid-card-bg);
+    --home-card-border: var(--grid-card-border);
+    --home-divider: var(--grid-divider);
+    --home-text-primary: var(--grid-text-primary);
+    --home-text-secondary: var(--grid-text-secondary);
+    --home-text-muted: var(--grid-text-muted);
+    --home-accent: var(--grid-accent);
   }
 
   /* NYT Prestige Dark Mode - Grid Page Colors */
