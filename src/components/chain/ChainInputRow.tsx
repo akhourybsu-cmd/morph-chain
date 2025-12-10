@@ -38,11 +38,17 @@ export const ChainInputRow = ({
     if (!useOnScreenKeyboard && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [useOnScreenKeyboard, currentWord]);
+  }, [useOnScreenKeyboard]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !disabled && !isLoading) {
       onSubmit();
+    }
+  };
+
+  const handleContainerClick = () => {
+    if (!useOnScreenKeyboard && inputRef.current) {
+      inputRef.current.focus();
     }
   };
 
@@ -54,9 +60,9 @@ export const ChainInputRow = ({
     inputTiles.push(
       <div
         key={i}
-        className={`chain-tile chain-tile-input w-10 h-10 md:w-12 md:h-12 flex items-center justify-center font-serif text-lg md:text-xl font-semibold text-[hsl(var(--chain-text-primary))] ${
+        className={`chain-tile chain-tile-input w-12 h-12 md:w-14 md:h-14 flex items-center justify-center font-serif text-xl md:text-2xl font-semibold text-[hsl(var(--chain-text-primary))] ${
           isCurrentPosition ? "chain-tile-cursor" : ""
-        } ${shake ? "animate-shake" : ""}`}
+        } ${shake ? "animate-chain-shake" : ""}`}
       >
         {letter}
       </div>
@@ -65,25 +71,18 @@ export const ChainInputRow = ({
 
   return (
     <div className="px-4 py-4">
-      <div className="max-w-sm mx-auto space-y-3">
-        {/* Current word display */}
-        <div className="flex items-center justify-center gap-4">
-          {/* From word */}
-          <div className="flex gap-1">
-            {currentWord.split("").map((letter, i) => (
-              <div
-                key={i}
-                className="chain-tile w-10 h-10 md:w-12 md:h-12 flex items-center justify-center font-serif text-lg md:text-xl font-medium text-[hsl(var(--chain-text-secondary))] opacity-60"
-              >
-                {letter}
-              </div>
-            ))}
-          </div>
+      <div className="max-w-md mx-auto space-y-3">
+        {/* Context label */}
+        <p className="text-center text-xs text-[hsl(var(--chain-text-muted))] tracking-wide">
+          Change one letter from <span className="font-semibold text-[hsl(var(--chain-text-secondary))]">{currentWord}</span>
+        </p>
 
-          <span className="text-[hsl(var(--chain-text-muted))] text-xl">→</span>
-
-          {/* Input tiles */}
-          <div className="flex gap-1">{inputTiles}</div>
+        {/* Input tiles - clickable to focus */}
+        <div 
+          className="flex justify-center gap-1.5 cursor-text"
+          onClick={handleContainerClick}
+        >
+          {inputTiles}
         </div>
 
         {/* Hidden input for physical keyboard */}
@@ -99,21 +98,22 @@ export const ChainInputRow = ({
               }
             }}
             onKeyDown={handleKeyDown}
-            className="sr-only"
+            className="absolute opacity-0 pointer-events-none"
             maxLength={wordLength}
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="characters"
             spellCheck={false}
+            autoFocus
           />
         )}
 
         {/* Submit button */}
-        <div className="flex justify-center">
+        <div className="flex justify-center pt-1">
           <button
             onClick={onSubmit}
             disabled={disabled || isLoading || currentInput.length !== wordLength}
-            className="chain-button px-6 py-2 text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+            className="chain-button px-8 py-2.5 text-sm font-medium tracking-wide disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isLoading ? "..." : "Morph"}
           </button>

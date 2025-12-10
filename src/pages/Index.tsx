@@ -609,7 +609,7 @@ const Index = () => {
         statuses={lengthStatuses}
       />
 
-      <main className="flex-1 max-w-lg mx-auto w-full pb-[280px] md:pb-24">
+      <main className="flex-1 max-w-lg mx-auto w-full pb-32 md:pb-8">
         <ChainPuzzleDisplay
           startWord={puzzle.startWord}
           goalWord={puzzle.goalWord}
