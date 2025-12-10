@@ -181,6 +181,22 @@ All colors MUST be HSL.
     --accent-grid: 186 68% 36%;       /* #1C8C9A teal */
     --accent-rush: 24 78% 57%;        /* #E67A3B orange */
     --accent-strip-opacity: 0.12;
+    
+    /* Rush Prestige Theme (reuse grid tokens) */
+    --rush-page-bg: var(--grid-page-bg);
+    --rush-card-bg: var(--grid-card-bg);
+    --rush-card-border: var(--grid-card-border);
+    --rush-divider: var(--grid-divider);
+    --rush-text-primary: var(--grid-text-primary);
+    --rush-text-secondary: var(--grid-text-secondary);
+    --rush-text-muted: var(--grid-text-muted);
+    --rush-accent: var(--accent-rush);
+    
+    /* Rush-specific tile styling */
+    --rush-tile-bg: 0 0% 100%;
+    --rush-tile-border: 37 20% 86%;
+    --rush-tile-active: var(--accent-rush);
+    --rush-drop-target: 187 94% 48%;  /* Cyan highlight */
   }
 
   /* NYT Prestige Dark Mode - Grid Page Colors */
