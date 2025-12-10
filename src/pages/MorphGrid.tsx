@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useGridStore } from '@/stores/gridStore';
 import { loadDictionary, isDictionaryLoaded } from '@/lib/grid/dictionary';
 import { GridView } from '@/components/grid/GridView';
@@ -12,6 +12,7 @@ import { GridMenuSheet } from '@/components/grid/GridMenuSheet';
 import { WordLengthTracker } from '@/components/grid/WordLengthTracker';
 import { WordCelebration } from '@/components/grid/WordCelebration';
 import { GridThemeToggle } from '@/components/grid/GridThemeToggle';
+import { GridAchievementPopup } from '@/components/grid/GridAchievementPopup';
 import { Button } from '@/components/ui/button';
 import { HelpCircle, Volume2, VolumeX } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
@@ -20,11 +21,13 @@ import { useGridLayout } from '@/hooks/useGridLayout';
 import { useGridSettings } from '@/hooks/useGridSettings';
 
 const MorphGrid = () => {
-  const { initializeGame, isEnded, dailySeed, submittedWords } = useGridStore();
+  const { initializeGame, isEnded, dailySeed, submittedWords, newAchievements, clearNewAchievements } = useGridStore();
   const { settings, updateSetting } = useGridSettings();
   const [isLoading, setIsLoading] = useState(true);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showEndScreen, setShowEndScreen] = useState(false);
+  const [achievementQueue, setAchievementQueue] = useState<string[]>([]);
+  const [currentAchievement, setCurrentAchievement] = useState<string | null>(null);
   
   // Calculate responsive grid layout
   useGridLayout();
@@ -59,6 +62,26 @@ const MorphGrid = () => {
       setShowEndScreen(true);
     }
   }, [isEnded, isLoading]);
+  
+  // Handle new achievements
+  useEffect(() => {
+    if (newAchievements.length > 0) {
+      setAchievementQueue(newAchievements);
+      clearNewAchievements();
+    }
+  }, [newAchievements, clearNewAchievements]);
+  
+  // Process achievement queue
+  useEffect(() => {
+    if (achievementQueue.length > 0 && !currentAchievement) {
+      setCurrentAchievement(achievementQueue[0]);
+      setAchievementQueue(prev => prev.slice(1));
+    }
+  }, [achievementQueue, currentAchievement]);
+  
+  const handleAchievementComplete = useCallback(() => {
+    setCurrentAchievement(null);
+  }, []);
   
   if (isLoading) {
     return (
@@ -194,6 +217,14 @@ const MorphGrid = () => {
       
       {/* Word Celebration Overlay */}
       <WordCelebration />
+      
+      {/* Achievement Popup */}
+      {currentAchievement && (
+        <GridAchievementPopup 
+          achievementId={currentAchievement} 
+          onComplete={handleAchievementComplete} 
+        />
+      )}
       
       {/* Modals */}
       <HowToPlayModal open={showHowToPlay} onClose={() => setShowHowToPlay(false)} />

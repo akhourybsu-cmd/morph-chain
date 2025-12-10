@@ -23,6 +23,15 @@ import {
   playGameEnd,
   initAudio as initRushAudio,
 } from "@/lib/rush/audioManager";
+import {
+  checkAchievements,
+  saveUnlockedAchievements,
+  getUnlockedAchievements,
+  getNewAchievements,
+  getInitialProgress,
+  type AchievementProgress,
+} from "@/lib/rushAchievements";
+import { AchievementPopup } from "@/components/rush/AchievementPopup";
 
 import { PrestigeTimer } from "@/components/rush/PrestigeTimer";
 import { WordDropZone } from "@/components/rush/WordDropZone";
@@ -82,6 +91,12 @@ const MorphRush = () => {
   
   // Daily completion tracking
   const [completedRun, setCompletedRun] = useState<CompletedDailyRun | null>(null);
+  
+  // Achievement tracking
+  const [achievementProgress, setAchievementProgress] = useState<AchievementProgress>(getInitialProgress());
+  const [achievementQueue, setAchievementQueue] = useState<string[]>([]);
+  const [currentAchievement, setCurrentAchievement] = useState<string | null>(null);
+  const [sessionAchievements, setSessionAchievements] = useState<string[]>([]);
 
   // Initialize audio on first interaction
   useEffect(() => {
@@ -120,6 +135,37 @@ const MorphRush = () => {
       setScoreSubmitted(true);
     }
   }, [mode, hardMode]);
+  
+  // Process achievement queue
+  useEffect(() => {
+    if (achievementQueue.length > 0 && !currentAchievement) {
+      setCurrentAchievement(achievementQueue[0]);
+      setAchievementQueue(prev => prev.slice(1));
+    }
+  }, [achievementQueue, currentAchievement]);
+  
+  const handleAchievementComplete = useCallback(() => {
+    setCurrentAchievement(null);
+  }, []);
+  
+  // Check and queue new achievements
+  const checkAndQueueAchievements = useCallback((
+    words: RushWord[],
+    invalidCount: number,
+    timeRemaining: number,
+    score: number,
+    progress: AchievementProgress
+  ) => {
+    const earned = checkAchievements(words, invalidCount, timeRemaining, score, progress);
+    const alreadyUnlocked = getUnlockedAchievements();
+    const newlyEarned = getNewAchievements(earned, [...alreadyUnlocked, ...sessionAchievements]);
+    
+    if (newlyEarned.length > 0) {
+      saveUnlockedAchievements(newlyEarned);
+      setSessionAchievements(prev => [...prev, ...newlyEarned]);
+      setAchievementQueue(prev => [...prev, ...newlyEarned]);
+    }
+  }, [sessionAchievements]);
 
   // Timer tick
   const handleTimerTick = useCallback(() => {
@@ -138,6 +184,9 @@ const MorphRush = () => {
         const finalBonuses = calculateEndBonuses(prev.words, prev.invalidCount);
         const finalScoreWithBonuses = prev.score + finalBonuses.total;
         
+        // Check final achievements at game end
+        checkAndQueueAchievements(prev.words, prev.invalidCount, 0, finalScoreWithBonuses, achievementProgress);
+        
         saveDailyCompletion({
           mode,
           hardMode,
@@ -146,14 +195,14 @@ const MorphRush = () => {
           maxMultiplier: prev.multiplierMax,
           invalidCount: prev.invalidCount,
           words: prev.words,
-          sessionAchievements: [],
+          sessionAchievements,
         });
         
         return { ...prev, timeRemaining: 0, isFinished: true };
       }
       return { ...prev, timeRemaining: newTime };
     });
-  }, [hardMode, mode, audioSettings.soundEnabled]);
+  }, [hardMode, mode, audioSettings.soundEnabled, achievementProgress, checkAndQueueAchievements, sessionAchievements]);
 
   // Handle tile drop
   const handleDrop = (position: number, letter: string) => {
@@ -174,6 +223,8 @@ const MorphRush = () => {
         setError("Not a valid word");
       }
       setRun(prev => ({ ...prev, invalidCount: prev.invalidCount + 1 }));
+      // Reset consecutive valid counter on error
+      setAchievementProgress(prev => ({ ...prev, consecutiveValid: 0, quickFingerCount: 0 }));
       return;
     }
     
@@ -196,18 +247,58 @@ const MorphRush = () => {
       totalScore: wordScore
     };
     
+    // Update achievement progress
+    const now = Date.now();
+    const newProgress = { ...achievementProgress };
+    
+    // Track brainwave (3 morphs in 10s)
+    if (!newProgress.brainwaveStreak) {
+      newProgress.brainwaveStreak = { count: 1, firstTime: now };
+    } else {
+      const elapsed = (now - newProgress.brainwaveStreak.firstTime) / 1000;
+      if (elapsed <= 10) {
+        newProgress.brainwaveStreak.count += 1;
+      } else {
+        newProgress.brainwaveStreak = { count: 1, firstTime: now };
+      }
+    }
+    
+    // Track consecutive valid morphs
+    newProgress.consecutiveValid += 1;
+    
+    // Track quick fingers (3 consecutive morphs under 3s each)
+    if (newProgress.lastMorphTime) {
+      const timeSinceLast = (now - newProgress.lastMorphTime) / 1000;
+      if (timeSinceLast < 3) {
+        newProgress.quickFingerCount += 1;
+      } else {
+        newProgress.quickFingerCount = 1;
+      }
+    } else {
+      newProgress.quickFingerCount = 1;
+    }
+    newProgress.lastMorphTime = now;
+    
+    setAchievementProgress(newProgress);
+    
     // Update state
+    const newWords = [...run.words, newWord];
+    const newScore = run.score + wordScore;
+    
     setRun(prev => {
       const newUsedWords = new Set(prev.usedWords);
       newUsedWords.add(result.newWord);
       
       return {
         ...prev,
-        words: [...prev.words, newWord],
+        words: newWords,
         usedWords: newUsedWords,
-        score: prev.score + wordScore,
+        score: newScore,
       };
     });
+    
+    // Check achievements after valid morph
+    checkAndQueueAchievements(newWords, run.invalidCount, run.timeRemaining, newScore, newProgress);
     
     setCurrentWord(result.newWord);
     
@@ -490,6 +581,14 @@ const MorphRush = () => {
           </>
         )}
       </main>
+      
+      {/* Achievement Popup */}
+      {currentAchievement && (
+        <AchievementPopup 
+          achievementId={currentAchievement} 
+          onComplete={handleAchievementComplete} 
+        />
+      )}
     </div>
   );
 };
