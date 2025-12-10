@@ -1,4 +1,4 @@
-import { Menu, HelpCircle } from "lucide-react";
+import { Menu, HelpCircle, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChainLogo } from "./ChainLogo";
 import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
@@ -6,11 +6,15 @@ import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
 interface ChainPrestigeHeaderProps {
   onOpenMenu: () => void;
   onOpenHelp: () => void;
+  soundEnabled: boolean;
+  onToggleSound: () => void;
 }
 
 export const ChainPrestigeHeader = ({
   onOpenMenu,
   onOpenHelp,
+  soundEnabled,
+  onToggleSound,
 }: ChainPrestigeHeaderProps) => {
   return (
     <header 
@@ -43,8 +47,21 @@ export const ChainPrestigeHeader = ({
         {/* Center spacer */}
         <div className="flex-1" />
         
-        {/* Right: Help */}
+        {/* Right: Sound + Help */}
         <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleSound}
+            aria-label={soundEnabled ? "Mute sounds" : "Enable sounds"}
+            className="h-9 w-9 md:h-10 md:w-10 text-[hsl(var(--chain-text-secondary))] hover:text-[hsl(var(--chain-text-primary))] hover:bg-[hsl(var(--chain-pill-bg))]"
+          >
+            {soundEnabled ? (
+              <Volume2 className="w-4 h-4 md:w-5 md:h-5" />
+            ) : (
+              <VolumeX className="w-4 h-4 md:w-5 md:h-5" />
+            )}
+          </Button>
           <Button
             variant="ghost"
             size="icon"

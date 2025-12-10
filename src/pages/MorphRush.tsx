@@ -3,6 +3,7 @@ import { Trophy, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useRushSettings } from "@/hooks/useRushSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { formatInTimeZone } from "date-fns-tz";
@@ -15,6 +16,13 @@ import {
   generateRushShareText,
 } from "@/lib/rushLogic";
 import { generateTileRack, checkDrop, hasValidMorphs } from "@/lib/rushTileRack";
+import {
+  playMorphSuccess,
+  playMorphError,
+  playTimerWarning,
+  playGameEnd,
+  initAudio as initRushAudio,
+} from "@/lib/rush/audioManager";
 
 import { PrestigeTimer } from "@/components/rush/PrestigeTimer";
 import { WordDropZone } from "@/components/rush/WordDropZone";
@@ -33,6 +41,7 @@ const MorphRush = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const mode = (searchParams.get('mode') || 'daily') as 'daily' | 'practice';
+  const { settings: audioSettings, toggleSound } = useRushSettings();
   
   const puzzle = getRushDailyPuzzle();
   const timezone = "America/New_York";
@@ -74,6 +83,16 @@ const MorphRush = () => {
   // Daily completion tracking
   const [completedRun, setCompletedRun] = useState<CompletedDailyRun | null>(null);
 
+  // Initialize audio on first interaction
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      initRushAudio();
+      window.removeEventListener('click', handleFirstInteraction);
+    };
+    window.addEventListener('click', handleFirstInteraction);
+    return () => window.removeEventListener('click', handleFirstInteraction);
+  }, []);
+
   // Initialize tile rack
   useEffect(() => {
     const rack = generateTileRack(currentWord, run.usedWords, 8);
@@ -106,7 +125,14 @@ const MorphRush = () => {
   const handleTimerTick = useCallback(() => {
     setRun(prev => {
       const newTime = Math.max(0, prev.timeRemaining - 1);
+      
+      // Play timer warnings at specific times
+      if (audioSettings.soundEnabled && (newTime === 30 || newTime === 10 || newTime === 5)) {
+        playTimerWarning(newTime);
+      }
+      
       if (newTime === 0 && !prev.isFinished) {
+        if (audioSettings.soundEnabled) playGameEnd();
         updateRushStats(prev.score, prev.words.length, prev.multiplierMax, hardMode);
         
         const finalBonuses = calculateEndBonuses(prev.words, prev.invalidCount);
@@ -127,7 +153,7 @@ const MorphRush = () => {
       }
       return { ...prev, timeRemaining: newTime };
     });
-  }, [hardMode, mode]);
+  }, [hardMode, mode, audioSettings.soundEnabled]);
 
   // Handle tile drop
   const handleDrop = (position: number, letter: string) => {
@@ -139,6 +165,7 @@ const MorphRush = () => {
     if (!result.valid) {
       // Invalid drop - shake and show error
       triggerShake();
+      if (audioSettings.soundEnabled) playMorphError();
       if (result.newWord === currentWord) {
         setError("Same letter - no change");
       } else if (run.usedWords.has(result.newWord)) {
@@ -151,6 +178,7 @@ const MorphRush = () => {
     }
     
     // Valid morph! Start timer on first valid submission
+    if (audioSettings.soundEnabled) playMorphSuccess();
     if (!run.timerStarted && mode === 'daily') {
       setRun(prev => ({ ...prev, timerStarted: true }));
     }
@@ -248,6 +276,8 @@ const MorphRush = () => {
       <RushPrestigeHeader
         onOpenMenu={() => setMenuOpen(true)}
         onOpenHelp={() => setHelpOpen(true)}
+        soundEnabled={audioSettings.soundEnabled}
+        onToggleSound={toggleSound}
       />
       
       {/* Info Strip */}
