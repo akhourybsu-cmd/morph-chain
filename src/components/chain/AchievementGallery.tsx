@@ -2,7 +2,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { CHAIN_ACHIEVEMENTS, getChainAchievements } from "@/lib/chainAchievements";
 import { ACHIEVEMENTS as RUSH_ACHIEVEMENTS, getUnlockedAchievements as getRushAchievements } from "@/lib/rushAchievements";
 import { GRID_ACHIEVEMENTS, getGridAchievements } from "@/lib/gridAchievements";
-import { ARCADE_ACHIEVEMENTS, getArcadeAchievements } from "@/lib/arcadeAchievements";
 import { Lock, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -120,14 +119,12 @@ export const AchievementGallery = ({ open, onOpenChange }: AchievementGalleryPro
   const chainUnlocked = getChainAchievements();
   const rushUnlocked = getRushAchievements();
   const gridUnlocked = getGridAchievements();
-  const arcadeUnlocked = getArcadeAchievements();
 
-  const totalUnlocked = chainUnlocked.length + rushUnlocked.length + gridUnlocked.length + arcadeUnlocked.length;
+  const totalUnlocked = chainUnlocked.length + rushUnlocked.length + gridUnlocked.length;
   const totalAchievements = 
     Object.keys(CHAIN_ACHIEVEMENTS).length + 
     Object.keys(RUSH_ACHIEVEMENTS).length + 
-    Object.keys(GRID_ACHIEVEMENTS).length + 
-    Object.keys(ARCADE_ACHIEVEMENTS).length;
+    Object.keys(GRID_ACHIEVEMENTS).length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -168,14 +165,6 @@ export const AchievementGallery = ({ open, onOpenChange }: AchievementGalleryPro
             achievements={GRID_ACHIEVEMENTS}
             unlockedIds={gridUnlocked}
             accentColor="#3b82f6"
-          />
-          
-          <GameSection
-            title="Morph Arcade"
-            icon="🕹️"
-            achievements={ARCADE_ACHIEVEMENTS}
-            unlockedIds={arcadeUnlocked}
-            accentColor="#f59e0b"
           />
         </div>
       </DialogContent>

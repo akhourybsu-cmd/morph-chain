@@ -1,4 +1,4 @@
-import { Menu, HelpCircle } from "lucide-react";
+import { Menu, HelpCircle, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RushLogo } from "./RushLogo";
 import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
@@ -6,11 +6,15 @@ import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
 interface RushPrestigeHeaderProps {
   onOpenMenu: () => void;
   onOpenHelp: () => void;
+  soundEnabled: boolean;
+  onToggleSound: () => void;
 }
 
 export const RushPrestigeHeader = ({
   onOpenMenu,
   onOpenHelp,
+  soundEnabled,
+  onToggleSound,
 }: RushPrestigeHeaderProps) => {
   return (
     <header 
@@ -43,8 +47,21 @@ export const RushPrestigeHeader = ({
         {/* Center spacer */}
         <div className="flex-1" />
         
-        {/* Right: Help */}
+        {/* Right: Sound + Help */}
         <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleSound}
+            aria-label={soundEnabled ? "Mute sounds" : "Enable sounds"}
+            className="h-9 w-9 md:h-10 md:w-10 text-[hsl(var(--rush-text-secondary))] hover:text-[hsl(var(--rush-text-primary))] hover:bg-[hsl(var(--rush-pill-bg))]"
+          >
+            {soundEnabled ? (
+              <Volume2 className="w-4 h-4 md:w-5 md:h-5" />
+            ) : (
+              <VolumeX className="w-4 h-4 md:w-5 md:h-5" />
+            )}
+          </Button>
           <Button
             variant="ghost"
             size="icon"

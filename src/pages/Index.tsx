@@ -19,6 +19,7 @@ import { MorphPowerups } from "@/components/MorphPowerups";
 import OnScreenKeyboard from "@/components/OnScreenKeyboard";
 
 import { useToast } from "@/hooks/use-toast";
+import { useChainSettings } from "@/hooks/useChainSettings";
 import {
   getDailyPuzzle,
   isValidWord,
@@ -50,6 +51,13 @@ import {
   saveChainAchievements,
   ChainAchievementContext,
 } from "@/lib/chainAchievements";
+import {
+  playMorphSuccess,
+  playMorphError,
+  playWin,
+  playLose,
+  initAudio as initChainAudio,
+} from "@/lib/chain/audioManager";
 
 interface Move {
   id: string;
@@ -65,6 +73,7 @@ interface Move {
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { settings: audioSettings, toggleSound } = useChainSettings();
   const [selectedLength, setSelectedLength] = useState<4 | 5>(4);
   const [puzzle, setPuzzle] = useState(getDailyPuzzle(4));
   const [moves, setMoves] = useState<Move[]>([]);
@@ -99,6 +108,16 @@ const Index = () => {
   const [settings, setSettings] = useState(loadSettings());
   const [stats, setStats] = useState(loadStats());
   const [invalidGuessCount, setInvalidGuessCount] = useState(0);
+
+  // Initialize audio on first interaction
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      initChainAudio();
+      window.removeEventListener('click', handleFirstInteraction);
+    };
+    window.addEventListener('click', handleFirstInteraction);
+    return () => window.removeEventListener('click', handleFirstInteraction);
+  }, []);
 
   // Handle length change
   const handleLengthChange = (newLength: 4 | 5) => {
@@ -189,6 +208,7 @@ const Index = () => {
         setError(errorMsg);
         setCurrentInput("");
         setIsLoading(false);
+        if (audioSettings.soundEnabled) playMorphError();
         return;
       }
       
@@ -206,6 +226,7 @@ const Index = () => {
         setError("Not in our modern-English list");
         setCurrentInput("");
         setIsLoading(false);
+        if (audioSettings.soundEnabled) playMorphError();
         return;
       }
 
@@ -214,6 +235,7 @@ const Index = () => {
         setError("Already used");
         setCurrentInput("");
         setIsLoading(false);
+        if (audioSettings.soundEnabled) playMorphError();
         return;
       }
 
@@ -227,6 +249,7 @@ const Index = () => {
         setInvalidGuessCount(prev => prev + 1);
         setError("Hard Mode: must get closer each step.");
         setIsLoading(false);
+        if (audioSettings.soundEnabled) playMorphError();
         return;
       }
 
@@ -246,6 +269,9 @@ const Index = () => {
       setMoves(updatedMoves);
       setCurrentWord(wordToSubmit);
       setUsedWords(updatedUsedWords);
+
+      // Play success sound for valid morph
+      if (audioSettings.soundEnabled) playMorphSuccess();
 
       if (settings.vibration && navigator.vibrate) {
         navigator.vibrate(closerToGoal ? 10 : 20);
@@ -269,6 +295,7 @@ const Index = () => {
         setGameCompleted(true);
         setGameWon(true);
         setShowCelebration(true);
+        if (audioSettings.soundEnabled) playWin();
         
         const timeElapsedSeconds = Math.floor((Date.now() - gameStartTime.current) / 1000);
         const hadWorseMove = updatedMoves.some(m => m.isWorse);
@@ -329,6 +356,7 @@ const Index = () => {
       } else if (updatedMoves.length >= puzzle.maxMoves) {
         setGameCompleted(true);
         setGameWon(false);
+        if (audioSettings.soundEnabled) playLose();
         updateStats(false, updatedMoves.length);
         saveGameState({
           date: puzzle.date,
@@ -599,6 +627,8 @@ const Index = () => {
       <ChainPrestigeHeader
         onOpenMenu={() => setMenuOpen(true)}
         onOpenHelp={() => setHelpOpen(true)}
+        soundEnabled={audioSettings.soundEnabled}
+        onToggleSound={toggleSound}
       />
 
       <ChainLengthTabs
