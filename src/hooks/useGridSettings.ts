@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 
 export interface GridSettings {
   animations: boolean;
+  soundEnabled: boolean;
   soundHaptics: boolean;
   colorblindMode: boolean;
 }
@@ -10,6 +11,7 @@ const STORAGE_KEY = 'morph-grid-settings';
 
 const DEFAULT_SETTINGS: GridSettings = {
   animations: true,
+  soundEnabled: true,
   soundHaptics: true,
   colorblindMode: false,
 };

@@ -12,13 +12,15 @@ import { GridMenuSheet } from '@/components/grid/GridMenuSheet';
 import { WordLengthTracker } from '@/components/grid/WordLengthTracker';
 import { WordCelebration } from '@/components/grid/WordCelebration';
 import { Button } from '@/components/ui/button';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Volume2, VolumeX } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { toast } from 'sonner';
 import { useGridLayout } from '@/hooks/useGridLayout';
+import { useGridSettings } from '@/hooks/useGridSettings';
 
 const MorphGrid = () => {
   const { initializeGame, isEnded, dailySeed, submittedWords } = useGridStore();
+  const { settings, updateSetting } = useGridSettings();
   const [isLoading, setIsLoading] = useState(true);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showEndScreen, setShowEndScreen] = useState(false);
@@ -84,15 +86,30 @@ const MorphGrid = () => {
             <GridLogo />
           </div>
           
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowHowToPlay(true)}
-            aria-label="How to play"
-            className="h-9 w-9 md:h-10 md:w-10"
-          >
-            <HelpCircle className="w-4 h-4 md:w-5 md:h-5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
+              aria-label={settings.soundEnabled ? "Mute sound" : "Unmute sound"}
+              className="h-9 w-9 md:h-10 md:w-10"
+            >
+              {settings.soundEnabled ? (
+                <Volume2 className="w-4 h-4 md:w-5 md:h-5" />
+              ) : (
+                <VolumeX className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowHowToPlay(true)}
+              aria-label="How to play"
+              className="h-9 w-9 md:h-10 md:w-10"
+            >
+              <HelpCircle className="w-4 h-4 md:w-5 md:h-5" />
+            </Button>
+          </div>
         </div>
       </header>
       

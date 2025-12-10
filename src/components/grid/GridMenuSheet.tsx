@@ -155,8 +155,20 @@ export const GridMenuSheet = () => {
             </div>
             
             <div className="flex items-center justify-between">
+              <Label htmlFor="sound-effects" className="cursor-pointer">
+                <div className="font-medium">Sound Effects</div>
+                <div className="text-sm text-muted-foreground">Audio feedback for actions</div>
+              </Label>
+              <Switch
+                id="sound-effects"
+                checked={settings.soundEnabled}
+                onCheckedChange={(checked) => updateSetting('soundEnabled', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
               <Label htmlFor="sound-haptics" className="cursor-pointer">
-                <div className="font-medium">Sound & Haptics</div>
+                <div className="font-medium">Haptics</div>
                 <div className="text-sm text-muted-foreground">Vibration feedback</div>
               </Label>
               <Switch
