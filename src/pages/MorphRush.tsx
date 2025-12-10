@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { Menu, HelpCircle, User, Trophy, AlertCircle } from "lucide-react";
-import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
+import { Trophy, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { formatInTimeZone } from "date-fns-tz";
-
+import { RushPrestigeHeader } from "@/components/rush/RushPrestigeHeader";
 import {
   getRushDailyPuzzle,
   calculateEndBonuses,
@@ -245,104 +244,22 @@ const MorphRush = () => {
       className="min-h-screen flex flex-col"
       style={{ background: 'hsl(var(--rush-page-bg))' }}
     >
-      {/* Masthead Header */}
-      <header 
-        className="mx-auto w-full max-w-[640px] mt-4 px-4"
+      {/* Prestige Header */}
+      <RushPrestigeHeader
+        onOpenMenu={() => setMenuOpen(true)}
+        onOpenHelp={() => setHelpOpen(true)}
+      />
+      
+      {/* Info Strip */}
+      <div 
+        className="text-center py-2 text-xs"
+        style={{ 
+          color: 'hsl(var(--rush-text-muted))',
+          borderBottom: '1px solid hsl(var(--rush-card-border))'
+        }}
       >
-        <div 
-          className="p-4 rounded-xl"
-          style={{
-            background: 'hsl(var(--rush-card-bg))',
-            border: '1px solid hsl(var(--rush-card-border))',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
-          }}
-        >
-          <div className="flex items-center justify-between">
-            {/* Left: Menu + Theme */}
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setMenuOpen(true)}
-                aria-label="Open menu"
-                className="h-9 w-9"
-                style={{ color: 'hsl(var(--rush-text-secondary))' }}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-              <PrestigeThemeToggle colorVar="--rush-text-secondary" />
-            </div>
-            
-            {/* Center: Title */}
-            <h1 
-              className="text-xl tracking-wide"
-              style={{ 
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontWeight: 700,
-                color: 'hsl(var(--rush-text-primary))',
-              }}
-            >
-              MORPH RUSH
-            </h1>
-            
-            {/* Right: Help + User */}
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setHelpOpen(true)}
-                aria-label="How to play"
-                className="h-9 w-9"
-                style={{ color: 'hsl(var(--rush-text-secondary))' }}
-              >
-                <HelpCircle className="h-5 w-5" />
-              </Button>
-              
-              {user ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate('/profile')}
-                  aria-label="View profile"
-                  className="h-9 w-9"
-                  style={{ color: 'hsl(var(--rush-text-secondary))' }}
-                >
-                  <User className="h-5 w-5" />
-                </Button>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate('/login')}
-                  aria-label="Sign in"
-                  className="h-9 w-9"
-                  style={{ color: 'hsl(var(--rush-text-secondary))' }}
-                >
-                  <User className="h-5 w-5" />
-                </Button>
-              )}
-            </div>
-          </div>
-          
-          {/* Gradient underline */}
-          <div 
-            className="mx-auto mt-2 rounded-full"
-            style={{
-              width: '48px',
-              height: '2px',
-              background: `linear-gradient(90deg, hsl(var(--accent-chain)), hsl(var(--accent-rush)), hsl(var(--accent-grid)))`,
-              opacity: 0.4,
-            }}
-          />
-          
-          <p 
-            className="text-center text-xs mt-2"
-            style={{ color: 'hsl(var(--rush-text-muted))' }}
-          >
-            {formattedDate} · Puzzle #{puzzle.puzzleNumber}
-          </p>
-        </div>
-      </header>
+        {formattedDate} · Puzzle #{puzzle.puzzleNumber}
+      </div>
       
       {/* Modals */}
       <RushMenuSheet 

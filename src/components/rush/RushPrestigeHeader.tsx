@@ -1,23 +1,23 @@
 import { Menu, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ChainLogo } from "./ChainLogo";
+import { RushLogo } from "./RushLogo";
 import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
 
-interface ChainPrestigeHeaderProps {
+interface RushPrestigeHeaderProps {
   onOpenMenu: () => void;
   onOpenHelp: () => void;
 }
 
-export const ChainPrestigeHeader = ({
+export const RushPrestigeHeader = ({
   onOpenMenu,
   onOpenHelp,
-}: ChainPrestigeHeaderProps) => {
+}: RushPrestigeHeaderProps) => {
   return (
     <header 
       className="h-14 md:h-16 border-b flex-shrink-0"
       style={{ 
-        borderColor: 'hsl(var(--chain-card-border))',
-        background: 'hsl(var(--chain-page-bg))'
+        borderColor: 'hsl(var(--rush-card-border))',
+        background: 'hsl(var(--rush-page-bg))'
       }}
     >
       <div className="px-3 md:px-4 h-full flex items-center">
@@ -27,18 +27,18 @@ export const ChainPrestigeHeader = ({
             variant="ghost"
             size="icon"
             onClick={onOpenMenu}
-            className="h-9 w-9 md:h-10 md:w-10 text-[hsl(var(--chain-text-secondary))] hover:text-[hsl(var(--chain-text-primary))] hover:bg-[hsl(var(--chain-pill-bg))]"
+            className="h-9 w-9 md:h-10 md:w-10 text-[hsl(var(--rush-text-secondary))] hover:text-[hsl(var(--rush-text-primary))] hover:bg-[hsl(var(--rush-pill-bg))]"
           >
             <Menu className="w-5 h-5" />
           </Button>
-          <PrestigeThemeToggle colorVar="--chain-text-secondary" />
+          <PrestigeThemeToggle colorVar="--rush-text-secondary" />
         </div>
         
         {/* Center spacer */}
         <div className="flex-1" />
         
         {/* Center: Logo */}
-        <ChainLogo />
+        <RushLogo />
         
         {/* Center spacer */}
         <div className="flex-1" />
@@ -50,7 +50,7 @@ export const ChainPrestigeHeader = ({
             size="icon"
             onClick={onOpenHelp}
             aria-label="How to play"
-            className="h-9 w-9 md:h-10 md:w-10 text-[hsl(var(--chain-text-secondary))] hover:text-[hsl(var(--chain-text-primary))] hover:bg-[hsl(var(--chain-pill-bg))]"
+            className="h-9 w-9 md:h-10 md:w-10 text-[hsl(var(--rush-text-secondary))] hover:text-[hsl(var(--rush-text-primary))] hover:bg-[hsl(var(--rush-pill-bg))]"
           >
             <HelpCircle className="w-4 h-4 md:w-5 md:h-5" />
           </Button>
