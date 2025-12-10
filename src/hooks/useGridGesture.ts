@@ -20,8 +20,6 @@ interface GridGestureOptions {
   enabled: boolean;
 }
 
-const TAP_THRESHOLD_MS = 200;
-const TAP_MOVE_THRESHOLD_PX = 5; // Reduced for more responsive drag detection
 const HIT_ZONE_PADDING = 8; // Pixels to expand hit zones for easier diagonal selection
 
 export const useGridGesture = (
@@ -36,12 +34,6 @@ export const useGridGesture = (
   const pathTilesRef = useRef<Tile[]>([]);
   const lastTileRef = useRef<string | null>(null);
   const pointerIdRef = useRef<number | null>(null);
-  
-  // Tap detection refs
-  const pointerDownTimeRef = useRef<number>(0);
-  const pointerDownPosRef = useRef<{ x: number; y: number } | null>(null);
-  const pointerDownTileRef = useRef<Tile | null>(null); // Store the tile we started on
-  const hasDraggedRef = useRef(false);
 
   // Helper: Get all tile elements with their bounding rects
   const getTileElements = useCallback((): Map<string, { tile: Tile; rect: DOMRect }> => {
@@ -90,7 +82,7 @@ export const useGridGesture = (
   }, []);
 
   // Helper: Get tile at coordinates with expanded hit zones and snap-to-adjacent
-  const getTileAtPoint = useCallback((x: number, y: number, forDrag: boolean = false): Tile | null => {
+  const getTileAtPoint = useCallback((x: number, y: number): Tile | null => {
     if (!gridElement) return null;
     
     const tileElements = getTileElements();
@@ -102,43 +94,39 @@ export const useGridGesture = (
       }
     }
     
-    // For dragging, try expanded hit zones
-    if (forDrag) {
-      let closestTile: Tile | null = null;
-      let closestDistance = Infinity;
+    // Try expanded hit zones with snap-to-adjacent logic
+    let closestTile: Tile | null = null;
+    let closestDistance = Infinity;
+    
+    const lastTile = pathTilesRef.current.length > 0 
+      ? pathTilesRef.current[pathTilesRef.current.length - 1] 
+      : null;
+    
+    for (const [, { tile, rect }] of tileElements) {
+      // Check if point is within expanded bounds
+      if (!isPointInExpandedRect(x, y, rect, HIT_ZONE_PADDING)) continue;
       
-      const lastTile = pathTilesRef.current.length > 0 
-        ? pathTilesRef.current[pathTilesRef.current.length - 1] 
-        : null;
-      
-      for (const [, { tile, rect }] of tileElements) {
-        // Check if point is within expanded bounds
-        if (!isPointInExpandedRect(x, y, rect, HIT_ZONE_PADDING)) continue;
+      // If we have a path, prioritize adjacent tiles
+      if (lastTile) {
+        if (!isAdjacent(lastTile, tile)) continue;
         
-        // If we have a path, prioritize adjacent tiles
-        if (lastTile) {
-          if (!isAdjacent(lastTile, tile)) continue;
-          
-          // Among adjacent tiles in expanded zone, pick closest
-          const distance = getDistanceToRectCenter(x, y, rect);
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestTile = tile;
-          }
-        } else {
-          // No path yet, just find closest
-          const distance = getDistanceToRectCenter(x, y, rect);
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestTile = tile;
-          }
+        // Among adjacent tiles in expanded zone, pick closest
+        const distance = getDistanceToRectCenter(x, y, rect);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestTile = tile;
+        }
+      } else {
+        // No path yet, just find closest
+        const distance = getDistanceToRectCenter(x, y, rect);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestTile = tile;
         }
       }
-      
-      return closestTile;
     }
     
-    return null;
+    return closestTile;
   }, [gridElement, getTileElements, isAdjacent]);
 
   // Helper: Add tile to path
@@ -194,20 +182,18 @@ export const useGridGesture = (
   const handlePointerDown = useCallback((e: PointerEvent) => {
     if (!enabled || !gridElement) return;
     
-    const tile = getTileAtPoint(e.clientX, e.clientY, false);
+    const tile = getTileAtPoint(e.clientX, e.clientY);
     if (!tile) return;
-    
-    // Record start position, time, and tile for tap detection
-    pointerDownTimeRef.current = Date.now();
-    pointerDownPosRef.current = { x: e.clientX, y: e.clientY };
-    pointerDownTileRef.current = tile;
-    hasDraggedRef.current = false;
     
     // Start dragging state
     isDraggingRef.current = true;
     pointerIdRef.current = e.pointerId;
     
-    // DON'T add tile here - wait for pointerup (tap) or pointermove (drag)
+    // Start new path with this tile
+    currentPathRef.current.clear();
+    pathTilesRef.current = [];
+    lastTileRef.current = null;
+    addTileToPath(tile);
     
     // Capture pointer
     if (e.target instanceof Element) {
@@ -215,36 +201,13 @@ export const useGridGesture = (
     }
     
     e.preventDefault();
-  }, [enabled, gridElement, getTileAtPoint]);
+  }, [enabled, gridElement, getTileAtPoint, addTileToPath]);
 
   // Handle pointer move (continue gesture)
   const handlePointerMove = useCallback((e: PointerEvent) => {
     if (!isDraggingRef.current || pointerIdRef.current !== e.pointerId) return;
     
-    // Check if we've moved enough to consider this a drag
-    if (pointerDownPosRef.current) {
-      const dx = e.clientX - pointerDownPosRef.current.x;
-      const dy = e.clientY - pointerDownPosRef.current.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      if (distance > TAP_MOVE_THRESHOLD_PX) {
-        // First time crossing drag threshold - start the path with initial tile
-        if (!hasDraggedRef.current && pointerDownTileRef.current) {
-          hasDraggedRef.current = true;
-          
-          // If no path exists, start with the initial tile
-          if (pathTilesRef.current.length === 0) {
-            currentPathRef.current.clear();
-            addTileToPath(pointerDownTileRef.current);
-          }
-        }
-      }
-    }
-    
-    // Only process drag if we've started dragging
-    if (!hasDraggedRef.current) return;
-    
-    const tile = getTileAtPoint(e.clientX, e.clientY, true); // Use expanded hit zones
+    const tile = getTileAtPoint(e.clientX, e.clientY);
     if (!tile) return;
     
     // Only add if it's a new tile
@@ -259,41 +222,15 @@ export const useGridGesture = (
   const handlePointerUp = useCallback((e: PointerEvent) => {
     if (!isDraggingRef.current || pointerIdRef.current !== e.pointerId) return;
     
-    const elapsed = Date.now() - pointerDownTimeRef.current;
-    const startTile = pointerDownTileRef.current;
-    
-    // Check if this was a tap (short duration, minimal movement)
-    if (startTile && elapsed < TAP_THRESHOLD_MS && !hasDraggedRef.current) {
-      // TAP LOGIC: Add tile to path or undo if tapping last tile
-      
-      // If tapping the last tile in path, remove it (undo)
-      if (pathTilesRef.current.length > 0 && 
-          pathTilesRef.current[pathTilesRef.current.length - 1].id === startTile.id) {
-        const removed = pathTilesRef.current.pop();
-        if (removed) {
-          currentPathRef.current.delete(removed.id);
-          lastTileRef.current = pathTilesRef.current.length > 0 
-            ? pathTilesRef.current[pathTilesRef.current.length - 1].id 
-            : null;
-          onPathUpdate([...pathTilesRef.current]);
-          audio?.onBacktrackSound?.();
-        }
-      } else {
-        // Add tile to path (validates adjacency internally)
-        addTileToPath(startTile);
-      }
-    } else if (hasDraggedRef.current && pathTilesRef.current.length > 0) {
-      // End of drag - signal path complete
+    if (pathTilesRef.current.length > 0) {
       onPathComplete([...pathTilesRef.current]);
     }
     
     isDraggingRef.current = false;
     pointerIdRef.current = null;
-    pointerDownPosRef.current = null;
-    pointerDownTileRef.current = null;
     
     e.preventDefault();
-  }, [addTileToPath, onPathUpdate, onPathComplete, audio]);
+  }, [onPathComplete]);
 
   // Handle pointer cancel
   const handlePointerCancel = useCallback((e: PointerEvent) => {
@@ -301,8 +238,6 @@ export const useGridGesture = (
     
     isDraggingRef.current = false;
     pointerIdRef.current = null;
-    pointerDownPosRef.current = null;
-    pointerDownTileRef.current = null;
     currentPathRef.current.clear();
     pathTilesRef.current = [];
     lastTileRef.current = null;
