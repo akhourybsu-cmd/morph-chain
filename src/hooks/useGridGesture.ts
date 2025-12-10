@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { Tile } from '@/lib/grid/gridGenerator';
 
+interface AudioCallbacks {
+  onTileSound?: (chainIndex: number) => void;
+  onBacktrackSound?: () => void;
+  onInvalidSound?: () => void;
+}
+
 interface GestureCallbacks {
   onPathUpdate: (tiles: Tile[]) => void;
   onPathComplete: (tiles: Tile[]) => void;
   onInvalidMove: () => void;
+  audio?: AudioCallbacks;
 }
 
 interface GridGestureOptions {
@@ -18,7 +25,7 @@ export const useGridGesture = (
   callbacks: GestureCallbacks
 ) => {
   const { grid, gridElement, enabled } = options;
-  const { onPathUpdate, onPathComplete, onInvalidMove } = callbacks;
+  const { onPathUpdate, onPathComplete, onInvalidMove, audio } = callbacks;
   
   const isDraggingRef = useRef(false);
   const currentPathRef = useRef<Set<string>>(new Set());
@@ -72,6 +79,7 @@ export const useGridGesture = (
             ? pathTilesRef.current[pathTilesRef.current.length - 1].id 
             : null;
           onPathUpdate([...pathTilesRef.current]);
+          audio?.onBacktrackSound?.();
         }
         return true;
       }
@@ -87,6 +95,7 @@ export const useGridGesture = (
       const lastTile = pathTilesRef.current[pathTilesRef.current.length - 1];
       if (!isAdjacent(lastTile, tile)) {
         onInvalidMove();
+        audio?.onInvalidSound?.();
         return false;
       }
     }
@@ -97,8 +106,11 @@ export const useGridGesture = (
     lastTileRef.current = tileKey;
     onPathUpdate([...pathTilesRef.current]);
     
+    // Play tile select sound with chain index
+    audio?.onTileSound?.(pathTilesRef.current.length - 1);
+    
     return true;
-  }, [isAdjacent, onPathUpdate, onInvalidMove]);
+  }, [isAdjacent, onPathUpdate, onInvalidMove, audio]);
 
   // Handle pointer down (start gesture)
   const handlePointerDown = useCallback((e: PointerEvent) => {

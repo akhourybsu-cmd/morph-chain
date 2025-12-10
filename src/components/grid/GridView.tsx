@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { useGridStore } from '@/stores/gridStore';
 import { GridTile } from './GridTile';
 import { useGridGesture } from '@/hooks/useGridGesture';
+import { useGridAudio } from '@/hooks/useGridAudio';
 
 export const GridView = () => {
   const { grid, selected, selectTile, setSelected, submitWord, clearSelection, lastSubmission } = useGridStore();
@@ -10,6 +11,8 @@ export const GridView = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [animatingTiles, setAnimatingTiles] = useState<Set<string>>(new Set());
   const [upgradingTiles, setUpgradingTiles] = useState<Set<string>>(new Set());
+  
+  const { playTileSelect, playBacktrack, playInvalidMove, playWordSubmit, playTileUpgrade } = useGridAudio();
 
   // Drag gesture handling
   useGridGesture(
@@ -33,6 +36,11 @@ export const GridView = () => {
         if ('vibrate' in navigator) {
           navigator.vibrate(50);
         }
+      },
+      audio: {
+        onTileSound: playTileSelect,
+        onBacktrackSound: playBacktrack,
+        onInvalidSound: playInvalidMove,
       }
     }
   );
@@ -99,6 +107,9 @@ export const GridView = () => {
   // Handle tile animations on word submission
   useEffect(() => {
     if (lastSubmission) {
+      // Play word submission sound
+      playWordSubmit(lastSubmission.wordLength);
+      
       // Set animating tiles for used tiles
       setAnimatingTiles(new Set(lastSubmission.usedTileIds));
       
@@ -108,7 +119,6 @@ export const GridView = () => {
       }, 500);
       
       // Only set up upgrade animations if there are upgraded tiles
-      let upgradeStartTimer: ReturnType<typeof setTimeout> | null = null;
       let upgradeClearTimer: ReturnType<typeof setTimeout> | null = null;
       
       if (lastSubmission.upgradedTileIds.length > 0) {
@@ -117,6 +127,8 @@ export const GridView = () => {
           const startDelay = 900 + (index * 100); // 900ms base + 100ms stagger per tile
           setTimeout(() => {
             setUpgradingTiles(prev => new Set([...prev, tileId]));
+            // Play upgrade sound for each tile
+            playTileUpgrade(index === 0 ? 'orange' : 'blue');
           }, startDelay);
         });
         
@@ -129,11 +141,10 @@ export const GridView = () => {
 
       return () => {
         clearTimeout(popTimer);
-        if (upgradeStartTimer) clearTimeout(upgradeStartTimer);
         if (upgradeClearTimer) clearTimeout(upgradeClearTimer);
       };
     }
-  }, [lastSubmission]);
+  }, [lastSubmission, playWordSubmit, playTileUpgrade]);
 
   // Get animation class based on word length
   const getAnimationClass = (tileId: string) => {
