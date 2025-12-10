@@ -20,7 +20,8 @@ interface GridGestureOptions {
   enabled: boolean;
 }
 
-const HIT_ZONE_PADDING = 8; // Pixels to expand hit zones for easier diagonal selection
+const HIT_ZONE_PADDING = 16; // Increased for easier diagonal selection
+const DIAGONAL_BIAS = 1.15; // Boost diagonal tiles in distance calculation
 
 export const useGridGesture = (
   options: GridGestureOptions,
@@ -81,7 +82,14 @@ export const useGridGesture = (
     return rowDiff <= 1 && colDiff <= 1 && (rowDiff + colDiff > 0);
   }, []);
 
-  // Helper: Get tile at coordinates with expanded hit zones and snap-to-adjacent
+  // Helper: Check if tile is diagonal from another
+  const isDiagonal = (tile1: Tile, tile2: Tile): boolean => {
+    const rowDiff = Math.abs(tile1.row - tile2.row);
+    const colDiff = Math.abs(tile1.col - tile2.col);
+    return rowDiff === 1 && colDiff === 1;
+  };
+
+  // Helper: Get tile at coordinates with expanded hit zones and diagonal-friendly detection
   const getTileAtPoint = useCallback((x: number, y: number): Tile | null => {
     if (!gridElement) return null;
     
@@ -94,39 +102,52 @@ export const useGridGesture = (
       }
     }
     
-    // Try expanded hit zones with snap-to-adjacent logic
-    let closestTile: Tile | null = null;
-    let closestDistance = Infinity;
-    
     const lastTile = pathTilesRef.current.length > 0 
       ? pathTilesRef.current[pathTilesRef.current.length - 1] 
       : null;
     
+    // Collect all adjacent tiles within expanded bounds
+    const candidates: { tile: Tile; distance: number; isDiag: boolean }[] = [];
+    
     for (const [, { tile, rect }] of tileElements) {
-      // Check if point is within expanded bounds
+      // Use larger hit zone for better diagonal reach
       if (!isPointInExpandedRect(x, y, rect, HIT_ZONE_PADDING)) continue;
       
-      // If we have a path, prioritize adjacent tiles
-      if (lastTile) {
-        if (!isAdjacent(lastTile, tile)) continue;
-        
-        // Among adjacent tiles in expanded zone, pick closest
-        const distance = getDistanceToRectCenter(x, y, rect);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestTile = tile;
-        }
-      } else {
-        // No path yet, just find closest
-        const distance = getDistanceToRectCenter(x, y, rect);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestTile = tile;
-        }
-      }
+      // Skip non-adjacent tiles when we have a path
+      if (lastTile && !isAdjacent(lastTile, tile)) continue;
+      
+      const distance = getDistanceToRectCenter(x, y, rect);
+      const isDiag = lastTile ? isDiagonal(lastTile, tile) : false;
+      
+      candidates.push({ tile, distance, isDiag });
     }
     
-    return closestTile;
+    if (candidates.length === 0) return null;
+    
+    // If we have a last tile, apply diagonal bias to make diagonals easier to hit
+    if (lastTile) {
+      // Find the best candidate - diagonal tiles get a distance bonus
+      let bestCandidate = candidates[0];
+      let bestScore = bestCandidate.distance;
+      
+      for (const candidate of candidates) {
+        // Diagonal tiles get their distance reduced (lower is better)
+        const score = candidate.isDiag 
+          ? candidate.distance / DIAGONAL_BIAS 
+          : candidate.distance;
+        
+        if (score < bestScore) {
+          bestScore = score;
+          bestCandidate = candidate;
+        }
+      }
+      
+      return bestCandidate.tile;
+    }
+    
+    // No path yet, just return closest
+    candidates.sort((a, b) => a.distance - b.distance);
+    return candidates[0].tile;
   }, [gridElement, getTileElements, isAdjacent]);
 
   // Helper: Add tile to path
