@@ -730,8 +730,6 @@ const Index = () => {
         onToggleVibration={() => handleToggleSetting("vibration")}
         useOnScreenKeyboard={settings.useOnScreenKeyboard ?? true}
         onToggleOnScreenKeyboard={() => handleToggleSetting("useOnScreenKeyboard")}
-        backgroundTheme={(settings.backgroundTheme as BackgroundTheme) || "midnight"}
-        onChangeBackgroundTheme={handleChangeBackgroundTheme}
         onResetData={handleResetData}
         onOpenAchievements={() => setAchievementsOpen(true)}
       />

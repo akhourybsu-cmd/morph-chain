@@ -8,12 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AddToHomeScreen } from "@/components/AddToHomeScreen";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Trophy } from "lucide-react";
+import { ChevronDown, Trophy, Settings } from "lucide-react";
 import { useState } from "react";
-import { backgroundThemes, BackgroundTheme } from "@/components/SettingsModal";
 import { GamesNavigation } from "@/components/shared/GamesNavigation";
 
 interface GameMenuSheetProps {
@@ -27,8 +25,6 @@ interface GameMenuSheetProps {
   onToggleVibration: () => void;
   useOnScreenKeyboard: boolean;
   onToggleOnScreenKeyboard: () => void;
-  backgroundTheme: BackgroundTheme;
-  onChangeBackgroundTheme: (theme: BackgroundTheme) => void;
   onResetData: () => void;
   onOpenAchievements?: () => void;
 }
@@ -44,8 +40,6 @@ export const GameMenuSheet = ({
   onToggleVibration,
   useOnScreenKeyboard,
   onToggleOnScreenKeyboard,
-  backgroundTheme,
-  onChangeBackgroundTheme,
   onResetData,
   onOpenAchievements,
 }: GameMenuSheetProps) => {
@@ -53,20 +47,37 @@ export const GameMenuSheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-[280px] sm:w-[320px] overflow-y-auto">
+      <SheetContent 
+        side="left" 
+        className="w-80 overflow-y-auto"
+        style={{
+          background: 'hsl(var(--chain-card-bg))',
+          borderColor: 'hsl(var(--chain-card-border))',
+        }}
+      >
         <SheetHeader>
-          <SheetTitle>Menu</SheetTitle>
+          <SheetTitle 
+            className="font-serif"
+            style={{ color: 'hsl(var(--chain-text-primary))' }}
+          >
+            Menu
+          </SheetTitle>
         </SheetHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-5 py-4">
           {/* Games Section */}
           <GamesNavigation currentGame="chain" onNavigate={() => onOpenChange(false)} />
 
-          <Separator />
+          <Separator style={{ background: 'hsl(var(--chain-divider))' }} />
 
           {/* Chain-specific: Achievements */}
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">MORPH CHAIN</h3>
+            <h3 
+              className="text-xs font-semibold uppercase tracking-wider mb-3 px-2"
+              style={{ color: 'hsl(var(--chain-text-muted))' }}
+            >
+              Morph Chain
+            </h3>
             <div className="space-y-1">
               {onOpenAchievements && (
                 <button
@@ -74,31 +85,52 @@ export const GameMenuSheet = ({
                     onOpenAchievements();
                     onOpenChange(false);
                   }}
-                  className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+                  className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+                  style={{ color: 'hsl(var(--chain-text-primary))' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--chain-divider))'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                 >
-                  <Trophy className="w-4 h-4 text-chain" />
-                  Achievements
+                  <Trophy className="w-4 h-4" style={{ color: 'hsl(var(--chain-accent))' }} />
+                  <span className="text-sm">Achievements</span>
                 </button>
               )}
             </div>
           </div>
 
-          <Separator />
+          <Separator style={{ background: 'hsl(var(--chain-divider))' }} />
 
           {/* Settings Section - Collapsible */}
           <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <CollapsibleTrigger className="flex items-center justify-between w-full px-2 py-1 hover:bg-muted/50 rounded-md">
-              <h3 className="font-semibold text-sm">Settings</h3>
-              <ChevronDown className={`h-4 w-4 transition-transform ${settingsOpen ? 'rotate-180' : ''}`} />
+            <CollapsibleTrigger 
+              className="flex items-center justify-between w-full px-2 py-1.5 rounded-lg transition-colors"
+              style={{ color: 'hsl(var(--chain-text-primary))' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--chain-divider))'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4" style={{ color: 'hsl(var(--chain-text-muted))' }} />
+                <span className="font-medium text-sm">Settings</span>
+              </div>
+              <ChevronDown 
+                className={`h-4 w-4 transition-transform ${settingsOpen ? 'rotate-180' : ''}`} 
+                style={{ color: 'hsl(var(--chain-text-muted))' }}
+              />
             </CollapsibleTrigger>
             
             <CollapsibleContent className="space-y-4 pt-4">
               <div className="flex items-center justify-between px-2">
                 <div className="space-y-0.5">
-                  <Label htmlFor="hard-mode" className="text-sm">
+                  <Label 
+                    htmlFor="hard-mode" 
+                    className="text-sm"
+                    style={{ color: 'hsl(var(--chain-text-primary))' }}
+                  >
                     Hard Mode
                   </Label>
-                  <p className="text-xs text-muted-foreground">
+                  <p 
+                    className="text-xs"
+                    style={{ color: 'hsl(var(--chain-text-muted))' }}
+                  >
                     Move closer each step
                   </p>
                 </div>
@@ -111,11 +143,18 @@ export const GameMenuSheet = ({
 
               <div className="flex items-center justify-between px-2">
                 <div className="space-y-0.5">
-                  <Label htmlFor="colorblind-mode" className="text-sm">
+                  <Label 
+                    htmlFor="colorblind-mode" 
+                    className="text-sm"
+                    style={{ color: 'hsl(var(--chain-text-primary))' }}
+                  >
                     Colorblind Mode
                   </Label>
-                  <p className="text-xs text-muted-foreground">
-                    Use shapes
+                  <p 
+                    className="text-xs"
+                    style={{ color: 'hsl(var(--chain-text-muted))' }}
+                  >
+                    Use shapes for hints
                   </p>
                 </div>
                 <Switch
@@ -127,10 +166,17 @@ export const GameMenuSheet = ({
 
               <div className="flex items-center justify-between px-2">
                 <div className="space-y-0.5">
-                  <Label htmlFor="vibration" className="text-sm">
+                  <Label 
+                    htmlFor="vibration" 
+                    className="text-sm"
+                    style={{ color: 'hsl(var(--chain-text-primary))' }}
+                  >
                     Vibration
                   </Label>
-                  <p className="text-xs text-muted-foreground">
+                  <p 
+                    className="text-xs"
+                    style={{ color: 'hsl(var(--chain-text-muted))' }}
+                  >
                     Haptic feedback
                   </p>
                 </div>
@@ -143,10 +189,17 @@ export const GameMenuSheet = ({
 
               <div className="flex items-center justify-between px-2">
                 <div className="space-y-0.5">
-                  <Label htmlFor="onscreen-keyboard" className="text-sm">
+                  <Label 
+                    htmlFor="onscreen-keyboard" 
+                    className="text-sm"
+                    style={{ color: 'hsl(var(--chain-text-primary))' }}
+                  >
                     On-Screen Keyboard
                   </Label>
-                  <p className="text-xs text-muted-foreground">
+                  <p 
+                    className="text-xs"
+                    style={{ color: 'hsl(var(--chain-text-muted))' }}
+                  >
                     Show keyboard overlay
                   </p>
                 </div>
@@ -157,36 +210,33 @@ export const GameMenuSheet = ({
                 />
               </div>
 
-              <Separator />
-
-              <div className="space-y-3 px-2">
-                <Label className="text-sm">Background Theme</Label>
-                <RadioGroup value={backgroundTheme} onValueChange={onChangeBackgroundTheme}>
-                  {Object.entries(backgroundThemes).map(([key, { name }]) => (
-                    <div key={key} className="flex items-center space-x-2">
-                      <RadioGroupItem value={key} id={key} />
-                      <Label htmlFor={key} className="text-xs font-normal cursor-pointer">
-                        {name}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
-
-              <Separator />
+              <Separator style={{ background: 'hsl(var(--chain-divider))' }} />
 
               <div className="flex flex-col gap-2 px-2">
-                <Label className="text-sm">Install App</Label>
+                <Label 
+                  className="text-sm"
+                  style={{ color: 'hsl(var(--chain-text-primary))' }}
+                >
+                  Install App
+                </Label>
                 <AddToHomeScreen />
-                <p className="text-xs text-muted-foreground">
+                <p 
+                  className="text-xs"
+                  style={{ color: 'hsl(var(--chain-text-muted))' }}
+                >
                   Add to home screen
                 </p>
               </div>
 
-              <Separator />
+              <Separator style={{ background: 'hsl(var(--chain-divider))' }} />
 
               <div className="space-y-2 px-2">
-                <Label className="text-sm text-destructive">Danger Zone</Label>
+                <Label 
+                  className="text-sm"
+                  style={{ color: 'hsl(var(--chain-error))' }}
+                >
+                  Danger Zone
+                </Label>
                 <Button
                   variant="destructive"
                   size="sm"
@@ -195,7 +245,10 @@ export const GameMenuSheet = ({
                 >
                   Reset Local Data
                 </Button>
-                <p className="text-xs text-muted-foreground">
+                <p 
+                  className="text-xs"
+                  style={{ color: 'hsl(var(--chain-text-muted))' }}
+                >
                   Erase stats and progress
                 </p>
               </div>

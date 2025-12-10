@@ -14,139 +14,118 @@ interface HowToPlayModalProps {
 export const HowToPlayModal = ({ open, onOpenChange }: HowToPlayModalProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="sm:max-w-md max-h-[85vh] overflow-y-auto"
+        style={{
+          background: 'hsl(var(--chain-card-bg))',
+          borderColor: 'hsl(var(--chain-card-border))',
+        }}
+      >
         <DialogHeader>
-          <DialogTitle>How to Play</DialogTitle>
+          <DialogTitle 
+            className="font-serif text-xl"
+            style={{ color: 'hsl(var(--chain-text-primary))' }}
+          >
+            How to Play
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 text-sm">
-          {/* Modern English Policy */}
-          <section className="bg-primary/10 border border-primary/30 rounded-lg p-3">
-            <p className="text-sm font-medium text-foreground">
-              Morph Chain uses <strong>standard, modern American English</strong>—no archaic, dialect, proper-noun, brand, texting, or highly technical words.
+        <div className="space-y-5 text-sm">
+          {/* Goal */}
+          <section>
+            <h3 
+              className="font-semibold mb-2"
+              style={{ color: 'hsl(var(--chain-text-primary))' }}
+            >
+              Goal
+            </h3>
+            <p style={{ color: 'hsl(var(--chain-text-secondary))' }}>
+              Transform the START word into the GOAL word by changing one letter at a time. Each step must be a valid word.
             </p>
           </section>
 
+          {/* Rules */}
           <section>
-            <h3 className="font-semibold mb-2">Goal</h3>
-            <p className="text-muted-foreground">
-              You're given a START word and a GOAL word (both shown). Your job is to transform the start into the goal by changing one letter at a time. Every step must be a valid English word, and you must reach the goal within the move limit.
-            </p>
-          </section>
-
-          <section>
-            <h3 className="font-semibold mb-2">How It Works</h3>
-            <p className="text-muted-foreground mb-3">
-              Both the START and GOAL words are visible from the beginning. Transform the START word into the GOAL word by changing <strong>exactly one letter</strong> per move. Each intermediate word must be a valid English word from our dictionary.
-            </p>
-            
-            <div className="bg-card p-3 rounded-lg border border-border">
-              <p className="font-medium text-sm mb-2">The Rule:</p>
-              <p className="text-muted-foreground text-sm">
-                Change <strong>exactly one letter</strong> per move. For example: COLD → CORD → CARD → WARD → WARM
-              </p>
-            </div>
-          </section>
-
-          <section>
-            <h3 className="font-semibold mb-2">Important Rules</h3>
-            <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-              <li>
-                <strong>No Repeating Words:</strong> Once you use a word in your chain, you cannot use it again.
+            <h3 
+              className="font-semibold mb-2"
+              style={{ color: 'hsl(var(--chain-text-primary))' }}
+            >
+              Rules
+            </h3>
+            <ul 
+              className="space-y-1.5 ml-4"
+              style={{ color: 'hsl(var(--chain-text-secondary))' }}
+            >
+              <li className="flex items-start gap-2">
+                <span style={{ color: 'hsl(var(--chain-accent))' }}>•</span>
+                Change exactly one letter per move
               </li>
-              <li>
-                <strong>Move Limit:</strong> Each puzzle has a maximum number of moves (typically 10-14). Plan your path carefully!
+              <li className="flex items-start gap-2">
+                <span style={{ color: 'hsl(var(--chain-accent))' }}>•</span>
+                No word can be used twice
               </li>
-              <li>
-                <strong>Valid Words Only:</strong> All words must be from our curated dictionary of modern American English.
-              </li>
-              <li>
-                <strong>Daily Puzzles:</strong> One puzzle per day for 4-letter and 5-letter words.
-              </li>
-              <li>
-                <strong>Letter Position Matters:</strong> You must change specific letter positions while keeping others the same.
+              <li className="flex items-start gap-2">
+                <span style={{ color: 'hsl(var(--chain-accent))' }}>•</span>
+                Reach the goal within the move limit
               </li>
             </ul>
           </section>
 
+          {/* Hints */}
           <section>
-            <h3 className="font-semibold mb-2">Letter Feedback (Hints)</h3>
-            <p className="text-muted-foreground mb-3">
-              After each valid move, the tiles change color to show how your current word compares to the visible GOAL word:
+            <h3 
+              className="font-semibold mb-2"
+              style={{ color: 'hsl(var(--chain-text-primary))' }}
+            >
+              Letter Hints
+            </h3>
+            <p 
+              className="mb-3"
+              style={{ color: 'hsl(var(--chain-text-secondary))' }}
+            >
+              After each move, tiles show how your word compares to the GOAL:
             </p>
-            <div className="space-y-2 bg-card p-3 rounded-lg border border-border">
+            <div 
+              className="space-y-2 p-3 rounded-lg"
+              style={{ 
+                background: 'hsl(var(--chain-divider))',
+                border: '1px solid hsl(var(--chain-card-border))'
+              }}
+            >
               <div className="flex items-center gap-3">
                 <HintTile state="match" letter="A" colorblindMode={false} />
-                <span className="text-muted-foreground">Letter is correct and in the right spot</span>
+                <span style={{ color: 'hsl(var(--chain-text-secondary))' }}>Correct position</span>
               </div>
               <div className="flex items-center gap-3">
                 <HintTile state="present" letter="B" colorblindMode={false} />
-                <span className="text-muted-foreground">Letter is in GOAL but a different spot</span>
+                <span style={{ color: 'hsl(var(--chain-text-secondary))' }}>In goal, wrong spot</span>
               </div>
               <div className="flex items-center gap-3">
                 <HintTile state="miss" letter="C" colorblindMode={false} />
-                <span className="text-muted-foreground">Letter isn't in GOAL</span>
+                <span style={{ color: 'hsl(var(--chain-text-secondary))' }}>Not in goal</span>
               </div>
             </div>
           </section>
 
-          <section>
-            <h3 className="font-semibold mb-2">Distance Progress Indicators</h3>
-            <p className="text-muted-foreground mb-2 text-sm">
-              Each move shows whether you're getting closer to or farther from the goal word:
-            </p>
-            <div className="space-y-2 bg-card p-3 rounded-lg border border-border">
-              <div className="flex items-start gap-2">
-                <div className="flex items-center gap-1 px-2 py-1 bg-success/10 text-success rounded text-xs font-medium whitespace-nowrap">
-                  ↑ Closer
-                </div>
-                <span className="text-muted-foreground text-xs">Your move decreased the distance to the GOAL. You're on the right track!</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="flex items-center gap-1 px-2 py-1 bg-warning/10 text-warning rounded text-xs font-medium whitespace-nowrap">
-                  ↔ Sideways
-                </div>
-                <span className="text-muted-foreground text-xs">The distance to the GOAL stayed the same. You're exploring alternative paths.</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="flex items-center gap-1 px-2 py-1 bg-destructive/10 text-destructive rounded text-xs font-medium whitespace-nowrap">
-                  ↓ Worse
-                </div>
-                <span className="text-muted-foreground text-xs">Your move increased the distance. Sometimes necessary for complex puzzles.</span>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h3 className="font-semibold mb-2">Hard Mode</h3>
-            <p className="text-muted-foreground text-sm">
-              When Hard Mode is enabled, every move must get you <strong>closer</strong> to the goal word. Sideways and worse moves are rejected.
-            </p>
-          </section>
-
-          <section>
-            <h3 className="font-semibold mb-2">Winning & Sharing</h3>
-            <div className="space-y-2">
-              <p className="text-muted-foreground text-sm">
-                <strong>Victory:</strong> Reach the GOAL word within the move limit.
-              </p>
-              <p className="text-muted-foreground text-sm">
-                <strong>Share:</strong> Copy a spoiler-free emoji grid showing your path's efficiency.
-              </p>
-              <p className="text-muted-foreground text-sm">
-                <strong>Streak:</strong> Win at least one puzzle each day to maintain your streak.
-              </p>
-            </div>
-          </section>
-
-          <section className="pt-2 border-t border-border">
-            <h3 className="font-semibold mb-2">Example</h3>
-            <div className="bg-muted/30 p-3 rounded text-xs font-mono space-y-1">
-              <div>START: <strong>COLD</strong> → GOAL: <strong>WARM</strong></div>
-              <div>Step 1: COLD → CORD (change L to R)</div>
-              <div>Step 2: CORD → CARD (change O to A)</div>
-              <div>Step 3: CARD → WARD (change C to W)</div>
-              <div>Step 4: WARD → WARM (change D to M) ✓</div>
+          {/* Example */}
+          <section 
+            className="pt-3"
+            style={{ borderTop: '1px solid hsl(var(--chain-divider))' }}
+          >
+            <h3 
+              className="font-semibold mb-2"
+              style={{ color: 'hsl(var(--chain-text-primary))' }}
+            >
+              Example
+            </h3>
+            <div 
+              className="p-3 rounded-lg text-xs font-mono space-y-1"
+              style={{ 
+                background: 'hsl(var(--chain-divider))',
+                color: 'hsl(var(--chain-text-secondary))'
+              }}
+            >
+              <div>COLD → CORD → CARD → WARD → WARM</div>
             </div>
           </section>
         </div>

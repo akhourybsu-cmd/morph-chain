@@ -1,5 +1,6 @@
 import { Menu, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
 
 interface ChainPrestigeHeaderProps {
   puzzleNumber: number;
@@ -26,15 +27,18 @@ export const ChainPrestigeHeader = ({
 
   return (
     <header className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4">
-      {/* Left: Menu */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onOpenMenu}
-        className="h-8 w-8 text-[hsl(var(--chain-text-secondary))] hover:text-[hsl(var(--chain-text-primary))] hover:bg-transparent"
-      >
-        <Menu className="h-5 w-5" />
-      </Button>
+      {/* Left: Menu + Theme */}
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onOpenMenu}
+          className="h-8 w-8 text-[hsl(var(--chain-text-secondary))] hover:text-[hsl(var(--chain-text-primary))] hover:bg-transparent"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+        <PrestigeThemeToggle colorVar="--chain-text-secondary" />
+      </div>
 
       {/* Center: Title and date */}
       <div className="text-center">

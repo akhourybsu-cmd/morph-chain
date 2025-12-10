@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Menu, HelpCircle, User, Trophy, AlertCircle } from "lucide-react";
+import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -257,17 +258,22 @@ const MorphRush = () => {
           }}
         >
           <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setMenuOpen(true)}
-              aria-label="Open menu"
-              className="h-9 w-9"
-              style={{ color: 'hsl(var(--rush-text-secondary))' }}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
+            {/* Left: Menu + Theme */}
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMenuOpen(true)}
+                aria-label="Open menu"
+                className="h-9 w-9"
+                style={{ color: 'hsl(var(--rush-text-secondary))' }}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+              <PrestigeThemeToggle colorVar="--rush-text-secondary" />
+            </div>
             
+            {/* Center: Title */}
             <h1 
               className="text-xl tracking-wide"
               style={{ 
@@ -279,6 +285,7 @@ const MorphRush = () => {
               MORPH RUSH
             </h1>
             
+            {/* Right: Help + User */}
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"

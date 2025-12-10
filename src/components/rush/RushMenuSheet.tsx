@@ -26,40 +26,63 @@ export const RushMenuSheet = ({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="left" className="w-[280px] sm:w-[320px] overflow-y-auto">
+        <SheetContent 
+          side="left" 
+          className="w-80 overflow-y-auto"
+          style={{
+            background: 'hsl(var(--rush-card-bg))',
+            borderColor: 'hsl(var(--rush-card-border))',
+          }}
+        >
           <SheetHeader>
-            <SheetTitle>Menu</SheetTitle>
+            <SheetTitle 
+              className="font-serif"
+              style={{ color: 'hsl(var(--rush-text-primary))' }}
+            >
+              Menu
+            </SheetTitle>
           </SheetHeader>
 
-          <div className="space-y-6 py-4">
+          <div className="space-y-5 py-4">
             {/* Games Section */}
             <GamesNavigation currentGame="rush" onNavigate={() => onOpenChange(false)} />
 
-            <Separator />
+            <Separator style={{ background: 'hsl(var(--rush-divider))' }} />
 
             {/* Rush-specific section */}
             <div>
-              <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">MORPH RUSH</h3>
+              <h3 
+                className="text-xs font-semibold uppercase tracking-wider mb-3 px-2"
+                style={{ color: 'hsl(var(--rush-text-muted))' }}
+              >
+                Morph Rush
+              </h3>
               <div className="space-y-1">
                 <button
                   onClick={() => {
                     setShowAchievements(true);
                     onOpenChange(false);
                   }}
-                  className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+                  className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+                  style={{ color: 'hsl(var(--rush-text-primary))' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--rush-divider))'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                 >
-                  <Award className="w-4 h-4 text-rush" />
-                  Achievements
+                  <Award className="w-4 h-4" style={{ color: 'hsl(var(--rush-accent))' }} />
+                  <span className="text-sm">Achievements</span>
                 </button>
                 <button
                   onClick={() => {
                     onOpenSettings();
                     onOpenChange(false);
                   }}
-                  className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+                  className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+                  style={{ color: 'hsl(var(--rush-text-primary))' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--rush-divider))'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                 >
-                  <Settings className="w-4 h-4" />
-                  Settings & Leaderboard
+                  <Settings className="w-4 h-4" style={{ color: 'hsl(var(--rush-text-muted))' }} />
+                  <span className="text-sm">Settings & Leaderboard</span>
                 </button>
               </div>
             </div>
