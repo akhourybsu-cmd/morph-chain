@@ -1,165 +1,218 @@
 import { useNavigate } from "react-router-dom";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
-import { MorphHeader } from "@/components/MorphHeader";
-import { MorphChainTitle, MorphGridTitle, MorphRushTitle } from "@/components/GameTitles";
-import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Gamepad2 } from "lucide-react";
+import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Menu } from "lucide-react";
 import { toast } from "sonner";
+import morphIcon from "@/assets/morph-icon.png";
+import { SideMenu } from "@/components/layout/SideMenu";
+import { useState } from "react";
 
 const GameSelector = () => {
   const navigate = useNavigate();
   const puzzle = getDailyPuzzle(4);
+  const [menuOpen, setMenuOpen] = useState(false);
   
   const timezone = "America/New_York";
   const formattedDate = formatInTimeZone(new Date(), timezone, 'MMMM d, yyyy');
   
   return (
-    <div className="min-h-screen flex flex-col">
-      <MorphHeader />
-      
-      <main className="flex-1 container mx-auto px-4 py-8 md:py-12 max-w-5xl">
-        {/* Hero Section */}
-        <section className="text-center mb-12 md:mb-16">
-          <h1 className="font-outfit font-bold text-3xl md:text-5xl tracking-tight mb-3" style={{ letterSpacing: '-0.02em' }}>
-            <span className="morph-text-gradient-animated">
+    <div 
+      className="min-h-screen flex flex-col"
+      style={{ background: 'hsl(var(--home-page-bg))' }}
+    >
+      <main className="flex-1 container mx-auto px-4 py-6 md:py-10 max-w-lg">
+        {/* Masthead Card */}
+        <div 
+          className="rounded-xl p-4 md:p-6 mb-6"
+          style={{ 
+            background: 'hsl(var(--home-card-bg))',
+            border: '1px solid hsl(var(--home-card-border))',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)'
+          }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            {/* Logo */}
+            <img src={morphIcon} alt="Morph" className="w-8 h-8" />
+            
+            {/* Title */}
+            <h1 
+              className="text-xl md:text-2xl font-bold tracking-wide"
+              style={{ 
+                fontFamily: "'Playfair Display', Georgia, serif",
+                color: 'hsl(var(--home-text-primary))'
+              }}
+            >
               MORPH GAMES
-            </span>
-          </h1>
-          <p className="text-lg md:text-xl font-medium mb-2" style={{ color: '#E0E0E0' }}>
-            A letter changes everything.
-          </p>
-          <div className="flex items-center justify-center gap-2 text-sm md:text-base font-medium" style={{ color: '#9A9A9A' }}>
-            <span>{formattedDate}</span>
-            <span>•</span>
-            <span>Puzzle #{puzzle.puzzleIndex}</span>
+            </h1>
+            
+            {/* Menu */}
+            <button 
+              onClick={() => setMenuOpen(true)}
+              className="p-1 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+            >
+              <Menu 
+                className="w-5 h-5" 
+                style={{ color: 'hsl(var(--home-text-muted))' }} 
+              />
+            </button>
           </div>
-        </section>
+          
+          {/* Tagline & Meta */}
+          <div className="text-center">
+            <p 
+              className="text-sm md:text-base"
+              style={{ color: 'hsl(var(--home-text-secondary))' }}
+            >
+              A letter changes everything.
+            </p>
+            <p 
+              className="text-xs mt-1"
+              style={{ color: 'hsl(var(--home-text-muted))' }}
+            >
+              {formattedDate} · Puzzle #{puzzle.puzzleIndex}
+            </p>
+          </div>
+        </div>
 
-        {/* Full-Width Game Banners */}
-        <section className="space-y-4 md:space-y-6">
-          <GameBanner
-            game="chain"
-            title={<MorphChainTitle className="text-2xl md:text-4xl" />}
+        {/* Section Label */}
+        <h2 
+          className="text-xs font-semibold uppercase tracking-widest mb-3 px-1"
+          style={{ color: 'hsl(var(--home-text-muted))' }}
+        >
+          Today's Puzzles
+        </h2>
+
+        {/* Games List */}
+        <div className="space-y-3">
+          <GameCard
+            icon={Link2}
+            name="Morph Chain"
             description="Transform words one letter at a time"
             onClick={() => navigate('/chain')}
           />
           
-          <GameBanner
-            game="grid"
-            title={<MorphGridTitle className="text-2xl md:text-4xl" />}
-            description="Color Changing daily 5x5 word puzzle"
+          <GameCard
+            icon={Grid3X3}
+            name="Morph Grid"
+            description="Color-changing daily 5×5 word puzzle"
             onClick={() => navigate('/grid')}
           />
           
-          <GameBanner
-            game="rush"
-            title={<MorphRushTitle className="text-2xl md:text-4xl px-4" />}
+          <GameCard
+            icon={Zap}
+            name="Morph Rush"
             description="Fast-paced morphing under pressure"
             onClick={() => navigate('/rush?mode=daily')}
           />
-          
-          <ShareBanner />
-        </section>
+        </div>
+
+        {/* Share Footer */}
+        <ShareFooter />
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border py-6 mt-12">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+      <footer 
+        className="py-6 mt-auto"
+        style={{ borderTop: '1px solid hsl(var(--home-divider))' }}
+      >
+        <div 
+          className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm"
+          style={{ color: 'hsl(var(--home-text-muted))' }}
+        >
           <span>© 2025 Morph Games</span>
           <div className="flex gap-4">
-            <button onClick={() => navigate('/rules')} className="hover:text-foreground transition-colors">
+            <button 
+              onClick={() => navigate('/rules')} 
+              className="transition-colors"
+              style={{ color: 'hsl(var(--home-text-muted))' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(var(--home-text-primary))'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'hsl(var(--home-text-muted))'}
+            >
               Rules
             </button>
-            <button onClick={() => navigate('/privacy')} className="hover:text-foreground transition-colors">
+            <button 
+              onClick={() => navigate('/privacy')} 
+              className="transition-colors"
+              style={{ color: 'hsl(var(--home-text-muted))' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(var(--home-text-primary))'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'hsl(var(--home-text-muted))'}
+            >
               Privacy
             </button>
           </div>
         </div>
       </footer>
+
+      {/* Side Menu */}
+      <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </div>
   );
 };
 
-interface GameBannerProps {
-  game: 'chain' | 'rush' | 'grid';
-  title: React.ReactNode;
+interface GameCardProps {
+  icon: React.ElementType;
+  name: string;
   description: string;
   onClick: () => void;
-  comingSoon?: boolean;
 }
 
-const GameBanner = ({ game, title, description, onClick, comingSoon }: GameBannerProps) => {
-  const gradientClasses = {
-    chain: "from-[hsl(var(--chain-accent)_/_0.15)] to-[hsl(var(--chain-accent)_/_0.05)]",
-    grid: "from-[hsl(var(--grid-accent-start)_/_0.15)] to-[hsl(var(--grid-accent-end)_/_0.15)]",
-    rush: "from-[hsl(var(--rush-accent-start)_/_0.15)] to-[hsl(var(--rush-accent-end)_/_0.15)]"
-  };
-
-  const glowClasses = {
-    chain: "hover:shadow-[0_0_40px_hsl(var(--chain-accent)_/_0.3),0_0_80px_hsl(var(--chain-accent)_/_0.15)]",
-    grid: "hover:shadow-[0_0_40px_hsl(var(--grid-accent-start)_/_0.3),0_0_80px_hsl(var(--grid-accent-start)_/_0.15)]",
-    rush: "hover:shadow-[0_0_40px_hsl(var(--rush-accent-start)_/_0.3),0_0_80px_hsl(var(--rush-accent-start)_/_0.15)]"
-  };
-
-  const borderClasses = {
-    chain: "border-[hsl(var(--chain-accent)_/_0.3)] hover:border-[hsl(var(--chain-accent)_/_0.6)]",
-    grid: "border-[hsl(var(--grid-accent-start)_/_0.3)] hover:border-[hsl(var(--grid-accent-start)_/_0.6)]",
-    rush: "border-[hsl(var(--rush-accent-start)_/_0.3)] hover:border-[hsl(var(--rush-accent-start)_/_0.6)]"
-  };
-
-  const iconConfig = {
-    chain: { Icon: Link2, color: "hsl(var(--chain))" },
-    grid: { Icon: Gamepad2, color: "hsl(var(--grid))" },
-    rush: { Icon: Zap, color: "hsl(var(--rush))" }
-  };
-
-  const { Icon, color } = iconConfig[game];
-
+const GameCard = ({ icon: Icon, name, description, onClick }: GameCardProps) => {
   return (
     <button
-      onClick={comingSoon ? undefined : onClick}
-      disabled={comingSoon}
-      className={`
-        relative w-full py-6 md:py-8 px-6 md:px-12 
-        rounded-xl border-2 
-        bg-gradient-to-r ${gradientClasses[game]}
-        ${borderClasses[game]}
-        shadow-lg hover:shadow-xl
-        transition-all duration-300 ease-out
-        group
-        overflow-hidden
-        ${comingSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.01]'}
-      `}
+      onClick={onClick}
+      className="w-full p-4 md:p-5 rounded-xl text-left transition-all duration-200 group"
+      style={{ 
+        background: 'hsl(var(--home-card-bg))',
+        border: '1px solid hsl(var(--home-card-border))',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'hsl(var(--home-accent))';
+        e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.08)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'hsl(var(--home-card-border))';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.04)';
+      }}
     >
-      {/* Background Icon */}
-      <div className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 opacity-5 group-hover:opacity-10 transition-opacity duration-300">
-        <Icon 
-          className="w-24 h-24 md:w-32 md:h-32" 
-          style={{ color }}
-          strokeWidth={1.5}
-        />
-      </div>
-
-      <div className="relative z-10 flex flex-col items-center justify-center gap-2 md:gap-3">
-        {comingSoon && (
-          <div className="absolute -top-8 md:-top-10 px-4 py-1.5 bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 rounded-full text-xs md:text-sm font-semibold">
-            Coming Soon
-          </div>
-        )}
-        
-        <div className="text-center w-full">
-          {title}
+      <div className="flex items-center gap-4">
+        <div className="flex-1">
+          <h3 
+            className="font-semibold text-base md:text-lg"
+            style={{ 
+              fontFamily: "Inter, system-ui, sans-serif",
+              color: 'hsl(var(--home-text-primary))'
+            }}
+          >
+            {name}
+          </h3>
+          <p 
+            className="text-sm mt-0.5"
+            style={{ color: 'hsl(var(--home-text-secondary))' }}
+          >
+            {description}
+          </p>
         </div>
         
-        <p className="text-sm md:text-base text-muted-foreground font-medium max-w-2xl">
-          {description}
-        </p>
+        {/* Icon */}
+        <Icon 
+          className="w-5 h-5 flex-shrink-0" 
+          style={{ color: 'hsl(var(--home-text-muted))' }}
+        />
+        
+        {/* Play arrow */}
+        <span 
+          className="text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ color: 'hsl(var(--home-accent))' }}
+        >
+          Play →
+        </span>
       </div>
     </button>
   );
 };
 
-const ShareBanner = () => {
+const ShareFooter = () => {
   const shareUrl = window.location.origin;
   const shareText = "Check out Morph Games - A letter changes everything!";
 
@@ -199,36 +252,56 @@ const ShareBanner = () => {
   ];
 
   return (
-    <div className="relative w-full py-6 md:py-8 px-6 md:px-12 rounded-xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-accent/10 overflow-hidden hover:border-primary/60 shadow-lg hover:shadow-xl transition-all duration-300">
-      <div className="relative z-10 flex flex-col items-center justify-center gap-4 md:gap-5">
-        <div className="text-center">
-          <h2 className="font-outfit font-bold text-2xl md:text-4xl tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2" style={{ letterSpacing: '-0.02em' }}>
-            Share the Morph.
-          </h2>
-          <p className="text-xs md:text-sm text-muted-foreground font-medium">
-            Spread the word about Morph Games
-          </p>
-        </div>
-        
-        <div className="flex gap-4 md:gap-6 flex-wrap justify-center">
-          {socialIcons.map((social) => {
-            const Icon = social.icon;
-            return (
-              <button
-                key={social.platform}
-                onClick={() => handleShare(social.platform)}
-                className="flex flex-col items-center gap-2 group/icon"
-              >
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center hover:bg-primary/30 hover:border-primary/50 hover:scale-110 transition-all duration-200">
-                  <Icon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
-                </div>
-                <span className="text-xs font-medium text-muted-foreground group-hover/icon:text-foreground transition-colors">
-                  {social.name}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+    <div 
+      className="mt-6 rounded-xl p-4 md:p-5"
+      style={{ 
+        background: 'hsl(var(--home-card-bg))',
+        border: '1px solid hsl(var(--home-card-border))',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)'
+      }}
+    >
+      <div className="text-center mb-4">
+        <h3 
+          className="font-semibold text-base"
+          style={{ color: 'hsl(var(--home-text-primary))' }}
+        >
+          Share the Morph.
+        </h3>
+        <p 
+          className="text-xs mt-1"
+          style={{ color: 'hsl(var(--home-text-muted))' }}
+        >
+          Spread the word about Morph Games
+        </p>
+      </div>
+      
+      {/* Circular outline icons */}
+      <div className="flex justify-center gap-3">
+        {socialIcons.map((social) => {
+          const Icon = social.icon;
+          return (
+            <button
+              key={social.platform}
+              onClick={() => handleShare(social.platform)}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
+              style={{ 
+                border: '1px solid hsl(var(--home-divider))'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'hsl(var(--home-accent))';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'hsl(var(--home-divider))';
+              }}
+              title={social.name}
+            >
+              <Icon 
+                className="w-4 h-4" 
+                style={{ color: 'hsl(var(--home-text-secondary))' }}
+              />
+            </button>
+          );
+        })}
       </div>
     </div>
   );
