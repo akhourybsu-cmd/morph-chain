@@ -175,6 +175,12 @@ All colors MUST be HSL.
     --home-text-secondary: var(--grid-text-secondary);
     --home-text-muted: var(--grid-text-muted);
     --home-accent: var(--grid-accent);
+    
+    /* Per-game accent colors */
+    --accent-chain: 187 94% 48%;      /* #1FBFD6 cyan */
+    --accent-grid: 186 68% 36%;       /* #1C8C9A teal */
+    --accent-rush: 24 78% 57%;        /* #E67A3B orange */
+    --accent-strip-opacity: 0.12;
   }
 
   /* NYT Prestige Dark Mode - Grid Page Colors */
@@ -196,6 +202,9 @@ All colors MUST be HSL.
     --grid-tier1: 35 43% 39%;            /* #8E6C37 warm bronze */
     --grid-tier2: 193 30% 45%;           /* #528794 deep teal */
     --grid-tier3: 262 26% 55%;           /* #7D6AAE muted purple */
+    
+    /* Dark mode accent strip opacity - more visible */
+    --accent-strip-opacity: 0.5;
   }
   
   .light {

@@ -1,11 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
-import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Menu } from "lucide-react";
+import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Menu, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import morphIcon from "@/assets/morph-icon.png";
 import { SideMenu } from "@/components/layout/SideMenu";
 import { useState } from "react";
+
+// Per-game accent colors (HSL values match CSS variables)
+const gameAccents = {
+  chain: "187 94% 48%",  // cyan
+  grid: "186 68% 36%",   // teal  
+  rush: "24 78% 57%",    // orange
+};
 
 const GameSelector = () => {
   const navigate = useNavigate();
@@ -20,10 +27,10 @@ const GameSelector = () => {
       className="min-h-screen flex flex-col"
       style={{ background: 'hsl(var(--home-page-bg))' }}
     >
-      <main className="flex-1 container mx-auto px-4 py-6 md:py-10 max-w-lg">
+      <main className="flex-1 container mx-auto px-4 py-6 md:py-10 max-w-xl">
         {/* Masthead Card */}
         <div 
-          className="rounded-xl p-4 md:p-6 mb-6"
+          className="rounded-2xl p-4 md:p-6 mb-6 max-w-[640px] mx-auto"
           style={{ 
             background: 'hsl(var(--home-card-bg))',
             border: '1px solid hsl(var(--home-card-border))',
@@ -57,6 +64,15 @@ const GameSelector = () => {
             </button>
           </div>
           
+          {/* Gradient underline */}
+          <div 
+            className="w-12 h-0.5 mx-auto rounded-full mb-3"
+            style={{
+              background: 'linear-gradient(90deg, hsl(var(--accent-chain)), hsl(var(--accent-grid)), hsl(var(--accent-rush)))',
+              opacity: 0.3
+            }}
+          />
+          
           {/* Tagline & Meta */}
           <div className="text-center">
             <p 
@@ -76,18 +92,19 @@ const GameSelector = () => {
 
         {/* Section Label */}
         <h2 
-          className="text-xs font-semibold uppercase tracking-widest mb-3 px-1"
+          className="text-xs font-semibold uppercase tracking-widest mb-3 px-1 max-w-[640px] mx-auto"
           style={{ color: 'hsl(var(--home-text-muted))' }}
         >
           Today's Puzzles
         </h2>
 
         {/* Games List */}
-        <div className="space-y-3">
+        <div className="space-y-3 max-w-[640px] mx-auto">
           <GameCard
             icon={Link2}
             name="Morph Chain"
             description="Transform words one letter at a time"
+            accent={gameAccents.chain}
             onClick={() => navigate('/chain')}
           />
           
@@ -95,6 +112,7 @@ const GameSelector = () => {
             icon={Grid3X3}
             name="Morph Grid"
             description="Color-changing daily 5×5 word puzzle"
+            accent={gameAccents.grid}
             onClick={() => navigate('/grid')}
           />
           
@@ -102,6 +120,7 @@ const GameSelector = () => {
             icon={Zap}
             name="Morph Rush"
             description="Fast-paced morphing under pressure"
+            accent={gameAccents.rush}
             onClick={() => navigate('/rush?mode=daily')}
           />
         </div>
@@ -153,21 +172,22 @@ interface GameCardProps {
   icon: React.ElementType;
   name: string;
   description: string;
+  accent: string;
   onClick: () => void;
 }
 
-const GameCard = ({ icon: Icon, name, description, onClick }: GameCardProps) => {
+const GameCard = ({ icon: Icon, name, description, accent, onClick }: GameCardProps) => {
   return (
     <button
       onClick={onClick}
-      className="w-full p-4 md:p-5 rounded-xl text-left transition-all duration-200 group"
+      className="w-full rounded-xl text-left transition-all duration-200 group overflow-hidden relative"
       style={{ 
         background: 'hsl(var(--home-card-bg))',
         border: '1px solid hsl(var(--home-card-border))',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)'
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'hsl(var(--home-accent))';
+        e.currentTarget.style.borderColor = `hsl(${accent})`;
         e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.08)';
       }}
       onMouseLeave={(e) => {
@@ -175,38 +195,61 @@ const GameCard = ({ icon: Icon, name, description, onClick }: GameCardProps) => 
         e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.04)';
       }}
     >
-      <div className="flex items-center gap-4">
-        <div className="flex-1">
-          <h3 
-            className="font-semibold text-base md:text-lg"
-            style={{ 
-              fontFamily: "Inter, system-ui, sans-serif",
-              color: 'hsl(var(--home-text-primary))'
-            }}
-          >
-            {name}
-          </h3>
-          <p 
-            className="text-sm mt-0.5"
-            style={{ color: 'hsl(var(--home-text-secondary))' }}
-          >
-            {description}
-          </p>
+      {/* Left accent strip */}
+      <div 
+        className="absolute left-0 top-0 bottom-0 w-1"
+        style={{ 
+          background: `hsl(${accent})`,
+          opacity: 'var(--accent-strip-opacity, 0.15)'
+        }}
+      />
+      
+      <div className="flex items-center gap-3 p-4 md:p-5 pl-5 md:pl-6">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 
+              className="font-semibold text-base md:text-lg"
+              style={{ 
+                fontFamily: "Inter, system-ui, sans-serif",
+                color: 'hsl(var(--home-text-primary))'
+              }}
+            >
+              {name}
+            </h3>
+          </div>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            {/* Tiny color dot */}
+            <span 
+              className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+              style={{ background: `hsl(${accent})` }}
+            />
+            <p 
+              className="text-sm truncate"
+              style={{ color: 'hsl(var(--home-text-secondary))' }}
+            >
+              {description}
+            </p>
+          </div>
         </div>
         
-        {/* Icon */}
-        <Icon 
-          className="w-5 h-5 flex-shrink-0" 
+        {/* Icon chip */}
+        <div 
+          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105"
+          style={{ 
+            background: `hsl(${accent} / 0.1)`,
+          }}
+        >
+          <Icon 
+            className="w-4 h-4" 
+            style={{ color: `hsl(${accent})` }}
+          />
+        </div>
+        
+        {/* Chevron */}
+        <ChevronRight 
+          className="w-4 h-4 flex-shrink-0 opacity-40 group-hover:opacity-70 transition-opacity" 
           style={{ color: 'hsl(var(--home-text-muted))' }}
         />
-        
-        {/* Play arrow */}
-        <span 
-          className="text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-          style={{ color: 'hsl(var(--home-accent))' }}
-        >
-          Play →
-        </span>
       </div>
     </button>
   );
@@ -253,7 +296,7 @@ const ShareFooter = () => {
 
   return (
     <div 
-      className="mt-6 rounded-xl p-4 md:p-5"
+      className="mt-6 rounded-xl p-4 md:p-5 max-w-[640px] mx-auto"
       style={{ 
         background: 'hsl(var(--home-card-bg))',
         border: '1px solid hsl(var(--home-card-border))',
@@ -278,12 +321,12 @@ const ShareFooter = () => {
       {/* Circular outline icons */}
       <div className="flex justify-center gap-3">
         {socialIcons.map((social) => {
-          const Icon = social.icon;
+          const SocialIcon = social.icon;
           return (
             <button
               key={social.platform}
               onClick={() => handleShare(social.platform)}
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
               style={{ 
                 border: '1px solid hsl(var(--home-divider))'
               }}
@@ -295,7 +338,7 @@ const ShareFooter = () => {
               }}
               title={social.name}
             >
-              <Icon 
+              <SocialIcon 
                 className="w-4 h-4" 
                 style={{ color: 'hsl(var(--home-text-secondary))' }}
               />
