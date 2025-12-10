@@ -11,6 +11,7 @@ import { GridLogo } from '@/components/GridLogo';
 import { GridMenuSheet } from '@/components/grid/GridMenuSheet';
 import { WordLengthTracker } from '@/components/grid/WordLengthTracker';
 import { WordCelebration } from '@/components/grid/WordCelebration';
+import { GridThemeToggle } from '@/components/grid/GridThemeToggle';
 import { Button } from '@/components/ui/button';
 import { HelpCircle, Volume2, VolumeX } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
@@ -91,11 +92,23 @@ const MorphGrid = () => {
           background: 'hsl(var(--grid-page-bg))'
         }}
       >
-        <div className="px-3 md:px-4 h-full flex items-center justify-between">
-          <GridMenuSheet />
+        <div className="px-3 md:px-4 h-full flex items-center">
+          {/* Left: Menu + Theme Toggle */}
+          <div className="flex items-center gap-1">
+            <GridMenuSheet />
+            <GridThemeToggle />
+          </div>
           
+          {/* Center spacer */}
+          <div className="flex-1" />
+          
+          {/* Center: Logo */}
           <GridLogo />
           
+          {/* Center spacer */}
+          <div className="flex-1" />
+          
+          {/* Right: Sound + Help */}
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
@@ -128,7 +141,7 @@ const MorphGrid = () => {
         className="h-10 border-b px-2 md:px-4 flex justify-center items-center gap-1.5 md:gap-3 text-xs md:text-sm flex-shrink-0 flex-nowrap whitespace-nowrap"
         style={{ 
           borderColor: 'hsl(var(--grid-divider))',
-          background: 'white'
+          background: 'hsl(var(--grid-card-bg))'
         }}
       >
         <span className="text-[hsl(var(--grid-text-muted))] font-inter">#{dailySeed}</span>
@@ -148,7 +161,7 @@ const MorphGrid = () => {
         className="border-t px-4 md:px-6 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-4 flex flex-col gap-3 flex-shrink-0"
         style={{ 
           borderColor: 'hsl(var(--grid-card-border))',
-          background: 'white'
+          background: 'hsl(var(--grid-card-bg))'
         }}
       >
         {/* Word Length Tracker */}
