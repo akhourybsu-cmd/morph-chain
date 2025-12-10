@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import morphIcon from "@/assets/morph-icon.png";
 import { SideMenu } from "@/components/layout/SideMenu";
 import { useState } from "react";
+import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
 
 // Per-game accent colors (HSL values match CSS variables)
 const gameAccents = {
@@ -38,10 +39,21 @@ const GameSelector = () => {
           }}
         >
           <div className="flex items-center justify-between mb-3">
-            {/* Logo */}
-            <img src={morphIcon} alt="Morph" className="w-8 h-8" />
+            {/* Left: Menu + Theme */}
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={() => setMenuOpen(true)}
+                className="p-1.5 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+              >
+                <Menu 
+                  className="w-5 h-5" 
+                  style={{ color: 'hsl(var(--home-text-muted))' }} 
+                />
+              </button>
+              <PrestigeThemeToggle colorVar="--home-text-muted" />
+            </div>
             
-            {/* Title */}
+            {/* Center: Title */}
             <h1 
               className="text-xl md:text-2xl font-bold tracking-wide"
               style={{ 
@@ -52,16 +64,8 @@ const GameSelector = () => {
               MORPH GAMES
             </h1>
             
-            {/* Menu */}
-            <button 
-              onClick={() => setMenuOpen(true)}
-              className="p-1 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10"
-            >
-              <Menu 
-                className="w-5 h-5" 
-                style={{ color: 'hsl(var(--home-text-muted))' }} 
-              />
-            </button>
+            {/* Right: Logo */}
+            <img src={morphIcon} alt="Morph" className="w-8 h-8" />
           </div>
           
           {/* Gradient underline */}
