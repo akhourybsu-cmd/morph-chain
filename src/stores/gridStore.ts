@@ -5,7 +5,9 @@ import { generateDailyGrid } from '@/lib/grid/gridGenerator';
 import { SeededRandom } from '@/lib/grid/seededRNG';
 import { morphGrid, morphPowerRow } from '@/lib/grid/morphMechanics';
 import { isValidWord } from '@/lib/grid/dictionary';
-import { recordGridPlayStart, recordGridSubmit, recordGridWin, saveGridGameState, loadGridGameState, clearGridGameState, type SubmittedWord } from '@/lib/gridStorage';
+import { recordGridPlayStart, recordGridSubmit, recordGridWin, recordGridLoss, saveGridGameState, loadGridGameState, clearGridGameState, type SubmittedWord } from '@/lib/gridStorage';
+
+const MAX_MOVES = 20;
 
 interface LastSubmission {
   wordLength: number;
@@ -24,6 +26,7 @@ interface GridState {
   rng: SeededRandom | null;
   isPlaying: boolean;
   isEnded: boolean;
+  isWin: boolean;
   morphCount: number;
   stabilizationCount: number;
   startTime: number | null;
@@ -53,6 +56,7 @@ export const useGridStore = create<GridState>((set, get) => ({
   rng: null,
   isPlaying: false,
   isEnded: false,
+  isWin: false,
   morphCount: 0,
   stabilizationCount: 0,
   startTime: null,
@@ -64,6 +68,27 @@ export const useGridStore = create<GridState>((set, get) => ({
     const savedState = loadGridGameState(date);
     
     if (savedState && savedState.dailySeed === date) {
+      // Check if saved game was already ended
+      if (savedState.isEnded) {
+        const rng = new SeededRandom(date + '-morph');
+        set({
+          grid: savedState.grid,
+          selected: [],
+          submittedWords: savedState.submittedWords,
+          moves: savedState.moves,
+          purpleCount: savedState.purpleCount,
+          dailySeed: date,
+          rng,
+          isPlaying: false,
+          isEnded: true,
+          isWin: savedState.isWin ?? false,
+          morphCount: savedState.morphCount,
+          stabilizationCount: savedState.stabilizationCount,
+          startTime: savedState.startTime
+        });
+        return;
+      }
+      
       // Restore from saved state
       const rng = new SeededRandom(date + '-morph');
       set({
@@ -76,6 +101,7 @@ export const useGridStore = create<GridState>((set, get) => ({
         rng,
         isPlaying: true,
         isEnded: false,
+        isWin: false,
         morphCount: savedState.morphCount,
         stabilizationCount: savedState.stabilizationCount,
         startTime: savedState.startTime
@@ -96,6 +122,7 @@ export const useGridStore = create<GridState>((set, get) => ({
         rng,
         isPlaying: true,
         isEnded: false,
+        isWin: false,
         morphCount: 0,
         stabilizationCount: 0,
         startTime: Date.now()
@@ -140,7 +167,7 @@ export const useGridStore = create<GridState>((set, get) => ({
   },
   
   submitWord: () => {
-    const { selected, grid, rng, submittedWords, morphCount, stabilizationCount, isEnded } = get();
+    const { selected, grid, rng, submittedWords, morphCount, stabilizationCount, isEnded, moves } = get();
     
     // Prevent submissions after game ends
     if (isEnded) {
@@ -148,7 +175,8 @@ export const useGridStore = create<GridState>((set, get) => ({
       return false;
     }
     
-    if (selected.length < 3 || !rng) return false;
+    // Minimum 4 letters required
+    if (selected.length < 4 || !rng) return false;
     
     const word = selected.map(t => t.char).join('');
     
@@ -221,14 +249,16 @@ export const useGridStore = create<GridState>((set, get) => ({
     }
     
     const newPurpleCount = morphedGrid.flat().filter(t => t.progress === 2).length;
+    const newMoves = moves + 1;
     const isWin = newPurpleCount === 25;
+    const isLoss = !isWin && newMoves >= MAX_MOVES;
+    const gameEnded = isWin || isLoss;
     
     // Track stats
     const usedPowerRow = selected.some(t => t.isPower);
     const stabilizedFreed = selected.filter(t => t.stabilized).length;
     recordGridSubmit(word, usedPowerRow, stabilizedFreed);
     
-    const newMoves = get().moves + 1;
     const newMorphCount = morphCount + 1;
     const newStabilizationCount = countStabilized(morphedGrid);
     const newSubmittedWords = [...submittedWords, { word, timestamp: Date.now() }];
@@ -241,7 +271,8 @@ export const useGridStore = create<GridState>((set, get) => ({
       purpleCount: newPurpleCount,
       morphCount: newMorphCount,
       stabilizationCount: newStabilizationCount,
-      isEnded: isWin,
+      isEnded: gameEnded,
+      isWin: isWin,
       lastSubmission: {
         wordLength,
         usedTileIds,
@@ -261,10 +292,12 @@ export const useGridStore = create<GridState>((set, get) => ({
       dailySeed: currentState.dailySeed,
       morphCount: newMorphCount,
       stabilizationCount: newStabilizationCount,
-      startTime: currentState.startTime || Date.now()
+      startTime: currentState.startTime || Date.now(),
+      isEnded: gameEnded,
+      isWin: isWin
     });
     
-    // Record win if game complete
+    // Record win or loss
     if (isWin) {
       const state = get();
       const timeToComplete = state.startTime ? Date.now() - state.startTime : undefined;
@@ -276,9 +309,6 @@ export const useGridStore = create<GridState>((set, get) => ({
         timeToCompleteMs: timeToComplete,
       });
       
-      // Clear saved game state on win
-      clearGridGameState(state.dailySeed);
-      
       // Store entry ID for leaderboard highlighting
       if (typeof window !== 'undefined') {
         const entries = JSON.parse(localStorage.getItem(`morphGrid_leaderboard_${state.dailySeed}`) || '[]');
@@ -286,6 +316,17 @@ export const useGridStore = create<GridState>((set, get) => ({
           localStorage.setItem('morphGrid_myEntryId', entries[entries.length - 1].id);
         }
       }
+    } else if (isLoss) {
+      const state = get();
+      const timeToComplete = state.startTime ? Date.now() - state.startTime : undefined;
+      
+      recordGridLoss({
+        dateSeed: state.dailySeed,
+        moves: state.moves,
+        wordsUsed: state.submittedWords.length,
+        purpleCount: newPurpleCount,
+        timeToCompleteMs: timeToComplete,
+      });
     }
     
     return true;

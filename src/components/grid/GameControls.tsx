@@ -8,8 +8,8 @@ export const GameControls = () => {
   const swipeStartXRef = useRef<number | null>(null);
   
   const handleSubmit = () => {
-    if (selected.length < 3) {
-      toast.error('Word must be at least 3 letters');
+    if (selected.length < 4) {
+      toast.error('Word must be at least 4 letters');
       return;
     }
     
@@ -29,13 +29,13 @@ export const GameControls = () => {
 
   // Swipe-to-submit on word preview
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (selected.length >= 3) {
+    if (selected.length >= 4) {
       swipeStartXRef.current = e.touches[0].clientX;
     }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (swipeStartXRef.current !== null && selected.length >= 3) {
+    if (swipeStartXRef.current !== null && selected.length >= 4) {
       const endX = e.changedTouches[0].clientX;
       const distance = endX - swipeStartXRef.current;
       
@@ -60,7 +60,7 @@ export const GameControls = () => {
       
       <Button
         onClick={handleSubmit}
-        disabled={selected.length < 3}
+        disabled={selected.length < 4}
         className="flex-[2] h-full text-base font-bold rounded-2xl disabled:opacity-50 bg-gradient-to-r from-[hsl(var(--grid-accent-start))] via-[hsl(var(--grid-accent-mid))] to-[hsl(var(--grid-accent-end))] hover:opacity-90 shadow-[0_0_20px_hsl(var(--grid-glow)/0.4)] transition-all"
         style={{
           textShadow: '0 0 10px rgba(0,0,0,0.5)'
