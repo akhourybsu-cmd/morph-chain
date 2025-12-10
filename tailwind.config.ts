@@ -254,6 +254,23 @@ export default {
           "0%": { opacity: "0", transform: "translateY(8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "orb-travel": {
+          "0%": { 
+            transform: "translate(0, 0) scale(1)",
+            opacity: "1",
+            boxShadow: "0 0 20px rgba(251,191,36,0.8)"
+          },
+          "70%": { 
+            transform: "translate(var(--target-x), var(--target-y)) scale(0.6)",
+            opacity: "0.9",
+            boxShadow: "0 0 30px rgba(251,191,36,1)"
+          },
+          "100%": { 
+            transform: "translate(var(--target-x), var(--target-y)) scale(0)",
+            opacity: "0",
+            boxShadow: "0 0 50px rgba(255,255,255,1)"
+          }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -283,6 +300,7 @@ export default {
         "score-travel": "score-travel 0.5s ease-out forwards",
         "badge-pulse": "badge-pulse 0.5s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
+        "orb-travel": "orb-travel 0.45s ease-in forwards",
       },
     },
   },

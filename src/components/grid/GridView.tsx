@@ -112,15 +112,19 @@ export const GridView = () => {
       let upgradeClearTimer: ReturnType<typeof setTimeout> | null = null;
       
       if (lastSubmission.upgradedTileIds.length > 0) {
-        // Set upgrading tiles with delay (after word celebration starts traveling)
-        upgradeStartTimer = setTimeout(() => {
-          setUpgradingTiles(new Set(lastSubmission.upgradedTileIds));
-        }, 800);
+        // Stagger the upgrade animations - each orb arrives slightly after the previous
+        lastSubmission.upgradedTileIds.forEach((tileId, index) => {
+          const startDelay = 900 + (index * 100); // 900ms base + 100ms stagger per tile
+          setTimeout(() => {
+            setUpgradingTiles(prev => new Set([...prev, tileId]));
+          }, startDelay);
+        });
         
-        // Clear upgrade animations after animation completes (800ms delay + 600ms animation)
+        // Clear all upgrade animations after last one completes
+        const lastTileDelay = 900 + (lastSubmission.upgradedTileIds.length - 1) * 100;
         upgradeClearTimer = setTimeout(() => {
           setUpgradingTiles(new Set());
-        }, 1400);
+        }, lastTileDelay + 600); // Add 600ms for animation duration
       }
 
       return () => {

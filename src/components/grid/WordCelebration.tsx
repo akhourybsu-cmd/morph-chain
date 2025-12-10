@@ -4,11 +4,37 @@ import { cn } from '@/lib/utils';
 
 type Phase = 'pop' | 'travel' | 'done';
 
+interface TargetPosition {
+  x: number;
+  y: number;
+}
+
 export const WordCelebration = () => {
   const { lastSubmission, clearLastSubmission, setHighlightTrackerLength } = useGridStore();
   const [phase, setPhase] = useState<Phase>('done');
   const [wordLength, setWordLength] = useState(0);
   const [upgradedCount, setUpgradedCount] = useState(0);
+  const [targetPositions, setTargetPositions] = useState<TargetPosition[]>([]);
+
+  // Calculate target positions for upgraded tiles
+  useEffect(() => {
+    if (lastSubmission?.upgradedTileIds.length > 0) {
+      const positions = lastSubmission.upgradedTileIds.map(tileId => {
+        const el = document.querySelector(`[data-tile-id="${tileId}"]`);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          return {
+            x: rect.left + rect.width / 2 - window.innerWidth / 2,
+            y: rect.top + rect.height / 2 - window.innerHeight / 2
+          };
+        }
+        return { x: 0, y: 0 };
+      });
+      setTargetPositions(positions);
+    } else {
+      setTargetPositions([]);
+    }
+  }, [lastSubmission]);
 
   useEffect(() => {
     if (lastSubmission) {
@@ -19,19 +45,19 @@ export const WordCelebration = () => {
       // Phase 1 → Phase 2: Pop to Travel
       const travelTimer = setTimeout(() => {
         setPhase('travel');
-      }, 600);
+      }, 500);
 
       // Phase 2 → Done: Travel complete, trigger tracker highlight
       const doneTimer = setTimeout(() => {
         setPhase('done');
         setHighlightTrackerLength(lastSubmission.wordLength);
         clearLastSubmission();
-      }, 1100);
+      }, 1200);
 
       // Clear tracker highlight after pulse
       const clearHighlightTimer = setTimeout(() => {
         setHighlightTrackerLength(null);
-      }, 1600);
+      }, 1700);
 
       return () => {
         clearTimeout(travelTimer);
@@ -42,6 +68,8 @@ export const WordCelebration = () => {
   }, [lastSubmission, clearLastSubmission, setHighlightTrackerLength]);
 
   if (phase === 'done') return null;
+
+  const hasUpgrades = targetPositions.length > 0;
 
   // Intensity based on word length
   const getIntensityStyles = () => {
@@ -81,36 +109,62 @@ export const WordCelebration = () => {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
-      {/* Main score display */}
-      <div
-        className={cn(
-          "flex flex-col items-center gap-2 font-outfit font-black text-white transition-all",
-          intensity.size,
-          intensity.glow,
-          phase === 'pop' && "animate-score-pop",
-          phase === 'travel' && "animate-score-travel"
-        )}
-      >
-        {/* Ring effect for 5+ */}
-        {intensity.ring && phase === 'pop' && (
-          <div className="absolute w-32 h-32 md:w-40 md:h-40 rounded-full border-2 border-chain/40 animate-word-burst" />
-        )}
-
-        {/* Score text */}
-        <span className="relative">
-          +{wordLength}
-          {wordLength >= 5 && (
-            <span className="absolute -right-6 -top-1 text-lg">✨</span>
+      {/* Main score display - only shows during pop phase */}
+      {phase === 'pop' && (
+        <div
+          className={cn(
+            "flex flex-col items-center gap-2 font-outfit font-black text-white animate-score-pop",
+            intensity.size,
+            intensity.glow
           )}
-        </span>
+        >
+          {/* Ring effect for 5+ */}
+          {intensity.ring && (
+            <div className="absolute w-32 h-32 md:w-40 md:h-40 rounded-full border-2 border-chain/40 animate-word-burst" />
+          )}
 
-        {/* Cascade bonus badge */}
-        {upgradedCount > 0 && phase === 'pop' && (
-          <div className="text-base md:text-lg font-bold text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,0.8)] animate-fade-in">
-            🔥 +{upgradedCount} tile{upgradedCount > 1 ? 's' : ''} upgraded!
-          </div>
-        )}
-      </div>
+          {/* Score text */}
+          <span className="relative">
+            +{wordLength}
+            {wordLength >= 5 && (
+              <span className="absolute -right-6 -top-1 text-lg">✨</span>
+            )}
+          </span>
+
+          {/* Cascade bonus badge */}
+          {upgradedCount > 0 && (
+            <div className="text-base md:text-lg font-bold text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,0.8)] animate-fade-in">
+              🔥 +{upgradedCount} tile{upgradedCount > 1 ? 's' : ''} upgraded!
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Energy orbs that travel to upgraded tiles */}
+      {phase === 'travel' && hasUpgrades && targetPositions.map((pos, i) => (
+        <div
+          key={i}
+          className="absolute w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-orange-500 animate-orb-travel"
+          style={{
+            '--target-x': `${pos.x}px`,
+            '--target-y': `${pos.y}px`,
+            animationDelay: `${i * 80}ms`
+          } as React.CSSProperties}
+        />
+      ))}
+
+      {/* Fallback: travel down to tracker for non-upgrade words */}
+      {phase === 'travel' && !hasUpgrades && (
+        <div
+          className={cn(
+            "flex items-center justify-center font-outfit font-black text-white animate-score-travel",
+            intensity.size,
+            intensity.glow
+          )}
+        >
+          <span>+{wordLength}</span>
+        </div>
+      )}
 
       {/* Particles for 6+ letter words */}
       {intensity.particles && phase === 'pop' && (
