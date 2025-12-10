@@ -597,8 +597,6 @@ const Index = () => {
       style={{ background: 'hsl(var(--chain-page-bg))' }}
     >
       <ChainPrestigeHeader
-        puzzleNumber={puzzle.puzzleIndex || 0}
-        date={puzzle.date}
         onOpenMenu={() => setMenuOpen(true)}
         onOpenHelp={() => setHelpOpen(true)}
       />
