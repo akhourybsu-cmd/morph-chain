@@ -2,16 +2,14 @@ import { DraggableTile } from './DraggableTile';
 
 interface TileRackProps {
   tiles: string[];
-  onTileDragStart: (letter: string, index: number) => void;
-  onTileDragEnd: () => void;
-  draggingIndex: number | null;
+  selectedIndex: number | null;
+  onTileSelect: (letter: string, index: number) => void;
 }
 
 export const TileRack = ({ 
   tiles, 
-  onTileDragStart, 
-  onTileDragEnd, 
-  draggingIndex 
+  selectedIndex,
+  onTileSelect 
 }: TileRackProps) => {
   return (
     <div 
@@ -28,9 +26,8 @@ export const TileRack = ({
             key={`${letter}-${i}`}
             letter={letter}
             index={i}
-            onDragStart={onTileDragStart}
-            onDragEnd={onTileDragEnd}
-            isDragging={draggingIndex === i}
+            isSelected={selectedIndex === i}
+            onSelect={onTileSelect}
           />
         ))}
       </div>
@@ -38,7 +35,7 @@ export const TileRack = ({
         className="text-center mt-3 text-xs"
         style={{ color: 'hsl(var(--rush-text-muted))' }}
       >
-        Drag a letter onto the word above
+        {selectedIndex !== null ? 'Tap a letter above to place it' : 'Tap a letter to select it'}
       </p>
     </div>
   );

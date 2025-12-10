@@ -57,8 +57,7 @@ const MorphRush = () => {
   
   const [currentWord, setCurrentWord] = useState(puzzle.startWord);
   const [tileRack, setTileRack] = useState<string[]>([]);
-  const [draggingTile, setDraggingTile] = useState<{ letter: string; index: number } | null>(null);
-  const [highlightedDropPosition, setHighlightedDropPosition] = useState<number | null>(null);
+  const [selectedTile, setSelectedTile] = useState<{ letter: string; index: number } | null>(null);
   const [shake, setShake] = useState(false);
   const [error, setError] = useState("");
   
@@ -447,10 +446,14 @@ const MorphRush = () => {
                 <div className="my-8">
                   <WordDropZone
                     word={currentWord}
-                    draggingLetter={draggingTile?.letter || null}
-                    onDrop={handleDrop}
-                    highlightedPosition={highlightedDropPosition}
-                    onHighlight={setHighlightedDropPosition}
+                    selectedLetter={selectedTile?.letter || null}
+                    onPlaceLetter={(position) => {
+                      if (selectedTile) {
+                        handleDrop(position, selectedTile.letter);
+                        setSelectedTile(null);
+                      }
+                    }}
+                    hasSelection={selectedTile !== null}
                     shake={shake}
                   />
                   
@@ -465,9 +468,14 @@ const MorphRush = () => {
                 {/* Tile Rack */}
                 <TileRack
                   tiles={tileRack}
-                  onTileDragStart={(letter, index) => setDraggingTile({ letter, index })}
-                  onTileDragEnd={() => setDraggingTile(null)}
-                  draggingIndex={draggingTile?.index ?? null}
+                  selectedIndex={selectedTile?.index ?? null}
+                  onTileSelect={(letter, index) => {
+                    if (selectedTile?.index === index) {
+                      setSelectedTile(null);
+                    } else {
+                      setSelectedTile({ letter, index });
+                    }
+                  }}
                 />
                 
                 {/* Word count */}
