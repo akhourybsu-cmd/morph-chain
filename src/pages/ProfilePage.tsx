@@ -166,7 +166,30 @@ export default function ProfilePage() {
 
   const onUploadAvatar = async () => {
     if (!file) return;
-    const ext = file.name.split(".").pop();
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Error",
+        description: "Only JPEG, PNG, WebP, or GIF images are allowed",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast({
+        title: "Error",
+        description: "File must be under 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const ext = file.name.split(".").pop()?.toLowerCase();
     const path = `${user.id}/avatar_${Date.now()}.${ext}`;
     
     const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, {
