@@ -31,22 +31,24 @@ export const WordLengthTracker = ({ submittedWords }: WordLengthTrackerProps) =>
   }
 
   return (
-    <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-      <span className="opacity-70">Words:</span>
+    <div className="flex items-center justify-center gap-2 text-xs font-inter text-[hsl(var(--grid-text-muted))]">
+      <span>Words:</span>
       <div className="flex items-center gap-1.5">
         {usedLengths.map((len) => (
           <div
             key={len}
             className={cn(
-              "px-1.5 py-0.5 rounded-md font-medium transition-all duration-300",
+              "px-2 py-0.5 rounded-md font-medium transition-all duration-300",
               len >= 5
-                ? "bg-chain/20 text-chain border border-chain/30"
-                : "bg-muted/50 text-muted-foreground",
-              highlightTrackerLength === len && "animate-badge-pulse scale-110"
+                ? "bg-[hsl(var(--grid-accent)/0.1)] text-[hsl(var(--grid-accent))]"
+                : "bg-[hsl(var(--grid-pill-bg))] text-[hsl(var(--grid-text-secondary))]",
+              highlightTrackerLength === len && "scale-110 ring-1 ring-[hsl(var(--grid-accent))]"
             )}
           >
             {len}L
-            <span className="ml-0.5 opacity-80">({lengthCounts[len]})</span>
+            <span className="ml-0.5 opacity-80">
+              (<span className="font-semibold">{lengthCounts[len]}</span>)
+            </span>
           </div>
         ))}
       </div>
