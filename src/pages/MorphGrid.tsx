@@ -125,13 +125,13 @@ const MorphGrid = () => {
       
       {/* Info Strip - NYT Style */}
       <div 
-        className="h-10 border-b px-3 md:px-4 flex justify-center items-center gap-3 text-sm flex-shrink-0"
+        className="h-10 border-b px-2 md:px-4 flex justify-center items-center gap-1.5 md:gap-3 text-xs md:text-sm flex-shrink-0 flex-nowrap whitespace-nowrap"
         style={{ 
           borderColor: 'hsl(var(--grid-divider))',
           background: 'white'
         }}
       >
-        <span className="text-[hsl(var(--grid-text-muted))] font-inter">Daily #{dailySeed}</span>
+        <span className="text-[hsl(var(--grid-text-muted))] font-inter">#{dailySeed}</span>
         <span className="text-[hsl(var(--grid-divider))]">·</span>
         <ScoreDisplay compact />
       </div>
