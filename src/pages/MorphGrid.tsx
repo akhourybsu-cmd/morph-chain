@@ -53,11 +53,12 @@ const MorphGrid = () => {
     init();
   }, [initializeGame]);
   
+  // Auto-show end screen if game is already ended (returning to completed daily)
   useEffect(() => {
-    if (isEnded) {
+    if (isEnded && !isLoading) {
       setShowEndScreen(true);
     }
-  }, [isEnded]);
+  }, [isEnded, isLoading]);
   
   if (isLoading) {
     return (

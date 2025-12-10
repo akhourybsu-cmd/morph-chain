@@ -37,7 +37,7 @@ export const GridMenuSheet = () => {
       </SheetTrigger>
       <SheetContent 
         side="left" 
-        className="w-80 overflow-y-auto bg-white border-[hsl(var(--grid-card-border))]"
+        className="w-80 overflow-y-auto bg-[hsl(var(--grid-card-bg))] border-[hsl(var(--grid-card-border))]"
       >
         <div className="flex flex-col gap-6 mt-8 font-inter">
           {/* Games Section */}
@@ -132,7 +132,7 @@ export const GridMenuSheet = () => {
       {/* Leaderboard Dialog */}
       <Dialog open={showLeaderboard} onOpenChange={setShowLeaderboard}>
         <DialogContent 
-          className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-[hsl(var(--grid-card-border))]"
+          className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-[hsl(var(--grid-card-bg))] border-[hsl(var(--grid-card-border))]"
           style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
         >
           <DialogHeader>
@@ -148,7 +148,7 @@ export const GridMenuSheet = () => {
       {/* Settings Dialog */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
         <DialogContent 
-          className="sm:max-w-md bg-white border-[hsl(var(--grid-card-border))]"
+          className="sm:max-w-md bg-[hsl(var(--grid-card-bg))] border-[hsl(var(--grid-card-border))]"
           style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
         >
           <DialogHeader>
