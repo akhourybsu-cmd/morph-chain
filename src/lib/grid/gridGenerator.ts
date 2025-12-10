@@ -54,6 +54,35 @@ export function generateDailyGrid(date: string): Tile[][] {
   return generateSafeTemplate(rng);
 }
 
+/**
+ * Generate a random grid for practice mode (not seeded by date)
+ */
+export function generateRandomGrid(): Tile[][] {
+  const randomSeed = `practice-${Date.now()}-${Math.random()}`;
+  const rng = new SeededRandom(randomSeed);
+  
+  for (let attempt = 0; attempt < MAX_GENERATION_RETRIES; attempt++) {
+    const attemptRng = new SeededRandom(`${randomSeed}-gen-${attempt}`);
+    const grid = generateGridAttempt(attemptRng);
+    
+    if (validateGridConstraints(grid)) {
+      console.log(`✓ Practice grid generated successfully on attempt ${attempt + 1}`);
+      return grid;
+    }
+    
+    if (attempt > 10 && attempt % 5 === 0) {
+      const repaired = repairGridConstraints(grid, attemptRng);
+      if (validateGridConstraints(repaired)) {
+        console.log(`✓ Practice grid repaired successfully on attempt ${attempt + 1}`);
+        return repaired;
+      }
+    }
+  }
+  
+  console.warn('Using fallback safe template for practice');
+  return generateSafeTemplate(rng);
+}
+
 function generateGridAttempt(rng: SeededRandom): Tile[][] {
   const grid: Tile[][] = [];
   const totalCells = GRID_SIZE * GRID_SIZE;
