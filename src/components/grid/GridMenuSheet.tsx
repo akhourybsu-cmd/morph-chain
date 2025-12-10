@@ -27,29 +27,36 @@ export const GridMenuSheet = () => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-9 w-9 sm:h-10 sm:w-10 text-[hsl(var(--grid-text-secondary))] hover:text-[hsl(var(--grid-text-primary))] hover:bg-[hsl(var(--grid-pill-bg))]"
+        >
           <Menu className="w-5 h-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-80 overflow-y-auto">
-        <div className="flex flex-col gap-6 mt-8">
+      <SheetContent 
+        side="left" 
+        className="w-80 overflow-y-auto bg-white border-[hsl(var(--grid-card-border))]"
+      >
+        <div className="flex flex-col gap-6 mt-8 font-inter">
           {/* Games Section */}
           <GamesNavigation currentGame="grid" onNavigate={() => setOpen(false)} />
 
-          <Separator />
+          <Separator className="bg-[hsl(var(--grid-divider))]" />
 
           {/* Grid-specific section */}
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">MORPH GRID</h3>
+            <h3 className="text-xs font-semibold text-[hsl(var(--grid-text-muted))] mb-3 px-2 uppercase tracking-wider">Morph Grid</h3>
             <div className="space-y-1">
               <button
                 onClick={() => {
                   setShowAchievements(true);
                   setOpen(false);
                 }}
-                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+                className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[hsl(var(--grid-pill-bg))] transition-colors flex items-center gap-2 text-[hsl(var(--grid-text-primary))]"
               >
-                <Award className="w-4 h-4 text-grid" />
+                <Award className="w-4 h-4 text-[hsl(var(--grid-accent))]" />
                 Achievements
               </button>
               <button
@@ -57,9 +64,9 @@ export const GridMenuSheet = () => {
                   setShowLeaderboard(true);
                   setOpen(false);
                 }}
-                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+                className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[hsl(var(--grid-pill-bg))] transition-colors flex items-center gap-2 text-[hsl(var(--grid-text-primary))]"
               >
-                <Trophy className="w-4 h-4" />
+                <Trophy className="w-4 h-4 text-[hsl(var(--grid-accent))]" />
                 Leaderboard
               </button>
               <button
@@ -67,9 +74,9 @@ export const GridMenuSheet = () => {
                   setShowStats(true);
                   setOpen(false);
                 }}
-                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+                className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[hsl(var(--grid-pill-bg))] transition-colors flex items-center gap-2 text-[hsl(var(--grid-text-primary))]"
               >
-                <BarChart3 className="w-4 h-4" />
+                <BarChart3 className="w-4 h-4 text-[hsl(var(--grid-accent))]" />
                 Stats
               </button>
               <button
@@ -77,28 +84,28 @@ export const GridMenuSheet = () => {
                   setShowSettings(true);
                   setOpen(false);
                 }}
-                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+                className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[hsl(var(--grid-pill-bg))] transition-colors flex items-center gap-2 text-[hsl(var(--grid-text-primary))]"
               >
-                <Settings className="w-4 h-4" />
+                <Settings className="w-4 h-4 text-[hsl(var(--grid-accent))]" />
                 Settings
               </button>
             </div>
           </div>
 
-          <Separator />
+          <Separator className="bg-[hsl(var(--grid-divider))]" />
 
           {/* Info Section */}
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">INFO</h3>
+            <h3 className="text-xs font-semibold text-[hsl(var(--grid-text-muted))] mb-3 px-2 uppercase tracking-wider">Info</h3>
             <div className="space-y-1">
               <button
                 onClick={() => {
                   navigate("/rules");
                   setOpen(false);
                 }}
-                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+                className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[hsl(var(--grid-pill-bg))] transition-colors flex items-center gap-2 text-[hsl(var(--grid-text-primary))]"
               >
-                <HelpCircle className="w-4 h-4" />
+                <HelpCircle className="w-4 h-4 text-[hsl(var(--grid-accent))]" />
                 Rules
               </button>
               <button
@@ -106,9 +113,9 @@ export const GridMenuSheet = () => {
                   navigate("/whats-new");
                   setOpen(false);
                 }}
-                className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+                className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[hsl(var(--grid-pill-bg))] transition-colors flex items-center gap-2 text-[hsl(var(--grid-text-primary))]"
               >
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 text-[hsl(var(--grid-accent))]" />
                 What's New
               </button>
             </div>
@@ -124,9 +131,12 @@ export const GridMenuSheet = () => {
 
       {/* Leaderboard Dialog */}
       <Dialog open={showLeaderboard} onOpenChange={setShowLeaderboard}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent 
+          className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-[hsl(var(--grid-card-border))]"
+          style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
+        >
           <DialogHeader>
-            <DialogTitle>Leaderboard</DialogTitle>
+            <DialogTitle className="font-playfair text-xl text-[hsl(var(--grid-text-primary))]">Leaderboard</DialogTitle>
           </DialogHeader>
           <GridLeaderboard dateSeed={dailySeed} />
         </DialogContent>
@@ -137,15 +147,18 @@ export const GridMenuSheet = () => {
       
       {/* Settings Dialog */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent 
+          className="sm:max-w-md bg-white border-[hsl(var(--grid-card-border))]"
+          style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
+        >
           <DialogHeader>
-            <DialogTitle>Settings</DialogTitle>
+            <DialogTitle className="font-playfair text-xl text-[hsl(var(--grid-text-primary))]">Settings</DialogTitle>
           </DialogHeader>
-          <div className="space-y-6 py-4">
+          <div className="space-y-5 py-4 font-inter">
             <div className="flex items-center justify-between">
               <Label htmlFor="animations" className="cursor-pointer">
-                <div className="font-medium">Animations</div>
-                <div className="text-sm text-muted-foreground">Enable tile animations</div>
+                <div className="font-medium text-[hsl(var(--grid-text-primary))]">Animations</div>
+                <div className="text-sm text-[hsl(var(--grid-text-muted))]">Enable tile animations</div>
               </Label>
               <Switch
                 id="animations"
@@ -156,8 +169,8 @@ export const GridMenuSheet = () => {
             
             <div className="flex items-center justify-between">
               <Label htmlFor="sound-effects" className="cursor-pointer">
-                <div className="font-medium">Sound Effects</div>
-                <div className="text-sm text-muted-foreground">Audio feedback for actions</div>
+                <div className="font-medium text-[hsl(var(--grid-text-primary))]">Sound Effects</div>
+                <div className="text-sm text-[hsl(var(--grid-text-muted))]">Audio feedback for actions</div>
               </Label>
               <Switch
                 id="sound-effects"
@@ -168,8 +181,8 @@ export const GridMenuSheet = () => {
             
             <div className="flex items-center justify-between">
               <Label htmlFor="sound-haptics" className="cursor-pointer">
-                <div className="font-medium">Haptics</div>
-                <div className="text-sm text-muted-foreground">Vibration feedback</div>
+                <div className="font-medium text-[hsl(var(--grid-text-primary))]">Haptics</div>
+                <div className="text-sm text-[hsl(var(--grid-text-muted))]">Vibration feedback</div>
               </Label>
               <Switch
                 id="sound-haptics"
@@ -180,8 +193,8 @@ export const GridMenuSheet = () => {
             
             <div className="flex items-center justify-between">
               <Label htmlFor="colorblind" className="cursor-pointer">
-                <div className="font-medium">Colorblind Mode</div>
-                <div className="text-sm text-muted-foreground">Alternative color palette</div>
+                <div className="font-medium text-[hsl(var(--grid-text-primary))]">Colorblind Mode</div>
+                <div className="text-sm text-[hsl(var(--grid-text-muted))]">Alternative color palette</div>
               </Label>
               <Switch
                 id="colorblind"
@@ -190,10 +203,10 @@ export const GridMenuSheet = () => {
               />
             </div>
             
-            <div className="pt-4 border-t">
-              <div className="text-sm text-muted-foreground space-y-2">
-                <p className="font-medium">About Morph Grid</p>
-                <p>Turn all 25 tiles Purple in the fewest moves by forming words. Today's board uses a balanced letter generator so every grid is fair and word-friendly. During play, morphs subtly keep vowels and consonants in a healthy mix.</p>
+            <div className="pt-4 border-t border-[hsl(var(--grid-divider))]">
+              <div className="text-sm text-[hsl(var(--grid-text-muted))] space-y-2">
+                <p className="font-medium text-[hsl(var(--grid-text-secondary))]">About Morph Grid</p>
+                <p>Turn all 25 tiles to Tier 3 in the fewest moves by forming words. Each grid is balanced for fair play.</p>
                 <p className="text-xs mt-3">To manage game data and settings across all games, visit your Profile page.</p>
               </div>
             </div>

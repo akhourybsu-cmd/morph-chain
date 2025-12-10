@@ -7,6 +7,8 @@ export default {
   theme: {
     fontFamily: {
       'outfit': ['Outfit', 'sans-serif'],
+      'playfair': ['Playfair Display', 'Georgia', 'serif'],
+      'inter': ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
     },
     container: {
       center: true,
@@ -185,23 +187,39 @@ export default {
         },
         "tile-pop-small": {
           "0%": { transform: "scale(1)" },
-          "50%": { transform: "scale(1.08)" },
+          "50%": { transform: "scale(1.04)" },
           "100%": { transform: "scale(1)" },
         },
         "tile-pop-medium": {
           "0%": { transform: "scale(1)" },
-          "50%": { transform: "scale(1.12)", boxShadow: "0 0 12px rgba(255,255,255,0.4)" },
+          "50%": { transform: "scale(1.06)" },
           "100%": { transform: "scale(1)" },
         },
         "tile-pop-large": {
           "0%": { transform: "scale(1)" },
-          "50%": { transform: "scale(1.18)", boxShadow: "0 0 20px rgba(255,255,255,0.6)" },
+          "50%": { transform: "scale(1.08)" },
           "100%": { transform: "scale(1)" },
         },
         "tile-pop-epic": {
-          "0%": { transform: "scale(1)", filter: "brightness(1)" },
-          "50%": { transform: "scale(1.25)", boxShadow: "0 0 30px rgba(255,255,255,0.8)", filter: "brightness(1.3)" },
-          "100%": { transform: "scale(1)", filter: "brightness(1)" },
+          "0%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.1)" },
+          "100%": { transform: "scale(1)" },
+        },
+        "tile-pop-subtle": {
+          "0%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.03)" },
+          "100%": { transform: "scale(1)" },
+        },
+        "tile-flip": {
+          "0%": { transform: "scale(1)" },
+          "30%": { transform: "scale(0.9)" },
+          "60%": { transform: "scale(1.02)" },
+          "100%": { transform: "scale(1)" },
+        },
+        "score-pop-subtle": {
+          "0%": { transform: "scale(0.8)", opacity: "0" },
+          "50%": { transform: "scale(1.05)", opacity: "1" },
+          "100%": { transform: "scale(1)", opacity: "1" },
         },
         "upgrade-spark": {
           "0%": { transform: "scale(1)", filter: "brightness(1)", boxShadow: "0 0 0 rgba(255,255,255,0)" },
@@ -288,10 +306,13 @@ export default {
         "achievement-pop": "achievement-pop 0.4s ease-out",
         "confetti": "confetti 1s ease-out forwards",
         "confetti-fall": "confetti-fall 2s ease-out forwards",
-        "tile-pop-small": "tile-pop-small 0.25s ease-out",
-        "tile-pop-medium": "tile-pop-medium 0.3s ease-out",
-        "tile-pop-large": "tile-pop-large 0.35s ease-out",
-        "tile-pop-epic": "tile-pop-epic 0.4s ease-out",
+        "tile-pop-small": "tile-pop-small 0.2s ease-out",
+        "tile-pop-medium": "tile-pop-medium 0.2s ease-out",
+        "tile-pop-large": "tile-pop-large 0.25s ease-out",
+        "tile-pop-epic": "tile-pop-epic 0.25s ease-out",
+        "tile-pop-subtle": "tile-pop-subtle 0.15s ease-out",
+        "tile-flip": "tile-flip 0.22s ease-out",
+        "score-pop-subtle": "score-pop-subtle 0.4s ease-out forwards",
         "upgrade-spark": "upgrade-spark 1.2s ease-in-out",
         "tile-upgrade": "tile-upgrade 0.6s ease-out",
         "float-score": "float-score 0.8s ease-out forwards",

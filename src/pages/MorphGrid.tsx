@@ -60,10 +60,15 @@ const MorphGrid = () => {
   
   if (isLoading) {
     return (
-      <div className="min-h-svh flex items-center justify-center bg-background">
+      <div 
+        className="min-h-svh flex items-center justify-center"
+        style={{ background: 'hsl(var(--grid-page-bg))' }}
+      >
         <div className="text-center">
-          <div className="text-2xl font-outfit font-bold mb-2">Loading MORPH GRID...</div>
-          <div className="text-muted-foreground">Preparing today's puzzle</div>
+          <div className="text-2xl font-playfair font-semibold mb-2 text-[hsl(var(--grid-text-primary))]">
+            Loading Morph Grid...
+          </div>
+          <div className="text-[hsl(var(--grid-text-muted))] font-inter">Preparing today's puzzle</div>
         </div>
       </div>
     );
@@ -71,20 +76,25 @@ const MorphGrid = () => {
   
   return (
     <div 
-      className="min-h-svh max-h-svh flex flex-col bg-background overflow-hidden max-w-2xl mx-auto"
+      className="min-h-svh max-h-svh flex flex-col overflow-hidden max-w-xl mx-auto"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)'
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        background: 'hsl(var(--grid-page-bg))'
       }}
     >
-      {/* Header - Fixed 64px */}
-      <header className="h-14 md:h-16 border-b border-border/50 bg-background/95 backdrop-blur-md flex-shrink-0">
+      {/* Header - NYT Style */}
+      <header 
+        className="h-14 md:h-16 border-b flex-shrink-0"
+        style={{ 
+          borderColor: 'hsl(var(--grid-card-border))',
+          background: 'hsl(var(--grid-page-bg))'
+        }}
+      >
         <div className="px-3 md:px-4 h-full flex items-center justify-between">
           <GridMenuSheet />
           
-          <div className="logo-pulse">
-            <GridLogo />
-          </div>
+          <GridLogo />
           
           <div className="flex items-center gap-1">
             <Button
@@ -92,12 +102,12 @@ const MorphGrid = () => {
               size="icon"
               onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
               aria-label={settings.soundEnabled ? "Mute sound" : "Unmute sound"}
-              className="h-9 w-9 md:h-10 md:w-10"
+              className="h-9 w-9 md:h-10 md:w-10 text-[hsl(var(--grid-text-secondary))] hover:text-[hsl(var(--grid-text-primary))] hover:bg-[hsl(var(--grid-pill-bg))]"
             >
               {settings.soundEnabled ? (
                 <Volume2 className="w-4 h-4 md:w-5 md:h-5" />
               ) : (
-                <VolumeX className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
+                <VolumeX className="w-4 h-4 md:w-5 md:h-5" />
               )}
             </Button>
             <Button
@@ -105,7 +115,7 @@ const MorphGrid = () => {
               size="icon"
               onClick={() => setShowHowToPlay(true)}
               aria-label="How to play"
-              className="h-9 w-9 md:h-10 md:w-10"
+              className="h-9 w-9 md:h-10 md:w-10 text-[hsl(var(--grid-text-secondary))] hover:text-[hsl(var(--grid-text-primary))] hover:bg-[hsl(var(--grid-pill-bg))]"
             >
               <HelpCircle className="w-4 h-4 md:w-5 md:h-5" />
             </Button>
@@ -113,34 +123,55 @@ const MorphGrid = () => {
         </div>
       </header>
       
-      {/* Info Row - Compact stats */}
-      <div className="h-9 bg-card/50 border-b border-border/30 px-3 md:px-4 flex justify-center items-center gap-3 text-xs md:text-sm flex-shrink-0">
-        <span className="text-muted-foreground">Daily #{dailySeed}</span>
-        <span className="text-muted-foreground">·</span>
+      {/* Info Strip - NYT Style */}
+      <div 
+        className="h-10 border-b px-3 md:px-4 flex justify-center items-center gap-3 text-sm flex-shrink-0"
+        style={{ 
+          borderColor: 'hsl(var(--grid-divider))',
+          background: 'white'
+        }}
+      >
+        <span className="text-[hsl(var(--grid-text-muted))] font-inter">Daily #{dailySeed}</span>
+        <span className="text-[hsl(var(--grid-divider))]">·</span>
         <ScoreDisplay compact />
       </div>
       
-      {/* Main Game - Flexible, centered grid */}
+      {/* Main Game - Centered grid */}
       <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div className="flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4">
+        <div className="flex-1 flex items-center justify-center px-4 md:px-6 py-4 md:py-6">
           <GridView />
         </div>
       </main>
       
-      {/* Bottom Bar - Fixed with safe area */}
-      <div className="bg-background/95 backdrop-blur-md border-t border-border/50 px-3 md:px-6 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-3 flex flex-col gap-2 flex-shrink-0">
+      {/* Bottom Controls Card - NYT Style */}
+      <div 
+        className="border-t px-4 md:px-6 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-4 flex flex-col gap-3 flex-shrink-0"
+        style={{ 
+          borderColor: 'hsl(var(--grid-card-border))',
+          background: 'white'
+        }}
+      >
         {/* Word Length Tracker */}
         <WordLengthTracker submittedWords={submittedWords} />
         
-        {/* Objective Snapshot */}
-        <div className="flex items-center justify-center gap-2 text-xs md:text-sm mb-1">
-          <span className="text-muted-foreground">Change tiles:</span>
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-4 md:w-5 md:h-5 bg-gradient-grid-orange shadow-[0_0_8px_hsl(var(--grid-orange-glow)/0.5)]" />
-            <span className="text-muted-foreground">→</span>
-            <div className="w-4 h-4 md:w-5 md:h-5 bg-gradient-grid-blue shadow-[0_0_8px_hsl(var(--grid-blue-glow)/0.5)]" />
-            <span className="text-muted-foreground">→</span>
-            <div className="w-4 h-4 md:w-5 md:h-5 bg-gradient-grid-purple shadow-[0_0_8px_hsl(var(--grid-purple-glow)/0.5)]" />
+        {/* Color Legend - NYT Style */}
+        <div className="flex items-center justify-center gap-3 text-xs font-inter text-[hsl(var(--grid-text-muted))]">
+          <span>Progress:</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 rounded bg-[hsl(var(--grid-tier1))]" />
+              <span>Tier 1</span>
+            </div>
+            <span>→</span>
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 rounded bg-[hsl(var(--grid-tier2))]" />
+              <span>Tier 2</span>
+            </div>
+            <span>→</span>
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 rounded bg-[hsl(var(--grid-tier3))]" />
+              <span>Tier 3</span>
+            </div>
           </div>
         </div>
         

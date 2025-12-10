@@ -1,5 +1,5 @@
 import { useGridStore } from '@/stores/gridStore';
-import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 const MAX_MOVES = 20;
 
@@ -10,47 +10,67 @@ interface ScoreDisplayProps {
 export const ScoreDisplay = ({ compact = false }: ScoreDisplayProps) => {
   const moves = useGridStore(state => state.moves);
   const purpleCount = useGridStore(state => state.purpleCount);
-  const dailySeed = useGridStore(state => state.dailySeed);
   
   const progressPercent = (purpleCount / 25) * 100;
   const movesRemaining = MAX_MOVES - moves;
+  const isLowMoves = movesRemaining <= 3;
   
   if (compact) {
     return (
-      <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm font-medium">
-        <span className={`font-bold ${movesRemaining <= 5 ? 'text-destructive' : 'text-primary'}`}>
+      <div className="flex items-center gap-2 text-sm font-inter">
+        <span className={cn(
+          "font-medium",
+          isLowMoves ? "text-[hsl(var(--grid-error))]" : "text-[hsl(var(--grid-accent))]"
+        )}>
           Moves: {moves}/{MAX_MOVES}
         </span>
-        <span className="text-muted-foreground">•</span>
-        <span className="text-foreground">Purple: {purpleCount}/25</span>
+        {isLowMoves && (
+          <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--grid-error))] animate-pulse" />
+        )}
+        <span className="text-[hsl(var(--grid-text-muted))]">·</span>
+        <span className="text-[hsl(var(--grid-text-secondary))]">
+          Goal: <span className="font-semibold text-[hsl(var(--grid-text-primary))]">{purpleCount}</span>/25
+        </span>
+        {/* Subtle purple progress bar */}
+        <div className="w-16 h-1.5 bg-[hsl(var(--grid-divider))] rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-[hsl(var(--grid-tier3))] transition-all duration-300 rounded-full"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
       </div>
     );
   }
   
   return (
-    <div className="space-y-3 py-3 md:py-4 px-4 md:px-6 bg-card/50 rounded-lg border border-border/50">
+    <div className="space-y-3 py-3 px-4 bg-white rounded-xl border border-[hsl(var(--grid-card-border))]">
       <div className="flex justify-around items-center">
         <div className="text-center">
-          <div className={`text-3xl md:text-4xl font-outfit font-bold ${movesRemaining <= 5 ? 'text-destructive' : 'text-primary'}`}>
-            {moves}<span className="text-xl text-muted-foreground">/{MAX_MOVES}</span>
+          <div className={cn(
+            "text-3xl font-inter font-bold",
+            isLowMoves ? "text-[hsl(var(--grid-error))]" : "text-[hsl(var(--grid-accent))]"
+          )}>
+            {moves}<span className="text-xl text-[hsl(var(--grid-text-muted))]">/{MAX_MOVES}</span>
           </div>
-          <div className="text-[10px] md:text-xs text-muted-foreground mt-0.5 md:mt-1">Moves</div>
+          <div className="text-xs text-[hsl(var(--grid-text-muted))] mt-0.5 font-inter">Moves</div>
         </div>
         
-        <div className="w-px h-10 md:h-12 bg-border" />
+        <div className="w-px h-10 bg-[hsl(var(--grid-divider))]" />
         
         <div className="text-center">
-          <div className="text-3xl md:text-4xl font-outfit font-bold text-foreground">
-            {purpleCount}<span className="text-xl text-muted-foreground">/25</span>
+          <div className="text-3xl font-inter font-bold text-[hsl(var(--grid-text-primary))]">
+            {purpleCount}<span className="text-xl text-[hsl(var(--grid-text-muted))]">/25</span>
           </div>
-          <div className="text-[10px] md:text-xs text-muted-foreground mt-0.5 md:mt-1">Purple</div>
+          <div className="text-xs text-[hsl(var(--grid-text-muted))] mt-0.5 font-inter">Purple</div>
         </div>
       </div>
       
       <div className="space-y-1">
-        <Progress value={progressPercent} className="h-2" />
-        <div className="text-[10px] text-center text-muted-foreground">
-          Daily #{dailySeed}
+        <div className="w-full h-2 bg-[hsl(var(--grid-divider))] rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-[hsl(var(--grid-tier3))] transition-all duration-300 rounded-full"
+            style={{ width: `${progressPercent}%` }}
+          />
         </div>
       </div>
     </div>

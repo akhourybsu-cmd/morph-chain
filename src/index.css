@@ -98,26 +98,44 @@ All colors MUST be HSL.
     --arcade-bg-mid: 20 35% 18%;      /* Warmer mid tone */
     --arcade-accent: 25 90% 55%;      /* Orange #F7931E */
     
-    --grid-accent-start: 0 100% 35%;  /* Deep crimson #B40000 */
-    --grid-accent-mid: 0 100% 59%;    /* Bright scarlet #FF3B30 */
-    --grid-accent-end: 0 100% 71%;    /* Light coral #FF6B6B */
-    --grid-glow: 25 100% 60%;         /* Soft white-to-orange glow */
+    --grid-accent-start: 193 46% 34%;  /* #2F6D80 teal accent */
+    --grid-accent-mid: 193 46% 34%;    /* #2F6D80 teal accent */
+    --grid-accent-end: 193 46% 34%;    /* #2F6D80 teal accent */
+    --grid-glow: 193 46% 34%;          /* Teal glow */
     
-    /* Grid Tile State Gradients */
-    --grid-orange-start: 38 92% 60%;    /* #F6B23E */
-    --grid-orange-mid: 39 91% 66%;      /* #F7C25A */
-    --grid-orange-end: 40 90% 72%;      /* #F8D172 */
-    --grid-orange-glow: 37 92% 59%;     /* Orange glow */
+    /* NYT Prestige - Grid Page Colors */
+    --grid-page-bg: 39 32% 96%;        /* #F9F5ED paper background */
+    --grid-card-bg: 0 0% 100%;         /* #FFFFFF card background */
+    --grid-card-border: 37 20% 86%;    /* #E0D9CC card border */
+    --grid-divider: 37 14% 90%;        /* #E5E0D7 dividers */
+    --grid-text-primary: 0 0% 13%;     /* #222222 primary text */
+    --grid-text-secondary: 0 0% 40%;   /* #666666 secondary text */
+    --grid-text-muted: 33 6% 57%;      /* #9A9388 muted text */
+    --grid-pill-bg: 36 27% 92%;        /* #F1ECE3 pill background */
+    --grid-accent: 193 46% 34%;        /* #2F6D80 teal accent */
+    --grid-success: 145 50% 37%;       /* #2F8F5B green */
+    --grid-error: 3 52% 54%;           /* #C6534C red */
     
-    --grid-blue-start: 196 100% 58%;    /* #29C3FF */
-    --grid-blue-mid: 196 100% 55%;      /* #1EB4FF */
-    --grid-blue-end: 196 100% 50%;      /* #009AFF */
-    --grid-blue-glow: 196 100% 52%;     /* Blue glow */
+    /* NYT Prestige - Flat Tile Colors */
+    --grid-tier1: 41 84% 77%;          /* #F4D597 yellow/cream */
+    --grid-tier2: 189 52% 81%;         /* #B9DDE4 soft teal */
+    --grid-tier3: 262 51% 84%;         /* #D1C2EB soft purple */
     
-    --grid-purple-start: 265 100% 65%;  /* #9E4CFF */
-    --grid-purple-mid: 265 95% 59%;     /* #7E39F6 */
-    --grid-purple-end: 265 90% 52%;     /* #5D28DD */
-    --grid-purple-glow: 265 95% 61%;    /* Purple glow */
+    /* Grid Tile State Gradients - now flat colors */
+    --grid-orange-start: 41 84% 77%;
+    --grid-orange-mid: 41 84% 77%;
+    --grid-orange-end: 41 84% 77%;
+    --grid-orange-glow: 41 84% 77%;
+    
+    --grid-blue-start: 189 52% 81%;
+    --grid-blue-mid: 189 52% 81%;
+    --grid-blue-end: 189 52% 81%;
+    --grid-blue-glow: 189 52% 81%;
+    
+    --grid-purple-start: 262 51% 84%;
+    --grid-purple-mid: 262 51% 84%;
+    --grid-purple-end: 262 51% 84%;
+    --grid-purple-glow: 262 51% 84%;
     
     --prism-accent-start: 180 100% 50%;    /* Cyan */
     --prism-accent-mid: 300 100% 50%;      /* Magenta */
@@ -132,18 +150,18 @@ All colors MUST be HSL.
     --morph-violet: 251 100% 68%;     /* #7A5CFF - Calmer blue-violet */
     --morph-glow: 23 100% 68%;        /* #FF9B5E - Warm hover glow */
 
-    /* MORPH GRID progress state gradients */
-    --gradient-grid-orange-start: 36 100% 55%;     /* #F5A623 deep orange */
-    --gradient-grid-orange-mid: 38 97% 63%;        /* #F8B24C bright orange */
-    --gradient-grid-orange-end: 40 93% 70%;        /* #F5C36C light coral */
+    /* MORPH GRID progress state gradients - flat NYT style */
+    --gradient-grid-orange-start: 41 84% 77%;
+    --gradient-grid-orange-mid: 41 84% 77%;
+    --gradient-grid-orange-end: 41 84% 77%;
     
-    --gradient-grid-blue-start: 194 100% 56%;      /* #1EC8FF cyan */
-    --gradient-grid-blue-mid: 199 100% 60%;        /* #27B1FF bright blue */
-    --gradient-grid-blue-end: 204 100% 50%;        /* #00A3FF blue */
+    --gradient-grid-blue-start: 189 52% 81%;
+    --gradient-grid-blue-mid: 189 52% 81%;
+    --gradient-grid-blue-end: 189 52% 81%;
     
-    --gradient-grid-purple-start: 270 89% 64%;     /* #A24DF7 purple */
-    --gradient-grid-purple-mid: 265 100% 65%;      /* #8E4CFF bright purple */
-    --gradient-grid-purple-end: 252 100% 64%;      /* #6E44FF deep purple */
+    --gradient-grid-purple-start: 262 51% 84%;
+    --gradient-grid-purple-mid: 262 51% 84%;
+    --gradient-grid-purple-end: 262 51% 84%;
 
     --radius: 0.75rem;                /* 12px */
   }

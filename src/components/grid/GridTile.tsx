@@ -11,103 +11,60 @@ interface GridTileProps {
 }
 
 export const GridTile = ({ tile, isSelected, selectionIndex, onClick, animationClass, isUpgrading }: GridTileProps) => {
-  // Calculate progress ring fill percentage
-  const progressPercent = tile.progress === 0 ? 33 : tile.progress === 1 ? 66 : 100;
-  
-  // Text colors by progress
-  const textColor = tile.progress === 0 
-    ? "text-[#3C2A00]" 
+  // NYT Prestige: Flat tile backgrounds by progress
+  const tileBackground = tile.progress === 0 
+    ? "bg-[hsl(var(--grid-tier1))]" 
     : tile.progress === 1 
-      ? "text-[#001730]" 
-      : "text-white";
-  
-  // Glow shadow by progress
-  const glowShadow = tile.progress === 0
-    ? "shadow-[0_0_12px_hsl(var(--grid-orange-glow)/0.6)]"
-    : tile.progress === 1
-      ? "shadow-[0_0_12px_hsl(var(--grid-blue-glow)/0.55)]"
-      : "shadow-[0_0_12px_hsl(var(--grid-purple-glow)/0.5)]";
+      ? "bg-[hsl(var(--grid-tier2))]" 
+      : "bg-[hsl(var(--grid-tier3))]";
   
   return (
     <button
       onClick={onClick}
       data-tile-id={tile.id}
       className={cn(
-        "grid-tile relative w-full aspect-square rounded-2xl font-outfit font-bold",
+        "grid-tile relative w-full aspect-square rounded-xl font-inter font-bold",
         "flex items-center justify-center touch-manipulation will-change-transform",
         "text-xl md:text-2xl transition-all duration-150",
         
-        // Progress-based gradient backgrounds
-        tile.progress === 0
-          ? "bg-gradient-grid-orange"
-          : tile.progress === 1
-            ? "bg-gradient-grid-blue"
-            : "bg-gradient-grid-purple",
+        // NYT Prestige flat tile backgrounds
+        tileBackground,
         
-        // Glow shadows
-        glowShadow,
+        // Subtle shadow
+        "shadow-[0_2px_4px_rgba(0,0,0,0.06)]",
         
         // Animation class for word submission feedback
         animationClass,
         
-        // Upgrade pulse-glow animation
-        isUpgrading && "animate-tile-upgrade",
+        // Upgrade flip animation
+        isUpgrading && "animate-tile-flip",
         
-        // Selected state - enhanced with scale and bright white outline
-        isSelected && "scale-105 shadow-[0_0_24px_rgba(255,255,255,0.8)] ring-2 ring-white/70 z-10",
-        
-        // Breathing animation for Blue tiles (only when not animating)
-        tile.progress === 1 && !isSelected && !animationClass && !isUpgrading && "animate-breathe",
+        // NYT Prestige selected state - teal border, no neon
+        isSelected && "ring-2 ring-[hsl(var(--grid-accent))] shadow-[0_0_0_1px_rgba(47,109,128,0.25)] z-10",
         
         // Hover/Active states (only when not selected)
-        !isSelected && "hover:scale-102 hover:brightness-110 active:scale-95",
+        !isSelected && "hover:-translate-y-px hover:shadow-[0_3px_8px_rgba(0,0,0,0.08)] active:scale-95",
         
-        // Text color
-        textColor
+        // Text color - dark for all tiles in NYT style
+        "text-[hsl(var(--grid-text-primary))]"
       )}
       style={{
         width: 'var(--tile-size, 64px)',
-        height: 'var(--tile-size, 64px)'
+        height: 'var(--tile-size, 64px)',
+        letterSpacing: '0.05em'
       }}
     >
-      {/* Outer glow aura */}
-      <div 
-        className={cn(
-          "absolute inset-0 rounded-2xl blur-xl opacity-40 pointer-events-none transition-opacity",
-          tile.isPower && "animate-pulse-glow",
-          tile.progress === 0 && "bg-gradient-grid-orange",
-          tile.progress === 1 && "bg-gradient-grid-blue",
-          tile.progress === 2 && "bg-gradient-grid-purple",
-          isSelected && "opacity-60"
-        )}
-      />
-      
-      
-      {/* Shimmer effect for Purple tiles */}
-      {tile.progress === 2 && !isSelected && (
-        <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-          <div className="absolute inset-0 animate-shimmer" />
-        </div>
-      )}
-      
-      
-      {/* Letter with drop shadow */}
-      <span 
-        className={cn(
-          "relative z-10 uppercase tracking-wide select-none",
-          "drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
-        )}
-      >
+      {/* Letter */}
+      <span className="relative z-10 uppercase select-none">
         {tile.char}
       </span>
       
-      {/* Selection number badge */}
+      {/* Selection number badge - NYT style */}
       {isSelected && selectionIndex !== undefined && (
-        <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-white text-black text-xs flex items-center justify-center font-bold shadow-lg border-2 border-white/90 z-20">
+        <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[hsl(var(--grid-accent))] text-white text-[10px] flex items-center justify-center font-semibold shadow-sm z-20">
           {selectionIndex + 1}
         </div>
       )}
-      
     </button>
   );
 };
