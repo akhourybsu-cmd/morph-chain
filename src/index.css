@@ -197,6 +197,23 @@ All colors MUST be HSL.
     --rush-tile-border: 37 20% 86%;
     --rush-tile-active: var(--accent-rush);
     --rush-drop-target: 187 94% 48%;  /* Cyan highlight */
+    
+    /* Chain Prestige Theme (NYT Style) */
+    --chain-page-bg: 39 32% 96%;       /* #F9F5ED paper background */
+    --chain-card-bg: 0 0% 100%;        /* #FFFFFF card background */
+    --chain-card-border: 37 20% 86%;   /* #E0D9CC card border */
+    --chain-divider: 37 14% 90%;       /* #E5E0D7 dividers */
+    --chain-text-primary: 0 0% 13%;    /* #222222 primary text */
+    --chain-text-secondary: 0 0% 40%;  /* #666666 secondary text */
+    --chain-text-muted: 33 6% 57%;     /* #9A9388 muted text */
+    --chain-accent: 40 75% 55%;        /* Warm gold accent */
+    --chain-success: 145 50% 37%;      /* #2F8F5B green */
+    --chain-error: 3 52% 54%;          /* #C6534C red */
+    
+    /* Chain Tile Hint Colors (NYT Wordle style) */
+    --chain-tile-match: 145 50% 47%;   /* Green - correct position */
+    --chain-tile-present: 45 85% 55%;  /* Yellow/Gold - wrong position */
+    --chain-tile-miss: 0 0% 88%;       /* Gray - not in word */
   }
 
   /* NYT Prestige Dark Mode - Grid Page Colors */
@@ -221,6 +238,23 @@ All colors MUST be HSL.
     
     /* Dark mode accent strip opacity - more visible */
     --accent-strip-opacity: 0.5;
+    
+    /* Chain Prestige Dark Mode */
+    --chain-page-bg: 216 22% 7%;         /* #0F1216 dark background */
+    --chain-card-bg: 216 17% 11%;        /* #171B20 card background */
+    --chain-card-border: 216 14% 17%;    /* #262B33 card border */
+    --chain-divider: 213 16% 20%;        /* #2C333C dividers */
+    --chain-text-primary: 36 36% 92%;    /* #F3ECE0 primary text */
+    --chain-text-secondary: 33 9% 75%;   /* #C5BFB4 secondary text */
+    --chain-text-muted: 33 7% 52%;       /* #8D877C muted text */
+    --chain-accent: 40 55% 65%;          /* Warmer gold for dark mode */
+    --chain-success: 145 35% 57%;        /* #6EB58C green */
+    --chain-error: 5 63% 67%;            /* #E07A71 red */
+    
+    /* Chain Tile Hint Colors Dark Mode */
+    --chain-tile-match: 145 40% 42%;     /* Softer green */
+    --chain-tile-present: 45 70% 48%;    /* Muted gold */
+    --chain-tile-miss: 216 14% 22%;      /* Dark gray */
   }
   
   .light {
@@ -403,6 +437,30 @@ All colors MUST be HSL.
 .cw-glow{box-shadow:0 0 14px rgba(255,255,255,0.18) inset, 0 0 18px rgba(255,255,255,0.06)}
 .cw-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;color:var(--cw-muted);gap:10px;flex-wrap:wrap}
 .cw-legend{font-size:12px}
+
+/* Chain Prestige Utility Classes */
+.chain-card {
+  background: hsl(var(--chain-card-bg));
+  border: 1px solid hsl(var(--chain-card-border));
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.chain-tile {
+  background: hsl(var(--chain-card-bg));
+  border: 1px solid hsl(var(--chain-card-border));
+  border-radius: 4px;
+}
+.chain-tile-goal { border-color: hsl(var(--chain-accent) / 0.5); }
+.chain-tile-input { border-style: dashed; border-color: hsl(var(--chain-text-muted) / 0.5); }
+.chain-tile-cursor { border-color: hsl(var(--chain-accent)); border-style: solid; }
+.chain-tile-match { background: hsl(var(--chain-tile-match)); border-color: hsl(var(--chain-tile-match)); color: white; }
+.chain-tile-present { background: hsl(var(--chain-tile-present)); border-color: hsl(var(--chain-tile-present)); }
+.chain-tile-miss { background: hsl(var(--chain-tile-miss)); border-color: hsl(var(--chain-tile-miss)); }
+.chain-button { background: transparent; border: 1px solid hsl(var(--chain-card-border)); border-radius: 4px; color: hsl(var(--chain-text-primary)); }
+.chain-button:hover:not(:disabled) { border-color: hsl(var(--chain-text-secondary)); }
+.chain-button-primary { background: hsl(var(--chain-accent)); border-color: hsl(var(--chain-accent)); color: white; }
+@keyframes chain-shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-3px); } 40%, 80% { transform: translateX(3px); } }
+.animate-shake { animation: chain-shake 0.4s ease-in-out; }
 
 @layer base {
   * {

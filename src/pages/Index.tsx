@@ -1,25 +1,22 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { GameHeader } from "@/components/GameHeader";
-import { PuzzleTopBar } from "@/components/PuzzleTopBar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { AlertCircle } from "lucide-react";
-import { LengthPills } from "@/components/LengthPills";
-import { PuzzleHero } from "@/components/PuzzleHero";
-import OnScreenKeyboard from "@/components/OnScreenKeyboard";
-import { MoveLog, Move } from "@/components/MoveLog";
-import { ResultPanel } from "@/components/ResultPanel";
+import { ChainPrestigeHeader } from "@/components/chain/ChainPrestigeHeader";
+import { ChainLengthTabs } from "@/components/chain/ChainLengthTabs";
+import { ChainPuzzleDisplay } from "@/components/chain/ChainPuzzleDisplay";
+import { ChainInstructionText } from "@/components/chain/ChainInstructionText";
+import { ChainInputRow } from "@/components/chain/ChainInputRow";
+import { ChainMoveHistory } from "@/components/chain/ChainMoveHistory";
+import { ChainResultsPanel } from "@/components/chain/ChainResultsPanel";
 import { GameMenuSheet } from "@/components/GameMenuSheet";
 import { backgroundThemes, BackgroundTheme } from "@/components/SettingsModal";
 import { StatsModal } from "@/components/StatsModal";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
 import { WordDisputeModal } from "@/components/WordDisputeModal";
-import { MobileActionBar } from "@/components/MobileActionBar";
 import { ChainAchievementPopup } from "@/components/chain/ChainAchievementPopup";
 import { WinCelebration } from "@/components/chain/WinCelebration";
 import { AchievementGallery } from "@/components/chain/AchievementGallery";
 import { MorphPowerups } from "@/components/MorphPowerups";
+import OnScreenKeyboard from "@/components/OnScreenKeyboard";
 
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -54,6 +51,17 @@ import {
   ChainAchievementContext,
 } from "@/lib/chainAchievements";
 
+interface Move {
+  id: string;
+  from: string;
+  to: string;
+  hints: Array<"match" | "present" | "miss">;
+  closerToGoal: boolean;
+  isComplete: boolean;
+  isWorse: boolean;
+  timestamp: Date;
+}
+
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -67,7 +75,6 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [gameWon, setGameWon] = useState(false);
-  const [simpleMode, setSimpleMode] = useState(false);
 
   // Achievement and celebration state
   const [showCelebration, setShowCelebration] = useState(false);
@@ -79,6 +86,7 @@ const Index = () => {
   const [doubleSwapUsed, setDoubleSwapUsed] = useState(false);
   const [consecutiveSingleSwaps, setConsecutiveSingleSwaps] = useState(0);
   const doubleSwapReady = consecutiveSingleSwaps >= 3 && !doubleSwapUsed;
+  
   // Modals
   const [menuOpen, setMenuOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
@@ -101,7 +109,6 @@ const Index = () => {
     
     // Load saved state for this length
     const savedState = loadGameState(newLength);
-    // Validate saved state matches current puzzle (date, length, AND start word)
     const isValidSavedState = 
       savedState && 
       savedState.date === newPuzzle.date && 
@@ -131,9 +138,7 @@ const Index = () => {
       setGameCompleted(savedState.completed);
       setGameWon(savedState.won);
     } else {
-      // Reset for new puzzle or invalid saved state
       if (savedState && savedState.date === newPuzzle.date && savedState.moves[0]?.from !== newPuzzle.startWord) {
-        // Clear outdated state from old puzzle configuration
         clearGameState(newLength);
       }
       setMoves([]);
@@ -143,7 +148,6 @@ const Index = () => {
       setGameWon(false);
     }
     setError("");
-    // Reset double swap state on length change
     setDoubleSwapUsed(false);
     setConsecutiveSingleSwaps(0);
   };
@@ -152,7 +156,6 @@ const Index = () => {
   useEffect(() => {
     handleLengthChange(selectedLength);
     
-    // Show help modal on first visit
     const hasSeenHelp = localStorage.getItem("morphchain_seen_help");
     if (!hasSeenHelp) {
       setHelpOpen(true);
@@ -164,7 +167,6 @@ const Index = () => {
     const wordToSubmit = word;
     setError("");
     
-    // Rate limiting: 6 requests per 15 seconds
     if (isRateLimited('guess')) {
       setError("Too many attempts. Please wait a moment.");
       return;
@@ -172,13 +174,10 @@ const Index = () => {
     
     setIsLoading(true);
 
-    // Simulate network delay
     setTimeout(() => {
-      // Check if double swap is ready (5L only, earned after 3 single-letter moves)
       const isOneDiff = isOneLetterDifferent(currentWord, wordToSubmit);
       const isTwoDiff = isTwoLettersDifferent(currentWord, wordToSubmit);
       
-      // Allow two-letter change only if double swap is ready and not used
       const allowTwoLetters = selectedLength === 5 && doubleSwapReady;
       const isValid = allowTwoLetters ? (isOneDiff || isTwoDiff) : isOneDiff;
       
@@ -193,14 +192,11 @@ const Index = () => {
         return;
       }
       
-      // Track consecutive single swaps for 5L
       if (selectedLength === 5) {
         if (isTwoDiff && doubleSwapReady) {
-          // Used the double swap power-up
           setDoubleSwapUsed(true);
           setConsecutiveSingleSwaps(0);
         } else if (isOneDiff) {
-          // Single letter change - increment counter
           setConsecutiveSingleSwaps(prev => prev + 1);
         }
       }
@@ -227,7 +223,6 @@ const Index = () => {
       const isComplete = wordToSubmit === puzzle.goalWord;
       const isWorse = newDistance > currentDistance;
 
-      // Hard mode check
       if (settings.hardMode && !closerToGoal && newDistance !== 0) {
         setInvalidGuessCount(prev => prev + 1);
         setError("Hard Mode: must get closer each step.");
@@ -252,14 +247,11 @@ const Index = () => {
       setCurrentWord(wordToSubmit);
       setUsedWords(updatedUsedWords);
 
-      // Vibration feedback
       if (settings.vibration && navigator.vibrate) {
         navigator.vibrate(closerToGoal ? 10 : 20);
       }
 
-      // Check for dead-end (word with no valid next moves)
       if (word !== puzzle.goalWord && updatedMoves.length < puzzle.maxMoves) {
-        // For 5L, allow two-letter moves if double swap is still available
         const canUseTwoLetters = selectedLength === 5 && !doubleSwapUsed;
         const hasNext = hasValidNextMove(word, updatedUsedWords, puzzle.wordLength, canUseTwoLetters);
         
@@ -273,30 +265,23 @@ const Index = () => {
         }
       }
 
-      // Check win condition
       if (word === puzzle.goalWord) {
         setGameCompleted(true);
         setGameWon(true);
         setShowCelebration(true);
         
-        // Calculate time elapsed
         const timeElapsedSeconds = Math.floor((Date.now() - gameStartTime.current) / 1000);
-        
-        // Check for worse moves (moved away from goal)
         const hadWorseMove = updatedMoves.some(m => m.isWorse);
         
-        // Get updated stats for achievement checking
         const currentStats = loadStats();
         const lengthKey = puzzle.wordLength as 4 | 5;
         const newTotalWins = currentStats.overall.won + 1;
         const newStreak = currentStats.byLength[lengthKey].currentStreak + 1;
         
-        // Check if won both lengths today
         const otherLength = puzzle.wordLength === 4 ? 5 : 4;
         const otherState = loadGameState(otherLength);
         const wonBothToday = otherState?.date === puzzle.date && otherState?.won === true;
         
-        // Check achievements
         const achievementContext: ChainAchievementContext = {
           won: true,
           movesUsed: updatedMoves.length,
@@ -332,7 +317,6 @@ const Index = () => {
           completed: true,
           won: true,
         });
-        // Save session to backend
         saveSessionToSupabase(
           puzzle.date,
           puzzle.wordLength,
@@ -343,7 +327,6 @@ const Index = () => {
           invalidGuessCount
         );
       } else if (updatedMoves.length >= puzzle.maxMoves) {
-        // Out of moves
         setGameCompleted(true);
         setGameWon(false);
         updateStats(false, updatedMoves.length);
@@ -358,7 +341,6 @@ const Index = () => {
           completed: true,
           won: false,
         });
-        // Save session to backend
         saveSessionToSupabase(
           puzzle.date,
           puzzle.wordLength,
@@ -369,7 +351,6 @@ const Index = () => {
           invalidGuessCount
         );
       } else {
-        // Save in-progress state
         saveGameState({
           date: puzzle.date,
           wordLength: puzzle.wordLength,
@@ -402,7 +383,6 @@ const Index = () => {
   const handleBackspace = () => {
     setCurrentInput(currentInput.slice(0, -1));
   };
-
 
   // Track letter states for keyboard feedback
   const usedLetters = useMemo(() => {
@@ -441,7 +421,6 @@ const Index = () => {
     const newStats = { ...stats };
     const lengthKey = puzzle.wordLength as 4 | 5;
     
-    // Update overall stats
     newStats.overall.played += 1;
     if (won) {
       newStats.overall.won += 1;
@@ -451,7 +430,6 @@ const Index = () => {
       }
     }
     
-    // Update per-length stats
     newStats.byLength[lengthKey].played += 1;
     if (won) {
       newStats.byLength[lengthKey].won += 1;
@@ -465,10 +443,8 @@ const Index = () => {
       newStats.byLength[lengthKey].currentStreak = 0;
     }
     
-    // Update overall streak (win in ANY length counts)
     const today = puzzle.date;
     if (stats.lastPlayedDate !== today) {
-      // New day
       if (won) {
         newStats.overall.currentStreak += 1;
         newStats.overall.maxStreak = Math.max(newStats.overall.maxStreak, newStats.overall.currentStreak);
@@ -476,7 +452,6 @@ const Index = () => {
         newStats.overall.currentStreak = 0;
       }
     } else if (won && newStats.overall.currentStreak === 0) {
-      // First win today after a loss
       newStats.overall.currentStreak = 1;
     }
     
@@ -495,7 +470,6 @@ const Index = () => {
   };
 
   const handlePlayAgain = () => {
-    // Reset game (practice mode)
     setMoves([]);
     setCurrentWord(puzzle.startWord);
     setUsedWords(new Set([puzzle.startWord]));
@@ -516,7 +490,6 @@ const Index = () => {
   // Handle achievement queue
   useEffect(() => {
     if (achievementQueue.length > 0 && !currentAchievement) {
-      // Show next achievement after a delay
       const timer = setTimeout(() => {
         setCurrentAchievement(achievementQueue[0]);
         setAchievementQueue(prev => prev.slice(1));
@@ -541,22 +514,18 @@ const Index = () => {
     setSettings(newSettings);
     saveSettings(newSettings);
     
-    // Apply theme to document root - with safety check
     const themeConfig = backgroundThemes[theme];
     if (themeConfig) {
       document.documentElement.style.setProperty('--background', themeConfig.bg);
     }
   };
 
-  // Apply saved theme on mount
   useEffect(() => {
     const savedTheme = settings.backgroundTheme as BackgroundTheme;
-    // Validate that the saved theme exists, fallback to midnight if not
     const validTheme = savedTheme && backgroundThemes[savedTheme] ? savedTheme : "midnight";
     const themeColor = backgroundThemes[validTheme].bg;
     document.documentElement.style.setProperty('--background', themeColor);
     
-    // Update settings if theme was invalid
     if (validTheme !== savedTheme) {
       const newSettings = { ...settings, backgroundTheme: validTheme };
       setSettings(newSettings);
@@ -592,7 +561,6 @@ const Index = () => {
     });
   };
 
-  // Define getLengthStatus before using it in useMemo
   const getLengthStatus = (length: 4 | 5): "empty" | "won" | "failed" | "in-progress" => {
     const state = loadGameState(length);
     if (!state || state.date !== puzzle.date) return "empty";
@@ -601,7 +569,6 @@ const Index = () => {
     return "empty";
   };
 
-  // Memoize expensive share text generation
   const shareText = useMemo(() => 
     moves.length > 0 
       ? generateShareText(
@@ -619,38 +586,31 @@ const Index = () => {
     [moves.length, gameWon, puzzle.date, puzzle.wordLength, puzzle.maxMoves, puzzle.puzzleIndex, puzzle.minDistance, stats.byLength, selectedLength, moves]
   );
 
-  // Memoize length status checks to avoid repeated localStorage reads
   const lengthStatuses = useMemo(() => ({
     4: getLengthStatus(4),
     5: getLengthStatus(5),
   }), [puzzle.date]);
 
   return (
-    <div className="min-h-screen flex flex-col max-w-2xl mx-auto pb-[280px] md:pb-24">
-      <GameHeader
-        onOpenSettings={() => setMenuOpen(true)}
-        onOpenStats={() => setStatsOpen(true)}
-        onOpenHelp={() => setHelpOpen(true)}
-        streak={stats.byLength[selectedLength].currentStreak}
-      />
-
-      <PuzzleTopBar
+    <div 
+      className="min-h-dvh flex flex-col"
+      style={{ background: 'hsl(var(--chain-page-bg))' }}
+    >
+      <ChainPrestigeHeader
         puzzleNumber={puzzle.puzzleIndex || 0}
         date={puzzle.date}
-        movesUsed={moves.length}
-        moveCap={puzzle.maxMoves}
+        onOpenMenu={() => setMenuOpen(true)}
+        onOpenHelp={() => setHelpOpen(true)}
       />
 
-      <div className="px-3 py-2 md:px-4 md:py-3">
-        <LengthPills
-          selectedLength={selectedLength}
-          onLengthChange={handleLengthChange}
-          statuses={lengthStatuses}
-        />
-      </div>
+      <ChainLengthTabs
+        selectedLength={selectedLength}
+        onLengthChange={handleLengthChange}
+        statuses={lengthStatuses}
+      />
 
-      <main className="flex-1">
-        <PuzzleHero
+      <main className="flex-1 max-w-lg mx-auto w-full pb-[280px] md:pb-24">
+        <ChainPuzzleDisplay
           startWord={puzzle.startWord}
           goalWord={puzzle.goalWord}
           movesUsed={moves.length}
@@ -658,110 +618,45 @@ const Index = () => {
         />
 
         {!gameCompleted && moves.length === 0 && (
-          <div className="px-3 mb-3 md:px-6 md:mb-4">
-            <div className="bg-card border border-chain/20 rounded-lg p-3 text-sm animate-fade-in md:p-4">
-              <div className="flex items-start gap-2 md:gap-3">
-                <div className="text-xl md:text-2xl">💡</div>
-                <div className="space-y-1">
-                  <p className="font-medium text-foreground text-xs md:text-sm">
-                    Change <strong className="text-chain">ONE</strong> letter each step. Every step must be a real word.
-                  </p>
-                  <p className="text-muted-foreground text-[11px] md:text-xs">
-                    Example: COLD → C<span className="text-chain">O</span>RD → C<span className="text-chain">A</span>RD → C<span className="text-chain">A</span>R<span className="text-chain">E</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ChainInstructionText />
         )}
 
         {!gameCompleted && (
           <>
-            <div className="px-3 py-3 space-y-2 md:px-6 md:py-4 md:space-y-3">
-              <div className="space-y-2 md:space-y-3">
-                <div className="flex gap-1.5 md:gap-2">
-                  <Input
-                    value={currentWord}
-                    disabled
-                    className="flex-1 font-mono uppercase tracking-tiles bg-muted/30 border-muted cursor-not-allowed text-sm md:text-base h-10 md:h-11"
-                    placeholder="Previous"
-                    aria-label="Previous word"
-                  />
-                  
-                  <span className="flex items-center text-lg md:text-2xl text-muted-foreground">→</span>
-                  
-                  <Input
-                    value={currentInput}
-                    onChange={(e) => {
-                      if (!settings.useOnScreenKeyboard) {
-                        const value = e.target.value.toUpperCase();
-                        if (value.length <= currentWord.length) {
-                          setCurrentInput(value);
-                        }
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (!settings.useOnScreenKeyboard && e.key === 'Enter') {
-                        handleSubmit();
-                      }
-                    }}
-                    disabled={settings.useOnScreenKeyboard ?? true}
-                    className="flex-1 font-mono uppercase tracking-tiles text-sm md:text-base h-10 md:h-11 bg-background"
-                    placeholder="..."
-                    maxLength={currentWord.length}
-                    aria-label="Next word"
-                    autoFocus={!settings.useOnScreenKeyboard}
-                  />
-
-                  {/* MORPH button for physical keyboard users */}
-                  {!settings.useOnScreenKeyboard && (
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={!currentInput.trim() || isLoading}
-                      className="h-10 md:h-11 px-4 bg-chain hover:bg-chain/90 text-chain-foreground font-bold shadow-[0_0_10px_hsl(var(--chain-accent)/0.3)]"
-                    >
-                      MORPH
-                    </Button>
-                  )}
-                </div>
-
-                <div className="flex items-center text-xs md:text-sm">
-                  <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                    {error && (
-                      <div
-                        className="flex items-center gap-1 md:gap-1.5 text-destructive animate-slide-in truncate"
-                        role="alert"
-                      >
-                        <AlertCircle className="h-3 w-3 md:h-3.5 md:w-3.5 flex-shrink-0" />
-                        <span className="truncate text-[11px] md:text-sm">{error}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Double Swap power-up for 5L only - shows progress toward earning it */}
-              {selectedLength === 5 && (
+            <ChainInputRow
+              currentWord={currentWord}
+              wordLength={puzzle.wordLength}
+              currentInput={currentInput}
+              onInputChange={setCurrentInput}
+              onSubmit={handleSubmit}
+              error={error}
+              disabled={gameCompleted}
+              isLoading={isLoading}
+              useOnScreenKeyboard={settings.useOnScreenKeyboard}
+            />
+            
+            {/* Double Swap power-up for 5L only */}
+            {selectedLength === 5 && (
+              <div className="px-4">
                 <MorphPowerups
                   doubleSwapUsed={doubleSwapUsed}
                   consecutiveSingleSwaps={consecutiveSingleSwaps}
                   doubleSwapReady={doubleSwapReady}
                   disabled={gameCompleted}
                 />
-              )}
-            </div>
+              </div>
+            )}
           </>
         )}
 
-        <MoveLog
+        <ChainMoveHistory
           moves={moves}
-          simpleMode={simpleMode}
           colorblindMode={settings.colorblindMode}
           onDisputeWord={handleDisputeWord}
         />
 
         {gameCompleted && (
-          <ResultPanel
+          <ChainResultsPanel
             won={gameWon}
             movesUsed={moves.length}
             goalWord={puzzle.goalWord}
@@ -772,7 +667,6 @@ const Index = () => {
           />
         )}
         
-        {/* Win celebration effects */}
         {showCelebration && gameWon && (
           <WinCelebration
             movesUsed={moves.length}
@@ -781,7 +675,6 @@ const Index = () => {
           />
         )}
         
-        {/* Achievement popup */}
         {currentAchievement && (
           <ChainAchievementPopup
             achievementId={currentAchievement}
@@ -792,7 +685,7 @@ const Index = () => {
 
       {/* Fixed keyboard at bottom */}
       {!gameCompleted && settings.useOnScreenKeyboard && (
-        <div className="fixed bottom-2 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border pb-safe">
+        <div className="fixed bottom-0 left-0 right-0 bg-[hsl(var(--chain-page-bg))]/95 backdrop-blur-sm border-t border-[hsl(var(--chain-card-border))] pb-safe">
           <OnScreenKeyboard
             onKeyPress={handleKeyPress}
             onBackspace={handleBackspace}
@@ -805,20 +698,21 @@ const Index = () => {
         </div>
       )}
 
-      {/* Footer - visible on desktop always, on mobile when keyboard is hidden */}
+      {/* Footer */}
       {(gameCompleted || !settings.useOnScreenKeyboard) && (
-        <footer className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border py-3 px-3 md:py-4 md:px-6 z-10">
-          <div className="max-w-2xl mx-auto text-center">
-            <p className="text-xs md:text-sm text-muted-foreground">
+        <footer className="fixed bottom-0 left-0 right-0 bg-[hsl(var(--chain-card-bg))]/95 backdrop-blur-sm border-t border-[hsl(var(--chain-card-border))] py-3 px-3 md:py-4 md:px-6">
+          <div className="max-w-lg mx-auto text-center">
+            <p className="text-xs text-[hsl(var(--chain-text-muted))]">
               New puzzle in {getTimeUntilMidnight()}
             </p>
           </div>
         </footer>
       )}
+      
       {!gameCompleted && settings.useOnScreenKeyboard && (
-        <footer className="hidden md:block fixed bottom-0 left-0 right-0 bg-card border-t border-border py-4 px-6">
-          <div className="max-w-2xl mx-auto text-center">
-            <p className="text-sm text-muted-foreground">
+        <footer className="hidden md:block fixed bottom-0 left-0 right-0 bg-[hsl(var(--chain-card-bg))] border-t border-[hsl(var(--chain-card-border))] py-4 px-6">
+          <div className="max-w-lg mx-auto text-center">
+            <p className="text-sm text-[hsl(var(--chain-text-muted))]">
               New puzzle in {getTimeUntilMidnight()}
             </p>
           </div>
