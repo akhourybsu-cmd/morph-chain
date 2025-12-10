@@ -17,22 +17,22 @@ export const ScoreDisplay = ({ compact = false }: ScoreDisplayProps) => {
   
   if (compact) {
     return (
-      <div className="flex items-center gap-2 text-sm font-inter">
+      <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm font-inter whitespace-nowrap">
         <span className={cn(
           "font-medium",
           isLowMoves ? "text-[hsl(var(--grid-error))]" : "text-[hsl(var(--grid-accent))]"
         )}>
-          Moves: {moves}/{MAX_MOVES}
+          <span className="hidden md:inline">Moves: </span>{moves}/{MAX_MOVES}
         </span>
         {isLowMoves && (
           <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--grid-error))] animate-pulse" />
         )}
         <span className="text-[hsl(var(--grid-text-muted))]">·</span>
         <span className="text-[hsl(var(--grid-text-secondary))]">
-          Goal: <span className="font-semibold text-[hsl(var(--grid-text-primary))]">{purpleCount}</span>/25
+          <span className="hidden md:inline">Goal: </span><span className="font-semibold text-[hsl(var(--grid-text-primary))]">{purpleCount}</span>/25
         </span>
         {/* Subtle purple progress bar */}
-        <div className="w-16 h-1.5 bg-[hsl(var(--grid-divider))] rounded-full overflow-hidden">
+        <div className="w-8 md:w-16 h-1.5 bg-[hsl(var(--grid-divider))] rounded-full overflow-hidden">
           <div 
             className="h-full bg-[hsl(var(--grid-tier3))] transition-all duration-300 rounded-full"
             style={{ width: `${progressPercent}%` }}
