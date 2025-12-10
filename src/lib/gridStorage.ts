@@ -1,4 +1,5 @@
 // Grid-specific storage for stats and leaderboard
+import { loadTieredProgress, saveTieredProgress, TieredProgress } from './gridAchievements';
 
 export interface SubmittedWord {
   word: string;
@@ -18,6 +19,7 @@ export interface GridLBEntry {
 export interface GridStats {
   gamesPlayed: number;
   gamesCompleted: number;
+  gamesLost: number;
   bestMoves: number | null;
   bestMovesDate: string | null;
   avgMovesCompleted: number | null;
@@ -30,7 +32,9 @@ export interface GridStats {
   totalStabilizedFreed: number;
   movesHistogram: Record<string, number>;
   streakDays: number;
+  maxStreakDays: number;
   lastPlayedDate: string | null;
+  lastWinDate: string | null;
   completedGames: Array<{
     dateSeed: string;
     moves: number;
@@ -38,6 +42,10 @@ export interface GridStats {
     timeToCompleteMs?: number;
     completedAt: string;
   }>;
+  // Tiered achievement tracking
+  totalCascadeUpgrades: number;
+  sixLetterWords: number;
+  sevenPlusLetterWords: number;
 }
 
 const GRID_STATS_KEY = 'morphGrid_stats';
@@ -49,7 +57,17 @@ export const loadGridStats = (): GridStats => {
   try {
     const saved = localStorage.getItem(GRID_STATS_KEY);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Ensure new fields have defaults
+      return {
+        gamesLost: 0,
+        maxStreakDays: 0,
+        lastWinDate: null,
+        totalCascadeUpgrades: 0,
+        sixLetterWords: 0,
+        sevenPlusLetterWords: 0,
+        ...parsed,
+      };
     }
   } catch (e) {
     console.error('Error loading Grid stats:', e);
@@ -58,6 +76,7 @@ export const loadGridStats = (): GridStats => {
   return {
     gamesPlayed: 0,
     gamesCompleted: 0,
+    gamesLost: 0,
     bestMoves: null,
     bestMovesDate: null,
     avgMovesCompleted: null,
@@ -70,8 +89,13 @@ export const loadGridStats = (): GridStats => {
     totalStabilizedFreed: 0,
     movesHistogram: {},
     streakDays: 0,
+    maxStreakDays: 0,
     lastPlayedDate: null,
+    lastWinDate: null,
     completedGames: [],
+    totalCascadeUpgrades: 0,
+    sixLetterWords: 0,
+    sevenPlusLetterWords: 0,
   };
 };
 
@@ -197,19 +221,20 @@ export const recordGridSubmit = (word: string, usedPower: boolean, stabilizedFre
     if (usedPower) stats.totalPowerUses += 1;
     stats.totalStabilizedFreed += stabilizedFreed;
     
+    // Track word length for tiered achievements
+    if (word.length === 6) {
+      stats.sixLetterWords = (stats.sixLetterWords || 0) + 1;
+    }
+    if (word.length >= 7) {
+      stats.sevenPlusLetterWords = (stats.sevenPlusLetterWords || 0) + 1;
+    }
+    
     // Track longest word
     if (!stats.longestWord || word.length > stats.longestWord.length) {
       stats.longestWord = word;
     }
     
     // Track most used letter across all words
-    const allLetters: Record<string, number> = {};
-    // Get all letters from previous data and current word
-    stats.completedGames.forEach(game => {
-      // We don't have individual words, but we could track this differently
-    });
-    
-    // For now, just track from current word
     const letters: Record<string, number> = {};
     for (const char of word.toUpperCase()) {
       letters[char] = (letters[char] || 0) + 1;
@@ -220,8 +245,36 @@ export const recordGridSubmit = (word: string, usedPower: boolean, stabilizedFre
     }
     
     saveGridStats(stats);
+    
+    // Update tiered progress
+    const tiered = loadTieredProgress();
+    tiered.total_words += 1;
+    if (word.length === 6) {
+      tiered.long_words += 1;
+    }
+    if (word.length >= 7) {
+      tiered.epic_words += 1;
+    }
+    saveTieredProgress(tiered);
   } catch (e) {
     console.error('Error recording Grid submit:', e);
+  }
+};
+
+/**
+ * Records cascade upgrades for tiered achievements
+ */
+export const recordCascadeUpgrade = (count: number): void => {
+  try {
+    const stats = loadGridStats();
+    stats.totalCascadeUpgrades = (stats.totalCascadeUpgrades || 0) + count;
+    saveGridStats(stats);
+    
+    const tiered = loadTieredProgress();
+    tiered.cascade_upgrades += count;
+    saveTieredProgress(tiered);
+  } catch (e) {
+    console.error('Error recording cascade upgrade:', e);
   }
 };
 
@@ -274,20 +327,46 @@ export const recordGridWin = (payload: {
     // Calculate completion rate
     stats.completionRate = stats.gamesPlayed > 0 ? stats.gamesCompleted / stats.gamesPlayed : 0;
     
-    // Update streak - consecutive daily completions
+    // Update streak - consecutive daily wins
     const today = payload.dateSeed;
     const yesterday = new Date(new Date(today).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     
-    if (stats.lastPlayedDate === yesterday) {
+    if (stats.lastWinDate === yesterday) {
       stats.streakDays += 1;
-    } else if (stats.lastPlayedDate !== today) {
+    } else if (stats.lastWinDate !== today) {
       stats.streakDays = 1;
     }
     
+    // Track max streak
+    stats.maxStreakDays = Math.max(stats.maxStreakDays || 0, stats.streakDays);
+    
+    stats.lastWinDate = today;
     stats.lastPlayedDate = today;
     
     saveGridStats(stats);
     console.log(`Grid win recorded: ${payload.moves} moves, streak: ${stats.streakDays} days`);
+    
+    // Update tiered progress
+    const tiered = loadTieredProgress();
+    tiered.grid_wins += 1;
+    tiered.win_streak = stats.streakDays;
+    tiered.max_win_streak = Math.max(tiered.max_win_streak, stats.streakDays);
+    
+    // Track efficiency wins
+    if (payload.moves <= 15) tiered.efficient_wins_15 += 1;
+    if (payload.moves <= 12) tiered.efficient_wins_12 += 1;
+    if (payload.moves <= 10) tiered.efficient_wins_10 += 1;
+    if (payload.moves <= 8) tiered.efficient_wins_8 += 1;
+    
+    // Track speed wins
+    if (payload.timeToCompleteMs) {
+      if (payload.timeToCompleteMs < 5 * 60 * 1000) tiered.speed_wins_5min += 1;
+      if (payload.timeToCompleteMs < 3 * 60 * 1000) tiered.speed_wins_3min += 1;
+      if (payload.timeToCompleteMs < 2 * 60 * 1000) tiered.speed_wins_2min += 1;
+      if (payload.timeToCompleteMs < 90 * 1000) tiered.speed_wins_90sec += 1;
+    }
+    
+    saveTieredProgress(tiered);
     
     // Add to leaderboard
     addGridLeaderboardEntry({
@@ -304,6 +383,39 @@ export const recordGridWin = (payload: {
   }
 };
 
+/**
+ * Records a Grid game loss (ran out of moves)
+ */
+export const recordGridLoss = (payload: {
+  dateSeed: string;
+  moves: number;
+  wordsUsed: number;
+  purpleCount: number;
+  timeToCompleteMs?: number;
+}): void => {
+  try {
+    const stats = loadGridStats();
+    
+    stats.gamesLost = (stats.gamesLost || 0) + 1;
+    
+    // Reset streak on loss
+    stats.streakDays = 0;
+    
+    // Update completion rate
+    stats.completionRate = stats.gamesPlayed > 0 ? stats.gamesCompleted / stats.gamesPlayed : 0;
+    
+    saveGridStats(stats);
+    console.log(`Grid loss recorded: ${payload.purpleCount}/25 purple in ${payload.moves} moves`);
+    
+    // Reset streak in tiered progress
+    const tiered = loadTieredProgress();
+    tiered.win_streak = 0;
+    saveTieredProgress(tiered);
+  } catch (e) {
+    console.error('Error recording Grid loss:', e);
+  }
+};
+
 export interface GridGameState {
   grid: any[][];
   selected: any[];
@@ -314,6 +426,8 @@ export interface GridGameState {
   morphCount: number;
   stabilizationCount: number;
   startTime: number;
+  isEnded?: boolean;
+  isWin?: boolean;
 }
 
 export const saveGridGameState = (state: GridGameState): void => {

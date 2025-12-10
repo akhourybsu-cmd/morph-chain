@@ -9,13 +9,15 @@ import { GridLeaderboard } from './GridLeaderboard';
 import { checkGridSubmissionExists } from '@/integrations/supabase/gridLeaderboard';
 import { supabase } from '@/integrations/supabase/client';
 
+const MAX_MOVES = 20;
+
 interface EndScreenProps {
   open: boolean;
   onClose: () => void;
 }
 
 export const EndScreen = ({ open, onClose }: EndScreenProps) => {
-  const { moves, submittedWords, dailySeed, morphCount, stabilizationCount, startTime } = useGridStore();
+  const { moves, submittedWords, dailySeed, morphCount, stabilizationCount, startTime, isWin, purpleCount } = useGridStore();
   const [showInitialsInput, setShowInitialsInput] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -25,7 +27,8 @@ export const EndScreen = ({ open, onClose }: EndScreenProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       setIsAuthenticated(!!user);
       
-      if (user && open) {
+      // Only show initials input for wins
+      if (user && open && isWin) {
         const exists = await checkGridSubmissionExists(dailySeed);
         setScoreSubmitted(exists);
         
@@ -38,17 +41,22 @@ export const EndScreen = ({ open, onClose }: EndScreenProps) => {
     if (open) {
       checkAuth();
     }
-  }, [open, dailySeed]);
+  }, [open, dailySeed, isWin]);
   
   const longestWord = submittedWords.reduce((longest, current) => 
     current.word.length > longest.length ? current.word : longest
   , '');
   
   const handleShare = async () => {
-    const text = `💎 MORPH GRID — Daily ${dailySeed}
-🏆 Completed in ${moves} moves
+    const resultEmoji = isWin ? '💎' : '💔';
+    const resultText = isWin 
+      ? `Completed in ${moves} moves`
+      : `${purpleCount}/25 purple in ${moves} moves`;
+    
+    const text = `${resultEmoji} MORPH GRID — Daily ${dailySeed}
+${isWin ? '🏆' : '❌'} ${resultText}
 📝 ${submittedWords.length} words | Longest: "${longestWord}"
-🔄 ${morphCount} morphs | 🔒 ${stabilizationCount} stabilized
+🔄 ${morphCount} morphs
 
 morphgames.io`;
     
@@ -74,22 +82,36 @@ morphgames.io`;
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        {/* Purple ambient glow background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-500/20 via-purple-600/10 to-transparent pointer-events-none animate-pulse-glow" />
+        {/* Ambient glow background */}
+        <div className={`absolute inset-0 bg-gradient-to-b ${isWin ? 'from-purple-500/20 via-purple-600/10' : 'from-red-500/20 via-red-600/10'} to-transparent pointer-events-none animate-pulse-glow`} />
         
         <DialogHeader className="relative z-10">
-          <DialogTitle className="text-3xl font-outfit font-bold text-center bg-gradient-to-r from-purple-400 via-purple-300 to-purple-400 bg-clip-text text-transparent animate-shimmer">
-            All Purple!
+          <DialogTitle className={`text-3xl font-outfit font-bold text-center bg-gradient-to-r ${isWin ? 'from-purple-400 via-purple-300 to-purple-400' : 'from-red-400 via-orange-300 to-red-400'} bg-clip-text text-transparent animate-shimmer`}>
+            {isWin ? 'All Purple!' : 'Out of Moves!'}
           </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6 py-4 relative z-10">
-          {/* Moves Display */}
+          {/* Result Display */}
           <div className="text-center">
-            <div className="text-6xl font-outfit font-bold bg-gradient-to-br from-purple-400 to-purple-600 bg-clip-text text-transparent mb-2 drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]">
-              {moves}
-            </div>
-            <div className="text-muted-foreground">Moves Used</div>
+            {isWin ? (
+              <>
+                <div className="text-6xl font-outfit font-bold bg-gradient-to-br from-purple-400 to-purple-600 bg-clip-text text-transparent mb-2 drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]">
+                  {moves}
+                </div>
+                <div className="text-muted-foreground">Moves Used</div>
+              </>
+            ) : (
+              <>
+                <div className="text-6xl font-outfit font-bold bg-gradient-to-br from-red-400 to-orange-500 bg-clip-text text-transparent mb-2">
+                  {purpleCount}/25
+                </div>
+                <div className="text-muted-foreground">Tiles Purple</div>
+                <div className="text-sm text-destructive mt-2">
+                  Ran out of moves ({MAX_MOVES} max)
+                </div>
+              </>
+            )}
           </div>
           
           {/* Stats Grid */}
@@ -110,8 +132,8 @@ morphgames.io`;
             </div>
             
             <div className="text-center p-4 bg-card/50 rounded-lg border border-border/50">
-              <div className="text-2xl font-bold">{stabilizationCount}</div>
-              <div className="text-xs text-muted-foreground">Stabilized</div>
+              <div className="text-2xl font-bold">{moves}/{MAX_MOVES}</div>
+              <div className="text-xs text-muted-foreground">Moves</div>
             </div>
           </div>
           
@@ -150,32 +172,42 @@ morphgames.io`;
             Share Results
           </Button>
 
-          {/* Leaderboard Section */}
-          {isAuthenticated && (
+          {/* Leaderboard Section - only show for wins */}
+          {isAuthenticated && isWin && (
             <div className="mt-6">
               <GridLeaderboard dateSeed={dailySeed} />
             </div>
           )}
 
-          {!isAuthenticated && (
+          {!isAuthenticated && isWin && (
             <div className="mt-6 p-4 bg-card/30 rounded-lg border border-border/30 text-center">
               <p className="text-sm text-muted-foreground">
                 Sign in to submit your score to the global leaderboard
               </p>
             </div>
           )}
+          
+          {!isWin && (
+            <div className="mt-4 p-4 bg-card/30 rounded-lg border border-border/30 text-center">
+              <p className="text-sm text-muted-foreground">
+                Come back tomorrow for a new puzzle!
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Initials Input Modal */}
-        <GridInitialsInput
-          open={showInitialsInput}
-          onClose={() => setShowInitialsInput(false)}
-          onSubmitted={() => setScoreSubmitted(true)}
-          moves={moves}
-          wordsUsed={submittedWords.length}
-          timeToCompleteMs={startTime ? Date.now() - startTime : undefined}
-          dateSeed={dailySeed}
-        />
+        {/* Initials Input Modal - only for wins */}
+        {isWin && (
+          <GridInitialsInput
+            open={showInitialsInput}
+            onClose={() => setShowInitialsInput(false)}
+            onSubmitted={() => setScoreSubmitted(true)}
+            moves={moves}
+            wordsUsed={submittedWords.length}
+            timeToCompleteMs={startTime ? Date.now() - startTime : undefined}
+            dateSeed={dailySeed}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

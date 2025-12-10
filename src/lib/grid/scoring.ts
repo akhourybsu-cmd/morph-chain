@@ -12,7 +12,6 @@ export interface WordScore {
 }
 
 const WORD_LENGTH_SCORES: { [key: number]: number } = {
-  3: 10,
   4: 20,
   5: 40,
   6: 65,
