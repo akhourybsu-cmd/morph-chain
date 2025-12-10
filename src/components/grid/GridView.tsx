@@ -152,12 +152,12 @@ export const GridView = () => {
   
   return (
     <div className="w-full max-w-[420px] mx-auto relative">
-      {/* NYT Prestige: White card wrapper for grid */}
+      {/* NYT Prestige: Card wrapper for grid */}
       <div 
-        className="bg-white rounded-xl p-5 md:p-6"
+        className="rounded-xl p-5 md:p-6 grid-card-shadow"
         style={{
-          border: '1px solid hsl(var(--grid-card-border))',
-          boxShadow: '0 8px 18px rgba(0,0,0,0.04)'
+          background: 'hsl(var(--grid-card-bg))',
+          border: '1px solid hsl(var(--grid-card-border))'
         }}
       >
         {/* Connection path canvas overlay */}

@@ -45,8 +45,8 @@ export const GridTile = ({ tile, isSelected, selectionIndex, onClick, animationC
         // Hover/Active states (only when not selected)
         !isSelected && "hover:-translate-y-px hover:shadow-[0_3px_8px_rgba(0,0,0,0.08)] active:scale-95",
         
-        // Text color - dark for all tiles in NYT style
-        "text-[hsl(var(--grid-text-primary))]"
+        // Text color - dark for light mode, light for dark mode
+        "text-[hsl(var(--grid-tile-letter))]"
       )}
       style={{
         width: 'var(--tile-size, 64px)',

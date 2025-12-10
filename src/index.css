@@ -103,7 +103,7 @@ All colors MUST be HSL.
     --grid-accent-end: 193 46% 34%;    /* #2F6D80 teal accent */
     --grid-glow: 193 46% 34%;          /* Teal glow */
     
-    /* NYT Prestige - Grid Page Colors */
+    /* NYT Prestige Light - Grid Page Colors */
     --grid-page-bg: 39 32% 96%;        /* #F9F5ED paper background */
     --grid-card-bg: 0 0% 100%;         /* #FFFFFF card background */
     --grid-card-border: 37 20% 86%;    /* #E0D9CC card border */
@@ -115,8 +115,9 @@ All colors MUST be HSL.
     --grid-accent: 193 46% 34%;        /* #2F6D80 teal accent */
     --grid-success: 145 50% 37%;       /* #2F8F5B green */
     --grid-error: 3 52% 54%;           /* #C6534C red */
+    --grid-tile-letter: 0 0% 13%;      /* #222222 tile text (light mode) */
     
-    /* NYT Prestige - Flat Tile Colors */
+    /* NYT Prestige Light - Flat Tile Colors */
     --grid-tier1: 41 84% 77%;          /* #F4D597 yellow/cream */
     --grid-tier2: 189 52% 81%;         /* #B9DDE4 soft teal */
     --grid-tier3: 262 51% 84%;         /* #D1C2EB soft purple */
@@ -164,6 +165,27 @@ All colors MUST be HSL.
     --gradient-grid-purple-end: 262 51% 84%;
 
     --radius: 0.75rem;                /* 12px */
+  }
+
+  /* NYT Prestige Dark Mode - Grid Page Colors */
+  .dark {
+    --grid-page-bg: 216 22% 7%;          /* #0F1216 dark background */
+    --grid-card-bg: 216 17% 11%;         /* #171B20 card background */
+    --grid-card-border: 216 14% 17%;     /* #262B33 card border */
+    --grid-divider: 213 16% 20%;         /* #2C333C dividers */
+    --grid-text-primary: 36 36% 92%;     /* #F3ECE0 primary text */
+    --grid-text-secondary: 33 9% 75%;    /* #C5BFB4 secondary text */
+    --grid-text-muted: 33 7% 52%;        /* #8D877C muted text */
+    --grid-pill-bg: 216 15% 15%;         /* #20252C pill background */
+    --grid-accent: 193 42% 64%;          /* #7FB8C7 teal accent */
+    --grid-success: 145 35% 57%;         /* #6EB58C green */
+    --grid-error: 5 63% 67%;             /* #E07A71 red */
+    --grid-tile-letter: 36 55% 95%;      /* #F8F4EC tile text (dark mode) */
+    
+    /* NYT Prestige Dark - Tile Colors (richer, deeper) */
+    --grid-tier1: 35 43% 39%;            /* #8E6C37 warm bronze */
+    --grid-tier2: 193 30% 45%;           /* #528794 deep teal */
+    --grid-tier3: 262 26% 55%;           /* #7D6AAE muted purple */
   }
   
   .light {
@@ -560,6 +582,15 @@ All colors MUST be HSL.
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+/* Grid card shadows - light and dark mode */
+.grid-card-shadow {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04);
+}
+
+.dark .grid-card-shadow {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
 }
 
 /* Support for safe-area-inset (notch/home indicator) */
