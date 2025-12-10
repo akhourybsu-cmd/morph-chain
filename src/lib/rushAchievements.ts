@@ -1,4 +1,4 @@
-// Achievement system for Morph Rush
+// Achievement system for Morph Rush (simplified tap-to-place gameplay)
 export interface Achievement {
   id: string;
   title: string;
@@ -22,20 +22,6 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
     icon: '⚡',
     flavorText: 'No mistakes!',
   },
-  hyperfocus: {
-    id: 'hyperfocus',
-    title: 'Hyperfocus',
-    description: '10-second streak without typing pause',
-    icon: '🧠',
-    flavorText: 'Mode Activated!',
-  },
-  double_helix: {
-    id: 'double_helix',
-    title: 'Double Helix',
-    description: 'Two morphs using the same letter position',
-    icon: '🔁',
-    flavorText: 'Achieved!',
-  },
   neuron_burst: {
     id: 'neuron_burst',
     title: 'Neuron Burst',
@@ -53,16 +39,9 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
   time_bender: {
     id: 'time_bender',
     title: 'Time Bender',
-    description: 'Last-second successful morph (<2s remaining)',
+    description: 'Last-second successful morph (<5s remaining)',
     icon: '⏳',
     flavorText: 'You bent the clock.',
-  },
-  multiplier_master: {
-    id: 'multiplier_master',
-    title: 'Multiplier Master',
-    description: 'Reach 2.0x multiplier',
-    icon: '⚡',
-    flavorText: 'Maximum charge!',
   },
   word_wizard: {
     id: 'word_wizard',
@@ -78,24 +57,70 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
     icon: '👹',
     flavorText: 'Lightning fast!',
   },
+  quick_fingers: {
+    id: 'quick_fingers',
+    title: 'Quick Fingers',
+    description: '3 consecutive morphs under 3 seconds each',
+    icon: '👆',
+    flavorText: 'Tap tap tap!',
+  },
+  perfect_run: {
+    id: 'perfect_run',
+    title: 'Perfect Run',
+    description: 'Score 2000+ points in a single run',
+    icon: '🏆',
+    flavorText: 'Outstanding performance!',
+  },
+  word_streak: {
+    id: 'word_streak',
+    title: 'Word Streak',
+    description: 'Chain 15 valid morphs without an error',
+    icon: '🔗',
+    flavorText: 'Unstoppable chain!',
+  },
+  first_morph: {
+    id: 'first_morph',
+    title: 'First Morph',
+    description: 'Complete your first morph',
+    icon: '🎯',
+    flavorText: 'Welcome to Rush!',
+  },
+  century: {
+    id: 'century',
+    title: 'Century',
+    description: 'Score 100+ points in a single run',
+    icon: '💯',
+    flavorText: 'Triple digits!',
+  },
 };
 
 export interface AchievementProgress {
-  brainwaveStreak?: { count: number; firstTime: number };
+  brainwaveStreak: { count: number; firstTime: number } | null;
   consecutiveValid: number;
-  lastInputTime?: number;
-  lastChangedPosition?: number;
-  consecutiveSamePosition: number;
+  lastMorphTime: number | null;
+  quickFingerCount: number;
 }
 
+export const getInitialProgress = (): AchievementProgress => ({
+  brainwaveStreak: null,
+  consecutiveValid: 0,
+  lastMorphTime: null,
+  quickFingerCount: 0,
+});
+
 export const checkAchievements = (
-  words: any[],
+  words: { word: string; timestamp: Date }[],
   invalidCount: number,
   timeRemaining: number,
-  currentMultiplier: number,
+  score: number,
   progress: AchievementProgress
 ): string[] => {
   const earned: string[] = [];
+  
+  // First Morph - complete any morph
+  if (words.length >= 1) {
+    earned.push('first_morph');
+  }
   
   // Brainwave: 3 morphs within 10s
   if (progress.brainwaveStreak && progress.brainwaveStreak.count >= 3) {
@@ -120,14 +145,9 @@ export const checkAchievements = (
     earned.push('flawless_flow');
   }
   
-  // Time Bender: morph with <2s remaining
-  if (timeRemaining > 0 && timeRemaining < 2 && words.length > 0) {
+  // Time Bender: morph with <5s remaining
+  if (timeRemaining > 0 && timeRemaining < 5 && words.length > 0) {
     earned.push('time_bender');
-  }
-  
-  // Multiplier Master: reach 2.0x
-  if (currentMultiplier >= 2.0) {
-    earned.push('multiplier_master');
   }
   
   // Word Wizard: 20 morphs
@@ -135,14 +155,8 @@ export const checkAchievements = (
     earned.push('word_wizard');
   }
   
-  // Double Helix: 2 consecutive same position changes
-  if (progress.consecutiveSamePosition >= 2) {
-    earned.push('double_helix');
-  }
-  
   // Speed Demon: 5 morphs in 15 seconds
   if (words.length >= 5) {
-    // Check if last 5 words were within 15 seconds
     const lastFive = words.slice(-5);
     if (lastFive.length === 5) {
       const timeSpan = (lastFive[4].timestamp.getTime() - lastFive[0].timestamp.getTime()) / 1000;
@@ -152,7 +166,25 @@ export const checkAchievements = (
     }
   }
   
-  // Hyperfocus: 10-second streak without typing pause (handled separately in game logic)
+  // Quick Fingers: 3 consecutive morphs under 3 seconds each
+  if (progress.quickFingerCount >= 3) {
+    earned.push('quick_fingers');
+  }
+  
+  // Perfect Run: 2000+ points
+  if (score >= 2000) {
+    earned.push('perfect_run');
+  }
+  
+  // Word Streak: 15 valid morphs without error
+  if (progress.consecutiveValid >= 15) {
+    earned.push('word_streak');
+  }
+  
+  // Century: 100+ points
+  if (score >= 100) {
+    earned.push('century');
+  }
   
   return earned;
 };
@@ -174,3 +206,6 @@ export const getNewAchievements = (
 ): string[] => {
   return currentSession.filter(id => !allUnlocked.includes(id));
 };
+
+// Helper to get rush achievements for gallery
+export const getRushAchievements = getUnlockedAchievements;

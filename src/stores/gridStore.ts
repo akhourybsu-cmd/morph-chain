@@ -6,6 +6,7 @@ import { SeededRandom } from '@/lib/grid/seededRNG';
 import { morphGrid, morphPowerRow } from '@/lib/grid/morphMechanics';
 import { isValidWord } from '@/lib/grid/dictionary';
 import { recordGridPlayStart, recordGridSubmit, recordGridWin, recordGridLoss, saveGridGameState, loadGridGameState, clearGridGameState, type SubmittedWord } from '@/lib/gridStorage';
+import { checkGridAchievements, saveGridAchievements, getGridAchievements, getNewGridAchievements, updateTieredProgress, loadTieredProgress, type GridAchievementContext } from '@/lib/gridAchievements';
 
 const MAX_MOVES = 20;
 
@@ -42,6 +43,10 @@ interface GridState {
   highlightTrackerLength: number | null;
   isPractice: boolean;
   dailyResult: DailyResult | null;
+  usedPowerTile: boolean;
+  usedCorner: boolean;
+  usedDiagonal: boolean;
+  newAchievements: string[];
   
   // Actions
   initializeGame: (date: string) => void;
@@ -55,6 +60,7 @@ interface GridState {
   clearLastSubmission: () => void;
   setHighlightTrackerLength: (length: number | null) => void;
   startPractice: () => void;
+  clearNewAchievements: () => void;
 }
 
 export const useGridStore = create<GridState>((set, get) => ({
@@ -75,6 +81,10 @@ export const useGridStore = create<GridState>((set, get) => ({
   highlightTrackerLength: null,
   isPractice: false,
   dailyResult: null,
+  usedPowerTile: false,
+  usedCorner: false,
+  usedDiagonal: false,
+  newAchievements: [],
   
   initializeGame: (date: string) => {
     // Try to load saved state first
@@ -236,7 +246,7 @@ export const useGridStore = create<GridState>((set, get) => ({
   },
   
   submitWord: () => {
-    const { selected, grid, rng, submittedWords, morphCount, stabilizationCount, isEnded, moves, isPractice } = get();
+    const { selected, grid, rng, submittedWords, morphCount, stabilizationCount, isEnded, moves, isPractice, usedPowerTile, usedCorner, usedDiagonal, dailySeed, startTime } = get();
     
     // Prevent submissions after game ends
     if (isEnded) {
@@ -252,6 +262,26 @@ export const useGridStore = create<GridState>((set, get) => ({
     if (!isValidWord(word)) {
       return false;
     }
+    
+    // Track corner usage (any corner tile used)
+    const firstTile = selected[0];
+    const newUsedCorner = usedCorner || (
+      (firstTile.row === 0 || firstTile.row === 4) && 
+      (firstTile.col === 0 || firstTile.col === 4)
+    );
+    
+    // Track diagonal-only word (all connections are diagonal)
+    let isDiagonalOnly = selected.length > 1;
+    for (let i = 1; i < selected.length && isDiagonalOnly; i++) {
+      const prev = selected[i - 1];
+      const curr = selected[i];
+      const rowDiff = Math.abs(prev.row - curr.row);
+      const colDiff = Math.abs(prev.col - curr.col);
+      if (rowDiff !== 1 || colDiff !== 1) {
+        isDiagonalOnly = false;
+      }
+    }
+    const newUsedDiagonal = usedDiagonal || isDiagonalOnly;
     
     // Step 1: Advance progress for all used tiles
     const newGrid = grid.map(row => row.map(tile => {
@@ -271,6 +301,7 @@ export const useGridStore = create<GridState>((set, get) => ({
     
     // Step 3: Check for power tile usage
     const hasPowerTile = selected.some(t => t.isPower);
+    const newUsedPowerTile = usedPowerTile || hasPowerTile;
     if (hasPowerTile) {
       const powerTile = selected.find(t => t.isPower);
       if (powerTile) {
@@ -334,6 +365,64 @@ export const useGridStore = create<GridState>((set, get) => ({
     const newStabilizationCount = countStabilized(morphedGrid);
     const newSubmittedWords = [...submittedWords, { word, timestamp: Date.now() }];
     
+    // Check achievements when game ends (only for non-practice)
+    let newAchievements: string[] = [];
+    if (gameEnded && !isPractice) {
+      const timeMs = startTime ? Date.now() - startTime : 0;
+      const longestWord = Math.max(...newSubmittedWords.map(w => w.word.length));
+      const tieredProgress = loadTieredProgress();
+      
+      const context: GridAchievementContext = {
+        won: isWin,
+        moves: newMoves,
+        wordsSubmitted: newSubmittedWords.length,
+        timeMs,
+        longestWord,
+        usedPowerTile: newUsedPowerTile,
+        purpleCount: newPurpleCount,
+        currentStreak: tieredProgress.win_streak + (isWin ? 1 : 0),
+        totalWins: tieredProgress.grid_wins + (isWin ? 1 : 0),
+        mutationCount: newMorphCount,
+        usedCorner: newUsedCorner,
+        usedDiagonal: newUsedDiagonal,
+      };
+      
+      const earned = checkGridAchievements(context);
+      const alreadyUnlocked = getGridAchievements();
+      newAchievements = getNewGridAchievements(earned, alreadyUnlocked);
+      
+      if (newAchievements.length > 0) {
+        saveGridAchievements(newAchievements);
+      }
+      
+      // Update tiered progress
+      if (isWin) {
+        updateTieredProgress({
+          grid_wins: tieredProgress.grid_wins + 1,
+          win_streak: tieredProgress.win_streak + 1,
+          max_win_streak: Math.max(tieredProgress.max_win_streak, tieredProgress.win_streak + 1),
+          total_words: tieredProgress.total_words + newSubmittedWords.length,
+          long_words: tieredProgress.long_words + newSubmittedWords.filter(w => w.word.length === 6).length,
+          epic_words: tieredProgress.epic_words + newSubmittedWords.filter(w => w.word.length >= 7).length,
+          cascade_upgrades: tieredProgress.cascade_upgrades + upgradedTileIds.length,
+          efficient_wins_15: tieredProgress.efficient_wins_15 + (newMoves <= 15 ? 1 : 0),
+          efficient_wins_12: tieredProgress.efficient_wins_12 + (newMoves <= 12 ? 1 : 0),
+          efficient_wins_10: tieredProgress.efficient_wins_10 + (newMoves <= 10 ? 1 : 0),
+          efficient_wins_8: tieredProgress.efficient_wins_8 + (newMoves <= 8 ? 1 : 0),
+          speed_wins_5min: tieredProgress.speed_wins_5min + (timeMs < 300000 ? 1 : 0),
+          speed_wins_3min: tieredProgress.speed_wins_3min + (timeMs < 180000 ? 1 : 0),
+          speed_wins_2min: tieredProgress.speed_wins_2min + (timeMs < 120000 ? 1 : 0),
+          speed_wins_90sec: tieredProgress.speed_wins_90sec + (timeMs < 90000 ? 1 : 0),
+        });
+      } else {
+        // Reset streak on loss
+        updateTieredProgress({
+          win_streak: 0,
+          total_words: tieredProgress.total_words + newSubmittedWords.length,
+        });
+      }
+    }
+    
     set({
       grid: morphedGrid,
       selected: [],
@@ -344,6 +433,10 @@ export const useGridStore = create<GridState>((set, get) => ({
       stabilizationCount: newStabilizationCount,
       isEnded: gameEnded,
       isWin: isWin,
+      usedPowerTile: newUsedPowerTile,
+      usedCorner: newUsedCorner,
+      usedDiagonal: newUsedDiagonal,
+      newAchievements,
       lastSubmission: {
         wordLength,
         usedTileIds,
@@ -457,6 +550,10 @@ export const useGridStore = create<GridState>((set, get) => ({
   
   setHighlightTrackerLength: (length: number | null) => {
     set({ highlightTrackerLength: length });
+  },
+  
+  clearNewAchievements: () => {
+    set({ newAchievements: [] });
   }
 }));
 

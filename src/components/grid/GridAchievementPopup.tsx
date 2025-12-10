@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { ACHIEVEMENTS } from "@/lib/rushAchievements";
+import { GRID_ACHIEVEMENTS } from "@/lib/gridAchievements";
 
-interface AchievementPopupProps {
+interface GridAchievementPopupProps {
   achievementId: string;
   onComplete: () => void;
 }
 
-export const AchievementPopup = ({ achievementId, onComplete }: AchievementPopupProps) => {
+export const GridAchievementPopup = ({ achievementId, onComplete }: GridAchievementPopupProps) => {
   const [show, setShow] = useState(true);
-  const achievement = ACHIEVEMENTS[achievementId];
+  const achievement = GRID_ACHIEVEMENTS[achievementId];
   
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -26,13 +26,13 @@ export const AchievementPopup = ({ achievementId, onComplete }: AchievementPopup
       className={`
         fixed top-1/3 left-1/2 -translate-x-1/2 z-50
         px-6 py-4 rounded-2xl
-        bg-[hsl(var(--grid-card-bg))] border-2 border-[hsl(var(--rush-orange))]
+        bg-[hsl(var(--grid-card-bg))] border-2 border-[hsl(var(--grid-accent))]
         shadow-2xl
         transition-all duration-400
         ${show ? 'opacity-100 scale-100 animate-achievement-pop' : 'opacity-0 scale-95'}
       `}
       style={{
-        boxShadow: '0 0 40px hsl(var(--rush-orange) / 0.3), 0 8px 24px rgba(0,0,0,0.15)',
+        boxShadow: '0 0 40px hsl(var(--grid-accent) / 0.3), 0 8px 24px rgba(0,0,0,0.15)',
       }}
     >
       {show && (
@@ -46,7 +46,7 @@ export const AchievementPopup = ({ achievementId, onComplete }: AchievementPopup
       <div className="flex items-center gap-3">
         <span className="text-3xl">{achievement.icon}</span>
         <div>
-          <p className="text-sm font-semibold text-[hsl(var(--rush-orange))]">{achievement.title}</p>
+          <p className="text-sm font-semibold text-[hsl(var(--grid-accent))]">{achievement.title}</p>
           <p className="text-xs text-[hsl(var(--grid-text-muted))]">{achievement.flavorText}</p>
         </div>
       </div>
