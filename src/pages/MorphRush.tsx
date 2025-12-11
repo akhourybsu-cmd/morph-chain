@@ -149,13 +149,14 @@ const MorphRush = () => {
     setCurrentAchievement(null);
   }, []);
   
-  // Check and queue new achievements
+  // Check and queue new achievements - only display popups when shouldQueue is true (game end)
   const checkAndQueueAchievements = useCallback((
     words: RushWord[],
     invalidCount: number,
     timeRemaining: number,
     score: number,
-    progress: AchievementProgress
+    progress: AchievementProgress,
+    shouldQueue: boolean = false
   ) => {
     const earned = checkAchievements(words, invalidCount, timeRemaining, score, progress);
     const alreadyUnlocked = getUnlockedAchievements();
@@ -164,7 +165,10 @@ const MorphRush = () => {
     if (newlyEarned.length > 0) {
       saveUnlockedAchievements(newlyEarned);
       setSessionAchievements(prev => [...prev, ...newlyEarned]);
-      setAchievementQueue(prev => [...prev, ...newlyEarned]);
+      // Only add to popup queue if shouldQueue is true (game end)
+      if (shouldQueue) {
+        setAchievementQueue(prev => [...prev, ...newlyEarned]);
+      }
     }
   }, [sessionAchievements]);
 
@@ -186,7 +190,7 @@ const MorphRush = () => {
         const finalScoreWithBonuses = prev.score + finalBonuses.total;
         
         // Check final achievements at game end
-        checkAndQueueAchievements(prev.words, prev.invalidCount, 0, finalScoreWithBonuses, achievementProgress);
+        checkAndQueueAchievements(prev.words, prev.invalidCount, 0, finalScoreWithBonuses, achievementProgress, true);
         
         saveDailyCompletion({
           mode,
@@ -311,7 +315,7 @@ const MorphRush = () => {
     });
     
     // Check achievements after valid morph
-    checkAndQueueAchievements(newWords, run.invalidCount, run.timeRemaining, newScore, newProgress);
+    checkAndQueueAchievements(newWords, run.invalidCount, run.timeRemaining, newScore, newProgress, false);
     
     setCurrentWord(result.newWord);
     
@@ -595,8 +599,8 @@ const MorphRush = () => {
         )}
       </main>
       
-      {/* Achievement Popup */}
-      {currentAchievement && (
+      {/* Achievement Popup - only show after game finishes */}
+      {currentAchievement && run.isFinished && (
         <AchievementPopup 
           achievementId={currentAchievement} 
           onComplete={handleAchievementComplete} 
