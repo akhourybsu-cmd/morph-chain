@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGridStore } from '@/stores/gridStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Share2, Play, Eye } from 'lucide-react';
+import { Share2, Archive } from 'lucide-react';
 import { toast } from 'sonner';
 import { GridInitialsInput } from './GridInitialsInput';
 import { GridLeaderboard } from './GridLeaderboard';
@@ -17,30 +18,35 @@ interface EndScreenProps {
 }
 
 export const EndScreen = ({ open, onClose }: EndScreenProps) => {
+  const navigate = useNavigate();
   const { 
-    moves, submittedWords, dailySeed, morphCount, stabilizationCount, 
-    startTime, isWin, purpleCount, isPractice, startPractice, dailyResult
+    moves, submittedWords, dailySeed, morphCount, 
+    startTime, isWin, purpleCount
   } = useGridStore();
   const [showInitialsInput, setShowInitialsInput] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [viewingDaily, setViewingDaily] = useState(false);
 
-  // Determine which result to display
-  const displayingDaily = viewingDaily && dailyResult;
-  const displayMoves = displayingDaily ? dailyResult.moves : moves;
-  const displayWords = displayingDaily ? dailyResult.submittedWords : submittedWords;
-  const displayIsWin = displayingDaily ? dailyResult.isWin : isWin;
-  const displayPurpleCount = displayingDaily ? dailyResult.purpleCount : purpleCount;
-  const displayMorphCount = displayingDaily ? dailyResult.morphCount : morphCount;
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setIsAuthenticated(!!session?.user);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session?.user);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      setIsAuthenticated(!!user);
       
-      // Only show initials input for wins on daily (not practice)
-      if (user && open && isWin && !isPractice) {
+      // Only show initials input for wins
+      if (user && open && isWin) {
         const exists = await checkGridSubmissionExists(dailySeed);
         setScoreSubmitted(exists);
         
@@ -52,26 +58,23 @@ export const EndScreen = ({ open, onClose }: EndScreenProps) => {
     
     if (open) {
       checkAuth();
-      setViewingDaily(false); // Reset when opening
     }
-  }, [open, dailySeed, isWin, isPractice]);
+  }, [open, dailySeed, isWin]);
   
-  const longestWord = displayWords.reduce((longest, current) => 
+  const longestWord = submittedWords.reduce((longest, current) => 
     current.word.length > longest.length ? current.word : longest
   , '');
   
   const handleShare = async () => {
-    const resultEmoji = displayIsWin ? '✓' : '✗';
-    const resultText = displayIsWin 
-      ? `Completed in ${displayMoves} moves`
-      : `${displayPurpleCount}/25 tiles in ${displayMoves} moves`;
+    const resultEmoji = isWin ? '✓' : '✗';
+    const resultText = isWin 
+      ? `Completed in ${moves} moves`
+      : `${purpleCount}/25 tiles in ${moves} moves`;
     
-    const modeLabel = isPractice && !viewingDaily ? ' (Practice)' : '';
-    
-    const text = `${resultEmoji} Morph Grid — Daily ${dailySeed}${modeLabel}
-${displayIsWin ? 'Won' : 'Lost'}: ${resultText}
-Words: ${displayWords.length} | Longest: "${longestWord}"
-Morphs: ${displayMorphCount}
+    const text = `${resultEmoji} Morph Grid — Daily ${dailySeed}
+${isWin ? 'Won' : 'Lost'}: ${resultText}
+Words: ${submittedWords.length} | Longest: "${longestWord}"
+Morphs: ${morphCount}
 
 morphchaingame.com`;
     
@@ -94,17 +97,13 @@ morphchaingame.com`;
     }
   };
 
-  const handleStartPractice = () => {
-    startPractice();
+  const handleArchiveClick = () => {
     onClose();
-  };
-
-  const handleViewDaily = () => {
-    setViewingDaily(true);
-  };
-
-  const handleBackToPractice = () => {
-    setViewingDaily(false);
+    if (isAuthenticated) {
+      navigate('/grid/archive');
+    } else {
+      navigate('/login');
+    }
   };
   
   return (
@@ -114,28 +113,25 @@ morphchaingame.com`;
         style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
       >
         <DialogHeader>
-          <DialogTitle className={`text-2xl font-playfair font-semibold text-center ${displayIsWin ? 'text-[hsl(var(--grid-success))]' : 'text-[hsl(var(--grid-error))]'}`}>
-            {viewingDaily ? 'Daily Results' : isPractice ? 'Practice Complete!' : displayIsWin ? 'Puzzle Complete!' : 'Out of Moves'}
+          <DialogTitle className={`text-2xl font-playfair font-semibold text-center ${isWin ? 'text-[hsl(var(--grid-success))]' : 'text-[hsl(var(--grid-error))]'}`}>
+            {isWin ? 'Puzzle Complete!' : 'Out of Moves'}
           </DialogTitle>
-          {(isPractice && !viewingDaily) && (
-            <p className="text-center text-sm text-[hsl(var(--grid-text-muted))] mt-1">Practice mode - stats not recorded</p>
-          )}
         </DialogHeader>
         
         <div className="space-y-5 py-4 font-inter">
           {/* Result Display */}
           <div className="text-center">
-            {displayIsWin ? (
+            {isWin ? (
               <>
                 <div className="text-5xl font-bold text-[hsl(var(--grid-accent))] mb-1">
-                  {displayMoves}
+                  {moves}
                 </div>
                 <div className="text-[hsl(var(--grid-text-muted))] text-sm">Moves Used</div>
               </>
             ) : (
               <>
                 <div className="text-5xl font-bold text-[hsl(var(--grid-error))] mb-1">
-                  {displayPurpleCount}/25
+                  {purpleCount}/25
                 </div>
                 <div className="text-[hsl(var(--grid-text-muted))] text-sm">Tiles at Tier 3</div>
                 <div className="text-xs text-[hsl(var(--grid-error))] mt-2">
@@ -148,7 +144,7 @@ morphchaingame.com`;
           {/* Stats Grid - NYT Style */}
           <div className="grid grid-cols-2 gap-3">
             <div className="text-center p-3 bg-[hsl(var(--grid-pill-bg))] rounded-lg">
-              <div className="text-xl font-bold text-[hsl(var(--grid-text-primary))]">{displayWords.length}</div>
+              <div className="text-xl font-bold text-[hsl(var(--grid-text-primary))]">{submittedWords.length}</div>
               <div className="text-xs text-[hsl(var(--grid-text-muted))]">Words Formed</div>
             </div>
             
@@ -158,12 +154,12 @@ morphchaingame.com`;
             </div>
             
             <div className="text-center p-3 bg-[hsl(var(--grid-pill-bg))] rounded-lg">
-              <div className="text-xl font-bold text-[hsl(var(--grid-text-primary))]">{displayMorphCount}</div>
+              <div className="text-xl font-bold text-[hsl(var(--grid-text-primary))]">{morphCount}</div>
               <div className="text-xs text-[hsl(var(--grid-text-muted))]">Morphs</div>
             </div>
             
             <div className="text-center p-3 bg-[hsl(var(--grid-pill-bg))] rounded-lg">
-              <div className="text-xl font-bold text-[hsl(var(--grid-text-primary))]">{displayMoves}/{MAX_MOVES}</div>
+              <div className="text-xl font-bold text-[hsl(var(--grid-text-primary))]">{moves}/{MAX_MOVES}</div>
               <div className="text-xs text-[hsl(var(--grid-text-muted))]">Moves</div>
             </div>
           </div>
@@ -182,7 +178,7 @@ morphchaingame.com`;
           <div className="max-h-36 overflow-y-auto space-y-2 p-3 bg-[hsl(var(--grid-pill-bg))] rounded-lg">
             <div className="text-xs font-semibold text-[hsl(var(--grid-text-muted))] mb-2">All Words:</div>
             <div className="flex flex-wrap gap-1.5">
-              {displayWords.map((w, i) => (
+              {submittedWords.map((w, i) => (
                 <div
                   key={i}
                   className="px-2 py-0.5 bg-[hsl(var(--grid-card-bg))] text-[hsl(var(--grid-text-secondary))] rounded text-xs font-medium border border-[hsl(var(--grid-card-border))]"
@@ -203,50 +199,30 @@ morphchaingame.com`;
             Share Results
           </Button>
 
-          {/* Practice Mode / View Daily buttons */}
-          {!isPractice && (
+          {/* Archive Access */}
+          <div className="text-center pt-3 border-t border-[hsl(var(--grid-card-border))]">
+            <p className="text-sm text-[hsl(var(--grid-text-muted))] mb-2">Want to play more?</p>
             <Button
-              onClick={handleStartPractice}
+              onClick={handleArchiveClick}
               variant="outline"
-              className="w-full border-[hsl(var(--grid-card-border))] text-[hsl(var(--grid-text-primary))] hover:bg-[hsl(var(--grid-pill-bg))] font-inter font-semibold rounded-full h-11"
-              size="lg"
+              className="border-[hsl(var(--grid-card-border))] text-[hsl(var(--grid-text-primary))] hover:bg-[hsl(var(--grid-pill-bg))] font-inter font-medium"
             >
-              <Play className="w-4 h-4 mr-2" />
-              Practice Mode
+              <Archive className="w-4 h-4 mr-2" />
+              Access the Archive
             </Button>
-          )}
+            {!isAuthenticated && (
+              <p className="text-xs text-[hsl(var(--grid-text-muted))] mt-2">(Sign in required)</p>
+            )}
+          </div>
 
-          {isPractice && dailyResult && !viewingDaily && (
-            <Button
-              onClick={handleViewDaily}
-              variant="outline"
-              className="w-full border-[hsl(var(--grid-card-border))] text-[hsl(var(--grid-text-primary))] hover:bg-[hsl(var(--grid-pill-bg))] font-inter font-semibold rounded-full h-11"
-              size="lg"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              View Daily Results
-            </Button>
-          )}
-
-          {viewingDaily && (
-            <Button
-              onClick={handleBackToPractice}
-              variant="outline"
-              className="w-full border-[hsl(var(--grid-card-border))] text-[hsl(var(--grid-text-primary))] hover:bg-[hsl(var(--grid-pill-bg))] font-inter font-semibold rounded-full h-11"
-              size="lg"
-            >
-              Back to Practice Results
-            </Button>
-          )}
-
-          {/* Leaderboard Section - only show for daily wins */}
-          {isAuthenticated && displayIsWin && !isPractice && (
+          {/* Leaderboard Section - only show for wins */}
+          {isAuthenticated && isWin && (
             <div className="mt-4">
               <GridLeaderboard dateSeed={dailySeed} />
             </div>
           )}
 
-          {!isAuthenticated && displayIsWin && !isPractice && (
+          {!isAuthenticated && isWin && (
             <div className="mt-4 p-3 bg-[hsl(var(--grid-pill-bg))] rounded-lg text-center">
               <p className="text-sm text-[hsl(var(--grid-text-muted))]">
                 Sign in to submit your score to the leaderboard
@@ -254,25 +230,17 @@ morphchaingame.com`;
             </div>
           )}
           
-          {!displayIsWin && !isPractice && (
+          {!isWin && (
             <div className="mt-3 p-3 bg-[hsl(var(--grid-pill-bg))] rounded-lg text-center">
               <p className="text-sm text-[hsl(var(--grid-text-muted))]">
                 Come back tomorrow for a new puzzle!
               </p>
             </div>
           )}
-
-          {isPractice && !viewingDaily && (
-            <div className="mt-3 p-3 bg-[hsl(var(--grid-pill-bg))] rounded-lg text-center">
-              <p className="text-sm text-[hsl(var(--grid-text-muted))]">
-                Practice again or view your daily results above
-              </p>
-            </div>
-          )}
         </div>
 
-        {/* Initials Input Modal - only for daily wins */}
-        {isWin && !isPractice && (
+        {/* Initials Input Modal - only for wins */}
+        {isWin && (
           <GridInitialsInput
             open={showInitialsInput}
             onClose={() => setShowInitialsInput(false)}
