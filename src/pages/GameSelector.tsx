@@ -181,6 +181,9 @@ interface GameCardProps {
 }
 
 const GameCard = ({ icon: Icon, name, description, accent, onClick }: GameCardProps) => {
+  // Extract the game word (e.g., "Chain" from "Morph Chain")
+  const gameWord = name.replace('Morph ', '');
+  
   return (
     <button
       onClick={onClick}
@@ -212,28 +215,24 @@ const GameCard = ({ icon: Icon, name, description, accent, onClick }: GameCardPr
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 
-              className="font-semibold text-base md:text-lg"
-              style={{ 
-                fontFamily: "Inter, system-ui, sans-serif",
-                color: 'hsl(var(--home-text-primary))'
-              }}
+              className="font-playfair font-semibold text-lg md:text-xl tracking-tight"
+              style={{ letterSpacing: '-0.01em' }}
             >
-              {name}
+              <span style={{ color: 'hsl(var(--home-text-primary))' }}>
+                Morph
+              </span>
+              {' '}
+              <span style={{ color: `hsl(${accent})` }}>
+                {gameWord}
+              </span>
             </h3>
           </div>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            {/* Tiny color dot */}
-            <span 
-              className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-              style={{ background: `hsl(${accent})` }}
-            />
-            <p 
-              className="text-sm truncate"
-              style={{ color: 'hsl(var(--home-text-secondary))' }}
-            >
-              {description}
-            </p>
-          </div>
+          <p 
+            className="text-sm truncate mt-0.5"
+            style={{ color: 'hsl(var(--home-text-secondary))' }}
+          >
+            {description}
+          </p>
         </div>
         
         {/* Icon chip */}
