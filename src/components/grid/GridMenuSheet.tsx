@@ -4,15 +4,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Menu, Trophy, BarChart3, Settings, HelpCircle, Sparkles, Award } from "lucide-react";
+import { Menu, Trophy, BarChart3, Settings, HelpCircle, Sparkles, Award, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GridLeaderboard } from "./GridLeaderboard";
 import { GridStatsModal } from "./GridStats";
 import { useGridStore } from "@/stores/gridStore";
 import { useGridSettings } from "@/hooks/useGridSettings";
 import { GamesNavigation } from "@/components/shared/GamesNavigation";
 import { AchievementGallery } from "@/components/chain/AchievementGallery";
+import { supabase } from "@/integrations/supabase/client";
 
 export const GridMenuSheet = () => {
   const navigate = useNavigate();
@@ -23,6 +24,19 @@ export const GridMenuSheet = () => {
   const [showStats, setShowStats] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setIsLoggedIn(!!data.session);
+    });
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setIsLoggedIn(!!session);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -42,6 +56,25 @@ export const GridMenuSheet = () => {
         <div className="flex flex-col gap-6 mt-8 font-inter">
           {/* Games Section */}
           <GamesNavigation currentGame="grid" onNavigate={() => setOpen(false)} />
+
+          <Separator className="bg-[hsl(var(--grid-divider))]" />
+
+          {/* Account Section */}
+          <div>
+            <h3 className="text-xs font-semibold text-[hsl(var(--grid-text-muted))] mb-3 px-2 uppercase tracking-wider">Account</h3>
+            <div className="space-y-1">
+              <button
+                onClick={() => {
+                  navigate(isLoggedIn ? '/profile' : '/login');
+                  setOpen(false);
+                }}
+                className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[hsl(var(--grid-pill-bg))] transition-colors flex items-center gap-2 text-[hsl(var(--grid-text-primary))]"
+              >
+                <User className="w-4 h-4 text-[hsl(var(--grid-accent))]" />
+                {isLoggedIn ? 'My Account' : 'Sign In'}
+              </button>
+            </div>
+          </div>
 
           <Separator className="bg-[hsl(var(--grid-divider))]" />
 

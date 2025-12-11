@@ -10,9 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { AddToHomeScreen } from "@/components/AddToHomeScreen";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Trophy, Settings } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, Trophy, Settings, User } from "lucide-react";
+import { useState, useEffect } from "react";
 import { GamesNavigation } from "@/components/shared/GamesNavigation";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GameMenuSheetProps {
   open: boolean;
@@ -44,6 +46,20 @@ export const GameMenuSheet = ({
   onOpenAchievements,
 }: GameMenuSheetProps) => {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setIsLoggedIn(!!data.session);
+    });
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setIsLoggedIn(!!session);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -67,6 +83,33 @@ export const GameMenuSheet = ({
         <div className="space-y-5 py-4">
           {/* Games Section */}
           <GamesNavigation currentGame="chain" onNavigate={() => onOpenChange(false)} />
+
+          <Separator style={{ background: 'hsl(var(--chain-divider))' }} />
+
+          {/* Account Section */}
+          <div>
+            <h3 
+              className="text-xs font-semibold uppercase tracking-wider mb-3 px-2"
+              style={{ color: 'hsl(var(--chain-text-muted))' }}
+            >
+              Account
+            </h3>
+            <div className="space-y-1">
+              <button
+                onClick={() => {
+                  navigate(isLoggedIn ? '/profile' : '/login');
+                  onOpenChange(false);
+                }}
+                className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+                style={{ color: 'hsl(var(--chain-text-primary))' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--chain-divider))'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <User className="w-4 h-4" style={{ color: 'hsl(var(--chain-accent))' }} />
+                <span className="text-sm">{isLoggedIn ? 'My Account' : 'Sign In'}</span>
+              </button>
+            </div>
+          </div>
 
           <Separator style={{ background: 'hsl(var(--chain-divider))' }} />
 
