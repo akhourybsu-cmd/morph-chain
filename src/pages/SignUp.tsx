@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Logo } from "@/components/Logo";
+import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
+import { ArrowLeft } from "lucide-react";
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -23,6 +23,15 @@ export default function SignUp() {
       toast({
         title: "Passwords don't match",
         description: "Please make sure your passwords match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters.",
         variant: "destructive",
       });
       return;
@@ -59,21 +68,51 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-4">
-          <div className="flex justify-center">
-            <Logo className="h-8" />
+    <div className="min-h-dvh flex flex-col" style={{ background: 'hsl(var(--home-page-bg))' }}>
+      {/* Header */}
+      <header 
+        className="h-14 flex items-center justify-between px-4"
+        style={{ borderBottom: '1px solid hsl(var(--home-divider))' }}
+      >
+        <button 
+          onClick={() => navigate('/')} 
+          className="p-1.5 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+        >
+          <ArrowLeft className="w-5 h-5" style={{ color: 'hsl(var(--home-text-muted))' }} />
+        </button>
+        <h1 className="font-playfair font-semibold" style={{ color: 'hsl(var(--home-text-primary))' }}>
+          Sign Up
+        </h1>
+        <PrestigeThemeToggle colorVar="--home-text-muted" />
+      </header>
+
+      <main className="flex-1 flex items-center justify-center p-4">
+        <div 
+          className="w-full max-w-sm rounded-xl p-6"
+          style={{ 
+            background: 'hsl(var(--home-card-bg))',
+            border: '1px solid hsl(var(--home-card-border))',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.06)'
+          }}
+        >
+          <div className="text-center mb-6">
+            <h2 className="font-playfair text-2xl font-bold mb-1" style={{ color: 'hsl(var(--home-text-primary))' }}>
+              Create Account
+            </h2>
+            <p className="text-sm" style={{ color: 'hsl(var(--home-text-secondary))' }}>
+              Sign up to sync your stats across devices
+            </p>
           </div>
-          <div>
-            <CardTitle className="text-2xl">Create Account</CardTitle>
-            <CardDescription>Sign up to sync your progress across devices</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
+
           <form onSubmit={handleSignUp} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label 
+                htmlFor="email"
+                className="text-xs font-medium uppercase tracking-wider"
+                style={{ color: 'hsl(var(--home-text-muted))' }}
+              >
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -81,10 +120,21 @@ export default function SignUp() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                style={{ 
+                  background: 'hsl(var(--home-page-bg))',
+                  borderColor: 'hsl(var(--home-divider))',
+                  color: 'hsl(var(--home-text-primary))'
+                }}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label 
+                htmlFor="password"
+                className="text-xs font-medium uppercase tracking-wider"
+                style={{ color: 'hsl(var(--home-text-muted))' }}
+              >
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -92,10 +142,21 @@ export default function SignUp() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
+                style={{ 
+                  background: 'hsl(var(--home-page-bg))',
+                  borderColor: 'hsl(var(--home-divider))',
+                  color: 'hsl(var(--home-text-primary))'
+                }}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label 
+                htmlFor="confirmPassword"
+                className="text-xs font-medium uppercase tracking-wider"
+                style={{ color: 'hsl(var(--home-text-muted))' }}
+              >
+                Confirm Password
+              </Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -103,6 +164,11 @@ export default function SignUp() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
+                style={{ 
+                  background: 'hsl(var(--home-page-bg))',
+                  borderColor: 'hsl(var(--home-divider))',
+                  color: 'hsl(var(--home-text-primary))'
+                }}
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
@@ -110,20 +176,23 @@ export default function SignUp() {
             </Button>
           </form>
 
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link to="/login" className="text-primary hover:underline">
+          <div 
+            className="mt-5 pt-5 text-center text-sm"
+            style={{ borderTop: '1px solid hsl(var(--home-divider))' }}
+          >
+            <span style={{ color: 'hsl(var(--home-text-muted))' }}>
+              Already have an account?{" "}
+            </span>
+            <Link 
+              to="/login" 
+              className="font-medium hover:underline"
+              style={{ color: 'hsl(var(--home-accent))' }}
+            >
               Sign in
             </Link>
           </div>
-
-          <div className="mt-4 text-center">
-            <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
-              ← Back to game
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </main>
     </div>
   );
 }

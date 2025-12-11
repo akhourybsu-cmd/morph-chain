@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
-import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Menu, ChevronRight } from "lucide-react";
+import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Menu, ChevronRight, User } from "lucide-react";
 import { toast } from "sonner";
 import { SideMenu } from "@/components/layout/SideMenu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
+import { supabase } from "@/integrations/supabase/client";
 
 // Per-game accent colors (HSL values match CSS variables)
 const gameAccents = {
@@ -18,6 +19,19 @@ const GameSelector = () => {
   const navigate = useNavigate();
   const puzzle = getDailyPuzzle(4);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setIsLoggedIn(!!data.session);
+    });
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setIsLoggedIn(!!session);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
   
   const timezone = "America/New_York";
   const formattedDate = formatInTimeZone(new Date(), timezone, 'MMMM d, yyyy');
@@ -44,7 +58,17 @@ const GameSelector = () => {
           </button>
           <PrestigeThemeToggle colorVar="--home-text-muted" />
         </div>
-        <div className="w-16" /> {/* Spacer for balance */}
+        <div className="flex-1" /> {/* Center spacer */}
+        <button 
+          onClick={() => navigate(isLoggedIn ? '/profile' : '/login')}
+          className="p-1.5 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+          title={isLoggedIn ? 'My Account' : 'Sign In'}
+        >
+          <User 
+            className="w-5 h-5" 
+            style={{ color: 'hsl(var(--home-text-muted))' }} 
+          />
+        </button>
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-6 md:py-10 max-w-xl">

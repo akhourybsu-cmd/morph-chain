@@ -1,8 +1,26 @@
-import { X } from "lucide-react";
+import { X, User } from "lucide-react";
 import { GamesNavigation } from "@/components/shared/GamesNavigation";
 import { Separator } from "@/components/ui/separator";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export function SideMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setIsLoggedIn(!!data.session);
+    });
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setIsLoggedIn(!!session);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
+
   if (!open) return null;
   
   return (
@@ -41,12 +59,28 @@ export function SideMenu({ open, onClose }: { open: boolean; onClose: () => void
           
           <Separator style={{ background: 'hsl(var(--home-divider))' }} />
           
-          <p 
-            className="text-xs px-2"
-            style={{ color: 'hsl(var(--home-text-muted))' }}
-          >
-            More features coming soon
-          </p>
+          {/* Account Section */}
+          <div>
+            <h3 
+              className="text-xs font-semibold uppercase tracking-wider mb-3 px-2"
+              style={{ color: 'hsl(var(--home-text-muted))' }}
+            >
+              Account
+            </h3>
+            <button
+              onClick={() => {
+                navigate(isLoggedIn ? '/profile' : '/login');
+                onClose();
+              }}
+              className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+              style={{ color: 'hsl(var(--home-text-primary))' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--home-divider))'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <User className="w-4 h-4" style={{ color: 'hsl(var(--home-accent))' }} />
+              <span className="text-sm">{isLoggedIn ? 'My Account' : 'Sign In'}</span>
+            </button>
+          </div>
         </div>
       </aside>
     </div>

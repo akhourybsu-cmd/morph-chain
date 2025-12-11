@@ -1,16 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { MorphHeader } from "@/components/MorphHeader";
-import { MorphChainTitle, MorphGridTitle, MorphRushTitle } from "@/components/GameTitles";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { loadRushStats } from "@/lib/rushStorage";
 import { loadGridStats } from "@/lib/gridStorage";
 import { loadStats } from "@/lib/storage";
+import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
+import { Menu, ArrowLeft, Link2, Grid3X3, Zap, LogOut, KeyRound, User as UserIcon, Upload, Trash2 } from "lucide-react";
 
 type MyStats = {
   user_id: string;
@@ -39,11 +38,24 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [pwdSaving, setPwdSaving] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [activeTab, setActiveTab] = useState("chain");
+  const [showPwdForm, setShowPwdForm] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Load local stats
+  const [localRushStats] = useState(() => loadRushStats());
+  const [localGridStats] = useState(() => loadGridStats());
+  const [localChainStats] = useState(() => loadStats());
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setSession(session);
+    });
+    
+    return () => subscription.unsubscribe();
   }, []);
 
   const user = session?.user;
@@ -51,7 +63,6 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user) return;
 
-    // Ensure a row exists
     supabase.from("user_profiles")
       .upsert({ user_id: user.id }, { onConflict: "user_id" })
       .then(() => {
@@ -65,84 +76,8 @@ export default function ProfilePage() {
     });
   }, [user?.id]);
 
-  // Load local stats for displaying when not signed in or as backup
-  const [localRushStats] = useState(() => loadRushStats());
-  const [localGridStats] = useState(() => loadGridStats());
-  const [localChainStats] = useState(() => loadStats());
-
-  const rushTime = useMemo(() => {
-    if (!stats) return "0m";
-    const minutes = Math.round((stats.rush_time_ms || 0) / 60000);
-    return `${minutes}m`;
-  }, [stats]);
-
-  if (!user) {
-    return (
-      <>
-        <MorphHeader />
-        <main className="max-w-4xl mx-auto p-6 space-y-8">
-          <Card>
-            <CardContent className="p-6 space-y-4">
-              <h2 className="text-xl font-bold">Create a profile to save these stats</h2>
-              <p className="text-muted-foreground">Your local stats are tracked on this device. Sign up to sync them across devices!</p>
-              <Button onClick={() => navigate('/login')} className="mt-4">Log In or Sign Up</Button>
-              
-              {/* Show local stats */}
-              <div className="pt-6 border-t">
-                <h3 className="text-lg font-semibold mb-4">Your Local Stats</h3>
-                <Accordion type="single" collapsible defaultValue="chain" className="space-y-2">
-                  <AccordionItem value="chain" className="border rounded-lg px-4">
-                    <AccordionTrigger className="hover:no-underline">
-                      <MorphChainTitle className="text-xl" />
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="grid grid-cols-2 gap-3 pt-2">
-                        <Stat label="Plays" value={localChainStats.overall.played} />
-                        <Stat label="Wins" value={localChainStats.overall.won} />
-                        <Stat label="Current Streak" value={localChainStats.overall.currentStreak} />
-                        <Stat label="Best Streak" value={localChainStats.overall.maxStreak} />
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="rush" className="border rounded-lg px-4">
-                    <AccordionTrigger className="hover:no-underline">
-                      <MorphRushTitle className="text-xl" />
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="grid grid-cols-2 gap-3 pt-2">
-                        <Stat label="Plays" value={localRushStats.normal.gamesPlayed + localRushStats.hard.gamesPlayed} />
-                        <Stat label="Best Score" value={Math.max(localRushStats.normal.highScore, localRushStats.hard.highScore)} />
-                        <Stat label="Total Words" value={localRushStats.normal.totalWords + localRushStats.hard.totalWords} />
-                        <Stat label="Max Multiplier" value={`${Math.max(localRushStats.normal.maxMultiplier, localRushStats.hard.maxMultiplier).toFixed(1)}x`} />
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="grid" className="border rounded-lg px-4">
-                    <AccordionTrigger className="hover:no-underline">
-                      <MorphGridTitle className="text-xl" />
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="grid grid-cols-2 gap-3 pt-2">
-                        <Stat label="Plays" value={localGridStats.gamesPlayed} />
-                        <Stat label="Completed" value={localGridStats.gamesCompleted} />
-                        <Stat label="Best Moves" value={localGridStats.bestMoves ?? 0} />
-                        <Stat label="Completion Rate" value={`${Math.round(localGridStats.completionRate * 100)}%`} />
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </div>
-            </CardContent>
-          </Card>
-        </main>
-      </>
-    );
-  }
-
   const onSaveProfile = async () => {
-    if (!profile) return;
+    if (!profile || !user) return;
     setSaving(true);
     const { error } = await supabase.from("user_profiles").update({
       display_name: profile.display_name?.trim() || null,
@@ -150,42 +85,25 @@ export default function ProfilePage() {
     }).eq("user_id", user.id);
     
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save profile",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to save profile", variant: "destructive" });
     } else {
-      toast({
-        title: "Saved",
-        description: "Profile updated successfully"
-      });
+      toast({ title: "Saved", description: "Profile updated successfully" });
     }
     setSaving(false);
   };
 
   const onUploadAvatar = async () => {
-    if (!file) return;
+    if (!file || !user) return;
 
-    // Validate file type
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: "Error",
-        description: "Only JPEG, PNG, WebP, or GIF images are allowed",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Only JPEG, PNG, WebP, or GIF images are allowed", variant: "destructive" });
       return;
     }
 
-    // Validate file size (5MB max)
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      toast({
-        title: "Error",
-        description: "File must be under 5MB",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "File must be under 5MB", variant: "destructive" });
       return;
     }
 
@@ -199,11 +117,7 @@ export default function ProfilePage() {
     });
 
     if (uploadError) {
-      toast({
-        title: "Error",
-        description: "Failed to upload avatar",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to upload avatar", variant: "destructive" });
       return;
     }
 
@@ -212,53 +126,36 @@ export default function ProfilePage() {
       .eq("user_id", user.id);
 
     if (updateError) {
-      toast({
-        title: "Error",
-        description: "Failed to update profile",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to update profile", variant: "destructive" });
     } else {
       setProfile(p => p ? { ...p, avatar_path: path } : p);
-      toast({
-        title: "Success",
-        description: "Avatar uploaded successfully"
-      });
+      setFile(null);
+      toast({ title: "Success", description: "Avatar uploaded successfully" });
     }
   };
 
   const onChangePassword = async (currentPassword: string, newPassword: string) => {
+    if (!user) return;
     try {
       setPwdSaving(true);
       
-      // Re-authenticate to verify current password
       const { error: reauthErr } = await supabase.auth.signInWithPassword({
         email: user.email!,
         password: currentPassword,
       });
       
       if (reauthErr) {
-        toast({
-          title: "Error",
-          description: "Current password is incorrect",
-          variant: "destructive"
-        });
+        toast({ title: "Error", description: "Current password is incorrect", variant: "destructive" });
         return;
       }
 
       const { error } = await supabase.auth.updateUser({ password: newPassword });
-      
       if (error) throw error;
       
-      toast({
-        title: "Success",
-        description: "Password updated successfully"
-      });
+      toast({ title: "Success", description: "Password updated successfully" });
+      setShowPwdForm(false);
     } catch (e: any) {
-      toast({
-        title: "Error",
-        description: e.message ?? "Failed to update password",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: e.message ?? "Failed to update password", variant: "destructive" });
     } finally {
       setPwdSaving(false);
     }
@@ -268,166 +165,367 @@ export default function ProfilePage() {
     ? supabase.storage.from("avatars").getPublicUrl(profile.avatar_path).data.publicUrl
     : null;
 
+  // Unauthenticated view
+  if (!user) {
+    return (
+      <div className="min-h-dvh flex flex-col" style={{ background: 'hsl(var(--home-page-bg))' }}>
+        <header 
+          className="h-14 flex items-center justify-between px-4 sticky top-0 z-10"
+          style={{ 
+            background: 'hsl(var(--home-page-bg))',
+            borderBottom: '1px solid hsl(var(--home-divider))' 
+          }}
+        >
+          <button onClick={() => navigate('/')} className="p-1.5 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10">
+            <ArrowLeft className="w-5 h-5" style={{ color: 'hsl(var(--home-text-muted))' }} />
+          </button>
+          <h1 className="font-playfair font-semibold" style={{ color: 'hsl(var(--home-text-primary))' }}>Account</h1>
+          <PrestigeThemeToggle colorVar="--home-text-muted" />
+        </header>
+
+        <main className="flex-1 container mx-auto px-4 py-6 max-w-lg">
+          <div 
+            className="rounded-xl p-6"
+            style={{ 
+              background: 'hsl(var(--home-card-bg))',
+              border: '1px solid hsl(var(--home-card-border))',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.04)'
+            }}
+          >
+            <h2 className="font-playfair text-xl font-semibold mb-2" style={{ color: 'hsl(var(--home-text-primary))' }}>
+              Create an Account
+            </h2>
+            <p className="text-sm mb-4" style={{ color: 'hsl(var(--home-text-secondary))' }}>
+              Sign up to sync your stats across devices!
+            </p>
+            <Button onClick={() => navigate('/login')} className="w-full">
+              Log In or Sign Up
+            </Button>
+          </div>
+
+          {/* Local Stats */}
+          <div className="mt-6">
+            <h3 className="text-xs font-semibold uppercase tracking-wider mb-3 px-1" style={{ color: 'hsl(var(--home-text-muted))' }}>
+              Your Local Stats
+            </h3>
+            
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="w-full mb-4" style={{ background: 'hsl(var(--home-divider))' }}>
+                <TabsTrigger value="chain" className="flex-1 gap-1.5 text-xs">
+                  <Link2 className="w-3.5 h-3.5" /> Chain
+                </TabsTrigger>
+                <TabsTrigger value="grid" className="flex-1 gap-1.5 text-xs">
+                  <Grid3X3 className="w-3.5 h-3.5" /> Grid
+                </TabsTrigger>
+                <TabsTrigger value="rush" className="flex-1 gap-1.5 text-xs">
+                  <Zap className="w-3.5 h-3.5" /> Rush
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="chain">
+                <StatsGrid>
+                  <StatCard label="Plays" value={localChainStats.overall.played} />
+                  <StatCard label="Wins" value={localChainStats.overall.won} />
+                  <StatCard label="Current Streak" value={localChainStats.overall.currentStreak} />
+                  <StatCard label="Best Streak" value={localChainStats.overall.maxStreak} />
+                </StatsGrid>
+              </TabsContent>
+
+              <TabsContent value="grid">
+                <StatsGrid>
+                  <StatCard label="Plays" value={localGridStats.gamesPlayed} />
+                  <StatCard label="Completed" value={localGridStats.gamesCompleted} />
+                  <StatCard label="Best Moves" value={localGridStats.bestMoves ?? '-'} />
+                  <StatCard label="Win Rate" value={`${Math.round(localGridStats.completionRate * 100)}%`} />
+                </StatsGrid>
+              </TabsContent>
+
+              <TabsContent value="rush">
+                <StatsGrid>
+                  <StatCard label="Plays" value={localRushStats.normal.gamesPlayed + localRushStats.hard.gamesPlayed} />
+                  <StatCard label="Best Score" value={Math.max(localRushStats.normal.highScore, localRushStats.hard.highScore)} />
+                  <StatCard label="Total Words" value={localRushStats.normal.totalWords + localRushStats.hard.totalWords} />
+                  <StatCard label="Max Multiplier" value={`${Math.max(localRushStats.normal.maxMultiplier, localRushStats.hard.maxMultiplier).toFixed(1)}x`} />
+                </StatsGrid>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Authenticated view
   return (
-    <>
-      <MorphHeader />
-      <main className="max-w-4xl mx-auto p-6 space-y-8">
-        <div className="flex items-center gap-4">
-          <img
-            src={avatarUrl ?? "https://placehold.co/96x96?text=MG"}
-            className="w-24 h-24 rounded-full object-cover"
-            alt="avatar"
-          />
-          <div>
-            <h1 className="text-2xl font-bold">Your Profile</h1>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
+    <div className="min-h-dvh flex flex-col" style={{ background: 'hsl(var(--home-page-bg))' }}>
+      <header 
+        className="h-14 flex items-center justify-between px-4 sticky top-0 z-10"
+        style={{ 
+          background: 'hsl(var(--home-page-bg))',
+          borderBottom: '1px solid hsl(var(--home-divider))' 
+        }}
+      >
+        <button onClick={() => navigate('/')} className="p-1.5 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10">
+          <ArrowLeft className="w-5 h-5" style={{ color: 'hsl(var(--home-text-muted))' }} />
+        </button>
+        <h1 className="font-playfair font-semibold" style={{ color: 'hsl(var(--home-text-primary))' }}>My Account</h1>
+        <PrestigeThemeToggle colorVar="--home-text-muted" />
+      </header>
+
+      <main className="flex-1 container mx-auto px-4 py-6 max-w-lg space-y-6">
+        {/* Profile Card */}
+        <div 
+          className="rounded-xl p-5"
+          style={{ 
+            background: 'hsl(var(--home-card-bg))',
+            border: '1px solid hsl(var(--home-card-border))',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.04)'
+          }}
+        >
+          <div className="flex items-center gap-4 mb-5">
+            <div className="relative">
+              <img
+                src={avatarUrl ?? "https://placehold.co/64x64?text=MG"}
+                className="w-16 h-16 rounded-full object-cover"
+                style={{ border: '2px solid hsl(var(--home-divider))' }}
+                alt="avatar"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-playfair font-semibold text-lg truncate" style={{ color: 'hsl(var(--home-text-primary))' }}>
+                {profile?.display_name || 'Player'}
+              </p>
+              <p className="text-sm truncate" style={{ color: 'hsl(var(--home-text-muted))' }}>
+                {user.email}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium uppercase tracking-wider" style={{ color: 'hsl(var(--home-text-muted))' }}>
+                Display Name
+              </label>
+              <Input
+                value={profile?.display_name ?? ""}
+                onChange={e => setProfile(p => p ? { ...p, display_name: e.target.value } : p)}
+                placeholder="Your name"
+                className="mt-1"
+                style={{ 
+                  background: 'hsl(var(--home-page-bg))',
+                  borderColor: 'hsl(var(--home-divider))',
+                  color: 'hsl(var(--home-text-primary))'
+                }}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium uppercase tracking-wider" style={{ color: 'hsl(var(--home-text-muted))' }}>
+                Leaderboard Initials (3 chars)
+              </label>
+              <Input
+                value={profile?.default_initials ?? ""}
+                onChange={e => setProfile(p => p ? { ...p, default_initials: e.target.value } : p)}
+                placeholder="ABC"
+                maxLength={3}
+                className="mt-1"
+                style={{ 
+                  background: 'hsl(var(--home-page-bg))',
+                  borderColor: 'hsl(var(--home-divider))',
+                  color: 'hsl(var(--home-text-primary))'
+                }}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium uppercase tracking-wider" style={{ color: 'hsl(var(--home-text-muted))' }}>
+                Avatar
+              </label>
+              <div className="flex gap-2 mt-1">
+                <Input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={e => setFile(e.target.files?.[0] ?? null)} 
+                  className="flex-1"
+                  style={{ 
+                    background: 'hsl(var(--home-page-bg))',
+                    borderColor: 'hsl(var(--home-divider))',
+                    color: 'hsl(var(--home-text-primary))'
+                  }}
+                />
+                <Button variant="outline" onClick={onUploadAvatar} disabled={!file} size="icon">
+                  <Upload className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <Button onClick={onSaveProfile} disabled={saving} className="w-full">
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </div>
 
-        <section className="grid md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader><CardTitle>Profile Settings</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <label className="text-sm font-medium">Display Name</label>
-                <Input
-                  value={profile?.display_name ?? ""}
-                  onChange={e => setProfile(p => p ? { ...p, display_name: e.target.value } : p)}
-                  placeholder="Optional"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Default Leaderboard Initials (0–3 chars)</label>
-                <Input
-                  value={profile?.default_initials ?? ""}
-                  onChange={e => setProfile(p => p ? { ...p, default_initials: e.target.value } : p)}
-                  placeholder="e.g., AK"
-                  maxLength={3}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Input type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} />
-                <Button variant="secondary" onClick={onUploadAvatar} disabled={!file}>Upload</Button>
-              </div>
-              <Button onClick={onSaveProfile} disabled={saving} className="w-full">
-                {saving ? "Saving..." : "Save Changes"}
-              </Button>
-              {user.email === "akhourybsu@gmail.com" && (
-                <Button onClick={() => navigate('/admin/analytics')} variant="outline" className="w-full">
-                  Analytics
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+        {/* Stats Card */}
+        <div 
+          className="rounded-xl p-5"
+          style={{ 
+            background: 'hsl(var(--home-card-bg))',
+            border: '1px solid hsl(var(--home-card-border))',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.04)'
+          }}
+        >
+          <h3 className="font-playfair font-semibold text-lg mb-4" style={{ color: 'hsl(var(--home-text-primary))' }}>
+            My Stats
+          </h3>
 
-          <Card>
-            <CardHeader><CardTitle>Change Password</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <ChangePasswordForm onSubmit={onChangePassword} busy={pwdSaving} />
-            </CardContent>
-          </Card>
-        </section>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="w-full mb-4" style={{ background: 'hsl(var(--home-divider))' }}>
+              <TabsTrigger value="chain" className="flex-1 gap-1.5 text-xs">
+                <Link2 className="w-3.5 h-3.5" /> Chain
+              </TabsTrigger>
+              <TabsTrigger value="grid" className="flex-1 gap-1.5 text-xs">
+                <Grid3X3 className="w-3.5 h-3.5" /> Grid
+              </TabsTrigger>
+              <TabsTrigger value="rush" className="flex-1 gap-1.5 text-xs">
+                <Zap className="w-3.5 h-3.5" /> Rush
+              </TabsTrigger>
+            </TabsList>
 
-        <section>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">My Stats</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible defaultValue="chain" className="space-y-2">
-                <AccordionItem value="chain" className="border rounded-lg px-4">
-                  <AccordionTrigger className="hover:no-underline">
-                    <MorphChainTitle className="text-xl" />
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <Stat label="Plays" value={stats?.chain_plays ?? 0} />
-                      <Stat label="Best Moves" value={stats?.chain_best_moves ?? 0} />
-                      <Stat label="Clears" value={stats?.chain_clears ?? 0} />
-                      <Stat label="Avg Time" value={`${Math.round((stats?.chain_avg_time_ms ?? 0)/1000)}s`} />
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
+            <TabsContent value="chain">
+              <StatsGrid>
+                <StatCard label="Plays" value={stats?.chain_plays ?? localChainStats.overall.played} />
+                <StatCard label="Wins" value={stats?.chain_clears ?? localChainStats.overall.won} />
+                <StatCard label="Best Moves" value={stats?.chain_best_moves ?? '-'} />
+                <StatCard label="Avg Time" value={stats?.chain_avg_time_ms ? `${Math.round(stats.chain_avg_time_ms/1000)}s` : '-'} />
+              </StatsGrid>
+            </TabsContent>
 
-                <AccordionItem value="rush" className="border rounded-lg px-4">
-                  <AccordionTrigger className="hover:no-underline">
-                    <MorphRushTitle className="text-xl" />
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <Stat label="Plays" value={stats?.rush_plays ?? 0} />
-                      <Stat label="Best Score" value={stats?.rush_best_score ?? 0} />
-                      <Stat label="Avg Score" value={stats?.rush_avg_score ?? 0} />
-                      <Stat label="Best Multiplier" value={`${stats?.rush_best_multiplier ?? 0}x`} />
-                      <Stat label="Time Played" value={rushTime} />
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
+            <TabsContent value="grid">
+              <StatsGrid>
+                <StatCard label="Plays" value={localGridStats.gamesPlayed} />
+                <StatCard label="Completed" value={localGridStats.gamesCompleted} />
+                <StatCard label="Best Moves" value={localGridStats.bestMoves ?? '-'} />
+                <StatCard label="Win Rate" value={`${Math.round(localGridStats.completionRate * 100)}%`} />
+                <StatCard label="Win Streak" value={localGridStats.streakDays} />
+                <StatCard label="Best Streak" value={localGridStats.maxStreakDays} />
+              </StatsGrid>
+            </TabsContent>
 
-                <AccordionItem value="grid" className="border rounded-lg px-4">
-                  <AccordionTrigger className="hover:no-underline">
-                    <MorphGridTitle className="text-xl" />
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <Stat label="Coming Soon" value="Track Grid stats" />
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
-        </section>
-
-        <Card>
-          <CardHeader><CardTitle>Data Management</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-4">
-                Clear all local game data, progress, and settings. This action cannot be undone.
-              </p>
-              <Button 
-                variant="destructive" 
-                onClick={() => {
-                  if (confirm('Are you sure you want to clear all local data? This cannot be undone.')) {
-                    localStorage.clear();
-                    toast({
-                      title: "Data Cleared",
-                      description: "All local game data has been reset"
-                    });
-                    window.location.reload();
-                  }
-                }}
-              >
-                Reset Local Data
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="pt-6 border-t">
-          <Button variant="ghost" className="text-destructive hover:text-destructive" onClick={() => {
-            supabase.auth.signOut();
-            navigate('/');
-          }}>
-            Sign Out
-          </Button>
+            <TabsContent value="rush">
+              <StatsGrid>
+                <StatCard label="Plays" value={stats?.rush_plays ?? (localRushStats.normal.gamesPlayed + localRushStats.hard.gamesPlayed)} />
+                <StatCard label="Best Score" value={stats?.rush_best_score ?? Math.max(localRushStats.normal.highScore, localRushStats.hard.highScore)} />
+                <StatCard label="Avg Score" value={stats?.rush_avg_score ?? '-'} />
+                <StatCard label="Best Multiplier" value={stats?.rush_best_multiplier ? `${stats.rush_best_multiplier}x` : `${Math.max(localRushStats.normal.maxMultiplier, localRushStats.hard.maxMultiplier).toFixed(1)}x`} />
+                <StatCard label="Time Played" value={stats?.rush_time_ms ? `${Math.round(stats.rush_time_ms / 60000)}m` : '-'} />
+              </StatsGrid>
+            </TabsContent>
+          </Tabs>
         </div>
-      </main>
-    </>
-  );
-}
 
-function Stat({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="rounded-lg border p-3">
-      <div className="text-sm text-muted-foreground">{label}</div>
-      <div className="text-xl font-semibold">{value}</div>
+        {/* Security Card */}
+        <div 
+          className="rounded-xl p-5"
+          style={{ 
+            background: 'hsl(var(--home-card-bg))',
+            border: '1px solid hsl(var(--home-card-border))',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.04)'
+          }}
+        >
+          <h3 className="font-playfair font-semibold text-lg mb-4" style={{ color: 'hsl(var(--home-text-primary))' }}>
+            Security
+          </h3>
+          
+          {showPwdForm ? (
+            <ChangePasswordForm onSubmit={onChangePassword} busy={pwdSaving} onCancel={() => setShowPwdForm(false)} />
+          ) : (
+            <Button variant="outline" onClick={() => setShowPwdForm(true)} className="w-full gap-2">
+              <KeyRound className="w-4 h-4" /> Change Password
+            </Button>
+          )}
+        </div>
+
+        {/* Data Management & Sign Out */}
+        <div 
+          className="rounded-xl p-5"
+          style={{ 
+            background: 'hsl(var(--home-card-bg))',
+            border: '1px solid hsl(var(--home-card-border))',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.04)'
+          }}
+        >
+          <h3 className="font-playfair font-semibold text-lg mb-4" style={{ color: 'hsl(var(--home-text-primary))' }}>
+            Data & Account
+          </h3>
+          
+          <div className="space-y-3">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                if (confirm('Are you sure you want to clear all local data? This cannot be undone.')) {
+                  localStorage.clear();
+                  toast({ title: "Data Cleared", description: "All local game data has been reset" });
+                  window.location.reload();
+                }
+              }}
+              className="w-full gap-2"
+            >
+              <Trash2 className="w-4 h-4" /> Reset Local Data
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              className="w-full gap-2 text-destructive hover:text-destructive hover:bg-destructive/10" 
+              onClick={() => {
+                supabase.auth.signOut();
+                navigate('/');
+              }}
+            >
+              <LogOut className="w-4 h-4" /> Sign Out
+            </Button>
+          </div>
+        </div>
+
+        {/* Admin link for specific user */}
+        {user.email === "akhourybsu@gmail.com" && (
+          <Button onClick={() => navigate('/admin/analytics')} variant="outline" className="w-full">
+            Analytics Dashboard
+          </Button>
+        )}
+      </main>
     </div>
   );
 }
 
-function ChangePasswordForm({ onSubmit, busy }: { onSubmit: (current: string, next: string) => void; busy: boolean }) {
+function StatsGrid({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {children}
+    </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div 
+      className="rounded-lg p-3"
+      style={{ 
+        background: 'hsl(var(--home-page-bg))',
+        border: '1px solid hsl(var(--home-divider))'
+      }}
+    >
+      <div className="text-xs uppercase tracking-wider" style={{ color: 'hsl(var(--home-text-muted))' }}>
+        {label}
+      </div>
+      <div className="text-xl font-semibold mt-0.5" style={{ color: 'hsl(var(--home-text-primary))' }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function ChangePasswordForm({ onSubmit, busy, onCancel }: { 
+  onSubmit: (current: string, next: string) => void; 
+  busy: boolean;
+  onCancel: () => void;
+}) {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -446,26 +544,67 @@ function ChangePasswordForm({ onSubmit, busy }: { onSubmit: (current: string, ne
           return;
         }
         onSubmit(current, next);
-        setCurrent("");
-        setNext("");
-        setConfirm("");
       }}
     >
       <div>
-        <label className="text-sm font-medium">Current Password</label>
-        <Input type="password" value={current} onChange={e => setCurrent(e.target.value)} required />
+        <label className="text-xs font-medium uppercase tracking-wider" style={{ color: 'hsl(var(--home-text-muted))' }}>
+          Current Password
+        </label>
+        <Input 
+          type="password" 
+          value={current} 
+          onChange={e => setCurrent(e.target.value)} 
+          required 
+          className="mt-1"
+          style={{ 
+            background: 'hsl(var(--home-page-bg))',
+            borderColor: 'hsl(var(--home-divider))',
+            color: 'hsl(var(--home-text-primary))'
+          }}
+        />
       </div>
       <div>
-        <label className="text-sm font-medium">New Password</label>
-        <Input type="password" value={next} onChange={e => setNext(e.target.value)} required />
+        <label className="text-xs font-medium uppercase tracking-wider" style={{ color: 'hsl(var(--home-text-muted))' }}>
+          New Password
+        </label>
+        <Input 
+          type="password" 
+          value={next} 
+          onChange={e => setNext(e.target.value)} 
+          required 
+          className="mt-1"
+          style={{ 
+            background: 'hsl(var(--home-page-bg))',
+            borderColor: 'hsl(var(--home-divider))',
+            color: 'hsl(var(--home-text-primary))'
+          }}
+        />
       </div>
       <div>
-        <label className="text-sm font-medium">Confirm New Password</label>
-        <Input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required />
+        <label className="text-xs font-medium uppercase tracking-wider" style={{ color: 'hsl(var(--home-text-muted))' }}>
+          Confirm New Password
+        </label>
+        <Input 
+          type="password" 
+          value={confirm} 
+          onChange={e => setConfirm(e.target.value)} 
+          required 
+          className="mt-1"
+          style={{ 
+            background: 'hsl(var(--home-page-bg))',
+            borderColor: 'hsl(var(--home-divider))',
+            color: 'hsl(var(--home-text-primary))'
+          }}
+        />
       </div>
-      <Button type="submit" disabled={busy} className="w-full">
-        {busy ? "Updating..." : "Update Password"}
-      </Button>
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+          Cancel
+        </Button>
+        <Button type="submit" disabled={busy} className="flex-1">
+          {busy ? "Updating..." : "Update"}
+        </Button>
+      </div>
     </form>
   );
 }
