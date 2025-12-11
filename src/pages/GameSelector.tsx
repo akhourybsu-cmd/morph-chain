@@ -3,7 +3,6 @@ import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
 import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Menu, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import morphIcon from "@/assets/morph-icon.png";
 import { SideMenu } from "@/components/layout/SideMenu";
 import { useState } from "react";
 import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
@@ -28,70 +27,65 @@ const GameSelector = () => {
       className="min-h-screen flex flex-col"
       style={{ background: 'hsl(var(--home-page-bg))' }}
     >
+      {/* Header Bar */}
+      <header 
+        className="h-14 flex items-center justify-between px-4"
+        style={{ borderBottom: '1px solid hsl(var(--home-divider))' }}
+      >
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={() => setMenuOpen(true)}
+            className="p-1.5 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+          >
+            <Menu 
+              className="w-5 h-5" 
+              style={{ color: 'hsl(var(--home-text-muted))' }} 
+            />
+          </button>
+          <PrestigeThemeToggle colorVar="--home-text-muted" />
+        </div>
+        <div className="w-16" /> {/* Spacer for balance */}
+      </header>
+
       <main className="flex-1 container mx-auto px-4 py-6 md:py-10 max-w-xl">
-        {/* Masthead Card */}
-        <div 
-          className="rounded-2xl p-4 md:p-6 mb-6 max-w-[640px] mx-auto"
-          style={{ 
-            background: 'hsl(var(--home-card-bg))',
-            border: '1px solid hsl(var(--home-card-border))',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)'
-          }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            {/* Left: Menu + Theme */}
-            <div className="flex items-center gap-1">
-              <button 
-                onClick={() => setMenuOpen(true)}
-                className="p-1.5 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10"
-              >
-                <Menu 
-                  className="w-5 h-5" 
-                  style={{ color: 'hsl(var(--home-text-muted))' }} 
-                />
-              </button>
-              <PrestigeThemeToggle colorVar="--home-text-muted" />
-            </div>
-            
-            {/* Center: Title */}
-            <h1 
-              className="text-xl md:text-2xl font-bold tracking-wide"
+        {/* Centered Masthead */}
+        <div className="text-center mb-8">
+          <h1 
+            className="font-playfair text-3xl md:text-4xl font-bold tracking-tight mb-3"
+            style={{ letterSpacing: '-0.02em' }}
+          >
+            <span style={{ color: 'hsl(var(--home-text-primary))' }}>
+              MORPH
+            </span>
+            {' '}
+            <span 
               style={{ 
-                fontFamily: "'Playfair Display', Georgia, serif",
-                color: 'hsl(var(--home-text-primary))'
+                background: 'linear-gradient(90deg, hsl(var(--accent-chain)), hsl(var(--accent-grid)), hsl(var(--accent-rush)))',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
               }}
             >
-              MORPH GAMES
-            </h1>
-            
-            {/* Right: Logo */}
-            <img src={morphIcon} alt="Morph" className="w-8 h-8" />
-          </div>
+              GAMES
+            </span>
+          </h1>
           
-          {/* Gradient underline */}
-          <div 
-            className="w-12 h-0.5 mx-auto rounded-full mb-3"
-            style={{
-              background: 'linear-gradient(90deg, hsl(var(--accent-chain)), hsl(var(--accent-grid)), hsl(var(--accent-rush)))',
-              opacity: 0.3
+          <p 
+            className="text-base md:text-lg italic"
+            style={{ 
+              color: 'hsl(var(--home-text-secondary))',
+              fontFamily: "'Playfair Display', Georgia, serif"
             }}
-          />
+          >
+            A letter changes everything.
+          </p>
           
-          {/* Tagline & Meta */}
-          <div className="text-center">
-            <p 
-              className="text-sm md:text-base"
-              style={{ color: 'hsl(var(--home-text-secondary))' }}
-            >
-              A letter changes everything.
-            </p>
-            <p 
-              className="text-xs mt-1"
-              style={{ color: 'hsl(var(--home-text-muted))' }}
-            >
-              {formattedDate} · Puzzle #{puzzle.puzzleIndex}
-            </p>
-          </div>
+          <p 
+            className="text-xs mt-2"
+            style={{ color: 'hsl(var(--home-text-muted))' }}
+          >
+            {formattedDate} · Puzzle #{puzzle.puzzleIndex}
+          </p>
         </div>
 
         {/* Section Label */}
