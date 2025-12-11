@@ -23,17 +23,17 @@ export const ChainLengthTabs = ({
   };
 
   return (
-    <div className="flex justify-center px-4 py-2">
-      <div className="flex gap-8 text-sm font-medium">
+    <div className="flex justify-center px-[var(--chain-h-padding,16px)] py-2">
+      <div className="flex gap-6 md:gap-8 text-sm font-medium">
         <button
           onClick={() => onLengthChange(4)}
-          className={`relative pb-2 transition-colors ${
+          className={`relative pb-2 min-h-[44px] px-2 transition-colors ${
             selectedLength === 4
               ? "text-[hsl(var(--chain-text-primary))]"
               : "text-[hsl(var(--chain-text-muted))] hover:text-[hsl(var(--chain-text-secondary))]"
           }`}
         >
-          <span className="flex items-center">
+          <span className="flex items-center whitespace-nowrap">
             4-Letter
             {getStatusIndicator(statuses[4])}
           </span>
@@ -42,17 +42,17 @@ export const ChainLengthTabs = ({
           )}
         </button>
         
-        <span className="text-[hsl(var(--chain-divider))]">|</span>
+        <span className="text-[hsl(var(--chain-divider))] self-center">|</span>
         
         <button
           onClick={() => onLengthChange(5)}
-          className={`relative pb-2 transition-colors ${
+          className={`relative pb-2 min-h-[44px] px-2 transition-colors ${
             selectedLength === 5
               ? "text-[hsl(var(--chain-text-primary))]"
               : "text-[hsl(var(--chain-text-muted))] hover:text-[hsl(var(--chain-text-secondary))]"
           }`}
         >
-          <span className="flex items-center">
+          <span className="flex items-center whitespace-nowrap">
             5-Letter
             {getStatusIndicator(statuses[5])}
           </span>

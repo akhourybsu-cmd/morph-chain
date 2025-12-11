@@ -12,19 +12,23 @@ export const ChainPuzzleDisplay = ({
   maxMoves,
 }: ChainPuzzleDisplayProps) => {
   return (
-    <div className="px-4 py-6 md:py-8">
+    <div className="px-[var(--chain-h-padding,16px)] py-4 md:py-6">
       {/* Word display */}
-      <div className="flex items-center justify-center gap-4 md:gap-6">
+      <div className="flex items-center justify-center gap-2 md:gap-4">
         {/* Start word */}
         <div className="text-center">
-          <span className="text-[10px] uppercase tracking-widest text-[hsl(var(--chain-text-muted))] mb-2 block">
+          <span className="text-[10px] uppercase tracking-widest text-[hsl(var(--chain-text-muted))] mb-1.5 block">
             Start
           </span>
-          <div className="flex gap-1">
+          <div className="flex" style={{ gap: 'var(--chain-gap, 4px)' }}>
             {startWord.split("").map((letter, i) => (
               <div
                 key={i}
-                className="chain-tile w-10 h-10 md:w-12 md:h-12 flex items-center justify-center font-serif text-lg md:text-xl font-semibold text-[hsl(var(--chain-text-primary))]"
+                className="chain-tile flex items-center justify-center font-serif text-base md:text-lg font-semibold text-[hsl(var(--chain-text-primary))]"
+                style={{
+                  width: 'var(--chain-tile-size, 40px)',
+                  height: 'var(--chain-tile-size, 40px)',
+                }}
               >
                 {letter}
               </div>
@@ -33,18 +37,22 @@ export const ChainPuzzleDisplay = ({
         </div>
 
         {/* Arrow */}
-        <span className="text-[hsl(var(--chain-text-muted))] text-xl mt-5">→</span>
+        <span className="text-[hsl(var(--chain-text-muted))] text-lg mt-5 px-1">→</span>
 
         {/* Goal word */}
         <div className="text-center">
-          <span className="text-[10px] uppercase tracking-widest text-[hsl(var(--chain-text-muted))] mb-2 block">
+          <span className="text-[10px] uppercase tracking-widest text-[hsl(var(--chain-text-muted))] mb-1.5 block">
             Goal
           </span>
-          <div className="flex gap-1">
+          <div className="flex" style={{ gap: 'var(--chain-gap, 4px)' }}>
             {goalWord.split("").map((letter, i) => (
               <div
                 key={i}
-                className="chain-tile chain-tile-goal w-10 h-10 md:w-12 md:h-12 flex items-center justify-center font-serif text-lg md:text-xl font-semibold text-[hsl(var(--chain-text-primary))]"
+                className="chain-tile chain-tile-goal flex items-center justify-center font-serif text-base md:text-lg font-semibold text-[hsl(var(--chain-text-primary))]"
+                style={{
+                  width: 'var(--chain-tile-size, 40px)',
+                  height: 'var(--chain-tile-size, 40px)',
+                }}
               >
                 {letter}
               </div>
@@ -54,7 +62,7 @@ export const ChainPuzzleDisplay = ({
       </div>
 
       {/* Move counter */}
-      <p className="text-center mt-4 text-sm text-[hsl(var(--chain-text-muted))]">
+      <p className="text-center mt-3 text-xs text-[hsl(var(--chain-text-muted))]">
         Moves: {movesUsed} / {maxMoves}
       </p>
     </div>

@@ -60,9 +60,13 @@ export const ChainInputRow = ({
     inputTiles.push(
       <div
         key={i}
-        className={`chain-tile chain-tile-input w-12 h-12 md:w-14 md:h-14 flex items-center justify-center font-serif text-xl md:text-2xl font-semibold text-[hsl(var(--chain-text-primary))] ${
+        className={`chain-tile chain-tile-input flex items-center justify-center font-serif text-lg md:text-xl font-semibold text-[hsl(var(--chain-text-primary))] ${
           isCurrentPosition ? "chain-tile-cursor" : ""
         } ${shake ? "animate-chain-shake" : ""}`}
+        style={{
+          width: 'var(--chain-input-tile-size, 48px)',
+          height: 'var(--chain-input-tile-size, 48px)',
+        }}
       >
         {letter}
       </div>
@@ -70,8 +74,8 @@ export const ChainInputRow = ({
   }
 
   return (
-    <div className="px-4 py-4">
-      <div className="max-w-md mx-auto space-y-3">
+    <div className="px-[var(--chain-h-padding,16px)] py-3">
+      <div className="max-w-md mx-auto space-y-2.5">
         {/* Context label */}
         <p className="text-center text-xs text-[hsl(var(--chain-text-muted))] tracking-wide">
           Change one letter from <span className="font-semibold text-[hsl(var(--chain-text-secondary))]">{currentWord}</span>
@@ -79,7 +83,8 @@ export const ChainInputRow = ({
 
         {/* Input tiles - clickable to focus */}
         <div 
-          className="flex justify-center gap-1.5 cursor-text"
+          className="flex justify-center cursor-text"
+          style={{ gap: 'var(--chain-gap, 4px)' }}
           onClick={handleContainerClick}
         >
           {inputTiles}

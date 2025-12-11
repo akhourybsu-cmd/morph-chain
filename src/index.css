@@ -449,6 +449,7 @@ All colors MUST be HSL.
   background: hsl(var(--chain-card-bg));
   border: 1px solid hsl(var(--chain-card-border));
   border-radius: 4px;
+  transition: border-color 0.15s ease;
 }
 .chain-tile-goal { border-color: hsl(var(--chain-accent) / 0.5); }
 .chain-tile-input { border-style: dashed; border-color: hsl(var(--chain-text-muted) / 0.5); }
@@ -459,7 +460,47 @@ All colors MUST be HSL.
 .chain-button { background: transparent; border: 1px solid hsl(var(--chain-card-border)); border-radius: 4px; color: hsl(var(--chain-text-primary)); }
 .chain-button:hover:not(:disabled) { border-color: hsl(var(--chain-text-secondary)); }
 .chain-button-primary { background: hsl(var(--chain-accent)); border-color: hsl(var(--chain-accent)); color: white; }
+
+/* Chain Layout CSS Variables (set by JS, with fallbacks) */
+:root {
+  --chain-tile-size: 40px;
+  --chain-input-tile-size: 48px;
+  --chain-gap: 4px;
+  --chain-h-padding: 16px;
+}
+
+/* Responsive chain tile sizing for very small screens */
+@media (max-width: 359px) {
+  :root {
+    --chain-tile-size: 32px;
+    --chain-input-tile-size: 40px;
+    --chain-h-padding: 12px;
+  }
+}
+
+@media (min-width: 360px) and (max-width: 399px) {
+  :root {
+    --chain-tile-size: 36px;
+    --chain-input-tile-size: 44px;
+  }
+}
+
+@media (min-width: 400px) and (max-width: 479px) {
+  :root {
+    --chain-tile-size: 40px;
+    --chain-input-tile-size: 48px;
+  }
+}
+
+@media (min-width: 480px) {
+  :root {
+    --chain-tile-size: 44px;
+    --chain-input-tile-size: 52px;
+  }
+}
+
 @keyframes chain-shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-3px); } 40%, 80% { transform: translateX(3px); } }
+.animate-chain-shake { animation: chain-shake 0.4s ease-in-out; }
 .animate-shake { animation: chain-shake 0.4s ease-in-out; }
 
 @layer base {

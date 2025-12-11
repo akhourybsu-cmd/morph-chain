@@ -17,6 +17,7 @@ import { WinCelebration } from "@/components/chain/WinCelebration";
 import { AchievementGallery } from "@/components/chain/AchievementGallery";
 import { MorphPowerups } from "@/components/MorphPowerups";
 import OnScreenKeyboard from "@/components/OnScreenKeyboard";
+import { useChainLayout } from "@/hooks/useChainLayout";
 
 import { useToast } from "@/hooks/use-toast";
 import { useChainSettings } from "@/hooks/useChainSettings";
@@ -75,6 +76,8 @@ const Index = () => {
   const { toast } = useToast();
   const { settings: audioSettings, toggleSound } = useChainSettings();
   const [selectedLength, setSelectedLength] = useState<4 | 5>(4);
+  const layout = useChainLayout(selectedLength);
+  const inputRowRef = useRef<HTMLDivElement>(null);
   const [puzzle, setPuzzle] = useState(getDailyPuzzle(4));
   const [moves, setMoves] = useState<Move[]>([]);
   const [currentWord, setCurrentWord] = useState(puzzle.startWord);
@@ -619,10 +622,18 @@ const Index = () => {
     5: getLengthStatus(5),
   }), [puzzle.date]);
 
+  // Calculate keyboard height for proper spacing
+  const keyboardHeight = settings.useOnScreenKeyboard && !gameCompleted ? 200 : 0;
+  const footerHeight = 48;
+  const bottomPadding = keyboardHeight + footerHeight + layout.safeAreaBottom;
+
   return (
     <div 
-      className="min-h-dvh flex flex-col"
-      style={{ background: 'hsl(var(--chain-page-bg))' }}
+      className="min-h-dvh max-h-dvh flex flex-col overflow-hidden"
+      style={{ 
+        background: 'hsl(var(--chain-page-bg))',
+        paddingTop: layout.isIOS ? `${layout.safeAreaTop}px` : 'env(safe-area-inset-top)',
+      }}
     >
       <ChainPrestigeHeader
         onOpenMenu={() => setMenuOpen(true)}
@@ -637,7 +648,10 @@ const Index = () => {
         statuses={lengthStatuses}
       />
 
-      <main className="flex-1 max-w-lg mx-auto w-full pb-32 md:pb-8">
+      <main 
+        className="flex-1 max-w-lg mx-auto w-full overflow-y-auto overflow-x-hidden"
+        style={{ paddingBottom: `${bottomPadding}px` }}
+      >
         <ChainPuzzleDisplay
           startWord={puzzle.startWord}
           goalWord={puzzle.goalWord}
@@ -650,7 +664,7 @@ const Index = () => {
         )}
 
         {!gameCompleted && (
-          <>
+          <div ref={inputRowRef}>
             <ChainInputRow
               currentWord={currentWord}
               wordLength={puzzle.wordLength}
@@ -665,7 +679,7 @@ const Index = () => {
             
             {/* Double Swap power-up for 5L only */}
             {selectedLength === 5 && (
-              <div className="px-4">
+              <div className="px-[var(--chain-h-padding,16px)]">
                 <MorphPowerups
                   doubleSwapUsed={doubleSwapUsed}
                   consecutiveSingleSwaps={consecutiveSingleSwaps}
@@ -674,7 +688,7 @@ const Index = () => {
                 />
               </div>
             )}
-          </>
+          </div>
         )}
 
         <ChainMoveHistory
