@@ -139,12 +139,12 @@ export const RushInitialsInput = ({
   // If not authenticated, show sign-in prompt
   if (!isAuthenticated) {
     return (
-      <Card className="p-6 space-y-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+      <Card className="p-6 space-y-4 bg-[hsl(var(--rush-card-bg))] border-[hsl(var(--rush-card-border))]">
         <div className="text-center space-y-2">
-          <Trophy className="h-12 w-12 text-primary mx-auto" />
-          <h3 className="text-2xl font-bold">High Score!</h3>
-          <p className="text-3xl font-bold text-primary">{score.toLocaleString()}</p>
-          <p className="text-sm text-muted-foreground">
+          <Trophy className="h-12 w-12 text-[hsl(var(--rush-accent))] mx-auto" />
+          <h3 className="text-2xl font-bold text-[hsl(var(--rush-text-primary))]">High Score!</h3>
+          <p className="text-3xl font-bold text-[hsl(var(--rush-accent))]">{score.toLocaleString()}</p>
+          <p className="text-sm text-[hsl(var(--rush-text-secondary))]">
             Sign in to submit your score to the leaderboard
           </p>
         </div>
@@ -152,19 +152,19 @@ export const RushInitialsInput = ({
         <div className="space-y-3">
           <Button
             onClick={() => navigate('/login')}
-            className="w-full"
+            className="w-full bg-[hsl(var(--rush-accent))] hover:bg-[hsl(var(--rush-accent))]/90 text-white"
             size="lg"
           >
             <User className="h-4 w-4 mr-2" />
             Sign In to Submit Score
           </Button>
           
-          <p className="text-xs text-center text-muted-foreground">
+          <p className="text-xs text-center text-[hsl(var(--rush-text-secondary))]">
             Create a free account to save your scores and compete on the leaderboard
           </p>
         </div>
 
-        <p className="text-xs text-center text-muted-foreground">
+        <p className="text-xs text-center text-[hsl(var(--rush-text-secondary))]">
           {mode === 'daily' 
             ? "First daily attempt only • Resets at midnight ET" 
             : "Arcade-style leaderboard • Resets daily at midnight ET"}
@@ -174,12 +174,12 @@ export const RushInitialsInput = ({
   }
 
   return (
-    <Card className="p-6 space-y-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+    <Card className="p-6 space-y-4 bg-[hsl(var(--rush-card-bg))] border-[hsl(var(--rush-card-border))]">
       <div className="text-center space-y-2">
-        <Trophy className="h-12 w-12 text-primary mx-auto" />
-        <h3 className="text-2xl font-bold">High Score!</h3>
-        <p className="text-3xl font-bold text-primary">{score.toLocaleString()}</p>
-        <p className="text-sm text-muted-foreground">
+        <Trophy className="h-12 w-12 text-[hsl(var(--rush-accent))] mx-auto" />
+        <h3 className="text-2xl font-bold text-[hsl(var(--rush-text-primary))]">High Score!</h3>
+        <p className="text-3xl font-bold text-[hsl(var(--rush-accent))]">{score.toLocaleString()}</p>
+        <p className="text-sm text-[hsl(var(--rush-text-secondary))]">
           Enter your initials for the daily leaderboard
         </p>
       </div>
@@ -191,7 +191,7 @@ export const RushInitialsInput = ({
             onChange={(e) => setInitials(e.target.value.replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase())}
             maxLength={3}
             placeholder="ABC"
-            className="w-32 text-center text-3xl font-mono font-bold uppercase tracking-widest"
+            className="w-32 text-center text-3xl font-mono font-bold uppercase tracking-widest bg-[hsl(var(--rush-page-bg))] border-[hsl(var(--rush-card-border))] text-[hsl(var(--rush-text-primary))]"
             autoFocus
           />
         </div>
@@ -199,14 +199,14 @@ export const RushInitialsInput = ({
         <Button
           type="submit"
           disabled={initials.length !== 3 || submitting}
-          className="w-full"
+          className="w-full bg-[hsl(var(--rush-accent))] hover:bg-[hsl(var(--rush-accent))]/90 text-white"
           size="lg"
         >
           {submitting ? "Submitting..." : "Submit to Leaderboard"}
         </Button>
       </form>
 
-      <p className="text-xs text-center text-muted-foreground">
+      <p className="text-xs text-center text-[hsl(var(--rush-text-secondary))]">
         {mode === 'daily' 
           ? "First daily attempt only • Resets at midnight ET" 
           : "Arcade-style leaderboard • Resets daily at midnight ET"}

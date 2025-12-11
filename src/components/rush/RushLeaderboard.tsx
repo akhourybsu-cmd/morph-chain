@@ -1,7 +1,4 @@
-import { useState } from "react";
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, Zap } from 'lucide-react';
 import { useRushLeaderboard } from '@/hooks/useRushLeaderboard';
 
@@ -10,37 +7,66 @@ interface RushLeaderboardProps {
 }
 
 export const RushLeaderboard = ({ mode = 'daily' }: RushLeaderboardProps) => {
-  const [selectedMode, setSelectedMode] = useState<'normal' | 'hard'>('normal');
-  const { data: normalData, isLoading: normalLoading, error: normalError } = useRushLeaderboard(mode, false);
-  const { data: hardData, isLoading: hardLoading, error: hardError } = useRushLeaderboard(mode, true);
+  const { data, isLoading, error } = useRushLeaderboard(mode, false);
 
-  const renderLeaderboard = (data: any[] | undefined, isLoading: boolean, error: any, showHardBadge: boolean = false) => {
-    if (isLoading) {
-      return (
-        <div className="p-8 text-center">
-          <div className="text-sm text-muted-foreground">Loading leaderboard…</div>
+  if (isLoading) {
+    return (
+      <Card className="p-4 space-y-3 bg-[hsl(var(--rush-card-bg))] border-[hsl(var(--rush-card-border))]">
+        <div className="flex items-center gap-2">
+          <Trophy className="h-4 w-4 text-[hsl(var(--rush-accent))]" />
+          <div className="text-xs uppercase tracking-wide font-semibold text-[hsl(var(--rush-text-secondary))]">
+            Daily Leaderboard
+          </div>
         </div>
-      );
-    }
+        <div className="p-8 text-center">
+          <div className="text-sm text-[hsl(var(--rush-text-secondary))]">Loading leaderboard…</div>
+        </div>
+      </Card>
+    );
+  }
 
-    if (error) {
-      return (
+  if (error) {
+    return (
+      <Card className="p-4 space-y-3 bg-[hsl(var(--rush-card-bg))] border-[hsl(var(--rush-card-border))]">
+        <div className="flex items-center gap-2">
+          <Trophy className="h-4 w-4 text-[hsl(var(--rush-accent))]" />
+          <div className="text-xs uppercase tracking-wide font-semibold text-[hsl(var(--rush-text-secondary))]">
+            Daily Leaderboard
+          </div>
+        </div>
         <div className="p-8 text-center">
           <div className="text-sm text-destructive">Error loading leaderboard. Please try again.</div>
         </div>
-      );
-    }
+      </Card>
+    );
+  }
 
-    if (!data || data.length === 0) {
-      return (
-        <div className="p-8 text-center">
-          <div className="text-sm text-muted-foreground">No scores yet today.</div>
-        </div>
-      );
-    }
-
+  if (!data || data.length === 0) {
     return (
-      <ul className="divide-y divide-border">
+      <Card className="p-4 space-y-3 bg-[hsl(var(--rush-card-bg))] border-[hsl(var(--rush-card-border))]">
+        <div className="flex items-center gap-2">
+          <Trophy className="h-4 w-4 text-[hsl(var(--rush-accent))]" />
+          <div className="text-xs uppercase tracking-wide font-semibold text-[hsl(var(--rush-text-secondary))]">
+            Daily Leaderboard
+          </div>
+        </div>
+        <div className="p-8 text-center">
+          <div className="text-sm text-[hsl(var(--rush-text-secondary))]">No scores yet today.</div>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-4 space-y-3 bg-[hsl(var(--rush-card-bg))] border-[hsl(var(--rush-card-border))]">
+      <div className="flex items-center gap-2">
+        <Trophy className="h-4 w-4 text-[hsl(var(--rush-accent))]" />
+        <div className="text-xs uppercase tracking-wide font-semibold text-[hsl(var(--rush-text-secondary))]">
+          Daily Leaderboard
+        </div>
+      </div>
+      
+      <ul className="divide-y divide-[hsl(var(--rush-card-border))]">
         {data.slice(0, 100).map((row) => (
           <li key={`${row.rank}-${row.user_id}`} className="py-2 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -48,19 +74,19 @@ export const RushLeaderboard = ({ mode = 'daily' }: RushLeaderboardProps) => {
                 row.rank === 1 ? 'text-yellow-500' :
                 row.rank === 2 ? 'text-gray-400' :
                 row.rank === 3 ? 'text-amber-600' :
-                'text-muted-foreground'
+                'text-[hsl(var(--rush-text-secondary))]'
               }`}>
                 #{row.rank}
               </span>
               <div className="flex flex-col">
-                <span className="font-mono font-bold text-lg uppercase">
+                <span className="font-mono font-bold text-lg uppercase text-[hsl(var(--rush-text-primary))]">
                   {row.initials || '???'}
                 </span>
               </div>
             </div>
             <div className="text-right">
-              <div className="font-bold tabular-nums">{row.score.toLocaleString()}</div>
-              <div className="text-xs text-muted-foreground tabular-nums flex items-center justify-end gap-1">
+              <div className="font-bold tabular-nums text-[hsl(var(--rush-text-primary))]">{row.score.toLocaleString()}</div>
+              <div className="text-xs text-[hsl(var(--rush-text-secondary))] tabular-nums flex items-center justify-end gap-1">
                 <Zap className="h-3 w-3" />
                 {Number(row.multiplier_max).toFixed(1)}x
               </div>
@@ -68,32 +94,6 @@ export const RushLeaderboard = ({ mode = 'daily' }: RushLeaderboardProps) => {
           </li>
         ))}
       </ul>
-    );
-  };
-
-  return (
-    <Card className="p-4 space-y-3">
-      <div className="flex items-center gap-2">
-        <Trophy className="h-4 w-4 text-primary" />
-        <div className="text-xs uppercase tracking-wide font-semibold text-muted-foreground">
-          Global Leaderboard
-        </div>
-      </div>
-      
-      <Tabs value={selectedMode} onValueChange={(v) => setSelectedMode(v as 'normal' | 'hard')}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="normal">Normal Mode</TabsTrigger>
-          <TabsTrigger value="hard">Hard Mode</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="normal" className="mt-3">
-          {renderLeaderboard(normalData, normalLoading, normalError)}
-        </TabsContent>
-        
-        <TabsContent value="hard" className="mt-3">
-          {renderLeaderboard(hardData, hardLoading, hardError, true)}
-        </TabsContent>
-      </Tabs>
     </Card>
   );
 };
