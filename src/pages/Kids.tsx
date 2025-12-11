@@ -31,9 +31,9 @@ const Kids = () => {
           <div>
             <h2 className="text-2xl font-bold mb-4">Tips for Young Players</h2>
             <ul className="list-disc list-inside space-y-2 ml-4 text-muted-foreground">
-              <li>Start with the Practice mode in Morph Rush to learn without time pressure</li>
+              <li>Start with the daily puzzle and explore the archive to play more</li>
               <li>Use the hint system when you get stuck</li>
-              <li>Try different word lengths (4, 5, or 6 letters) to find your comfort level</li>
+              <li>Try different word lengths (4 or 5 letters) to find your comfort level</li>
               <li>Play together with family members for collaborative fun</li>
             </ul>
           </div>

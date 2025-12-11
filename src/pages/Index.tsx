@@ -500,23 +500,7 @@ const Index = () => {
     });
   };
 
-  const handlePlayAgain = () => {
-    setMoves([]);
-    setCurrentWord(puzzle.startWord);
-    setUsedWords(new Set([puzzle.startWord]));
-    setGameCompleted(false);
-    setGameWon(false);
-    setShowCelebration(false);
-    setAchievementQueue([]);
-    setCurrentAchievement(null);
-    setError("");
-    setCurrentInput("");
-    setInvalidGuessCount(0);
-    setDoubleSwapUsed(false);
-    setConsecutiveSingleSwaps(0);
-    gameStartTime.current = Date.now();
-    clearGameState(puzzle.wordLength);
-  };
+  // Removed: handlePlayAgain function - users should use archive instead
 
   // Handle achievement queue
   useEffect(() => {
@@ -704,7 +688,6 @@ const Index = () => {
             goalWord={puzzle.goalWord}
             minDistance={puzzle.minDistance}
             shareText={shareText}
-            onPlayAgain={handlePlayAgain}
             streak={stats.byLength[selectedLength].currentStreak}
           />
         )}

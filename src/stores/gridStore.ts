@@ -1,7 +1,7 @@
 // Zustand store for MORPH GRID game state
 import { create } from 'zustand';
 import { Tile } from '@/lib/grid/gridGenerator';
-import { generateDailyGrid, generateRandomGrid } from '@/lib/grid/gridGenerator';
+import { generateDailyGrid } from '@/lib/grid/gridGenerator';
 import { SeededRandom } from '@/lib/grid/seededRNG';
 import { morphGrid, morphPowerRow } from '@/lib/grid/morphMechanics';
 import { isValidWord } from '@/lib/grid/dictionary';
@@ -16,14 +16,6 @@ interface LastSubmission {
   usedTileIds: string[];
   upgradedTileIds: string[];
   timestamp: number;
-}
-
-interface DailyResult {
-  moves: number;
-  submittedWords: SubmittedWord[];
-  isWin: boolean;
-  purpleCount: number;
-  morphCount: number;
 }
 
 interface GridState {
@@ -42,8 +34,6 @@ interface GridState {
   startTime: number | null;
   lastSubmission: LastSubmission | null;
   highlightTrackerLength: number | null;
-  isPractice: boolean;
-  dailyResult: DailyResult | null;
   usedPowerTile: boolean;
   usedCorner: boolean;
   usedDiagonal: boolean;
@@ -60,7 +50,6 @@ interface GridState {
   resetDaily: () => void;
   clearLastSubmission: () => void;
   setHighlightTrackerLength: (length: number | null) => void;
-  startPractice: () => void;
   clearNewAchievements: () => void;
 }
 
@@ -80,8 +69,6 @@ export const useGridStore = create<GridState>((set, get) => ({
   startTime: null,
   lastSubmission: null,
   highlightTrackerLength: null,
-  isPractice: false,
-  dailyResult: null,
   usedPowerTile: false,
   usedCorner: false,
   usedDiagonal: false,
@@ -95,15 +82,6 @@ export const useGridStore = create<GridState>((set, get) => ({
       // Check if saved game was already ended
       if (savedState.isEnded) {
         const rng = new SeededRandom(date + '-morph');
-        
-        // Store daily result for viewing later
-        const dailyResult: DailyResult = {
-          moves: savedState.moves,
-          submittedWords: savedState.submittedWords,
-          isWin: savedState.isWin ?? false,
-          purpleCount: savedState.purpleCount,
-          morphCount: savedState.morphCount,
-        };
         
         set({
           grid: savedState.grid,
@@ -119,8 +97,6 @@ export const useGridStore = create<GridState>((set, get) => ({
           morphCount: savedState.morphCount,
           stabilizationCount: savedState.stabilizationCount,
           startTime: savedState.startTime,
-          isPractice: false,
-          dailyResult,
         });
         return;
       }
@@ -141,8 +117,6 @@ export const useGridStore = create<GridState>((set, get) => ({
         morphCount: savedState.morphCount,
         stabilizationCount: savedState.stabilizationCount,
         startTime: savedState.startTime,
-        isPractice: false,
-        dailyResult: null,
       });
       console.log('Restored Grid game state for', date);
     } else {
@@ -164,53 +138,11 @@ export const useGridStore = create<GridState>((set, get) => ({
         morphCount: 0,
         stabilizationCount: 0,
         startTime: Date.now(),
-        isPractice: false,
-        dailyResult: null,
       });
       
       // Record play start for stats
       recordGridPlayStart(date);
     }
-  },
-  
-  startPractice: () => {
-    const { dailySeed, moves, submittedWords, isWin, purpleCount, morphCount, isEnded } = get();
-    
-    // If daily was completed, save it as dailyResult first
-    let dailyResult: DailyResult | null = get().dailyResult;
-    if (isEnded && !get().isPractice) {
-      dailyResult = {
-        moves,
-        submittedWords,
-        isWin,
-        purpleCount,
-        morphCount,
-      };
-    }
-    
-    // Generate a random grid for practice
-    const practiceSeed = `practice-${Date.now()}`;
-    const grid = generateRandomGrid();
-    const rng = new SeededRandom(practiceSeed);
-    
-    set({
-      grid,
-      selected: [],
-      submittedWords: [],
-      moves: 0,
-      purpleCount: 0,
-      rng,
-      isPlaying: true,
-      isEnded: false,
-      isWin: false,
-      morphCount: 0,
-      stabilizationCount: 0,
-      startTime: Date.now(),
-      isPractice: true,
-      dailyResult,
-    });
-    
-    console.log('Started practice mode');
   },
   
   selectTile: (tile: Tile) => {
@@ -247,7 +179,7 @@ export const useGridStore = create<GridState>((set, get) => ({
   },
   
   submitWord: () => {
-    const { selected, grid, rng, submittedWords, morphCount, stabilizationCount, isEnded, moves, isPractice, usedPowerTile, usedCorner, usedDiagonal, dailySeed, startTime } = get();
+    const { selected, grid, rng, submittedWords, morphCount, stabilizationCount, isEnded, moves, usedPowerTile, usedCorner, usedDiagonal, dailySeed, startTime } = get();
     
     // Prevent submissions after game ends
     if (isEnded) {
@@ -355,20 +287,18 @@ export const useGridStore = create<GridState>((set, get) => ({
     const isLoss = !isWin && newMoves >= MAX_MOVES;
     const gameEnded = isWin || isLoss;
     
-    // Track stats ONLY for non-practice games
-    if (!isPractice) {
-      const usedPowerRow = selected.some(t => t.isPower);
-      const stabilizedFreed = selected.filter(t => t.stabilized).length;
-      recordGridSubmit(word, usedPowerRow, stabilizedFreed);
-    }
+    // Track stats
+    const usedPowerRow = selected.some(t => t.isPower);
+    const stabilizedFreed = selected.filter(t => t.stabilized).length;
+    recordGridSubmit(word, usedPowerRow, stabilizedFreed);
     
     const newMorphCount = morphCount + 1;
     const newStabilizationCount = countStabilized(morphedGrid);
     const newSubmittedWords = [...submittedWords, { word, timestamp: Date.now() }];
     
-    // Check achievements when game ends (only for non-practice)
+    // Check achievements when game ends
     let newAchievements: string[] = [];
-    if (gameEnded && !isPractice) {
+    if (gameEnded) {
       const timeMs = startTime ? Date.now() - startTime : 0;
       const longestWord = Math.max(...newSubmittedWords.map(w => w.word.length));
       const tieredProgress = loadTieredProgress();
@@ -446,65 +376,61 @@ export const useGridStore = create<GridState>((set, get) => ({
       }
     });
     
-    // Save game state ONLY for non-practice games
-    if (!isPractice) {
-      const currentState = get();
-      saveGridGameState({
-        grid: morphedGrid,
-        selected: [],
-        submittedWords: newSubmittedWords,
-        moves: newMoves,
+    // Save game state
+    const currentState = get();
+    saveGridGameState({
+      grid: morphedGrid,
+      selected: [],
+      submittedWords: newSubmittedWords,
+      moves: newMoves,
+      purpleCount: newPurpleCount,
+      dailySeed: currentState.dailySeed,
+      morphCount: newMorphCount,
+      stabilizationCount: newStabilizationCount,
+      startTime: currentState.startTime || Date.now(),
+      isEnded: gameEnded,
+      isWin: isWin
+    });
+    
+    // Record win or loss
+    const state = get();
+    const timeToComplete = state.startTime ? Date.now() - state.startTime : undefined;
+    
+    if (isWin) {
+      recordGridWin({
+        dateSeed: state.dailySeed,
+        moves: state.moves,
+        wordsUsed: state.submittedWords.length,
+        timeToCompleteMs: timeToComplete,
+      });
+      
+      // Store entry ID for leaderboard highlighting
+      if (typeof window !== 'undefined') {
+        const entries = JSON.parse(localStorage.getItem(`morphGrid_leaderboard_${state.dailySeed}`) || '[]');
+        if (entries.length > 0) {
+          localStorage.setItem('morphGrid_myEntryId', entries[entries.length - 1].id);
+        }
+      }
+    } else if (isLoss) {
+      recordGridLoss({
+        dateSeed: state.dailySeed,
+        moves: state.moves,
+        wordsUsed: state.submittedWords.length,
         purpleCount: newPurpleCount,
-        dailySeed: currentState.dailySeed,
-        morphCount: newMorphCount,
-        stabilizationCount: newStabilizationCount,
-        startTime: currentState.startTime || Date.now(),
-        isEnded: gameEnded,
-        isWin: isWin
+        timeToCompleteMs: timeToComplete,
       });
     }
     
-    // Record win or loss ONLY for non-practice games
-    if (!isPractice) {
-      const state = get();
-      const timeToComplete = state.startTime ? Date.now() - state.startTime : undefined;
-      
-      if (isWin) {
-        recordGridWin({
-          dateSeed: state.dailySeed,
-          moves: state.moves,
-          wordsUsed: state.submittedWords.length,
-          timeToCompleteMs: timeToComplete,
-        });
-        
-        // Store entry ID for leaderboard highlighting
-        if (typeof window !== 'undefined') {
-          const entries = JSON.parse(localStorage.getItem(`morphGrid_leaderboard_${state.dailySeed}`) || '[]');
-          if (entries.length > 0) {
-            localStorage.setItem('morphGrid_myEntryId', entries[entries.length - 1].id);
-          }
-        }
-      } else if (isLoss) {
-        recordGridLoss({
-          dateSeed: state.dailySeed,
-          moves: state.moves,
-          wordsUsed: state.submittedWords.length,
-          purpleCount: newPurpleCount,
-          timeToCompleteMs: timeToComplete,
-        });
-      }
-      
-      // Sync to backend for authenticated users
-      upsertGridSession({
-        date_local: state.dailySeed,
-        session_id: `${state.dailySeed}-${Date.now()}`,
-        moves: state.moves,
-        words_used: state.submittedWords.length,
-        time_to_complete_ms: timeToComplete,
-        completed: true,
-        won: isWin,
-      });
-    }
+    // Sync to backend for authenticated users
+    upsertGridSession({
+      date_local: state.dailySeed,
+      session_id: `${state.dailySeed}-${Date.now()}`,
+      moves: state.moves,
+      words_used: state.submittedWords.length,
+      time_to_complete_ms: timeToComplete,
+      completed: true,
+      won: isWin,
+    });
     
     return true;
   },
@@ -514,15 +440,9 @@ export const useGridStore = create<GridState>((set, get) => ({
   },
   
   resetGame: () => {
-    const { dailySeed, isPractice } = get();
+    const { dailySeed } = get();
     
-    // If in practice mode, just start a new practice
-    if (isPractice) {
-      get().startPractice();
-      return;
-    }
-    
-    // For daily, check if already completed - if so, don't allow reset
+    // Check if already completed - if so, don't allow reset
     const savedState = loadGridGameState(dailySeed);
     if (savedState?.isEnded) {
       console.log('Daily already completed, cannot reset');

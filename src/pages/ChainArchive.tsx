@@ -564,14 +564,21 @@ const ChainArchive = () => {
               goalWord={puzzle.goalWord}
               minDistance={puzzle.minDistance}
               shareText={shareText}
-              onPlayAgain={handlePlayAnother}
             />
-            <p 
-              className="text-xs mt-4 text-center"
-              style={{ color: 'hsl(var(--chain-text-muted))' }}
-            >
-              Archive results don't affect your stats
-            </p>
+            <div className="flex flex-col items-center gap-2 mt-4">
+              <button
+                onClick={handlePlayAnother}
+                className="text-sm text-[hsl(var(--chain-accent))] hover:text-[hsl(var(--chain-text-primary))] transition-colors underline underline-offset-2"
+              >
+                Play Another Archive Puzzle
+              </button>
+              <p 
+                className="text-xs text-center"
+                style={{ color: 'hsl(var(--chain-text-muted))' }}
+              >
+                Archive results don't affect your stats
+              </p>
+            </div>
           </div>
         ) : (
           <>

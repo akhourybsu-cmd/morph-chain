@@ -1,5 +1,8 @@
-import { Share, Copy } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Share, Copy, Archive } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ChainResultsPanelProps {
   won: boolean;
@@ -7,7 +10,6 @@ interface ChainResultsPanelProps {
   goalWord: string;
   minDistance: number;
   shareText: string;
-  onPlayAgain: () => void;
   streak?: number;
 }
 
@@ -16,9 +18,32 @@ export const ChainResultsPanel = ({
   movesUsed,
   minDistance,
   shareText,
-  onPlayAgain,
   streak,
 }: ChainResultsPanelProps) => {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setIsAuthenticated(!!session?.user);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session?.user);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleArchiveClick = () => {
+    if (isAuthenticated) {
+      navigate('/chain/archive');
+    } else {
+      navigate('/login');
+    }
+  };
   const { toast } = useToast();
   const par = minDistance + 2;
 
@@ -116,13 +141,20 @@ export const ChainResultsPanel = ({
           </button>
         </div>
 
-        {/* Play again */}
-        <button
-          onClick={onPlayAgain}
-          className="text-sm text-[hsl(var(--chain-text-muted))] hover:text-[hsl(var(--chain-text-secondary))] underline underline-offset-2"
-        >
-          Practice Again
-        </button>
+        {/* Archive Access */}
+        <div className="pt-2 border-t border-[hsl(var(--chain-divider))]">
+          <p className="text-xs text-[hsl(var(--chain-text-muted))] mb-2">Want to play more?</p>
+          <button
+            onClick={handleArchiveClick}
+            className="flex items-center justify-center gap-2 text-sm text-[hsl(var(--chain-accent))] hover:text-[hsl(var(--chain-text-primary))] transition-colors"
+          >
+            <Archive className="h-4 w-4" />
+            Access the Archive
+          </button>
+          {!isAuthenticated && (
+            <p className="text-xs text-[hsl(var(--chain-text-muted))] mt-1">(Sign in required)</p>
+          )}
+        </div>
       </div>
     </div>
   );
