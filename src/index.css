@@ -749,6 +749,34 @@ All colors MUST be HSL.
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Rush floating score animations */
+@keyframes score-appear {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-50%) scale(0.8); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+}
+
+@keyframes score-slide {
+  0% { opacity: 1; transform: translateX(-50%) translateY(-50%); }
+  100% { opacity: 0; transform: translateX(50%) translateY(-50%); }
+}
+
+@keyframes score-pop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.animate-score-appear {
+  animation: score-appear 0.25s ease-out forwards;
+}
+
+.animate-score-slide {
+  animation: score-slide 0.5s ease-in forwards;
+}
+
+.animate-score-pop {
+  animation: score-pop 0.3s ease-out forwards;
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,
