@@ -165,7 +165,7 @@ export default function MorphPrism() {
   };
 
   const handleShare = () => {
-    const shareText = `Morph Prism #${puzzleNumber}\n${gameStatus === 'won' ? `✨ Solved in ${rows.length}/${MAX_GUESSES}` : `❌ ${rows.length}/${MAX_GUESSES}`}\n\nSpectrum Alignment: ${Math.round((rows[rows.length - 1]?.similarity || 0) * 100)}%\n\nPlay at morphgames.app`;
+    const shareText = `Morph Prism #${puzzleNumber}\n${gameStatus === 'won' ? `✨ Solved in ${rows.length}/${MAX_GUESSES}` : `❌ ${rows.length}/${MAX_GUESSES}`}\n\nSpectrum Alignment: ${Math.round((rows[rows.length - 1]?.similarity || 0) * 100)}%\n\nmorphchaingame.com`;
     
     if (navigator.share) {
       navigator.share({ text: shareText });

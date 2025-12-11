@@ -73,7 +73,7 @@ ${displayIsWin ? 'Won' : 'Lost'}: ${resultText}
 Words: ${displayWords.length} | Longest: "${longestWord}"
 Morphs: ${displayMorphCount}
 
-morphgames.io`;
+morphchaingame.com`;
     
     if (navigator.share) {
       try {

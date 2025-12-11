@@ -277,7 +277,7 @@ const GameCard = ({ icon: Icon, name, description, accent, onClick }: GameCardPr
 };
 
 const ShareFooter = () => {
-  const shareUrl = window.location.origin;
+  const shareUrl = "https://morphchaingame.com";
   const shareText = "Check out Morph Games - A letter changes everything!";
 
   const handleShare = (platform: string) => {
