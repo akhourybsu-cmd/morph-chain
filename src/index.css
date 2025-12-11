@@ -255,6 +255,12 @@ All colors MUST be HSL.
     --chain-tile-match: 145 40% 42%;     /* Softer green */
     --chain-tile-present: 45 70% 48%;    /* Muted gold */
     --chain-tile-miss: 216 14% 22%;      /* Dark gray */
+    
+    /* Rush Dark Mode Tile Styling */
+    --rush-tile-bg: 216 17% 15%;         /* Dark tile background */
+    --rush-tile-border: 216 14% 22%;     /* Dark tile border */
+    --rush-tile-active: var(--accent-rush);
+    --rush-drop-target: 187 60% 55%;     /* Brighter cyan for dark mode */
   }
   
   .light {
