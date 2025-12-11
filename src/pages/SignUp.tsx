@@ -12,12 +12,23 @@ export default function SignUp() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (email !== confirmEmail) {
+      toast({
+        title: "Emails don't match",
+        description: "Please make sure your email addresses match.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (password !== confirmPassword) {
       toast({
@@ -37,18 +48,38 @@ export default function SignUp() {
       return;
     }
 
+    if (!displayName.trim()) {
+      toast({
+        title: "Display name required",
+        description: "Please enter a display name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            display_name: displayName.trim()
+          }
         }
       });
 
       if (error) throw error;
+
+      // Create profile with display name
+      if (data.user) {
+        await supabase.from("user_profiles").upsert({
+          user_id: data.user.id,
+          display_name: displayName.trim(),
+        });
+      }
 
       toast({
         title: "Account created!",
@@ -107,6 +138,29 @@ export default function SignUp() {
           <form onSubmit={handleSignUp} className="space-y-4">
             <div className="space-y-2">
               <Label 
+                htmlFor="displayName"
+                className="text-xs font-medium uppercase tracking-wider"
+                style={{ color: 'hsl(var(--home-text-muted))' }}
+              >
+                Display Name
+              </Label>
+              <Input
+                id="displayName"
+                type="text"
+                placeholder="Your display name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                required
+                maxLength={50}
+                style={{ 
+                  background: 'hsl(var(--home-page-bg))',
+                  borderColor: 'hsl(var(--home-divider))',
+                  color: 'hsl(var(--home-text-primary))'
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label 
                 htmlFor="email"
                 className="text-xs font-medium uppercase tracking-wider"
                 style={{ color: 'hsl(var(--home-text-muted))' }}
@@ -119,6 +173,28 @@ export default function SignUp() {
                 placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
+                style={{ 
+                  background: 'hsl(var(--home-page-bg))',
+                  borderColor: 'hsl(var(--home-divider))',
+                  color: 'hsl(var(--home-text-primary))'
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label 
+                htmlFor="confirmEmail"
+                className="text-xs font-medium uppercase tracking-wider"
+                style={{ color: 'hsl(var(--home-text-muted))' }}
+              >
+                Confirm Email
+              </Label>
+              <Input
+                id="confirmEmail"
+                type="email"
+                placeholder="Confirm your email"
+                value={confirmEmail}
+                onChange={(e) => setConfirmEmail(e.target.value)}
                 required
                 style={{ 
                   background: 'hsl(var(--home-page-bg))',

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { format, differenceInDays, startOfDay } from "date-fns";
 import { toZonedTime, formatInTimeZone } from "date-fns-tz";
+import { supabase } from "@/integrations/supabase/client";
 import { ChainLengthTabs } from "@/components/chain/ChainLengthTabs";
 import { ChainPuzzleDisplay } from "@/components/chain/ChainPuzzleDisplay";
 import { ChainInstructionText } from "@/components/chain/ChainInstructionText";
@@ -16,7 +17,7 @@ import { useChainLayout } from "@/hooks/useChainLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useChainSettings } from "@/hooks/useChainSettings";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, ChevronLeft, HelpCircle } from "lucide-react";
+import { Calendar, ChevronLeft, HelpCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   isValidWord,
@@ -115,6 +116,9 @@ const ChainArchive = () => {
   const { toast } = useToast();
   const { settings: audioSettings } = useChainSettings();
   
+  // Auth state
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  
   // Archive state
   const [archiveDate, setArchiveDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(true);
@@ -122,6 +126,33 @@ const ChainArchive = () => {
   const [selectedLength, setSelectedLength] = useState<4 | 5>(4);
   const layout = useChainLayout(selectedLength);
   const inputRowRef = useRef<HTMLDivElement>(null);
+
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to access the puzzle archive.",
+          variant: "destructive",
+        });
+        navigate("/login");
+        return;
+      }
+      setIsAuthenticated(true);
+    };
+    
+    checkAuth();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session) {
+        navigate("/login");
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [navigate, toast]);
   
   // Game state
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
@@ -422,6 +453,18 @@ const ChainArchive = () => {
     });
     return letters;
   }, [moves]);
+
+  // Show loading while checking auth
+  if (isAuthenticated === null) {
+    return (
+      <div 
+        className="min-h-dvh flex items-center justify-center"
+        style={{ background: 'hsl(var(--chain-page-bg))' }}
+      >
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'hsl(var(--chain-accent))' }} />
+      </div>
+    );
+  }
 
   // Show date picker if no date selected
   if (showDatePicker) {
