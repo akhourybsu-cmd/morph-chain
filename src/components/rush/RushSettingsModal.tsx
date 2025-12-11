@@ -33,9 +33,14 @@ export const RushSettingsModal = ({
 }: RushSettingsModalProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent 
+        className="sm:max-w-md bg-[hsl(var(--rush-card-bg))] border-[hsl(var(--rush-card-border))]"
+        style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
+      >
         <DialogHeader>
-          <DialogTitle>Morph Rush Settings</DialogTitle>
+          <DialogTitle className="font-playfair text-xl text-[hsl(var(--rush-text-primary))]">
+            Morph Rush Settings
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
@@ -43,16 +48,16 @@ export const RushSettingsModal = ({
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <Label htmlFor="hard-mode" className="text-base">
+                <Label htmlFor="hard-mode" className="text-base text-[hsl(var(--rush-text-primary))]">
                   Hard Mode
                 </Label>
                 {hardMode && (
-                  <div className="px-2 py-0.5 bg-destructive/10 text-destructive rounded text-xs font-semibold">
+                  <div className="px-2 py-0.5 bg-[hsl(var(--rush-accent))]/10 text-[hsl(var(--rush-accent))] rounded text-xs font-semibold">
                     ACTIVE
                   </div>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-[hsl(var(--rush-text-muted))]">
                 {canToggleHardMode 
                   ? "Can't change the same letter position twice in a row"
                   : "Must be set before your first move"}
@@ -69,16 +74,16 @@ export const RushSettingsModal = ({
           {/* View Leaderboard (Daily mode only) */}
           {mode === 'daily' && (
             <>
-              <Separator />
+              <Separator className="bg-[hsl(var(--rush-divider))]" />
               
               <div className="space-y-2">
-                <Label className="text-base flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-primary" />
+                <Label className="text-base flex items-center gap-2 text-[hsl(var(--rush-text-primary))]">
+                  <Trophy className="h-4 w-4 text-[hsl(var(--rush-accent))]" />
                   Leaderboard
                 </Label>
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className="w-full border-[hsl(var(--rush-card-border))] text-[hsl(var(--rush-text-secondary))] hover:bg-[hsl(var(--rush-pill-bg))]"
                   onClick={() => {
                     onViewLeaderboard();
                     onOpenChange(false);
@@ -86,30 +91,30 @@ export const RushSettingsModal = ({
                 >
                   View Daily Leaderboard
                 </Button>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-[hsl(var(--rush-text-muted))]">
                   Separate leaderboards for Normal and Hard mode
                 </p>
               </div>
             </>
           )}
 
-          <Separator />
+          <Separator className="bg-[hsl(var(--rush-divider))]" />
 
           {/* Game Info */}
           <div className="space-y-2">
-            <Label className="text-base">Current Mode</Label>
-            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-              <Zap className="h-4 w-4 text-primary" />
-              <span className="font-medium capitalize">{mode} Mode</span>
+            <Label className="text-base text-[hsl(var(--rush-text-primary))]">Current Mode</Label>
+            <div className="flex items-center gap-2 p-3 bg-[hsl(var(--rush-pill-bg))] rounded-lg border border-[hsl(var(--rush-card-border))]">
+              <Zap className="h-4 w-4 text-[hsl(var(--rush-accent))]" />
+              <span className="font-medium capitalize text-[hsl(var(--rush-text-primary))]">{mode} Mode</span>
             </div>
             {mode === 'practice' && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-[hsl(var(--rush-text-muted))]">
                 Practice mode has no timer and doesn't submit to leaderboard
               </p>
             )}
           </div>
 
-          <Separator />
+          <Separator className="bg-[hsl(var(--rush-divider))]" />
 
           {/* Danger Zone */}
           <div className="space-y-2">
@@ -121,7 +126,7 @@ export const RushSettingsModal = ({
             >
               Reset Rush Stats
             </Button>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-[hsl(var(--rush-text-muted))]">
               This will erase all your Rush statistics and high scores
             </p>
           </div>

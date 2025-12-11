@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,17 +8,19 @@ import { HowToPlayModal } from "@/components/grid/HowToPlayModal";
 import { GridTile } from "@/components/grid/GridTile";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, ChevronLeft, HelpCircle, Volume2, VolumeX, Check, Loader2 } from "lucide-react";
+import { Calendar, ChevronLeft, HelpCircle, Volume2, VolumeX, Check, Loader2, Hand, MousePointer } from "lucide-react";
 import { useGridSettings } from "@/hooks/useGridSettings";
 import { generateDailyGrid, Tile } from "@/lib/grid/gridGenerator";
 import { SeededRandom } from "@/lib/grid/seededRNG";
 import { morphGrid } from "@/lib/grid/morphMechanics";
 import { isValidWord } from "@/lib/grid/dictionary";
-import { playWordSubmit, playTileUpgrade, initAudio } from "@/lib/grid/audioManager";
+import { playWordSubmit, initAudio } from "@/lib/grid/audioManager";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
 // Archive-specific storage
 const getArchiveGridKey = (date: string) => `morphgrid_archive_${date}`;
+const INPUT_MODE_KEY = 'morphgrid_archive_input_mode';
 
 interface ArchiveGridState {
   grid: Tile[][];
@@ -48,6 +50,23 @@ const saveArchiveGridState = (date: string, state: ArchiveGridState) => {
   }
 };
 
+const loadInputMode = (): 'tap' | 'drag' => {
+  try {
+    const stored = localStorage.getItem(INPUT_MODE_KEY);
+    return stored === 'drag' ? 'drag' : 'tap';
+  } catch {
+    return 'tap';
+  }
+};
+
+const saveInputMode = (mode: 'tap' | 'drag') => {
+  try {
+    localStorage.setItem(INPUT_MODE_KEY, mode);
+  } catch (error) {
+    console.error("Failed to save input mode:", error);
+  }
+};
+
 const MAX_MOVES = 20;
 
 // Check if two tiles are adjacent (including diagonals)
@@ -68,6 +87,9 @@ const GridArchive = () => {
   const [archiveDate, setArchiveDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(true);
   
+  // Input mode state
+  const [inputMode, setInputMode] = useState<'tap' | 'drag'>(loadInputMode);
+  
   // Game state
   const [grid, setGrid] = useState<Tile[][]>([]);
   const [selected, setSelected] = useState<Tile[]>([]);
@@ -77,11 +99,21 @@ const GridArchive = () => {
   const [isEnded, setIsEnded] = useState(false);
   const [isWin, setIsWin] = useState(false);
   
+  // Drag state
+  const [isDragging, setIsDragging] = useState(false);
+  
   const [showHelp, setShowHelp] = useState(false);
   const [showEndScreen, setShowEndScreen] = useState(false);
   
   const rngRef = useRef<SeededRandom | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
+
+  // Handle input mode change
+  const handleInputModeChange = (mode: 'tap' | 'drag') => {
+    setInputMode(mode);
+    saveInputMode(mode);
+    setSelected([]); // Clear selection when switching modes
+  };
 
   // Check authentication
   useEffect(() => {
@@ -105,6 +137,7 @@ const GridArchive = () => {
     
     return () => subscription.unsubscribe();
   }, [navigate]);
+
   // Initialize audio
   useEffect(() => {
     const handleFirstInteraction = () => {
@@ -163,9 +196,39 @@ const GridArchive = () => {
     initializeArchiveGame(date);
   };
 
-  // Tile selection
+  // Find tile at coordinates
+  const findTileAtPoint = useCallback((clientX: number, clientY: number): Tile | null => {
+    if (!gridRef.current || grid.length === 0) return null;
+    
+    const gridRect = gridRef.current.getBoundingClientRect();
+    const x = clientX - gridRect.left;
+    const y = clientY - gridRect.top;
+    
+    const gap = 10; // gap-2.5 = 10px
+    const tileSize = (gridRect.width - gap * 4) / 5;
+    
+    const col = Math.floor(x / (tileSize + gap));
+    const row = Math.floor(y / (tileSize + gap));
+    
+    if (row >= 0 && row < 5 && col >= 0 && col < 5) {
+      const tile = grid[row][col];
+      
+      // Check if within center of tile (center commitment threshold)
+      const tileCenterX = col * (tileSize + gap) + tileSize / 2;
+      const tileCenterY = row * (tileSize + gap) + tileSize / 2;
+      const distFromCenter = Math.sqrt(Math.pow(x - tileCenterX, 2) + Math.pow(y - tileCenterY, 2));
+      
+      if (distFromCenter < 28) {
+        return tile;
+      }
+    }
+    
+    return null;
+  }, [grid]);
+
+  // Tap mode: Tile selection
   const selectTile = (tile: Tile) => {
-    if (isEnded) return;
+    if (isEnded || inputMode !== 'tap') return;
     
     // If clicking the last selected tile, remove it
     if (selected.length > 0 && selected[selected.length - 1].id === tile.id) {
@@ -184,6 +247,66 @@ const GridArchive = () => {
     
     setSelected([...selected, tile]);
   };
+
+  // Drag mode: Handlers
+  const handleDragStart = useCallback((clientX: number, clientY: number) => {
+    if (isEnded || inputMode !== 'drag') return;
+    
+    const tile = findTileAtPoint(clientX, clientY);
+    if (tile) {
+      setIsDragging(true);
+      setSelected([tile]);
+    }
+  }, [isEnded, inputMode, findTileAtPoint]);
+
+  const handleDragMove = useCallback((clientX: number, clientY: number) => {
+    if (!isDragging || isEnded || inputMode !== 'drag') return;
+    
+    const tile = findTileAtPoint(clientX, clientY);
+    if (!tile) return;
+    
+    // Check if already selected
+    if (selected.some(t => t.id === tile.id)) {
+      // If it's the second-to-last tile, backtrack
+      if (selected.length > 1 && selected[selected.length - 2].id === tile.id) {
+        setSelected(selected.slice(0, -1));
+      }
+      return;
+    }
+    
+    // Check adjacency to last tile
+    if (selected.length > 0) {
+      const last = selected[selected.length - 1];
+      if (isAdjacent(last, tile)) {
+        setSelected([...selected, tile]);
+      }
+    }
+  }, [isDragging, isEnded, inputMode, selected, findTileAtPoint]);
+
+  const handleDragEnd = useCallback(() => {
+    if (inputMode === 'drag') {
+      setIsDragging(false);
+      // Don't auto-submit - let user click Submit button
+    }
+  }, [inputMode]);
+
+  // Pointer event handlers for drag mode
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (inputMode !== 'drag') return;
+    e.preventDefault();
+    handleDragStart(e.clientX, e.clientY);
+  }, [inputMode, handleDragStart]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (inputMode !== 'drag' || !isDragging) return;
+    e.preventDefault();
+    handleDragMove(e.clientX, e.clientY);
+  }, [inputMode, isDragging, handleDragMove]);
+
+  const handlePointerUp = useCallback(() => {
+    if (inputMode !== 'drag') return;
+    handleDragEnd();
+  }, [inputMode, handleDragEnd]);
 
   // Submit word
   const submitWord = () => {
@@ -418,6 +541,10 @@ const GridArchive = () => {
               ref={gridRef}
               className="grid grid-cols-5 gap-2.5 select-none"
               style={{ touchAction: 'none' }}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerUp}
             >
               {grid.map((row) =>
                 row.map((tile) => {
@@ -473,7 +600,7 @@ const GridArchive = () => {
               </div>
             ) : (
               <div className="text-[hsl(var(--grid-text-muted))] text-sm font-inter">
-                Tap tiles to form words
+                {inputMode === 'tap' ? 'Tap tiles to form words' : 'Drag to chain letters'}
               </div>
             )}
           </div>
@@ -496,6 +623,38 @@ const GridArchive = () => {
             >
               Submit
             </Button>
+          </div>
+
+          {/* Input Mode Toggle */}
+          <div 
+            className="flex items-center justify-center gap-2 pt-2 border-t"
+            style={{ borderColor: 'hsl(var(--grid-divider))' }}
+          >
+            <button
+              onClick={() => handleInputModeChange('tap')}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+                inputMode === 'tap'
+                  ? "bg-[hsl(var(--grid-accent))] text-white"
+                  : "text-[hsl(var(--grid-text-muted))] hover:bg-[hsl(var(--grid-pill-bg))]"
+              )}
+            >
+              <MousePointer className="w-3.5 h-3.5" />
+              Tap
+            </button>
+            <span className="text-[hsl(var(--grid-text-muted))] text-xs">·</span>
+            <button
+              onClick={() => handleInputModeChange('drag')}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+                inputMode === 'drag'
+                  ? "bg-[hsl(var(--grid-accent))] text-white"
+                  : "text-[hsl(var(--grid-text-muted))] hover:bg-[hsl(var(--grid-pill-bg))]"
+              )}
+            >
+              <Hand className="w-3.5 h-3.5" />
+              Drag
+            </button>
           </div>
         </div>
       )}

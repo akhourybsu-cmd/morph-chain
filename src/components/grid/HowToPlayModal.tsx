@@ -14,7 +14,7 @@ export const HowToPlayModal = ({ open, onClose }: HowToPlayModalProps) => {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-lg max-h-[90vh] overflow-y-auto bg-white border-[hsl(var(--grid-card-border))]"
+        className="max-w-lg max-h-[90vh] overflow-y-auto bg-[hsl(var(--grid-card-bg))] border-[hsl(var(--grid-card-border))]"
         style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
       >
         <DialogHeader>
