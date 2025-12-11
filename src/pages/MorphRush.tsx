@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { formatInTimeZone } from "date-fns-tz";
 import { RushPrestigeHeader } from "@/components/rush/RushPrestigeHeader";
+import { FloatingScore } from "@/components/rush/FloatingScore";
 import {
   getRushDailyPuzzle,
   calculateEndBonuses,
@@ -70,7 +71,7 @@ const MorphRush = () => {
     undoUsed: false,
     currentMultiplier: 1.0,
     timerStarted: false,
-    timeRemaining: 120,
+    timeRemaining: 90,
     isFinished: false
   });
   
@@ -87,6 +88,8 @@ const MorphRush = () => {
   const [helpOpen, setHelpOpen] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
+  const [floatingScore, setFloatingScore] = useState<{ amount: number; id: number } | null>(null);
+  const [scorePop, setScorePop] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [hardMode, setHardMode] = useState(false);
   
@@ -334,12 +337,8 @@ const MorphRush = () => {
       });
     }
     
-    // Show score toast
-    toast({
-      title: `+${wordScore} points`,
-      description: `${result.newWord}`,
-      duration: 1500
-    });
+    // Show floating score animation
+    setFloatingScore({ amount: wordScore, id: Date.now() });
   };
 
   const triggerShake = () => {
@@ -347,7 +346,12 @@ const MorphRush = () => {
     setTimeout(() => setShake(false), 400);
   };
 
-  // Calculate final results
+  const handleFloatingScoreComplete = useCallback(() => {
+    setFloatingScore(null);
+    setScorePop(true);
+    setTimeout(() => setScorePop(false), 300);
+  }, []);
+
   const endBonuses = run.isFinished ? calculateEndBonuses(run.words, run.invalidCount) : { cleanRun: 0, explorer: 0, total: 0 };
   const finalScore = run.isFinished ? run.score + endBonuses.total : run.score;
   
@@ -480,13 +484,24 @@ const MorphRush = () => {
             <div className="flex items-center justify-between mt-6 mb-6">
               <PrestigeTimer
                 timeRemaining={run.timeRemaining}
-                totalTime={120}
+                totalTime={90}
                 isRunning={run.timerStarted}
                 onTick={handleTimerTick}
               />
               
+              {/* Floating Score Animation Area */}
+              <div className="relative flex-1 mx-4">
+                {floatingScore && (
+                  <FloatingScore
+                    score={floatingScore.amount}
+                    id={floatingScore.id}
+                    onComplete={handleFloatingScoreComplete}
+                  />
+                )}
+              </div>
+              
               <div 
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-transform ${scorePop ? 'animate-score-pop' : ''}`}
                 style={{
                   background: 'hsl(var(--rush-card-bg))',
                   border: '1px solid hsl(var(--rush-card-border))',
