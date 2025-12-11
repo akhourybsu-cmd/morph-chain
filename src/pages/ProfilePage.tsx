@@ -20,7 +20,7 @@ type MyStats = {
   rush_time_ms: number;
   chain_plays: number;
   chain_best_moves: number;
-  chain_clears: number;
+  chain_wins: number;
   chain_avg_time_ms: number;
 };
 
@@ -391,7 +391,7 @@ export default function ProfilePage() {
             <TabsContent value="chain">
               <StatsGrid>
                 <StatCard label="Plays" value={stats?.chain_plays ?? localChainStats.overall.played} />
-                <StatCard label="Wins" value={stats?.chain_clears ?? localChainStats.overall.won} />
+                <StatCard label="Wins" value={stats?.chain_wins ?? localChainStats.overall.won} />
                 <StatCard label="Best Moves" value={stats?.chain_best_moves ?? '-'} />
                 <StatCard label="Avg Time" value={stats?.chain_avg_time_ms ? `${Math.round(stats.chain_avg_time_ms/1000)}s` : '-'} />
               </StatsGrid>
