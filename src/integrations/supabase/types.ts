@@ -797,8 +797,8 @@ export type Database = {
         Row: {
           chain_avg_time_ms: number | null
           chain_best_moves: number | null
-          chain_clears: number | null
           chain_plays: number | null
+          chain_wins: number | null
           rush_avg_score: number | null
           rush_best_multiplier: number | null
           rush_best_score: number | null
@@ -847,8 +847,8 @@ export type Database = {
         Row: {
           chain_avg_time_ms: number | null
           chain_best_moves: number | null
-          chain_clears: number | null
           chain_plays: number | null
+          chain_wins: number | null
           rush_avg_score: number | null
           rush_best_multiplier: number | null
           rush_best_score: number | null
@@ -862,9 +862,9 @@ export type Database = {
         Row: {
           avg_time_ms: number | null
           best_moves: number | null
-          clears: number | null
           plays: number | null
           user_id: string | null
+          wins: number | null
         }
         Relationships: []
       }
