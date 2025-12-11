@@ -43,7 +43,8 @@ import { RushStats } from "@/components/rush/RushStats";
 import { RushInitialsInput } from "@/components/rush/RushInitialsInput";
 import { RushMenuSheet } from "@/components/rush/RushMenuSheet";
 import { RushSettingsModal } from "@/components/rush/RushSettingsModal";
-import { updateRushStats, saveDailyCompletion, loadTodayCompletion, type CompletedDailyRun } from "@/lib/rushStorage";
+import { updateRushStats, saveDailyCompletion, loadTodayCompletion, getTodayDateString, type CompletedDailyRun } from "@/lib/rushStorage";
+import { upsertRushSession } from "@/integrations/supabase/rushSession";
 
 const MorphRush = () => {
   const { toast } = useToast();
@@ -196,6 +197,18 @@ const MorphRush = () => {
           invalidCount: prev.invalidCount,
           words: prev.words,
           sessionAchievements,
+        });
+        
+        // Auto-sync to backend for authenticated users
+        upsertRushSession({
+          date_local: getTodayDateString(),
+          session_id: `${getTodayDateString()}-${Date.now()}`,
+          mode,
+          score: finalScoreWithBonuses,
+          multiplier_max: prev.multiplierMax,
+          invalid_count: prev.invalidCount,
+          hard_mode: hardMode,
+          words: prev.words,
         });
         
         return { ...prev, timeRemaining: 0, isFinished: true };
