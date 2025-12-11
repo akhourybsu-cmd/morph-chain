@@ -22,6 +22,10 @@ type MyStats = {
   chain_best_moves: number;
   chain_wins: number;
   chain_avg_time_ms: number;
+  grid_plays: number;
+  grid_wins: number;
+  grid_best_moves: number;
+  grid_avg_time_ms: number;
 };
 
 type Profile = {
@@ -399,10 +403,10 @@ export default function ProfilePage() {
 
             <TabsContent value="grid">
               <StatsGrid>
-                <StatCard label="Plays" value={localGridStats.gamesPlayed} />
-                <StatCard label="Completed" value={localGridStats.gamesCompleted} />
-                <StatCard label="Best Moves" value={localGridStats.bestMoves ?? '-'} />
-                <StatCard label="Win Rate" value={`${Math.round(localGridStats.completionRate * 100)}%`} />
+                <StatCard label="Plays" value={stats?.grid_plays ?? localGridStats.gamesPlayed} />
+                <StatCard label="Wins" value={stats?.grid_wins ?? localGridStats.gamesCompleted} />
+                <StatCard label="Best Moves" value={stats?.grid_best_moves || localGridStats.bestMoves || '-'} />
+                <StatCard label="Avg Time" value={stats?.grid_avg_time_ms ? `${Math.round(stats.grid_avg_time_ms/1000)}s` : '-'} />
                 <StatCard label="Win Streak" value={localGridStats.streakDays} />
                 <StatCard label="Best Streak" value={localGridStats.maxStreakDays} />
               </StatsGrid>

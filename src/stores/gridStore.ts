@@ -7,6 +7,7 @@ import { morphGrid, morphPowerRow } from '@/lib/grid/morphMechanics';
 import { isValidWord } from '@/lib/grid/dictionary';
 import { recordGridPlayStart, recordGridSubmit, recordGridWin, recordGridLoss, saveGridGameState, loadGridGameState, clearGridGameState, type SubmittedWord } from '@/lib/gridStorage';
 import { checkGridAchievements, saveGridAchievements, getGridAchievements, getNewGridAchievements, updateTieredProgress, loadTieredProgress, type GridAchievementContext } from '@/lib/gridAchievements';
+import { upsertGridSession } from '@/integrations/supabase/gridSession';
 
 const MAX_MOVES = 20;
 
@@ -465,10 +466,10 @@ export const useGridStore = create<GridState>((set, get) => ({
     
     // Record win or loss ONLY for non-practice games
     if (!isPractice) {
+      const state = get();
+      const timeToComplete = state.startTime ? Date.now() - state.startTime : undefined;
+      
       if (isWin) {
-        const state = get();
-        const timeToComplete = state.startTime ? Date.now() - state.startTime : undefined;
-        
         recordGridWin({
           dateSeed: state.dailySeed,
           moves: state.moves,
@@ -484,9 +485,6 @@ export const useGridStore = create<GridState>((set, get) => ({
           }
         }
       } else if (isLoss) {
-        const state = get();
-        const timeToComplete = state.startTime ? Date.now() - state.startTime : undefined;
-        
         recordGridLoss({
           dateSeed: state.dailySeed,
           moves: state.moves,
@@ -495,6 +493,17 @@ export const useGridStore = create<GridState>((set, get) => ({
           timeToCompleteMs: timeToComplete,
         });
       }
+      
+      // Sync to backend for authenticated users
+      upsertGridSession({
+        date_local: state.dailySeed,
+        session_id: `${state.dailySeed}-${Date.now()}`,
+        moves: state.moves,
+        words_used: state.submittedWords.length,
+        time_to_complete_ms: timeToComplete,
+        completed: true,
+        won: isWin,
+      });
     }
     
     return true;

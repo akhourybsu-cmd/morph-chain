@@ -383,6 +383,48 @@ export type Database = {
         }
         Relationships: []
       }
+      grid_sessions: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          date_local: string
+          id: string
+          moves: number
+          session_id: string
+          started_at: string
+          time_to_complete_ms: number | null
+          user_id: string
+          won: boolean | null
+          words_used: number
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          date_local: string
+          id?: string
+          moves?: number
+          session_id: string
+          started_at?: string
+          time_to_complete_ms?: number | null
+          user_id: string
+          won?: boolean | null
+          words_used?: number
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          date_local?: string
+          id?: string
+          moves?: number
+          session_id?: string
+          started_at?: string
+          time_to_complete_ms?: number | null
+          user_id?: string
+          won?: boolean | null
+          words_used?: number
+        }
+        Relationships: []
+      }
       player_sessions: {
         Row: {
           completed: boolean | null
@@ -799,6 +841,10 @@ export type Database = {
           chain_best_moves: number | null
           chain_plays: number | null
           chain_wins: number | null
+          grid_avg_time_ms: number | null
+          grid_best_moves: number | null
+          grid_plays: number | null
+          grid_wins: number | null
           rush_avg_score: number | null
           rush_best_multiplier: number | null
           rush_best_score: number | null
@@ -849,6 +895,10 @@ export type Database = {
           chain_best_moves: number | null
           chain_plays: number | null
           chain_wins: number | null
+          grid_avg_time_ms: number | null
+          grid_best_moves: number | null
+          grid_plays: number | null
+          grid_wins: number | null
           rush_avg_score: number | null
           rush_best_multiplier: number | null
           rush_best_score: number | null
@@ -859,6 +909,16 @@ export type Database = {
         Relationships: []
       }
       v_user_stats_chain: {
+        Row: {
+          avg_time_ms: number | null
+          best_moves: number | null
+          plays: number | null
+          user_id: string | null
+          wins: number | null
+        }
+        Relationships: []
+      }
+      v_user_stats_grid: {
         Row: {
           avg_time_ms: number | null
           best_moves: number | null
