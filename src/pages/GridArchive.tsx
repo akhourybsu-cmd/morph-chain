@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 import { ArchiveDatePicker } from "@/components/archive/ArchiveDatePicker";
 import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
 import { HowToPlayModal } from "@/components/grid/HowToPlayModal";
 import { GridTile } from "@/components/grid/GridTile";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, ChevronLeft, HelpCircle, Volume2, VolumeX, Check } from "lucide-react";
+import { Calendar, ChevronLeft, HelpCircle, Volume2, VolumeX, Check, Loader2 } from "lucide-react";
 import { useGridSettings } from "@/hooks/useGridSettings";
 import { generateDailyGrid, Tile } from "@/lib/grid/gridGenerator";
 import { SeededRandom } from "@/lib/grid/seededRNG";
@@ -16,7 +17,6 @@ import { isValidWord } from "@/lib/grid/dictionary";
 import { playWordSubmit, playTileUpgrade, initAudio } from "@/lib/grid/audioManager";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-
 // Archive-specific storage
 const getArchiveGridKey = (date: string) => `morphgrid_archive_${date}`;
 
@@ -61,6 +61,9 @@ const GridArchive = () => {
   const navigate = useNavigate();
   const { settings, updateSetting } = useGridSettings();
   
+  // Auth state
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  
   // Archive state
   const [archiveDate, setArchiveDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(true);
@@ -80,6 +83,28 @@ const GridArchive = () => {
   const rngRef = useRef<SeededRandom | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Please sign in to access the puzzle archive.");
+        navigate("/login");
+        return;
+      }
+      setIsAuthenticated(true);
+    };
+    
+    checkAuth();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session) {
+        navigate("/login");
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [navigate]);
   // Initialize audio
   useEffect(() => {
     const handleFirstInteraction = () => {
@@ -267,6 +292,18 @@ const GridArchive = () => {
     setShowEndScreen(false);
     setArchiveDate(null);
   };
+
+  // Show loading while checking auth
+  if (isAuthenticated === null) {
+    return (
+      <div 
+        className="min-h-dvh flex items-center justify-center"
+        style={{ background: 'hsl(var(--grid-page-bg))' }}
+      >
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'hsl(var(--grid-accent))' }} />
+      </div>
+    );
+  }
 
   // Show date picker
   if (showDatePicker) {
