@@ -69,25 +69,30 @@ export const GridInitialsInput = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-sm">
+      <DialogContent 
+        className="max-w-sm bg-[hsl(var(--grid-card-bg))] border-[hsl(var(--grid-card-border))]"
+        style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
+      >
         <DialogHeader>
-          <DialogTitle>Submit to Leaderboard</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="font-playfair text-xl text-[hsl(var(--grid-text-primary))]">
+            Submit to Leaderboard
+          </DialogTitle>
+          <DialogDescription className="text-[hsl(var(--grid-text-secondary))]">
             Enter your initials (1-3 characters) to appear on the daily leaderboard
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="text-center">
-            <div className="text-4xl font-bold mb-1">{moves}</div>
-            <div className="text-sm text-muted-foreground">Moves · {wordsUsed} Words</div>
+            <div className="text-4xl font-semibold mb-1 text-[hsl(var(--grid-text-primary))]">{moves}</div>
+            <div className="text-sm text-[hsl(var(--grid-text-muted))]">Moves · {wordsUsed} Words</div>
           </div>
 
           <Input
             placeholder="ABC"
             value={initials}
             onChange={(e) => setInitials(e.target.value.slice(0, 3))}
-            className="text-center text-lg font-semibold uppercase"
+            className="text-center text-lg font-semibold uppercase bg-[hsl(var(--grid-pill-bg))] border-[hsl(var(--grid-card-border))] text-[hsl(var(--grid-text-primary))] placeholder:text-[hsl(var(--grid-text-muted))]"
             maxLength={3}
             autoFocus
             onKeyDown={(e) => {
@@ -102,14 +107,14 @@ export const GridInitialsInput = ({
               variant="outline"
               onClick={handleSkip}
               disabled={isSubmitting}
-              className="flex-1"
+              className="flex-1 border-[hsl(var(--grid-card-border))] text-[hsl(var(--grid-text-secondary))] hover:bg-[hsl(var(--grid-pill-bg))]"
             >
               Skip
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="flex-1"
+              className="flex-1 bg-[hsl(var(--grid-accent))] hover:bg-[hsl(193,46%,28%)] text-white"
             >
               {isSubmitting ? 'Submitting...' : 'Submit'}
             </Button>

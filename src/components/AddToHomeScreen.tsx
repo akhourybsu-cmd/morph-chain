@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Download, Share, X } from "lucide-react";
+import { Download, Share } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -71,28 +71,33 @@ export const AddToHomeScreen = () => {
         onClick={handleInstallClick}
         variant="outline"
         size="sm"
-        className="gap-2"
+        className="gap-2 border-[hsl(var(--chain-card-border))] text-[hsl(var(--chain-text-secondary))] hover:bg-[hsl(var(--chain-pill-bg))]"
       >
         <Download className="h-4 w-4" />
         Install App
       </Button>
 
       <Dialog open={showIOSInstructions} onOpenChange={setShowIOSInstructions}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent 
+          className="sm:max-w-md bg-[hsl(var(--chain-card-bg))] border-[hsl(var(--chain-card-border))]"
+          style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
+        >
           <DialogHeader>
-            <DialogTitle>Add to Home Screen</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="font-playfair text-xl text-[hsl(var(--chain-text-primary))]">
+              Add to Home Screen
+            </DialogTitle>
+            <DialogDescription className="text-[hsl(var(--chain-text-secondary))]">
               Install Morph Chain for quick access
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="flex items-start gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <span className="text-lg font-semibold text-primary">1</span>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--chain-accent))]/10">
+                <span className="text-lg font-semibold text-[hsl(var(--chain-accent))]">1</span>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium">Tap the Share button</p>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <p className="text-sm font-medium text-[hsl(var(--chain-text-primary))]">Tap the Share button</p>
+                <div className="flex items-center gap-2 text-sm text-[hsl(var(--chain-text-muted))]">
                   <Share className="h-4 w-4" />
                   <span>in your browser's toolbar</span>
                 </div>
@@ -100,12 +105,12 @@ export const AddToHomeScreen = () => {
             </div>
             
             <div className="flex items-start gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <span className="text-lg font-semibold text-primary">2</span>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--chain-accent))]/10">
+                <span className="text-lg font-semibold text-[hsl(var(--chain-accent))]">2</span>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium">Select "Add to Home Screen"</p>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <p className="text-sm font-medium text-[hsl(var(--chain-text-primary))]">Select "Add to Home Screen"</p>
+                <div className="flex items-center gap-2 text-sm text-[hsl(var(--chain-text-muted))]">
                   <Download className="h-4 w-4" />
                   <span>from the menu</span>
                 </div>
@@ -113,18 +118,21 @@ export const AddToHomeScreen = () => {
             </div>
             
             <div className="flex items-start gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <span className="text-lg font-semibold text-primary">3</span>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--chain-accent))]/10">
+                <span className="text-lg font-semibold text-[hsl(var(--chain-accent))]">3</span>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium">Tap "Add"</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm font-medium text-[hsl(var(--chain-text-primary))]">Tap "Add"</p>
+                <p className="text-sm text-[hsl(var(--chain-text-muted))]">
                   The app will appear on your home screen
                 </p>
               </div>
             </div>
           </div>
-          <Button onClick={() => setShowIOSInstructions(false)} className="w-full">
+          <Button 
+            onClick={() => setShowIOSInstructions(false)} 
+            className="w-full bg-[hsl(var(--chain-accent))] hover:bg-[hsl(var(--chain-accent))]/90 text-white"
+          >
             Got it
           </Button>
         </DialogContent>

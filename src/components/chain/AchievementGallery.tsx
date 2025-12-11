@@ -28,21 +28,21 @@ const GameSection = ({ title, icon, achievements, unlockedIds, accentColor, defa
   const progressPercent = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0;
 
   return (
-    <div className="border border-border rounded-lg overflow-hidden">
+    <div className="border border-[hsl(var(--home-card-border))] rounded-lg overflow-hidden bg-[hsl(var(--home-card-bg))]">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "w-full flex items-center justify-between p-4 transition-colors",
-          "hover:bg-muted/50"
+          "hover:bg-[hsl(var(--home-pill-bg))]"
         )}
       >
         <div className="flex items-center gap-3">
           <span className="text-2xl">{icon}</span>
           <div className="text-left">
-            <h3 className="font-semibold">{title}</h3>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <h3 className="font-semibold text-[hsl(var(--home-text-primary))]">{title}</h3>
+            <div className="flex items-center gap-2 text-sm text-[hsl(var(--home-text-muted))]">
               <span>{unlockedCount} / {totalCount}</span>
-              <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className="w-20 h-1.5 bg-[hsl(var(--home-pill-bg))] rounded-full overflow-hidden">
                 <div 
                   className="h-full rounded-full transition-all duration-300"
                   style={{ 
@@ -55,7 +55,11 @@ const GameSection = ({ title, icon, achievements, unlockedIds, accentColor, defa
             </div>
           </div>
         </div>
-        {isOpen ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+        {isOpen ? (
+          <ChevronUp className="h-5 w-5 text-[hsl(var(--home-text-muted))]" />
+        ) : (
+          <ChevronDown className="h-5 w-5 text-[hsl(var(--home-text-muted))]" />
+        )}
       </button>
       
       {isOpen && (
@@ -69,34 +73,34 @@ const GameSection = ({ title, icon, achievements, unlockedIds, accentColor, defa
                 className={cn(
                   "flex items-center gap-3 p-3 rounded-lg border transition-all",
                   isUnlocked 
-                    ? "bg-card border-border" 
-                    : "bg-muted/20 border-border/50 opacity-60"
+                    ? "bg-[hsl(var(--home-card-bg))] border-[hsl(var(--home-card-border))]" 
+                    : "bg-[hsl(var(--home-pill-bg))] border-[hsl(var(--home-card-border))]/50 opacity-60"
                 )}
               >
                 <div 
                   className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0",
                     isUnlocked 
-                      ? "bg-primary/10" 
-                      : "bg-muted/40"
+                      ? "bg-[hsl(var(--home-pill-bg))]" 
+                      : "bg-[hsl(var(--home-pill-bg))]"
                   )}
                   style={isUnlocked ? { backgroundColor: `${accentColor}20` } : {}}
                 >
                   {isUnlocked ? (
                     achievement.icon
                   ) : (
-                    <Lock className="h-4 w-4 text-muted-foreground" />
+                    <Lock className="h-4 w-4 text-[hsl(var(--home-text-muted))]" />
                   )}
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <h4 className={cn(
                     "font-medium text-sm",
-                    isUnlocked ? "text-foreground" : "text-muted-foreground"
+                    isUnlocked ? "text-[hsl(var(--home-text-primary))]" : "text-[hsl(var(--home-text-muted))]"
                   )}>
                     {achievement.title}
                   </h4>
-                  <p className="text-xs text-muted-foreground line-clamp-1">
+                  <p className="text-xs text-[hsl(var(--home-text-muted))] line-clamp-1">
                     {isUnlocked ? achievement.description : "???"}
                   </p>
                 </div>
@@ -128,14 +132,17 @@ export const AchievementGallery = ({ open, onOpenChange }: AchievementGalleryPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent 
+        className="max-w-lg max-h-[85vh] overflow-y-auto bg-[hsl(var(--home-card-bg))] border-[hsl(var(--home-card-border))]"
+        style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
+      >
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
+          <DialogTitle className="flex items-center justify-between font-playfair text-xl text-[hsl(var(--home-text-primary))]">
             <span className="flex items-center gap-2">
               <span className="text-2xl">🏆</span>
               Achievements
             </span>
-            <span className="text-sm font-normal text-muted-foreground">
+            <span className="text-sm font-normal text-[hsl(var(--home-text-muted))]">
               {totalUnlocked} / {totalAchievements} total
             </span>
           </DialogTitle>

@@ -48,31 +48,31 @@ export const StatsModal = ({ open, onOpenChange, stats }: StatsModalProps) => {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-sm font-medium">Move Distribution</h3>
+          <h3 className="text-sm font-medium text-[hsl(var(--chain-text-primary))]">Move Distribution</h3>
           <div className="space-y-2">
             {lengthStats.distribution.map((count, index) => (
               <div key={index} className="flex items-center gap-2">
-                <span className="text-sm w-4 text-muted-foreground">
+                <span className="text-sm w-4 text-[hsl(var(--chain-text-muted))]">
                   {index + 1}
                 </span>
-                <div className="flex-1 h-6 bg-muted/30 rounded overflow-hidden">
+                <div className="flex-1 h-6 bg-[hsl(var(--chain-card-bg))] rounded overflow-hidden border border-[hsl(var(--chain-card-border))]">
                   <div
-                    className="h-full bg-primary transition-all duration-300"
+                    className="h-full bg-[hsl(var(--chain-accent))] transition-all duration-300"
                     style={{
                       width: `${count === 0 ? 0 : Math.max((count / maxCount) * 100, 8)}%`,
                     }}
                   />
                 </div>
-                <span className="text-sm w-8 text-right">{count}</span>
+                <span className="text-sm w-8 text-right text-[hsl(var(--chain-text-primary))]">{count}</span>
               </div>
             ))}
           </div>
         </div>
 
         {lengthStats.hardModeStreak !== undefined && lengthStats.hardModeStreak > 0 && (
-          <div className="text-center p-3 bg-card border border-border rounded-lg">
-            <p className="text-sm text-muted-foreground">Hard Mode Streak</p>
-            <p className="text-2xl font-semibold">{lengthStats.hardModeStreak}</p>
+          <div className="text-center p-3 bg-[hsl(var(--chain-pill-bg))] border border-[hsl(var(--chain-card-border))] rounded-lg">
+            <p className="text-sm text-[hsl(var(--chain-text-muted))]">Hard Mode Streak</p>
+            <p className="text-2xl font-semibold text-[hsl(var(--chain-text-primary))]">{lengthStats.hardModeStreak}</p>
           </div>
         )}
       </div>
@@ -81,16 +81,36 @@ export const StatsModal = ({ open, onOpenChange, stats }: StatsModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent 
+        className="sm:max-w-md bg-[hsl(var(--chain-card-bg))] border-[hsl(var(--chain-card-border))]"
+        style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
+      >
         <DialogHeader>
-          <DialogTitle>Your Stats</DialogTitle>
+          <DialogTitle className="font-playfair text-xl text-[hsl(var(--chain-text-primary))]">
+            Your Stats
+          </DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="overall" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overall">Overall</TabsTrigger>
-            <TabsTrigger value="4">4L</TabsTrigger>
-            <TabsTrigger value="5">5L</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 bg-[hsl(var(--chain-pill-bg))]">
+            <TabsTrigger 
+              value="overall"
+              className="data-[state=active]:bg-[hsl(var(--chain-card-bg))] data-[state=active]:text-[hsl(var(--chain-accent))] text-[hsl(var(--chain-text-secondary))]"
+            >
+              Overall
+            </TabsTrigger>
+            <TabsTrigger 
+              value="4"
+              className="data-[state=active]:bg-[hsl(var(--chain-card-bg))] data-[state=active]:text-[hsl(var(--chain-accent))] text-[hsl(var(--chain-text-secondary))]"
+            >
+              4L
+            </TabsTrigger>
+            <TabsTrigger 
+              value="5"
+              className="data-[state=active]:bg-[hsl(var(--chain-card-bg))] data-[state=active]:text-[hsl(var(--chain-accent))] text-[hsl(var(--chain-text-secondary))]"
+            >
+              5L
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overall">
@@ -106,7 +126,7 @@ export const StatsModal = ({ open, onOpenChange, stats }: StatsModalProps) => {
           </TabsContent>
         </Tabs>
 
-        <p className="text-xs text-center text-muted-foreground">
+        <p className="text-xs text-center text-[hsl(var(--chain-text-muted))]">
           Stats reset on this device only unless signed in
         </p>
       </DialogContent>
@@ -117,8 +137,8 @@ export const StatsModal = ({ open, onOpenChange, stats }: StatsModalProps) => {
 const StatBox = ({ label, value }: { label: string; value: string | number }) => {
   return (
     <div className="text-center space-y-1">
-      <p className="text-2xl font-semibold">{value}</p>
-      <p className="text-xs text-muted-foreground uppercase tracking-wide">
+      <p className="text-2xl font-semibold text-[hsl(var(--chain-text-primary))]">{value}</p>
+      <p className="text-xs text-[hsl(var(--chain-text-muted))] uppercase tracking-wide">
         {label}
       </p>
     </div>

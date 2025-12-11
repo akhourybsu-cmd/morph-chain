@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,9 +40,14 @@ export const GridStatsModal = ({ open, onOpenChange }: GridStatsModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-[hsl(var(--grid-card-bg))] border-[hsl(var(--grid-card-border))]"
+        style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
+      >
         <DialogHeader>
-          <DialogTitle>Your Lifetime Stats</DialogTitle>
+          <DialogTitle className="font-playfair text-xl text-[hsl(var(--grid-text-primary))]">
+            Your Lifetime Stats
+          </DialogTitle>
         </DialogHeader>
 
         {/* Hero KPIs */}
@@ -82,108 +86,112 @@ export const GridStatsModal = ({ open, onOpenChange }: GridStatsModalProps) => {
         </div>
 
         {/* Word & Tile Insights */}
-        <Card>
-          <CardContent className="pt-6 space-y-3">
-            <h3 className="font-semibold text-sm mb-3">Word & Tile Insights</h3>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="flex items-center gap-2">
-                <Type className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Longest Word:</span>
-                <span className="font-medium">{stats.longestWord || "—"}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Type className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Most Used:</span>
-                <span className="font-medium">{stats.mostUsedLetter || "—"}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Hash className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Total Words:</span>
-                <span className="font-medium">{stats.totalWordsAllGames}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Power Uses:</span>
-                <span className="font-medium">{stats.totalPowerUses}</span>
-              </div>
-              <div className="flex items-center gap-2 col-span-2">
-                <Grid3x3 className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Stabilized Freed:</span>
-                <span className="font-medium">{stats.totalStabilizedFreed}</span>
-              </div>
+        <div 
+          className="rounded-lg border p-4 bg-[hsl(var(--grid-pill-bg))] border-[hsl(var(--grid-card-border))]"
+        >
+          <h3 className="font-semibold text-sm mb-3 text-[hsl(var(--grid-text-primary))]">Word & Tile Insights</h3>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="flex items-center gap-2">
+              <Type className="h-4 w-4 text-[hsl(var(--grid-text-muted))]" />
+              <span className="text-[hsl(var(--grid-text-muted))]">Longest Word:</span>
+              <span className="font-medium text-[hsl(var(--grid-text-primary))]">{stats.longestWord || "—"}</span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex items-center gap-2">
+              <Type className="h-4 w-4 text-[hsl(var(--grid-text-muted))]" />
+              <span className="text-[hsl(var(--grid-text-muted))]">Most Used:</span>
+              <span className="font-medium text-[hsl(var(--grid-text-primary))]">{stats.mostUsedLetter || "—"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Hash className="h-4 w-4 text-[hsl(var(--grid-text-muted))]" />
+              <span className="text-[hsl(var(--grid-text-muted))]">Total Words:</span>
+              <span className="font-medium text-[hsl(var(--grid-text-primary))]">{stats.totalWordsAllGames}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-[hsl(var(--grid-text-muted))]" />
+              <span className="text-[hsl(var(--grid-text-muted))]">Power Uses:</span>
+              <span className="font-medium text-[hsl(var(--grid-text-primary))]">{stats.totalPowerUses}</span>
+            </div>
+            <div className="flex items-center gap-2 col-span-2">
+              <Grid3x3 className="h-4 w-4 text-[hsl(var(--grid-text-muted))]" />
+              <span className="text-[hsl(var(--grid-text-muted))]">Stabilized Freed:</span>
+              <span className="font-medium text-[hsl(var(--grid-text-primary))]">{stats.totalStabilizedFreed}</span>
+            </div>
+          </div>
+        </div>
 
         {/* Moves Distribution */}
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="font-semibold text-sm mb-3">Moves Distribution</h3>
-            <div className="space-y-2">
-              {histogramBuckets.map((bucket) => {
-                const count = stats.movesHistogram[bucket] || 0;
-                const widthPct = count > 0 ? Math.max((count / maxHistValue) * 100, 8) : 0;
-                return (
-                  <div key={bucket} className="flex items-center gap-2 text-sm">
-                    <span className="w-12 text-muted-foreground">{bucket}</span>
-                    <div className="flex-1 h-6 bg-muted/30 rounded overflow-hidden">
-                      <div
-                        className="h-full bg-primary transition-all"
-                        style={{ width: `${widthPct}%` }}
-                      />
-                    </div>
-                    <span className="w-8 text-right">{count}</span>
+        <div 
+          className="rounded-lg border p-4 bg-[hsl(var(--grid-pill-bg))] border-[hsl(var(--grid-card-border))]"
+        >
+          <h3 className="font-semibold text-sm mb-3 text-[hsl(var(--grid-text-primary))]">Moves Distribution</h3>
+          <div className="space-y-2">
+            {histogramBuckets.map((bucket) => {
+              const count = stats.movesHistogram[bucket] || 0;
+              const widthPct = count > 0 ? Math.max((count / maxHistValue) * 100, 8) : 0;
+              return (
+                <div key={bucket} className="flex items-center gap-2 text-sm">
+                  <span className="w-12 text-[hsl(var(--grid-text-muted))]">{bucket}</span>
+                  <div className="flex-1 h-6 bg-[hsl(var(--grid-card-bg))] rounded overflow-hidden border border-[hsl(var(--grid-card-border))]">
+                    <div
+                      className="h-full bg-[hsl(var(--grid-accent))] transition-all"
+                      style={{ width: `${widthPct}%` }}
+                    />
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                  <span className="w-8 text-right text-[hsl(var(--grid-text-primary))]">{count}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Streak */}
         {stats.streakDays > 0 && (
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <p className="text-sm text-muted-foreground">Daily Completion Streak</p>
-              <p className="text-3xl font-semibold">{stats.streakDays} days</p>
-            </CardContent>
-          </Card>
+          <div 
+            className="rounded-lg border p-4 text-center bg-[hsl(var(--grid-pill-bg))] border-[hsl(var(--grid-card-border))]"
+          >
+            <p className="text-sm text-[hsl(var(--grid-text-muted))]">Daily Completion Streak</p>
+            <p className="text-3xl font-semibold text-[hsl(var(--grid-text-primary))]">{stats.streakDays} days</p>
+          </div>
         )}
 
         {/* History */}
         {stats.completedGames.length > 0 && (
-          <Card>
-            <CardContent className="pt-6">
-              <h3 className="font-semibold text-sm mb-3">Last 10 Daily Results</h3>
-              <div className="space-y-2 text-sm">
-                {stats.completedGames.slice(-10).reverse().map((game, i) => (
-                  <div key={i} className="flex justify-between items-center py-1 border-b border-border/50 last:border-0">
-                    <span className="text-muted-foreground">{game.dateSeed}</span>
-                    <div className="flex gap-3 text-xs">
-                      <span>{game.moves} moves</span>
-                      <span className="text-muted-foreground">{game.wordsUsed} words</span>
-                      {game.timeToCompleteMs && (
-                        <span className="text-muted-foreground">
-                          {Math.floor(game.timeToCompleteMs / 60000)}:{String(Math.floor((game.timeToCompleteMs % 60000) / 1000)).padStart(2, '0')}
-                        </span>
-                      )}
-                    </div>
+          <div 
+            className="rounded-lg border p-4 bg-[hsl(var(--grid-pill-bg))] border-[hsl(var(--grid-card-border))]"
+          >
+            <h3 className="font-semibold text-sm mb-3 text-[hsl(var(--grid-text-primary))]">Last 10 Daily Results</h3>
+            <div className="space-y-2 text-sm">
+              {stats.completedGames.slice(-10).reverse().map((game, i) => (
+                <div key={i} className="flex justify-between items-center py-1 border-b border-[hsl(var(--grid-divider))] last:border-0">
+                  <span className="text-[hsl(var(--grid-text-muted))]">{game.dateSeed}</span>
+                  <div className="flex gap-3 text-xs">
+                    <span className="text-[hsl(var(--grid-text-primary))]">{game.moves} moves</span>
+                    <span className="text-[hsl(var(--grid-text-muted))]">{game.wordsUsed} words</span>
+                    {game.timeToCompleteMs && (
+                      <span className="text-[hsl(var(--grid-text-muted))]">
+                        {Math.floor(game.timeToCompleteMs / 60000)}:{String(Math.floor((game.timeToCompleteMs % 60000) / 1000)).padStart(2, '0')}
+                      </span>
+                    )}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Actions */}
         <div className="space-y-2">
           {!showAliasInput ? (
-            <Button variant="outline" className="w-full" onClick={() => setShowAliasInput(true)}>
+            <Button 
+              variant="outline" 
+              className="w-full border-[hsl(var(--grid-card-border))] text-[hsl(var(--grid-text-secondary))] hover:bg-[hsl(var(--grid-pill-bg))]" 
+              onClick={() => setShowAliasInput(true)}
+            >
               Set Alias / Initials
             </Button>
           ) : (
             <div className="space-y-2">
-              <Label htmlFor="alias">Leaderboard Alias (1-12 chars)</Label>
+              <Label htmlFor="alias" className="text-[hsl(var(--grid-text-secondary))]">Leaderboard Alias (1-12 chars)</Label>
               <div className="flex gap-2">
                 <Input
                   id="alias"
@@ -191,14 +199,30 @@ export const GridStatsModal = ({ open, onOpenChange }: GridStatsModalProps) => {
                   onChange={(e) => setAlias(e.target.value)}
                   maxLength={12}
                   placeholder="e.g., AK"
+                  className="bg-[hsl(var(--grid-pill-bg))] border-[hsl(var(--grid-card-border))] text-[hsl(var(--grid-text-primary))]"
                 />
-                <Button onClick={handleSaveAlias}>Save</Button>
-                <Button variant="ghost" onClick={() => setShowAliasInput(false)}>Cancel</Button>
+                <Button 
+                  onClick={handleSaveAlias}
+                  className="bg-[hsl(var(--grid-accent))] hover:bg-[hsl(193,46%,28%)] text-white"
+                >
+                  Save
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setShowAliasInput(false)}
+                  className="text-[hsl(var(--grid-text-secondary))]"
+                >
+                  Cancel
+                </Button>
               </div>
             </div>
           )}
           
-          <Button variant="destructive" className="w-full" onClick={handleReset}>
+          <Button 
+            variant="destructive" 
+            className="w-full" 
+            onClick={handleReset}
+          >
             Reset Stats
           </Button>
         </div>
@@ -216,15 +240,15 @@ interface StatCardProps {
 
 const StatCard = ({ icon, label, value, subtext }: StatCardProps) => {
   return (
-    <Card>
-      <CardContent className="pt-6 text-center space-y-2">
-        <div className="flex justify-center text-muted-foreground">{icon}</div>
-        <div>
-          <p className="text-2xl font-semibold">{value}</p>
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
-          {subtext && <p className="text-xs text-muted-foreground mt-1">{subtext}</p>}
-        </div>
-      </CardContent>
-    </Card>
+    <div 
+      className="rounded-lg border p-4 text-center space-y-2 bg-[hsl(var(--grid-pill-bg))] border-[hsl(var(--grid-card-border))]"
+    >
+      <div className="flex justify-center text-[hsl(var(--grid-text-muted))]">{icon}</div>
+      <div>
+        <p className="text-2xl font-semibold text-[hsl(var(--grid-text-primary))]">{value}</p>
+        <p className="text-xs text-[hsl(var(--grid-text-muted))] uppercase tracking-wide">{label}</p>
+        {subtext && <p className="text-xs text-[hsl(var(--grid-text-muted))] mt-1">{subtext}</p>}
+      </div>
+    </div>
   );
 };
