@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Menu, Trophy, BarChart3, Settings, HelpCircle, Sparkles, Award, User } from "lucide-react";
+import { Menu, Trophy, BarChart3, Settings, HelpCircle, Sparkles, Award, User, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { GridLeaderboard } from "./GridLeaderboard";
@@ -91,6 +91,16 @@ export const GridMenuSheet = () => {
               >
                 <Award className="w-4 h-4 text-[hsl(var(--grid-accent))]" />
                 Achievements
+              </button>
+              <button
+                onClick={() => {
+                  navigate('/grid/archive');
+                  setOpen(false);
+                }}
+                className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[hsl(var(--grid-pill-bg))] transition-colors flex items-center gap-2 text-[hsl(var(--grid-text-primary))]"
+              >
+                <Calendar className="w-4 h-4 text-[hsl(var(--grid-accent))]" />
+                Puzzle Archive
               </button>
               <button
                 onClick={() => {
