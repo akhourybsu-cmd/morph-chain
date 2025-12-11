@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { AddToHomeScreen } from "@/components/AddToHomeScreen";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Trophy, Settings, User } from "lucide-react";
+import { ChevronDown, Trophy, Settings, User, Calendar } from "lucide-react";
 import { useState, useEffect } from "react";
 import { GamesNavigation } from "@/components/shared/GamesNavigation";
 import { useNavigate } from "react-router-dom";
@@ -113,7 +113,7 @@ export const GameMenuSheet = ({
 
           <Separator style={{ background: 'hsl(var(--chain-divider))' }} />
 
-          {/* Chain-specific: Achievements */}
+          {/* Chain-specific: Achievements & Archive */}
           <div>
             <h3 
               className="text-xs font-semibold uppercase tracking-wider mb-3 px-2"
@@ -137,6 +137,19 @@ export const GameMenuSheet = ({
                   <span className="text-sm">Achievements</span>
                 </button>
               )}
+              <button
+                onClick={() => {
+                  navigate('/chain/archive');
+                  onOpenChange(false);
+                }}
+                className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+                style={{ color: 'hsl(var(--chain-text-primary))' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--chain-divider))'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <Calendar className="w-4 h-4" style={{ color: 'hsl(var(--chain-accent))' }} />
+                <span className="text-sm">Puzzle Archive</span>
+              </button>
             </div>
           </div>
 

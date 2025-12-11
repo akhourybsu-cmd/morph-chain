@@ -6,12 +6,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import GameSelector from "./pages/GameSelector";
 import Index from "./pages/Index";
+import ChainArchive from "./pages/ChainArchive";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import TermsOfService from "./pages/TermsOfService";
 // MorphPrism removed - hidden from app
 import MorphRush from "./pages/MorphRush";
+import GridArchive from "./pages/GridArchive";
 import MorphGrid from "./pages/MorphGrid";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -51,7 +53,9 @@ const App = () => {
           <Routes>
             <Route path="/" element={<GameSelector />} />
             <Route path="/chain" element={<Index />} />
+            <Route path="/chain/archive" element={<ChainArchive />} />
             <Route path="/grid" element={<MorphGrid />} />
+            <Route path="/grid/archive" element={<GridArchive />} />
             {/* Prism route removed - hidden from app */}
             <Route path="/rush" element={<MorphRush />} />
             <Route path="/rules" element={<Rules />} />
