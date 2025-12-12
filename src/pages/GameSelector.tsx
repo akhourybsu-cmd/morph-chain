@@ -22,8 +22,7 @@ const GameSelector = () => {
   const puzzle = getDailyPuzzle(4);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const { role } = useUserRole();
-  const isAdmin = role === 'admin';
+  const { hasBetaAccess } = useUserRole();
   
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -150,15 +149,15 @@ const GameSelector = () => {
             onClick={() => navigate('/rush?mode=daily')}
           />
           
-          {/* Alibi - Admin Only */}
-          {isAdmin && (
+          {/* Alibi - Beta Only */}
+          {hasBetaAccess && (
             <GameCard
               icon={Search}
               name="Morph Alibi"
               description="Daily logic mystery puzzle"
               accent={gameAccents.alibi}
               onClick={() => navigate('/alibi')}
-              badge="Admin"
+              badge="Beta"
             />
           )}
         </div>
