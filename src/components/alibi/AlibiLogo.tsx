@@ -6,11 +6,18 @@ interface AlibiLogoProps {
 
 export function AlibiLogo({ className = '' }: AlibiLogoProps) {
   return (
-    <div className={`flex items-center justify-center ${className}`}>
-      <h1 className="font-serif text-xl md:text-2xl tracking-tight">
-        <span className="text-alibi-text-primary">Morph</span>
-        {' '}
-        <span className="text-alibi-accent">Alibi</span>
+    <div className={`flex flex-col items-center justify-center ${className}`}>
+      <span 
+        className="text-[10px] tracking-[0.2em] uppercase"
+        style={{ color: 'hsl(var(--alibi-text-muted))' }}
+      >
+        Morph Games
+      </span>
+      <h1 
+        className="font-serif text-2xl md:text-3xl tracking-tight"
+        style={{ color: 'hsl(var(--alibi-text-primary))' }}
+      >
+        Alibi
       </h1>
     </div>
   );

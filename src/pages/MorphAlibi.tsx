@@ -54,7 +54,7 @@ export default function MorphAlibi() {
         style={{ background: 'hsl(var(--alibi-page-bg))' }}
       >
         <div 
-          className="animate-pulse text-lg"
+          className="animate-pulse text-lg font-serif"
           style={{ color: 'hsl(var(--alibi-text-muted))' }}
         >
           Loading puzzle...
@@ -67,61 +67,61 @@ export default function MorphAlibi() {
 
   return (
     <div 
-      className="min-h-screen flex flex-col"
+      className="min-h-screen flex flex-col relative"
       style={{ background: 'hsl(var(--alibi-page-bg))' }}
     >
-      {/* Header */}
+      {/* Masthead Header */}
       <AlibiPrestigeHeader
         onMenuClick={() => setMenuOpen(true)}
         onHelpClick={() => setHelpOpen(true)}
         themeToggle={<PrestigeThemeToggle colorVar="--alibi-text-muted" />}
       />
 
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-4 max-w-2xl">
-        {/* Puzzle Info Bar */}
-        <div 
-          className="flex items-center justify-between mb-4 pb-3"
-          style={{ borderBottom: '1px solid hsl(var(--alibi-divider))' }}
-        >
-          <div className="flex items-center gap-3">
+      {/* Secondary Metadata Line */}
+      <div 
+        className="flex items-center justify-between px-4 py-2"
+        style={{ borderBottom: '1px solid hsl(var(--alibi-divider) / 0.5)' }}
+      >
+        <div className="flex items-center gap-2">
+          <span 
+            className="text-xs font-medium"
+            style={{ color: 'hsl(var(--alibi-text-secondary))' }}
+          >
+            #{puzzle.index}
+          </span>
+          {stats.currentStreak > 0 && (
             <span 
-              className="text-sm font-medium"
-              style={{ color: 'hsl(var(--alibi-text-primary))' }}
+              className="flex items-center gap-0.5 text-xs"
+              style={{ color: 'hsl(var(--alibi-accent))' }}
             >
-              Alibi #{puzzle.index}
-            </span>
-            {stats.currentStreak > 0 && (
-              <span 
-                className="flex items-center gap-1 text-sm"
-                style={{ color: 'hsl(var(--alibi-accent))' }}
-              >
-                <Flame className="h-4 w-4" />
-                {stats.currentStreak}
-              </span>
-            )}
-          </div>
-          
-          {showTimer && !isSolved && (
-            <span 
-              className="text-sm font-mono"
-              style={{ color: 'hsl(var(--alibi-text-muted))' }}
-            >
-              {formatTime(elapsedTime)}
+              <Flame className="h-3 w-3" />
+              {stats.currentStreak}
             </span>
           )}
-          
-          <span 
-            className="text-xs px-2 py-1 rounded"
-            style={{ 
-              background: 'hsl(var(--alibi-accent) / 0.1)',
-              color: 'hsl(var(--alibi-accent))'
-            }}
-          >
-            {puzzle.difficulty}
-          </span>
         </div>
+        
+        {showTimer && !isSolved && (
+          <span 
+            className="text-xs font-mono"
+            style={{ color: 'hsl(var(--alibi-text-muted))' }}
+          >
+            {formatTime(elapsedTime)}
+          </span>
+        )}
+        
+        <span 
+          className="text-[10px] px-2 py-0.5 rounded-full lowercase"
+          style={{ 
+            background: 'hsl(var(--alibi-divider) / 0.5)',
+            color: 'hsl(var(--alibi-text-muted))'
+          }}
+        >
+          {puzzle.difficulty}
+        </span>
+      </div>
 
+      {/* Main Content */}
+      <main className="flex-1 container mx-auto px-4 py-6 max-w-lg">
         {isSolved ? (
           /* Results Panel */
           <AlibiResultsPanel
@@ -132,40 +132,19 @@ export default function MorphAlibi() {
             onPlayAgain={mode === 'practice' ? resetGame : undefined}
           />
         ) : (
-          /* Game Interface */
-          <div className="space-y-4">
-            {/* Grid Tabs */}
+          /* Game Interface - clear vertical rhythm */
+          <div className="space-y-6">
+            {/* Segmented Control Tabs */}
             <GridTabs activeGrid={activeGrid} onGridChange={setActiveGrid} />
 
-            {/* Logic Grid */}
-            <div 
-              className="p-4 rounded-lg"
-              style={{ 
-                background: 'hsl(var(--alibi-card-bg))',
-                border: '1px solid hsl(var(--alibi-card-border))'
-              }}
-            >
-              <LogicGrid
-                grid={currentGrid}
-                onCellClick={(row, col) => toggleCell(activeGrid, row, col)}
-                disabled={isSolved}
-              />
-            </div>
+            {/* Logic Grid - no card wrapper, breathing room */}
+            <LogicGrid
+              grid={currentGrid}
+              onCellClick={(row, col) => toggleCell(activeGrid, row, col)}
+              disabled={isSolved}
+            />
 
-            {/* Consistency Message */}
-            {lastConsistencyMessage && (
-              <div 
-                className="text-center text-sm py-2 px-4 rounded-lg animate-fade-in"
-                style={{ 
-                  background: 'hsl(var(--alibi-accent) / 0.1)',
-                  color: 'hsl(var(--alibi-accent))'
-                }}
-              >
-                {lastConsistencyMessage}
-              </div>
-            )}
-
-            {/* Game Controls */}
+            {/* Utility Tool Bar */}
             <GameControls
               onUndo={undo}
               onConsistencyCheck={runConsistencyCheck}
@@ -174,27 +153,41 @@ export default function MorphAlibi() {
               disabled={isSolved}
             />
 
-            {/* Clue Panel */}
-            <div 
-              className="p-4 rounded-lg"
-              style={{ 
-                background: 'hsl(var(--alibi-card-bg))',
-                border: '1px solid hsl(var(--alibi-card-border))'
-              }}
-            >
-              <CluePanel clues={puzzle.clues} />
-            </div>
+            {/* Consistency Message */}
+            {lastConsistencyMessage && (
+              <div 
+                className="text-center text-sm py-2 animate-fade-in"
+                style={{ color: 'hsl(var(--alibi-accent))' }}
+              >
+                {lastConsistencyMessage}
+              </div>
+            )}
 
-            {/* Final Question */}
+            {/* Divider */}
             <div 
-              className="text-center p-4 rounded-lg"
-              style={{ 
-                background: 'hsl(var(--alibi-accent) / 0.05)',
-                border: '1px solid hsl(var(--alibi-accent) / 0.2)'
-              }}
-            >
+              className="w-12 mx-auto"
+              style={{ borderTop: '1px solid hsl(var(--alibi-divider))' }}
+            />
+
+            {/* Clues Section - editorial column */}
+            <CluePanel clues={puzzle.clues} />
+
+            {/* Divider */}
+            <div 
+              className="w-full"
+              style={{ borderTop: '1px solid hsl(var(--alibi-divider))' }}
+            />
+
+            {/* Final Question - conclusive emphasis */}
+            <div className="text-center py-4">
+              <span 
+                className="block text-[10px] tracking-[0.15em] uppercase mb-2"
+                style={{ color: 'hsl(var(--alibi-text-muted))' }}
+              >
+                Final Question
+              </span>
               <p 
-                className="text-sm font-medium"
+                className="font-serif text-base md:text-lg"
                 style={{ color: 'hsl(var(--alibi-text-primary))' }}
               >
                 {puzzle.finalQuestion}

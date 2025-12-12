@@ -9,21 +9,31 @@ interface CluePanelProps {
 
 export function CluePanel({ clues, className }: CluePanelProps) {
   return (
-    <div className={cn("space-y-2", className)}>
-      <h3 className="text-sm font-semibold text-alibi-text-secondary uppercase tracking-wide">
+    <div className={cn("", className)}>
+      {/* Section header - small caps, letter-spaced */}
+      <h3 
+        className="text-[10px] tracking-[0.15em] uppercase mb-4"
+        style={{ color: 'hsl(var(--alibi-text-muted))' }}
+      >
         Clues
       </h3>
-      <div className="space-y-2 max-h-[200px] md:max-h-[300px] overflow-y-auto pr-2">
+      
+      {/* Editorial clue column - no cards, clean spacing */}
+      <div className="space-y-3 max-h-[200px] md:max-h-[280px] overflow-y-auto pr-2">
         {clues.map((clue, index) => (
-          <div
+          <p
             key={clue.id}
-            className="p-3 bg-alibi-card-bg border border-alibi-divider rounded-lg"
+            className="text-sm leading-relaxed"
+            style={{ color: 'hsl(var(--alibi-text-primary))' }}
           >
-            <p className="text-sm text-alibi-text-primary leading-relaxed">
-              <span className="text-alibi-text-muted mr-2">{index + 1}.</span>
-              {clue.text}
-            </p>
-          </div>
+            <span 
+              className="font-semibold mr-2"
+              style={{ color: 'hsl(var(--alibi-text-secondary))' }}
+            >
+              {index + 1}.
+            </span>
+            {clue.text}
+          </p>
         ))}
       </div>
     </div>
