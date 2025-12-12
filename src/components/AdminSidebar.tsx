@@ -1,17 +1,15 @@
 import { 
   Calendar, 
   Database, 
-  Settings, 
-  Shield, 
   Users, 
   Activity,
-  Flag,
   FileText,
   LogOut,
   LayoutDashboard,
   CheckCircle2,
-  CalendarDays,
-  Archive
+  Archive,
+  MessageSquare,
+  Shield
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
@@ -23,7 +21,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,18 +29,14 @@ import { Logo } from "@/components/Logo";
 
 const navigation = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-  { title: "Today's Puzzle", url: "/admin/puzzle", icon: Calendar },
-  { title: "Scheduled Puzzles", url: "/admin/scheduled", icon: CalendarDays },
-  { title: "Scheduler", url: "/admin/scheduler", icon: Calendar },
-  { title: "Puzzle Vault", url: "/admin/vault", icon: Shield },
+  { title: "Puzzle Center", url: "/admin/puzzles", icon: Calendar },
   { title: "Puzzle Validator", url: "/admin/validator", icon: CheckCircle2 },
+  { title: "Puzzle Vault", url: "/admin/vault", icon: Shield },
   { title: "Dictionary", url: "/admin/dictionary", icon: Database },
-  { title: "Player Sessions", url: "/admin/sessions", icon: Users },
+  { title: "Word Feedback", url: "/admin/feedback", icon: MessageSquare },
   { title: "Analytics", url: "/admin/analytics", icon: Activity },
-  { title: "Feature Flags", url: "/admin/flags", icon: Flag },
-  { title: "Audit Log", url: "/admin/audit", icon: FileText },
-  { title: "Configuration", url: "/admin/config", icon: Settings },
-  { title: "Morph Archive", url: "/admin/archive", icon: Archive },
+  { title: "Player Sessions", url: "/admin/sessions", icon: Users },
+  { title: "Archive", url: "/admin/archive", icon: Archive },
 ];
 
 export function AdminSidebar() {
