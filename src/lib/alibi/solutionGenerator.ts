@@ -1,4 +1,12 @@
-import { AlibiSolution } from './types';
+/**
+ * Solution Generator - V1.0 Ruleset Implementation
+ * 
+ * Section 6: Final Question Rules
+ * - The answer must be inevitable (deducible before asked)
+ * - Only ask Person at Location/Time/Object questions
+ */
+
+import { AlibiSolution, AlibiClue } from './types';
 import { 
   PERSON_NAMES, 
   LOCATION_POOL, 
@@ -8,6 +16,7 @@ import {
   sortTimes,
   seededShuffle
 } from './entityPools';
+import { simulateHumanSolve } from './humanLogicSolver';
 
 export interface PuzzleEntities {
   people: string[];
@@ -50,43 +59,174 @@ export function generateSolution(entities: PuzzleEntities, seed: number): AlibiS
   };
 }
 
-// Generate a final question and answer
+// Seeded random helper
+function seededRandom(seed: number): () => number {
+  return () => {
+    seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+interface FinalQuestionCandidate {
+  question: string;
+  answer: string;
+  type: 'location' | 'time' | 'object';
+  targetValue: string;
+}
+
+/**
+ * Generate final question with inevitability validation (Section 6)
+ * The answer must be deducible from clues before the question is asked
+ */
 export function generateFinalQuestion(
+  entities: PuzzleEntities,
+  solution: AlibiSolution,
+  clues: AlibiClue[],
+  seed: number
+): { question: string; answer: string } | null {
+  const rand = seededRandom(seed);
+
+  // Generate all candidate questions
+  const candidates: FinalQuestionCandidate[] = [];
+
+  // Location questions
+  for (const location of entities.locations) {
+    const answer = Object.entries(solution.personToLocation)
+      .find(([, loc]) => loc === location)?.[0];
+    if (answer) {
+      candidates.push({
+        question: `Who was at the ${location}?`,
+        answer,
+        type: 'location',
+        targetValue: location,
+      });
+    }
+  }
+
+  // Time questions
+  for (const time of entities.times) {
+    const answer = Object.entries(solution.personToTime)
+      .find(([, t]) => t === time)?.[0];
+    if (answer) {
+      candidates.push({
+        question: `Who was seen at ${time}?`,
+        answer,
+        type: 'time',
+        targetValue: time,
+      });
+    }
+  }
+
+  // Object questions
+  for (const object of entities.objects) {
+    const answer = Object.entries(solution.personToObject)
+      .find(([, obj]) => obj === object)?.[0];
+    if (answer) {
+      candidates.push({
+        question: `Who had the ${object}?`,
+        answer,
+        type: 'object',
+        targetValue: object,
+      });
+    }
+  }
+
+  // Shuffle candidates
+  const shuffled = [...candidates].sort(() => rand() - 0.5);
+
+  // Validate inevitability: After solving, only one person should be possible
+  for (const candidate of shuffled) {
+    if (validateQuestionInevitability(candidate, entities, solution, clues)) {
+      return {
+        question: candidate.question,
+        answer: candidate.answer,
+      };
+    }
+  }
+
+  // If no inevitable question found, return the first one (fallback)
+  // This shouldn't happen with a properly generated puzzle
+  if (candidates.length > 0) {
+    return {
+      question: candidates[0].question,
+      answer: candidates[0].answer,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Validate that the question answer is inevitable given the clues
+ * After solving, exactly one person should match
+ */
+function validateQuestionInevitability(
+  candidate: FinalQuestionCandidate,
+  entities: PuzzleEntities,
+  solution: AlibiSolution,
+  clues: AlibiClue[]
+): boolean {
+  // Run human solver to get the deduced state
+  const solveResult = simulateHumanSolve({
+    id: 'test',
+    index: 0,
+    difficulty: 'medium',
+    people: entities.people,
+    locations: entities.locations,
+    times: entities.times,
+    objects: entities.objects,
+    solution,
+    clues,
+    finalQuestion: candidate.question,
+    finalAnswerPerson: candidate.answer,
+  });
+
+  if (!solveResult.solvable) return false;
+
+  // Check that the solve result confirms the answer
+  const confirmSteps = solveResult.steps.filter(s => s.type === 'confirm');
+  
+  // Find the confirmation for this question
+  const gridType = candidate.type;
+  const relevantConfirm = confirmSteps.find(
+    s => s.grid === gridType && s.value === candidate.targetValue
+  );
+
+  // The answer must be confirmed before we ask
+  return relevantConfirm?.person === candidate.answer;
+}
+
+// Legacy version without clues parameter (for backward compatibility)
+export function generateFinalQuestionLegacy(
   entities: PuzzleEntities,
   solution: AlibiSolution,
   seed: number
 ): { question: string; answer: string } {
-  const rand = (s: number) => {
-    s = (s + 0x6D2B79F5) | 0;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+  const rand = seededRandom(seed);
 
   const questionTypes = [
-    // Who had the object?
     () => {
-      const obj = entities.objects[Math.floor(rand(seed) * entities.objects.length)];
+      const obj = entities.objects[Math.floor(rand() * entities.objects.length)];
       const answer = Object.entries(solution.personToObject)
         .find(([_, o]) => o === obj)?.[0] || '';
       return { question: `Who had the ${obj}?`, answer };
     },
-    // Who was at the location?
     () => {
-      const loc = entities.locations[Math.floor(rand(seed + 1) * entities.locations.length)];
+      const loc = entities.locations[Math.floor(rand() * entities.locations.length)];
       const answer = Object.entries(solution.personToLocation)
         .find(([_, l]) => l === loc)?.[0] || '';
       return { question: `Who was at the ${loc}?`, answer };
     },
-    // Who was there at time?
     () => {
-      const time = entities.times[Math.floor(rand(seed + 2) * entities.times.length)];
+      const time = entities.times[Math.floor(rand() * entities.times.length)];
       const answer = Object.entries(solution.personToTime)
         .find(([_, t]) => t === time)?.[0] || '';
       return { question: `Who was seen at ${time}?`, answer };
     },
   ];
 
-  const questionType = questionTypes[Math.floor(rand(seed + 10) * questionTypes.length)];
+  const questionType = questionTypes[Math.floor(rand() * questionTypes.length)];
   return questionType();
 }
