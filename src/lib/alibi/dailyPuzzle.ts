@@ -1,16 +1,29 @@
 /**
- * Daily Puzzle Generator - V1.0 Ruleset Implementation
+ * Daily Puzzle Generator - V1.0 Ruleset + Deductive Logic Edition
  * 
- * Generates puzzles with retry loop until all validation rules pass:
- * - Mandatory anchors (Section 2)
- * - Forced progress path (Section 4)
- * - Minimum forced moves ≥5 (Section 4.2)
- * - Category balance (Section 5)
- * - Final question inevitability (Section 6)
+ * Generation Flow (Deductive Logic Edition):
+ * 1. Generate entities and solution
+ * 2. Pick final question FIRST (establishes protected answer)
+ * 3. Generate clues that DON'T reveal the answer
+ * 4. Validate all rules:
+ *    - Mandatory anchors (Section 2)
+ *    - Forced progress path (Section 4)
+ *    - Minimum forced moves ≥5 (Section 4.2)
+ *    - Category balance (Section 5)
+ *    - Final question inevitability (Section 6)
+ *    - Answer obfuscation (Deductive Logic Edition)
+ *    - Deduction depth ≥2 (Deductive Logic Edition)
+ *    - Cross-category deduction (Deductive Logic Edition)
  */
 
-import { AlibiPuzzle, Difficulty, ALIBI_RULES } from './types';
-import { generateEntities, generateSolution, generateFinalQuestion, PuzzleEntities } from './solutionGenerator';
+import { AlibiPuzzle, Difficulty, ALIBI_RULES, FinalQuestion } from './types';
+import { 
+  generateEntities, 
+  generateSolution, 
+  pickFinalQuestion,
+  generateFinalQuestion,
+  PuzzleEntities 
+} from './solutionGenerator';
 import { selectHumanSolvableClueSet, estimateDifficulty, validatePuzzle } from './clueSelection';
 import { simulateHumanSolve, countForcedMoves } from './humanLogicSolver';
 import { countValidSolutions } from './constraintSolver';
@@ -35,7 +48,7 @@ function getPuzzleIndex(dateStr: string): number {
 }
 
 /**
- * Generate a daily puzzle with full validation
+ * Generate a daily puzzle with full validation including Deductive Logic Edition rules
  * Retries up to MAX_ATTEMPTS times to find a valid puzzle
  */
 export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
@@ -47,22 +60,29 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const seed = baseSeed + attempt * 1000;
 
-    // Generate entities and solution
+    // STEP 1: Generate entities and solution
     const entities = generateEntities(seed);
     const solution = generateSolution(entities, seed);
 
-    // Select clues with human-solvability validation
+    // STEP 2: Pick final question FIRST (Deductive Logic Edition)
+    // This establishes the protected answer that clues cannot reveal
+    const finalQuestion = pickFinalQuestion(entities, solution, seed);
+    if (!finalQuestion) continue;
+
+    // STEP 3: Select clues that don't reveal the answer
     const clues = selectHumanSolvableClueSet(
       { ...entities, solution },
       seed,
-      'medium'
+      'medium',
+      finalQuestion
     );
 
     if (!clues) continue;
 
-    // Validate the puzzle
-    const validation = validatePuzzle(clues, { ...entities, solution });
+    // STEP 4: Comprehensive validation
+    const validation = validatePuzzle(clues, { ...entities, solution }, finalQuestion);
 
+    // V1.0 Ruleset checks
     if (!validation.hasMinimumAnchors) continue;
     if (!validation.hasForcedProgressPath) continue;
     if (validation.forcedMoveCount < ALIBI_RULES.MIN_FORCED_MOVES) continue;
@@ -77,9 +97,10 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
       continue;
     }
 
-    // Generate final question with inevitability validation
-    const finalQ = generateFinalQuestion(entities, solution, clues, seed);
-    if (!finalQ) continue;
+    // Deductive Logic Edition checks
+    if (!validation.answerObfuscated) continue;
+    if (validation.answerRevealedAtStep < ALIBI_RULES.MIN_DEDUCTION_DEPTH) continue;
+    if (!validation.requiresCrossCategoryDeduction) continue;
 
     // All validations passed!
     const difficulty: Difficulty = estimateDifficulty(clues);
@@ -94,8 +115,9 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
       objects: entities.objects,
       solution,
       clues,
-      finalQuestion: finalQ.question,
-      finalAnswerPerson: finalQ.answer,
+      finalQuestion: finalQuestion.questionText,
+      finalAnswerPerson: finalQuestion.answer,
+      finalQuestionData: finalQuestion,
       validation,
     };
   }
@@ -107,7 +129,7 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
 
 /**
  * Fallback puzzle generation when validation fails
- * Uses simpler clue selection without strict validation
+ * Uses simpler clue selection without strict Deductive Logic Edition requirements
  */
 function generateFallbackPuzzle(dateStr: string, seed: number, index: number): AlibiPuzzle {
   const entities = generateEntities(seed);
@@ -155,30 +177,25 @@ export function generatePracticePuzzle(): AlibiPuzzle {
     const entities = generateEntities(attemptSeed);
     const solution = generateSolution(entities, attemptSeed);
 
+    // Pick final question first
+    const finalQuestion = pickFinalQuestion(entities, solution, attemptSeed);
+    if (!finalQuestion) continue;
+
     const clues = selectHumanSolvableClueSet(
       { ...entities, solution },
       attemptSeed,
-      'medium'
+      'medium',
+      finalQuestion
     );
 
     if (!clues) continue;
 
     // Quick validation
-    const solveResult = simulateHumanSolve({
-      id: 'practice',
-      index: 0,
-      difficulty: 'medium',
-      ...entities,
-      solution,
-      clues,
-      finalQuestion: '',
-      finalAnswerPerson: '',
-    });
+    const validation = validatePuzzle(clues, { ...entities, solution }, finalQuestion);
 
-    if (!solveResult.solvable) continue;
-
-    const finalQ = generateFinalQuestion(entities, solution, clues, attemptSeed);
-    if (!finalQ) continue;
+    if (!validation.hasForcedProgressPath) continue;
+    if (!validation.answerObfuscated) continue;
+    if (validation.answerRevealedAtStep < 2) continue;
 
     const difficulty: Difficulty = estimateDifficulty(clues);
 
@@ -189,8 +206,10 @@ export function generatePracticePuzzle(): AlibiPuzzle {
       ...entities,
       solution,
       clues,
-      finalQuestion: finalQ.question,
-      finalAnswerPerson: finalQ.answer,
+      finalQuestion: finalQuestion.questionText,
+      finalAnswerPerson: finalQuestion.answer,
+      finalQuestionData: finalQuestion,
+      validation,
     };
   }
 
@@ -209,23 +228,56 @@ export function loadDailyPuzzle(): AlibiPuzzle {
 }
 
 /**
- * Debug helper: Analyze a puzzle's solve path
+ * Debug helper: Comprehensive puzzle analysis
  */
 export function analyzePuzzle(puzzle: AlibiPuzzle): {
   solvable: boolean;
   forcedMoves: number;
   stuckAt?: number;
   stepBreakdown: { confirms: number; eliminates: number };
+  // Deductive Logic Edition analysis
+  answerRevealedAtStep: number;
+  usedCrossCategoryReasoning: boolean;
+  answerObfuscated: boolean;
+  isValid: boolean;
 } {
-  const result = simulateHumanSolve(puzzle);
+  const finalQuestion = puzzle.finalQuestionData;
+  const result = simulateHumanSolve(puzzle, finalQuestion);
   
   const confirms = result.steps.filter(s => s.type === 'confirm').length;
   const eliminates = result.steps.filter(s => s.type === 'eliminate').length;
+
+  // Check answer obfuscation
+  const { clueRevealsAnswer } = require('./humanLogicSolver');
+  let answerObfuscated = true;
+  if (finalQuestion) {
+    for (const clue of puzzle.clues) {
+      if (clueRevealsAnswer(clue, finalQuestion)) {
+        answerObfuscated = false;
+        break;
+      }
+    }
+  }
+
+  const answerRevealedAtStep = result.answerRevealedAtStep ?? 0;
+  const usedCrossCategoryReasoning = result.crossCategoryUsedForAnswer ?? false;
+
+  // Overall validity check
+  const isValid = 
+    result.solvable &&
+    countForcedMoves(result.steps) >= ALIBI_RULES.MIN_FORCED_MOVES &&
+    answerObfuscated &&
+    answerRevealedAtStep >= ALIBI_RULES.MIN_DEDUCTION_DEPTH &&
+    usedCrossCategoryReasoning;
 
   return {
     solvable: result.solvable,
     forcedMoves: countForcedMoves(result.steps),
     stuckAt: result.stuckAt,
     stepBreakdown: { confirms, eliminates },
+    answerRevealedAtStep,
+    usedCrossCategoryReasoning,
+    answerObfuscated,
+    isValid,
   };
 }

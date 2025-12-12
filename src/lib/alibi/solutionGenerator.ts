@@ -1,12 +1,17 @@
 /**
- * Solution Generator - V1.0 Ruleset Implementation
+ * Solution Generator - V1.0 Ruleset + Deductive Logic Edition
  * 
  * Section 6: Final Question Rules
  * - The answer must be inevitable (deducible before asked)
  * - Only ask Person at Location/Time/Object questions
+ * 
+ * Deductive Logic Edition:
+ * - Final question is picked FIRST before clue generation
+ * - No clue may directly reveal the answer
+ * - Answer must require cross-category deduction
  */
 
-import { AlibiSolution, AlibiClue } from './types';
+import { AlibiSolution, AlibiClue, FinalQuestion, FinalQuestionType } from './types';
 import { 
   PERSON_NAMES, 
   LOCATION_POOL, 
@@ -16,7 +21,7 @@ import {
   sortTimes,
   seededShuffle
 } from './entityPools';
-import { simulateHumanSolve } from './humanLogicSolver';
+import { simulateHumanSolve, SolveResult } from './humanLogicSolver';
 
 export interface PuzzleEntities {
   people: string[];
@@ -72,23 +77,19 @@ function seededRandom(seed: number): () => number {
 interface FinalQuestionCandidate {
   question: string;
   answer: string;
-  type: 'location' | 'time' | 'object';
+  type: FinalQuestionType;
+  targetCategory: 'location' | 'time' | 'object';
   targetValue: string;
 }
 
 /**
- * Generate final question with inevitability validation (Section 6)
- * The answer must be deducible from clues before the question is asked
+ * Generate all possible final questions for a puzzle
+ * Called FIRST before clue selection to establish protected answer
  */
-export function generateFinalQuestion(
+export function generateFinalQuestionCandidates(
   entities: PuzzleEntities,
-  solution: AlibiSolution,
-  clues: AlibiClue[],
-  seed: number
-): { question: string; answer: string } | null {
-  const rand = seededRandom(seed);
-
-  // Generate all candidate questions
+  solution: AlibiSolution
+): FinalQuestionCandidate[] {
   const candidates: FinalQuestionCandidate[] = [];
 
   // Location questions
@@ -99,7 +100,8 @@ export function generateFinalQuestion(
       candidates.push({
         question: `Who was at the ${location}?`,
         answer,
-        type: 'location',
+        type: 'person_at_location',
+        targetCategory: 'location',
         targetValue: location,
       });
     }
@@ -113,7 +115,8 @@ export function generateFinalQuestion(
       candidates.push({
         question: `Who was seen at ${time}?`,
         answer,
-        type: 'time',
+        type: 'person_at_time',
+        targetCategory: 'time',
         targetValue: time,
       });
     }
@@ -127,18 +130,71 @@ export function generateFinalQuestion(
       candidates.push({
         question: `Who had the ${object}?`,
         answer,
-        type: 'object',
+        type: 'person_with_object',
+        targetCategory: 'object',
         targetValue: object,
       });
     }
   }
 
-  // Shuffle candidates
+  return candidates;
+}
+
+/**
+ * Pick a final question for the puzzle
+ * This is called FIRST, before clue generation
+ */
+export function pickFinalQuestion(
+  entities: PuzzleEntities,
+  solution: AlibiSolution,
+  seed: number
+): FinalQuestion | null {
+  const candidates = generateFinalQuestionCandidates(entities, solution);
+  if (candidates.length === 0) return null;
+
+  // Shuffle and pick one
+  const rand = seededRandom(seed + 7000);
+  const shuffled = [...candidates].sort(() => rand() - 0.5);
+  
+  const chosen = shuffled[0];
+  return {
+    type: chosen.type,
+    targetCategory: chosen.targetCategory,
+    targetValue: chosen.targetValue,
+    questionText: chosen.question,
+    answer: chosen.answer,
+  };
+}
+
+/**
+ * Generate final question with inevitability validation (Section 6)
+ * The answer must be deducible from clues before the question is asked
+ * 
+ * Note: This is now a validation function, as the question is picked first
+ */
+export function generateFinalQuestion(
+  entities: PuzzleEntities,
+  solution: AlibiSolution,
+  clues: AlibiClue[],
+  seed: number
+): { question: string; answer: string } | null {
+  const candidates = generateFinalQuestionCandidates(entities, solution);
+  if (candidates.length === 0) return null;
+
+  const rand = seededRandom(seed);
   const shuffled = [...candidates].sort(() => rand() - 0.5);
 
   // Validate inevitability: After solving, only one person should be possible
   for (const candidate of shuffled) {
-    if (validateQuestionInevitability(candidate, entities, solution, clues)) {
+    const finalQuestion: FinalQuestion = {
+      type: candidate.type,
+      targetCategory: candidate.targetCategory,
+      targetValue: candidate.targetValue,
+      questionText: candidate.question,
+      answer: candidate.answer,
+    };
+
+    if (validateQuestionInevitability(candidate, entities, solution, clues, finalQuestion)) {
       return {
         question: candidate.question,
         answer: candidate.answer,
@@ -147,7 +203,6 @@ export function generateFinalQuestion(
   }
 
   // If no inevitable question found, return the first one (fallback)
-  // This shouldn't happen with a properly generated puzzle
   if (candidates.length > 0) {
     return {
       question: candidates[0].question,
@@ -160,13 +215,14 @@ export function generateFinalQuestion(
 
 /**
  * Validate that the question answer is inevitable given the clues
- * After solving, exactly one person should match
+ * Also validates deduction depth and cross-category requirements
  */
 function validateQuestionInevitability(
   candidate: FinalQuestionCandidate,
   entities: PuzzleEntities,
   solution: AlibiSolution,
-  clues: AlibiClue[]
+  clues: AlibiClue[],
+  finalQuestion: FinalQuestion
 ): boolean {
   // Run human solver to get the deduced state
   const solveResult = simulateHumanSolve({
@@ -181,7 +237,7 @@ function validateQuestionInevitability(
     clues,
     finalQuestion: candidate.question,
     finalAnswerPerson: candidate.answer,
-  });
+  }, finalQuestion);
 
   if (!solveResult.solvable) return false;
 
@@ -189,13 +245,22 @@ function validateQuestionInevitability(
   const confirmSteps = solveResult.steps.filter(s => s.type === 'confirm');
   
   // Find the confirmation for this question
-  const gridType = candidate.type;
+  const gridType = candidate.targetCategory;
   const relevantConfirm = confirmSteps.find(
     s => s.grid === gridType && s.value === candidate.targetValue
   );
 
   // The answer must be confirmed before we ask
-  return relevantConfirm?.person === candidate.answer;
+  if (relevantConfirm?.person !== candidate.answer) return false;
+
+  // Validate deduction depth (answer needs ≥2 deductions)
+  const answerStep = solveResult.answerRevealedAtStep ?? 0;
+  if (answerStep < 2) return false;
+
+  // Validate cross-category reasoning was used
+  if (!solveResult.crossCategoryUsedForAnswer) return false;
+
+  return true;
 }
 
 // Legacy version without clues parameter (for backward compatibility)

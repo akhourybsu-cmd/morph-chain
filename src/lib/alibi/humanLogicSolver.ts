@@ -1,12 +1,17 @@
 /**
- * Human Logic Solver - V1.0 Ruleset Implementation
+ * Human Logic Solver - V1.0 Ruleset + Deductive Logic Edition
  * 
  * Simulates human deduction step-by-step.
  * At every step, there must be at least one forced deduction.
  * No guessing, backtracking, or hypothesis testing allowed.
+ * 
+ * Deductive Logic Edition Additions:
+ * - Tracks when the final answer becomes known
+ * - Validates cross-category deduction requirement
+ * - Ensures answer is not known from anchors alone
  */
 
-import { AlibiClue, AlibiPuzzle, DeductionStep, CellState } from './types';
+import { AlibiClue, AlibiPuzzle, DeductionStep, CellState, FinalQuestion } from './types';
 
 interface SolverGrid {
   cells: Record<string, Record<string, CellState>>;
@@ -28,6 +33,16 @@ interface ParsedConstraint {
   object?: string;
   direction?: 'before' | 'after';
   gap?: number;
+}
+
+export interface SolveResult {
+  solvable: boolean;
+  steps: DeductionStep[];
+  stuckAt?: number;
+  // Deductive Logic Edition tracking
+  answerRevealedAtStep?: number;
+  crossCategoryUsedForAnswer?: boolean;
+  categoriesUsedBeforeAnswer?: Set<string>;
 }
 
 // Initialize empty grids
@@ -116,7 +131,7 @@ function parseClue(clue: AlibiClue, entities: {
     }
   }
 
-  // Direct negative: Person didn't have object
+  // Direct negative: Person didn't have object(s)
   const didNotHaveMatch = text.match(/^(\w+) did not have the (\w+)\.$/);
   if (didNotHaveMatch) {
     const [, person, object] = didNotHaveMatch;
@@ -125,11 +140,39 @@ function parseClue(clue: AlibiClue, entities: {
     }
   }
 
+  // Direct negative: Person didn't have two objects
+  const didNotHaveTwoMatch = text.match(/^(\w+) did not have the (\w+) or the (\w+)\.$/);
+  if (didNotHaveTwoMatch) {
+    const [, person, obj1, obj2] = didNotHaveTwoMatch;
+    if (entities.people.includes(person)) {
+      if (entities.objects.includes(obj1)) {
+        constraints.push({ type: 'eliminate', grid: 'object', person, value: obj1 });
+      }
+      if (entities.objects.includes(obj2)) {
+        constraints.push({ type: 'eliminate', grid: 'object', person, value: obj2 });
+      }
+    }
+  }
+
   // Direct negative: Person wasn't at time
   for (const person of entities.people) {
     for (const time of entities.times) {
       if (text === `${person} wasn't seen at ${time}.`) {
         constraints.push({ type: 'eliminate', grid: 'time', person, value: time });
+      }
+    }
+  }
+
+  // Direct negative: Person wasn't at two times
+  const wasntAtTimeMatch = text.match(/^(\w+) wasn't seen at (.+) or (.+)\.$/);
+  if (wasntAtTimeMatch) {
+    const [, person, time1, time2] = wasntAtTimeMatch;
+    if (entities.people.includes(person)) {
+      if (entities.times.includes(time1)) {
+        constraints.push({ type: 'eliminate', grid: 'time', person, value: time1 });
+      }
+      if (entities.times.includes(time2)) {
+        constraints.push({ type: 'eliminate', grid: 'time', person, value: time2 });
       }
     }
   }
@@ -157,6 +200,16 @@ function parseClue(clue: AlibiClue, entities: {
     const [, p1, gapStr, p2] = exactGapMatch;
     if (entities.people.includes(p1) && entities.people.includes(p2)) {
       constraints.push({ type: 'relative', person: p1, person2: p2, direction: 'before', gap: parseInt(gapStr) });
+    }
+  }
+
+  // Chained order: P1 before P2, who before P3
+  const chainedMatch = text.match(/^(\w+) arrived before (\w+), who arrived before (\w+)\.$/);
+  if (chainedMatch) {
+    const [, p1, p2, p3] = chainedMatch;
+    if (entities.people.includes(p1) && entities.people.includes(p2) && entities.people.includes(p3)) {
+      constraints.push({ type: 'relative', person: p1, person2: p2, direction: 'before' });
+      constraints.push({ type: 'relative', person: p2, person2: p3, direction: 'before' });
     }
   }
 
@@ -331,13 +384,11 @@ function findClueDeductions(
 
       // Cross-category: object at location
       if (constraint.type === 'cross' && constraint.object && constraint.location) {
-        // Find who has the object
         const objectGrid = state.object;
         const locationGrid = state.location;
         
         for (const person of entities.people) {
           if (objectGrid.cells[person][constraint.object] === 'confirmed') {
-            // This person must be at this location
             if (locationGrid.cells[person][constraint.location] === 'unknown') {
               steps.push({
                 type: 'confirm',
@@ -350,7 +401,6 @@ function findClueDeductions(
             }
           }
           if (locationGrid.cells[person][constraint.location] === 'confirmed') {
-            // This person must have this object
             if (objectGrid.cells[person][constraint.object] === 'unknown') {
               steps.push({
                 type: 'confirm',
@@ -438,7 +488,6 @@ function findClueDeductions(
             const p2Index = times.indexOf(p2Time);
             const p1Index = p2Index - constraint.gap;
             if (p1Index >= 0 && p1Index < times.length) {
-              // p1 must be at this exact time
               if (timeGrid.cells[p1][times[p1Index]] === 'unknown') {
                 steps.push({
                   type: 'confirm',
@@ -483,22 +532,53 @@ function deduplicateSteps(steps: DeductionStep[]): DeductionStep[] {
 }
 
 /**
- * Main human logic solver
+ * Check if the final answer is known at current state
+ */
+function isAnswerKnown(
+  state: SolverState,
+  targetCategory: 'location' | 'time' | 'object',
+  targetValue: string,
+  people: string[]
+): { known: boolean; answer?: string } {
+  const grid = state[targetCategory];
+  const col = getColState(grid, targetValue, people);
+  
+  // Check if someone is confirmed for this value
+  const confirmed = Object.entries(col).find(([, s]) => s === 'confirmed');
+  if (confirmed) {
+    return { known: true, answer: confirmed[0] };
+  }
+  
+  // Check if only one person remains unknown (all others eliminated)
+  const unknowns = Object.entries(col).filter(([, s]) => s === 'unknown');
+  if (unknowns.length === 1) {
+    return { known: true, answer: unknowns[0][0] };
+  }
+  
+  return { known: false };
+}
+
+/**
+ * Main human logic solver with answer tracking
  * Returns solvable=true only if puzzle can be solved with forced deductions only
  */
-export function simulateHumanSolve(puzzle: AlibiPuzzle): {
-  solvable: boolean;
-  steps: DeductionStep[];
-  stuckAt?: number;
-} {
+export function simulateHumanSolve(
+  puzzle: AlibiPuzzle,
+  trackFinalAnswer?: FinalQuestion
+): SolveResult {
   const { people, locations, times, objects, clues } = puzzle;
   const entities = { people, locations, times, objects };
   
   const state = initializeState(people, locations, times, objects);
   const allSteps: DeductionStep[] = [];
+  const categoriesUsed = new Set<string>();
+  
+  let answerRevealedAtStep: number | undefined;
+  let crossCategoryUsedForAnswer = false;
   
   const MAX_ITERATIONS = 100;
   let iteration = 0;
+  let confirmCount = 0;
   
   while (!isSolved(state, people) && iteration < MAX_ITERATIONS) {
     iteration++;
@@ -530,6 +610,9 @@ export function simulateHumanSolve(puzzle: AlibiPuzzle): {
         solvable: false,
         steps: allSteps,
         stuckAt: allSteps.length,
+        answerRevealedAtStep,
+        crossCategoryUsedForAnswer,
+        categoriesUsedBeforeAnswer: categoriesUsed,
       };
     }
     
@@ -537,6 +620,35 @@ export function simulateHumanSolve(puzzle: AlibiPuzzle): {
     for (const step of newSteps) {
       applyDeduction(state, step);
       allSteps.push(step);
+      
+      // Track which categories are being used
+      categoriesUsed.add(step.grid);
+      
+      if (step.type === 'confirm') {
+        confirmCount++;
+      }
+      
+      // Track when answer is revealed (if tracking)
+      if (trackFinalAnswer && answerRevealedAtStep === undefined) {
+        const answerCheck = isAnswerKnown(
+          state, 
+          trackFinalAnswer.targetCategory, 
+          trackFinalAnswer.targetValue, 
+          people
+        );
+        if (answerCheck.known && answerCheck.answer === trackFinalAnswer.answer) {
+          answerRevealedAtStep = confirmCount;
+          // Check if cross-category reasoning was used
+          crossCategoryUsedForAnswer = categoriesUsed.has(
+            trackFinalAnswer.targetCategory === 'location' ? 'object' :
+            trackFinalAnswer.targetCategory === 'object' ? 'location' :
+            'location'  // For time, check if location or object was used
+          ) || categoriesUsed.has(
+            trackFinalAnswer.targetCategory === 'time' ? 'object' : 
+            'time'
+          );
+        }
+      }
     }
   }
   
@@ -546,6 +658,9 @@ export function simulateHumanSolve(puzzle: AlibiPuzzle): {
     solvable: solved,
     steps: allSteps,
     stuckAt: solved ? undefined : allSteps.length,
+    answerRevealedAtStep,
+    crossCategoryUsedForAnswer,
+    categoriesUsedBeforeAnswer: categoriesUsed,
   };
 }
 
@@ -585,4 +700,52 @@ export function validateSolverResult(
   }
   
   return true;
+}
+
+/**
+ * Check if a clue directly reveals the final answer
+ * Used for answer obfuscation validation
+ */
+export function clueRevealsAnswer(
+  clue: AlibiClue,
+  finalQuestion: FinalQuestion
+): boolean {
+  const { targetCategory, targetValue, answer } = finalQuestion;
+  
+  // Check if clue directly links answer person to target value
+  if (clue.entities?.people?.includes(answer)) {
+    if (targetCategory === 'time' && clue.entities?.times?.includes(targetValue)) {
+      return clue.tier === 'anchor' && clue.category === 'time';
+    }
+    if (targetCategory === 'location' && clue.entities?.locations?.includes(targetValue)) {
+      return clue.tier === 'anchor' && clue.category === 'location';
+    }
+    if (targetCategory === 'object' && clue.entities?.objects?.includes(targetValue)) {
+      return clue.tier === 'anchor' && clue.category === 'object';
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Validate cross-category deduction requirement
+ * Returns true if at least one deduction before the answer uses a different category
+ */
+export function validateCrossCategoryDeduction(
+  steps: DeductionStep[],
+  answerRevealedAtStep: number,
+  questionCategory: 'location' | 'time' | 'object'
+): boolean {
+  // Look at all steps up to (not including) the answer reveal
+  const relevantSteps = steps.slice(0, answerRevealedAtStep);
+  
+  // Check if any step used a different category
+  for (const step of relevantSteps) {
+    if (step.grid !== questionCategory) {
+      return true;
+    }
+  }
+  
+  return false;
 }

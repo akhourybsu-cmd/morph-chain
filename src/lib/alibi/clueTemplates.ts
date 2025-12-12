@@ -248,7 +248,37 @@ export interface GeneratedClues {
   crossCategory: AlibiClue[];
 }
 
-export function generateAllCandidateClues(ctx: ClueContext, baseSeed: number): GeneratedClues {
+// Protected answer pair - used to filter out answer-revealing clues
+export interface ProtectedAnswer {
+  person: string;
+  category: 'time' | 'location' | 'object';
+  value: string;
+}
+
+/**
+ * Check if a clue would reveal the protected answer
+ */
+function wouldRevealAnswer(clue: AlibiClue, protected_: ProtectedAnswer): boolean {
+  // Check if this clue directly links the answer person to the target value
+  if (clue.entities?.people?.includes(protected_.person)) {
+    if (protected_.category === 'time' && clue.entities?.times?.includes(protected_.value)) {
+      return clue.tier === 'anchor' && clue.category === 'time';
+    }
+    if (protected_.category === 'location' && clue.entities?.locations?.includes(protected_.value)) {
+      return clue.tier === 'anchor' && clue.category === 'location';
+    }
+    if (protected_.category === 'object' && clue.entities?.objects?.includes(protected_.value)) {
+      return clue.tier === 'anchor' && clue.category === 'object';
+    }
+  }
+  return false;
+}
+
+export function generateAllCandidateClues(
+  ctx: ClueContext, 
+  baseSeed: number,
+  protectedAnswer?: ProtectedAnswer
+): GeneratedClues {
   const result: GeneratedClues = {
     anchors: { time: [], location: [], object: [] },
     forcedNegatives: [],
@@ -257,10 +287,23 @@ export function generateAllCandidateClues(ctx: ClueContext, baseSeed: number): G
   };
   
   // Generate all possible anchors (one per person per category)
+  // Skip anchors that would reveal the protected answer
   for (const person of ctx.people) {
-    result.anchors.time.push(generateTimeAnchor(ctx, person));
-    result.anchors.location.push(generateLocationAnchor(ctx, person));
-    result.anchors.object.push(generateObjectAnchor(ctx, person));
+    const timeAnchor = generateTimeAnchor(ctx, person);
+    if (!protectedAnswer || !wouldRevealAnswer(timeAnchor, protectedAnswer)) {
+      result.anchors.time.push(timeAnchor);
+    }
+    
+    const locAnchor = generateLocationAnchor(ctx, person);
+    if (!protectedAnswer || !wouldRevealAnswer(locAnchor, protectedAnswer)) {
+      result.anchors.location.push(locAnchor);
+    }
+    
+    const objAnchor = generateObjectAnchor(ctx, person);
+    if (!protectedAnswer || !wouldRevealAnswer(objAnchor, protectedAnswer)) {
+      result.anchors.object.push(objAnchor);
+    }
+    
     result.crossCategory.push(generateCrossAnchor(ctx, person));
   }
   
