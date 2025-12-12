@@ -18,47 +18,55 @@ export function AlibiPrestigeHeader({
   const { soundEnabled, setSoundEnabled } = useAlibiSettings();
 
   return (
-    <header className="h-14 md:h-16 flex items-center px-4 border-b border-alibi-divider bg-alibi-card-bg">
-      {/* Left: Menu + Theme */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onMenuClick}
-          className="text-alibi-text-primary hover:bg-alibi-divider/50"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-        {themeToggle}
-      </div>
+    <header 
+      className="py-3 px-4 border-b"
+      style={{ 
+        borderColor: 'hsl(var(--alibi-divider))',
+        background: 'hsl(var(--alibi-page-bg))'
+      }}
+    >
+      <div className="flex items-center justify-between">
+        {/* Left: Menu + Theme */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onMenuClick}
+            className="h-8 w-8 text-alibi-text-muted hover:text-alibi-text-secondary hover:bg-transparent"
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
+          {themeToggle}
+        </div>
 
-      {/* Center: Logo */}
-      <div className="flex-1 flex justify-center">
-        <AlibiLogo />
-      </div>
+        {/* Center: Logo */}
+        <div className="absolute left-1/2 -translate-x-1/2">
+          <AlibiLogo />
+        </div>
 
-      {/* Right: Sound + Help */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setSoundEnabled(!soundEnabled)}
-          className="text-alibi-text-primary hover:bg-alibi-divider/50"
-        >
-          {soundEnabled ? (
-            <Volume2 className="h-5 w-5" />
-          ) : (
-            <VolumeX className="h-5 w-5" />
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onHelpClick}
-          className="text-alibi-text-primary hover:bg-alibi-divider/50"
-        >
-          <HelpCircle className="h-5 w-5" />
-        </Button>
+        {/* Right: Sound + Help */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="h-8 w-8 text-alibi-text-muted hover:text-alibi-text-secondary hover:bg-transparent"
+          >
+            {soundEnabled ? (
+              <Volume2 className="h-4 w-4" />
+            ) : (
+              <VolumeX className="h-4 w-4" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onHelpClick}
+            className="h-8 w-8 text-alibi-text-muted hover:text-alibi-text-secondary hover:bg-transparent"
+          >
+            <HelpCircle className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </header>
   );

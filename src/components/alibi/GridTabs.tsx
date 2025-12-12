@@ -15,22 +15,25 @@ const tabs: { id: GridType; label: string }[] = [
 
 export function GridTabs({ activeGrid, onGridChange }: GridTabsProps) {
   return (
-    <div className="flex justify-center gap-1 border-b border-alibi-divider">
+    <div 
+      className="rounded-lg p-1 flex"
+      style={{ 
+        background: 'hsl(var(--alibi-card-bg))',
+        border: '1px solid hsl(var(--alibi-divider))'
+      }}
+    >
       {tabs.map(tab => (
         <button
           key={tab.id}
           onClick={() => onGridChange(tab.id)}
           className={cn(
-            "px-4 py-2 text-sm font-medium transition-colors relative",
+            "flex-1 px-4 py-2 text-sm font-medium transition-all rounded-md",
             activeGrid === tab.id
-              ? "text-alibi-accent"
+              ? "bg-alibi-accent/10 text-alibi-accent font-semibold"
               : "text-alibi-text-muted hover:text-alibi-text-secondary"
           )}
         >
           {tab.label}
-          {activeGrid === tab.id && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-alibi-accent" />
-          )}
         </button>
       ))}
     </div>

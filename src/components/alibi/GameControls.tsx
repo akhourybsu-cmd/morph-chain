@@ -1,6 +1,6 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Undo2, Search } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface GameControlsProps {
   onUndo: () => void;
@@ -18,33 +18,50 @@ export function GameControls({
   disabled = false,
 }: GameControlsProps) {
   return (
-    <div className="flex items-center justify-center gap-3">
-      <Button
-        variant="outline"
-        size="sm"
+    <div 
+      className="flex items-center justify-center gap-6 py-2"
+      style={{ borderTop: '1px solid hsl(var(--alibi-divider) / 0.5)' }}
+    >
+      <button
         onClick={onUndo}
         disabled={!canUndo || disabled}
-        className="border-alibi-divider text-alibi-text-secondary hover:bg-alibi-divider/50"
+        className={cn(
+          "flex items-center gap-2 text-sm transition-colors",
+          !canUndo || disabled 
+            ? "opacity-40 cursor-not-allowed" 
+            : "hover:text-alibi-accent"
+        )}
+        style={{ color: 'hsl(var(--alibi-text-muted))' }}
       >
-        <Undo2 className="h-4 w-4 mr-2" />
-        Undo
-      </Button>
+        <Undo2 className="h-4 w-4" />
+        <span>Undo</span>
+      </button>
       
-      <Button
-        variant="outline"
-        size="sm"
+      <button
         onClick={onConsistencyCheck}
         disabled={disabled}
-        className="border-alibi-divider text-alibi-text-secondary hover:bg-alibi-divider/50"
+        className={cn(
+          "flex items-center gap-2 text-sm transition-colors",
+          disabled 
+            ? "opacity-40 cursor-not-allowed" 
+            : "hover:text-alibi-accent"
+        )}
+        style={{ color: 'hsl(var(--alibi-text-muted))' }}
       >
-        <Search className="h-4 w-4 mr-2" />
-        Check
+        <Search className="h-4 w-4" />
+        <span>Check</span>
         {consistencyChecks > 0 && (
-          <span className="ml-2 px-1.5 py-0.5 text-xs bg-alibi-accent/20 text-alibi-accent rounded">
+          <span 
+            className="px-1.5 py-0.5 text-xs rounded"
+            style={{ 
+              background: 'hsl(var(--alibi-accent) / 0.15)',
+              color: 'hsl(var(--alibi-accent))'
+            }}
+          >
             {consistencyChecks}
           </span>
         )}
-      </Button>
+      </button>
     </div>
   );
 }
