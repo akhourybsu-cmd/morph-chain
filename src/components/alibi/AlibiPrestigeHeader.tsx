@@ -2,6 +2,7 @@ import React from 'react';
 import { Menu, HelpCircle, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlibiLogo } from './AlibiLogo';
+import { PrestigeThemeToggle } from '@/components/shared/PrestigeThemeToggle';
 import { useAlibiSettings } from '@/hooks/useAlibiSettings';
 
 interface AlibiPrestigeHeaderProps {
@@ -19,54 +20,55 @@ export function AlibiPrestigeHeader({
 
   return (
     <header 
-      className="py-3 px-4 border-b"
+      className="flex items-center justify-between h-14 md:h-16 px-3 md:px-4"
       style={{ 
-        borderColor: 'hsl(var(--alibi-divider))',
+        borderBottom: '1px solid hsl(var(--alibi-divider))',
         background: 'hsl(var(--alibi-page-bg))'
       }}
     >
-      <div className="flex items-center justify-between">
-        {/* Left: Menu + Theme */}
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onMenuClick}
-            className="h-8 w-8 text-alibi-text-muted hover:text-alibi-text-secondary hover:bg-transparent"
-          >
-            <Menu className="h-4 w-4" />
-          </Button>
-          {themeToggle}
-        </div>
+      {/* Left side - Menu and Theme Toggle */}
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onMenuClick}
+          className="h-9 w-9 md:h-10 md:w-10"
+          style={{ color: 'hsl(var(--alibi-text-secondary))' }}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+        {themeToggle}
+      </div>
 
-        {/* Center: Logo */}
-        <div className="absolute left-1/2 -translate-x-1/2">
-          <AlibiLogo />
-        </div>
+      {/* Center - Logo with flex spacers */}
+      <div className="flex-1 flex justify-center">
+        <AlibiLogo />
+      </div>
 
-        {/* Right: Sound + Help */}
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className="h-8 w-8 text-alibi-text-muted hover:text-alibi-text-secondary hover:bg-transparent"
-          >
-            {soundEnabled ? (
-              <Volume2 className="h-4 w-4" />
-            ) : (
-              <VolumeX className="h-4 w-4" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onHelpClick}
-            className="h-8 w-8 text-alibi-text-muted hover:text-alibi-text-secondary hover:bg-transparent"
-          >
-            <HelpCircle className="h-4 w-4" />
-          </Button>
-        </div>
+      {/* Right side - Sound and Help */}
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setSoundEnabled(!soundEnabled)}
+          className="h-9 w-9 md:h-10 md:w-10"
+          style={{ color: 'hsl(var(--alibi-text-secondary))' }}
+        >
+          {soundEnabled ? (
+            <Volume2 className="h-5 w-5" />
+          ) : (
+            <VolumeX className="h-5 w-5" />
+          )}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onHelpClick}
+          className="h-9 w-9 md:h-10 md:w-10"
+          style={{ color: 'hsl(var(--alibi-text-secondary))' }}
+        >
+          <HelpCircle className="h-5 w-5" />
+        </Button>
       </div>
     </header>
   );
