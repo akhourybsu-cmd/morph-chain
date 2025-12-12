@@ -4,22 +4,18 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, XCircle, AlertTriangle, PlayCircle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, PlayCircle } from "lucide-react";
 import { validatePuzzlePair } from "@/lib/puzzleValidatorV2";
-import { runPreflightCheck, generatePreflightReport, runBatchPreflightCheck } from "@/lib/puzzlePreflightCheck";
 import { VALID_WORDS_4, VALID_WORDS_5 } from "@/lib/gameLogic";
 import { CURATED_4L_PUZZLES } from "@/lib/curatedPuzzles4L";
 import { CURATED_5L_PUZZLES } from "@/lib/curatedPuzzles5L";
-import { CURATED_6L_PUZZLES } from "@/lib/curatedPuzzles6L";
 
 export default function PuzzleValidator() {
   const { toast } = useToast();
-  const [validating, setValidating] = useState(false);
   const [batchValidating, setBatchValidating] = useState(false);
   const [results, setResults] = useState<{
     fourLetter: any[];
     fiveLetter: any[];
-    sixLetter: any[];
   } | null>(null);
 
   const validateAllPuzzles = async () => {
@@ -29,7 +25,6 @@ export default function PuzzleValidator() {
     try {
       const results4L: any[] = [];
       const results5L: any[] = [];
-      const results6L: any[] = [];
 
       // Validate 4L puzzles
       toast({
@@ -73,20 +68,15 @@ export default function PuzzleValidator() {
         });
       }
 
-
-      // 6L puzzles removed for Core spec - only 4L and 5L supported
-
       setResults({
         fourLetter: results4L,
         fiveLetter: results5L,
-        sixLetter: []
       });
 
       // Count failures
       const failures4L = results4L.filter(r => !r.solvable || !r.meetsGates).length;
       const failures5L = results5L.filter(r => !r.solvable || !r.meetsGates).length;
-      const failures6L = results6L.filter(r => !r.solvable || !r.meetsGates).length;
-      const totalFailures = failures4L + failures5L + failures6L;
+      const totalFailures = failures4L + failures5L;
 
       if (totalFailures === 0) {
         toast({
@@ -96,7 +86,7 @@ export default function PuzzleValidator() {
       } else {
         toast({
           title: `⚠️ ${totalFailures} puzzles failed validation`,
-          description: `4L: ${failures4L}, 5L: ${failures5L}, 6L: ${failures6L}`,
+          description: `4L: ${failures4L}, 5L: ${failures5L}`,
           variant: "destructive"
         });
       }
@@ -154,16 +144,9 @@ export default function PuzzleValidator() {
                           <div className="text-xs space-y-0.5">
                             <p>✓ Solvable but fails gates:</p>
                             <p>• Distance: {result.minDistance} (expected: {
-                              wordLength === 4 ? '4-7' :
-                              wordLength === 5 ? '5-8' :
-                              '3-7'
+                              wordLength === 4 ? '4-7' : '5-8'
                             })</p>
-                            <p>• Paths: {result.pathCount} (minimum: {
-                              wordLength === 6 ? 12 : 10
-                            })</p>
-                            {wordLength === 6 && (
-                              <p>• Branching: {result.avgBranching.toFixed(2)} (minimum: 2.7)</p>
-                            )}
+                            <p>• Paths: {result.pathCount} (minimum: 10)</p>
                             <p className="text-destructive mt-1">
                               {result.failureReason}
                             </p>
@@ -187,26 +170,28 @@ export default function PuzzleValidator() {
           )}
 
           {/* Stats Summary */}
-          <div className="grid grid-cols-3 gap-4 text-sm border-t pt-4">
-            <div>
-              <p className="text-muted-foreground">Avg Distance</p>
-              <p className="font-semibold">
-                {(passed.reduce((sum, r) => sum + r.minDistance, 0) / passed.length).toFixed(1)}
-              </p>
+          {passed.length > 0 && (
+            <div className="grid grid-cols-3 gap-4 text-sm border-t pt-4">
+              <div>
+                <p className="text-muted-foreground">Avg Distance</p>
+                <p className="font-semibold">
+                  {(passed.reduce((sum, r) => sum + r.minDistance, 0) / passed.length).toFixed(1)}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Avg Paths</p>
+                <p className="font-semibold">
+                  {(passed.reduce((sum, r) => sum + r.pathCount, 0) / passed.length).toFixed(0)}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Avg Branching</p>
+                <p className="font-semibold">
+                  {(passed.reduce((sum, r) => sum + r.avgBranching, 0) / passed.length).toFixed(2)}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-muted-foreground">Avg Paths</p>
-              <p className="font-semibold">
-                {(passed.reduce((sum, r) => sum + r.pathCount, 0) / passed.length).toFixed(0)}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Avg Branching</p>
-              <p className="font-semibold">
-                {(passed.reduce((sum, r) => sum + r.avgBranching, 0) / passed.length).toFixed(2)}
-              </p>
-            </div>
-          </div>
+          )}
         </div>
       </Card>
     );
@@ -218,8 +203,7 @@ export default function PuzzleValidator() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">Puzzle Validator</h1>
         <p className="text-muted-foreground">
-          Comprehensive validation using the battle-tested algorithm with pattern buckets, 
-          component analysis, and acceptance gates.
+          Validate curated puzzles using BFS algorithm with acceptance gates.
         </p>
       </div>
 
@@ -249,8 +233,8 @@ export default function PuzzleValidator() {
           
           <Alert>
             <AlertDescription>
-              This will validate all {CURATED_4L_PUZZLES.length} 4L + {CURATED_5L_PUZZLES.length} 5L + {CURATED_6L_PUZZLES.length} 6L 
-              curated puzzles against the comprehensive algorithm acceptance gates.
+              This will validate all {CURATED_4L_PUZZLES.length} 4L + {CURATED_5L_PUZZLES.length} 5L 
+              curated puzzles against the acceptance gates.
             </AlertDescription>
           </Alert>
         </div>
@@ -266,7 +250,6 @@ export default function PuzzleValidator() {
 
           {renderResultsSection("4-Letter Puzzles", results.fourLetter, 4)}
           {renderResultsSection("5-Letter Puzzles", results.fiveLetter, 5)}
-          {renderResultsSection("6-Letter Puzzles", results.sixLetter, 6)}
         </div>
       )}
 
@@ -281,7 +264,6 @@ export default function PuzzleValidator() {
             <p>• <strong>Acceptance Gates:</strong></p>
             <p className="ml-4">- 4L: Distance 4-7, 10+ paths</p>
             <p className="ml-4">- 5L: Distance 5-8, 10+ paths (first move Δ≤2)</p>
-            <p className="ml-4">- 6L: Distance 3-7, 12+ paths, 2.7+ branching (all moves Δ≤2)</p>
           </div>
         </div>
       </Card>
