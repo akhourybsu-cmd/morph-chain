@@ -29,6 +29,17 @@ export interface AlibiClue {
 
 export type Difficulty = "easy" | "medium" | "hard";
 
+// Deductive Logic Edition: Structured final question format
+export type FinalQuestionType = 'person_at_time' | 'person_at_location' | 'person_with_object';
+
+export interface FinalQuestion {
+  type: FinalQuestionType;
+  targetCategory: 'time' | 'location' | 'object';
+  targetValue: string;
+  questionText: string;
+  answer: string;
+}
+
 // V1.0 Ruleset: Puzzle validation status
 export interface PuzzleValidation {
   hasMinimumAnchors: boolean;      // ≥1 per category (Section 2)
@@ -41,6 +52,11 @@ export interface PuzzleValidation {
     object: number;
   };
   finalQuestionInevitable: boolean; // Answer deducible before asked (Section 6)
+  // Deductive Logic Edition additions
+  answerObfuscated: boolean;       // No clue directly reveals the answer
+  answerRevealedAtStep: number;    // Step at which answer becomes known
+  requiresCrossCategoryDeduction: boolean; // Uses reasoning from different category
+  deductionDepth: number;          // Number of deductions to reach answer
 }
 
 // V1.0 Ruleset: Deduction step for human solver
@@ -65,6 +81,8 @@ export interface AlibiPuzzle {
   clues: AlibiClue[];
   finalQuestion: string;
   finalAnswerPerson: string;
+  // Deductive Logic Edition: Structured final question
+  finalQuestionData?: FinalQuestion;
   // V1.0: Include validation metadata
   validation?: PuzzleValidation;
 }
@@ -142,4 +160,9 @@ export const ALIBI_RULES = {
   MAX_ENTITIES_PER_CLAUSE: 2,
   NO_PRONOUNS: true,
   SINGLE_SENTENCE: true,
+  
+  // Deductive Logic Edition
+  MIN_DEDUCTION_DEPTH: 2,         // Answer needs ≥2 deductions
+  REQUIRE_CROSS_CATEGORY: true,   // Must use different category for answer
+  ANSWER_OBFUSCATION: true,       // No clue may directly state the answer
 } as const;
