@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      active_sessions: {
+        Row: {
+          completed: boolean | null
+          device_token: string
+          game_type: string
+          id: string
+          last_activity_at: string
+          mode: string | null
+          moves_count: number | null
+          puzzle_date: string
+          started_at: string
+          user_id: string | null
+          won: boolean | null
+          word_length: number | null
+        }
+        Insert: {
+          completed?: boolean | null
+          device_token: string
+          game_type: string
+          id?: string
+          last_activity_at?: string
+          mode?: string | null
+          moves_count?: number | null
+          puzzle_date: string
+          started_at?: string
+          user_id?: string | null
+          won?: boolean | null
+          word_length?: number | null
+        }
+        Update: {
+          completed?: boolean | null
+          device_token?: string
+          game_type?: string
+          id?: string
+          last_activity_at?: string
+          mode?: string | null
+          moves_count?: number | null
+          puzzle_date?: string
+          started_at?: string
+          user_id?: string | null
+          won?: boolean | null
+          word_length?: number | null
+        }
+        Relationships: []
+      }
       admin_audit_log: {
         Row: {
           action: string
