@@ -21,6 +21,7 @@ import {
 import { isRateLimited } from "@/lib/rateLimit";
 import { syncStatsToSupabase } from "@/lib/supabaseSync";
 import { saveSessionToSupabase } from "@/lib/sessionSync";
+import { startActiveSession, updateSessionActivity, completeActiveSession } from "@/lib/activeSessionTracking";
 import {
   checkChainAchievements,
   getChainAchievements,
@@ -96,6 +97,13 @@ export const useChainGame = () => {
       setUsedWords(new Set([newPuzzle.startWord]));
       setGameCompleted(false);
       setGameWon(false);
+      
+      // Start active session tracking for new games
+      startActiveSession({
+        gameType: 'chain',
+        puzzleDate: newPuzzle.date,
+        wordLength: newLength,
+      });
     }
     setError("");
   }, []);
@@ -280,6 +288,13 @@ export const useChainGame = () => {
       0,
       invalidGuessCount
     );
+    
+    // Complete active session tracking
+    completeActiveSession(
+      { gameType: 'chain', puzzleDate: puzzle.date, wordLength: puzzle.wordLength },
+      true,
+      updatedMoves.length
+    );
   }, [puzzle, settings, invalidGuessCount]);
 
   const handleLoss = useCallback((updatedMoves: Move[]) => {
@@ -306,6 +321,13 @@ export const useChainGame = () => {
       false,
       0,
       invalidGuessCount
+    );
+    
+    // Complete active session tracking
+    completeActiveSession(
+      { gameType: 'chain', puzzleDate: puzzle.date, wordLength: puzzle.wordLength },
+      false,
+      updatedMoves.length
     );
   }, [puzzle, invalidGuessCount]);
 

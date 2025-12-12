@@ -8,6 +8,7 @@ import { isValidWord } from '@/lib/grid/dictionary';
 import { recordGridPlayStart, recordGridSubmit, recordGridWin, recordGridLoss, saveGridGameState, loadGridGameState, clearGridGameState, type SubmittedWord } from '@/lib/gridStorage';
 import { checkGridAchievements, saveGridAchievements, getGridAchievements, getNewGridAchievements, updateTieredProgress, loadTieredProgress, type GridAchievementContext } from '@/lib/gridAchievements';
 import { upsertGridSession } from '@/integrations/supabase/gridSession';
+import { startActiveSession, updateSessionActivity, completeActiveSession } from '@/lib/activeSessionTracking';
 
 const MAX_MOVES = 20;
 
@@ -142,6 +143,12 @@ export const useGridStore = create<GridState>((set, get) => ({
       
       // Record play start for stats
       recordGridPlayStart(date);
+      
+      // Start active session tracking
+      startActiveSession({
+        gameType: 'grid',
+        puzzleDate: date,
+      });
     }
   },
   
@@ -431,6 +438,13 @@ export const useGridStore = create<GridState>((set, get) => ({
       completed: true,
       won: isWin,
     });
+    
+    // Complete active session tracking
+    completeActiveSession(
+      { gameType: 'grid', puzzleDate: state.dailySeed },
+      isWin,
+      state.moves
+    );
     
     return true;
   },

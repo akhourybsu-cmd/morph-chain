@@ -46,6 +46,7 @@ import { RushMenuSheet } from "@/components/rush/RushMenuSheet";
 import { RushSettingsModal } from "@/components/rush/RushSettingsModal";
 import { updateRushStats, saveDailyCompletion, loadTodayCompletion, getTodayDateString, type CompletedDailyRun } from "@/lib/rushStorage";
 import { upsertRushSession } from "@/integrations/supabase/rushSession";
+import { startActiveSession, completeActiveSession } from "@/lib/activeSessionTracking";
 
 const MorphRush = () => {
   const { toast } = useToast();
@@ -112,10 +113,19 @@ const MorphRush = () => {
     return () => window.removeEventListener('click', handleFirstInteraction);
   }, []);
 
-  // Initialize tile rack
+  // Initialize tile rack and start session tracking
   useEffect(() => {
     const rack = generateTileRack(currentWord, run.usedWords, 8);
     setTileRack(rack.tiles);
+    
+    // Start active session tracking for new games
+    if (mode === 'daily') {
+      startActiveSession({
+        gameType: 'rush',
+        puzzleDate: getTodayDateString(),
+        mode: 'daily',
+      });
+    }
   }, []);
 
   // Auth listener
@@ -218,6 +228,12 @@ const MorphRush = () => {
           words: prev.words,
         });
         
+        // Complete active session tracking
+        completeActiveSession(
+          { gameType: 'rush', puzzleDate: getTodayDateString(), mode: 'daily' },
+          true,
+          prev.words.length
+        );
         return { ...prev, timeRemaining: 0, isFinished: true };
       }
       return { ...prev, timeRemaining: newTime };
