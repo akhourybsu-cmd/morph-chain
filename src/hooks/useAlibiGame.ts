@@ -12,7 +12,8 @@ import {
   createEmptyGridState, 
   saveGameState, 
   loadGameState, 
-  updateStatsAfterGame 
+  updateStatsAfterGame,
+  checkAndClearVersionedCache,
 } from '@/lib/alibi/storage';
 import { useAlibiSettings } from './useAlibiSettings';
 
@@ -41,6 +42,9 @@ export function useAlibiGame({ mode }: UseAlibiGameOptions) {
   // Initialize puzzle
   useEffect(() => {
     const loadPuzzle = () => {
+      // Check if puzzle generation version changed - clears old cached puzzles
+      checkAndClearVersionedCache();
+      
       const newPuzzle = mode === 'daily' ? loadDailyPuzzle() : generatePracticePuzzle();
       
       // Check for saved state

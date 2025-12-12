@@ -1,7 +1,7 @@
 /**
- * Daily Puzzle Generator - V1.0 Ruleset + Deductive Logic Edition
+ * Daily Puzzle Generator - V2.0 Deductive Logic Edition
  * 
- * Generation Flow (Deductive Logic Edition):
+ * Generation Flow:
  * 1. Generate entities and solution
  * 2. Pick final question FIRST (establishes protected answer)
  * 3. Generate clues that DON'T reveal the answer
@@ -17,6 +17,9 @@
  */
 
 import { AlibiPuzzle, Difficulty, ALIBI_RULES, FinalQuestion } from './types';
+
+// Version bump forces puzzle regeneration when rules change
+export const PUZZLE_GENERATION_VERSION = 2;
 import { 
   generateEntities, 
   generateSolution, 
