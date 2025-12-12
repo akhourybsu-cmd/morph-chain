@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getDeviceToken } from "@/hooks/useDeviceToken";
 
-export type GameType = 'chain' | 'rush' | 'grid';
+export type GameType = 'chain' | 'rush' | 'grid' | 'alibi';
 
 interface SessionParams {
   gameType: GameType;

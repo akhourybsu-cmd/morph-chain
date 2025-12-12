@@ -214,6 +214,20 @@ All colors MUST be HSL.
     --chain-tile-match: 145 50% 47%;   /* Green - correct position */
     --chain-tile-present: 45 85% 55%;  /* Yellow/Gold - wrong position */
     --chain-tile-miss: 0 0% 88%;       /* Gray - not in word */
+    
+    /* Alibi Prestige Theme (Mystery/Gold aesthetic) */
+    --alibi-page-bg: 39 32% 96%;       /* #F9F5ED paper background */
+    --alibi-card-bg: 0 0% 100%;        /* #FFFFFF card background */
+    --alibi-card-border: 37 20% 86%;   /* #E0D9CC card border */
+    --alibi-divider: 37 14% 90%;       /* #E5E0D7 dividers */
+    --alibi-text-primary: 0 0% 13%;    /* #222222 primary text */
+    --alibi-text-secondary: 0 0% 40%;  /* #666666 secondary text */
+    --alibi-text-muted: 33 6% 57%;     /* #9A9388 muted text */
+    --alibi-accent: 40 75% 50%;        /* #D7A744 muted gold */
+    --alibi-accent-alt: 207 40% 45%;   /* #3A5A7A desaturated blue */
+    --alibi-success: 145 50% 37%;      /* #2F8F5B green */
+    --alibi-error: 3 52% 54%;          /* #C6534C red */
+    --accent-alibi: 40 75% 50%;        /* Gold accent */
   }
 
   /* NYT Prestige Dark Mode - Grid Page Colors */
@@ -261,6 +275,20 @@ All colors MUST be HSL.
     --rush-tile-border: 216 14% 22%;     /* Dark tile border */
     --rush-tile-active: var(--accent-rush);
     --rush-drop-target: 187 60% 55%;     /* Brighter cyan for dark mode */
+    
+    /* Alibi Prestige Dark Mode */
+    --alibi-page-bg: 216 22% 7%;         /* #0F1216 dark background */
+    --alibi-card-bg: 216 17% 11%;        /* #171B20 card background */
+    --alibi-card-border: 216 14% 17%;    /* #262B33 card border */
+    --alibi-divider: 213 16% 20%;        /* #2C333C dividers */
+    --alibi-text-primary: 36 36% 92%;    /* #F3ECE0 primary text */
+    --alibi-text-secondary: 33 9% 75%;   /* #C5BFB4 secondary text */
+    --alibi-text-muted: 33 7% 52%;       /* #8D877C muted text */
+    --alibi-accent: 40 55% 60%;          /* Warmer gold for dark mode */
+    --alibi-accent-alt: 207 35% 55%;     /* Lighter blue for dark mode */
+    --alibi-success: 145 35% 57%;        /* #6EB58C green */
+    --alibi-error: 5 63% 67%;            /* #E07A71 red */
+    --accent-alibi: 40 55% 60%;          /* Gold accent */
   }
   
   .light {
