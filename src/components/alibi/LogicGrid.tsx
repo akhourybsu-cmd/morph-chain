@@ -1,7 +1,6 @@
 import React from 'react';
 import { GridState, CellState } from '@/lib/alibi/types';
 import { Check, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface LogicGridProps {
   grid: GridState;
@@ -13,40 +12,51 @@ export function LogicGrid({ grid, onCellClick, disabled = false }: LogicGridProp
   const getCellContent = (state: CellState) => {
     switch (state) {
       case 'confirmed':
-        return <Check className="h-4 w-4 text-alibi-success" />;
+        return <Check className="h-5 w-5" style={{ color: 'hsl(var(--alibi-success))' }} />;
       case 'ruled_out':
-        return <X className="h-4 w-4 text-alibi-error" />;
+        return <X className="h-5 w-5" style={{ color: 'hsl(var(--alibi-error))' }} />;
       default:
         return null;
     }
   };
 
-  const getCellClass = (state: CellState) => {
+  const getCellStyles = (state: CellState): React.CSSProperties => {
     switch (state) {
       case 'confirmed':
-        return 'bg-alibi-success/10 border-alibi-success/50';
+        return {
+          background: 'hsl(var(--alibi-success) / 0.15)',
+          borderColor: 'hsl(var(--alibi-success) / 0.5)'
+        };
       case 'ruled_out':
-        return 'bg-alibi-error/5 border-alibi-divider/50';
+        return {
+          background: 'hsl(var(--alibi-error) / 0.08)',
+          borderColor: 'hsl(var(--alibi-divider) / 0.5)'
+        };
       default:
-        return 'bg-alibi-card-bg border-alibi-divider/50 hover:bg-alibi-accent/5';
+        return {
+          background: 'hsl(var(--alibi-card-bg))',
+          borderColor: 'hsl(var(--alibi-divider) / 0.5)'
+        };
     }
   };
 
   return (
-    <div className="w-full overflow-x-auto">
-      <table className="border-collapse mx-auto">
-        {/* Column headers in dedicated row */}
+    <div className="w-full flex justify-center">
+      <table className="border-collapse">
+        {/* Column headers */}
         <thead>
           <tr>
             {/* Empty corner cell */}
             <th className="w-20 md:w-24" />
-            {/* Column headers - small caps, muted, letter-spaced */}
+            {/* Column headers */}
             {grid.cols.map(col => (
               <th 
                 key={col}
-                className="px-1 pb-3 text-[10px] md:text-xs font-normal tracking-wider uppercase
-                           text-center min-w-[48px] md:min-w-[56px]"
-                style={{ color: 'hsl(var(--alibi-text-muted))' }}
+                className="px-1 pb-3 text-[10px] md:text-xs font-normal tracking-wider uppercase text-center"
+                style={{ 
+                  color: 'hsl(var(--alibi-text-muted))',
+                  minWidth: '52px'
+                }}
               >
                 {col}
               </th>
@@ -56,27 +66,38 @@ export function LogicGrid({ grid, onCellClick, disabled = false }: LogicGridProp
         <tbody>
           {grid.rows.map(row => (
             <tr key={row}>
-              {/* Row header - slightly darker, vertically centered */}
+              {/* Row header */}
               <th 
                 className="px-2 py-1 text-xs md:text-sm font-medium text-right pr-3"
                 style={{ color: 'hsl(var(--alibi-text-secondary))' }}
               >
                 {row}
               </th>
-              {/* Cells - more square, hairline borders, increased spacing */}
+              {/* Cells with uniform spacing */}
               {grid.cols.map(col => {
                 const state = grid.cells[row]?.[col] || 'unknown';
+                const cellStyles = getCellStyles(state);
                 return (
                   <td key={col} className="p-1">
                     <button
                       onClick={() => !disabled && onCellClick(row, col)}
                       disabled={disabled}
-                      className={cn(
-                        "w-10 h-10 md:w-11 md:h-11 flex items-center justify-center",
-                        "border rounded-sm transition-all duration-150",
-                        getCellClass(state),
-                        disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                      )}
+                      className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center border rounded transition-all duration-150"
+                      style={{
+                        ...cellStyles,
+                        cursor: disabled ? 'not-allowed' : 'pointer',
+                        opacity: disabled ? 0.6 : 1
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!disabled && state === 'unknown') {
+                          e.currentTarget.style.background = 'hsl(var(--alibi-accent) / 0.08)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!disabled) {
+                          e.currentTarget.style.background = cellStyles.background as string;
+                        }
+                      }}
                     >
                       {getCellContent(state)}
                     </button>

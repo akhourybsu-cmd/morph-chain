@@ -1,24 +1,20 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface AlibiLogoProps {
   className?: string;
 }
 
 export function AlibiLogo({ className = '' }: AlibiLogoProps) {
+  const navigate = useNavigate();
+  
   return (
-    <div className={`flex flex-col items-center justify-center ${className}`}>
-      <span 
-        className="text-[10px] tracking-[0.2em] uppercase"
-        style={{ color: 'hsl(var(--alibi-text-muted))' }}
-      >
-        Morph Games
-      </span>
-      <h1 
-        className="font-serif text-2xl md:text-3xl tracking-tight"
-        style={{ color: 'hsl(var(--alibi-text-primary))' }}
-      >
-        Alibi
-      </h1>
-    </div>
+    <button 
+      onClick={() => navigate('/')}
+      className={`flex items-center gap-1.5 font-playfair font-semibold tracking-tight text-lg sm:text-xl ${className}`}
+    >
+      <span style={{ color: 'hsl(var(--alibi-text-primary))' }}>Morph</span>
+      <span style={{ color: 'hsl(var(--alibi-accent))' }}>Alibi</span>
+    </button>
   );
 }
