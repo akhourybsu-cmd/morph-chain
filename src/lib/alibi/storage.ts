@@ -1,10 +1,38 @@
 import { AlibiGameState, AlibiStats, GridState, GridType, CellState } from './types';
+import { PUZZLE_GENERATION_VERSION } from './dailyPuzzle';
 
 const STORAGE_KEYS = {
   GAME_STATE: 'alibi_game_state',
   STATS: 'alibi_stats',
   SETTINGS: 'alibi_settings',
+  PUZZLE_VERSION: 'alibi_puzzle_version',
 };
+
+// Check and clear cache if puzzle generation version changed
+export function checkAndClearVersionedCache(): void {
+  try {
+    const storedVersion = localStorage.getItem(STORAGE_KEYS.PUZZLE_VERSION);
+    const currentVersion = String(PUZZLE_GENERATION_VERSION);
+    
+    if (storedVersion !== currentVersion) {
+      // Clear all game states (puzzles generated with old rules)
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(STORAGE_KEYS.GAME_STATE)) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      // Update stored version
+      localStorage.setItem(STORAGE_KEYS.PUZZLE_VERSION, currentVersion);
+      console.log(`Alibi puzzle cache cleared for version ${currentVersion}`);
+    }
+  } catch (e) {
+    console.error('Failed to check puzzle version:', e);
+  }
+}
 
 // Initialize empty grid state
 export function createEmptyGridState(rows: string[], cols: string[]): GridState {
