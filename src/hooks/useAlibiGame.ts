@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { 
   AlibiPuzzle, 
   AlibiGameState, 
   GridState, 
   GridType, 
-  CellState 
+  CellState,
+  REVEAL_THRESHOLD 
 } from '@/lib/alibi/types';
 import { loadDailyPuzzle, generatePracticePuzzle, getTodayDateStr } from '@/lib/alibi/dailyPuzzle';
 import { checkConsistency, checkWinCondition, extractUserSolution } from '@/lib/alibi/consistencyCheck';
@@ -36,8 +37,30 @@ export function useAlibiGame({ mode }: UseAlibiGameOptions) {
   const [isComplete, setIsComplete] = useState(false);
   const [moveHistory, setMoveHistory] = useState<AlibiGameState['moveHistory']>([]);
   const [lastConsistencyMessage, setLastConsistencyMessage] = useState<string | null>(null);
+  const [questionJustRevealed, setQuestionJustRevealed] = useState(false);
   
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  
+  // Count total confirmations across all grids
+  const totalConfirmations = useMemo(() => {
+    if (!grids) return 0;
+    let count = 0;
+    for (const gridType of ['location', 'time', 'object'] as GridType[]) {
+      const grid = grids[gridType];
+      for (const row of grid.rows) {
+        for (const col of grid.cols) {
+          if (grid.cells[row]?.[col] === 'confirmed') {
+            count++;
+          }
+        }
+      }
+    }
+    return count;
+  }, [grids]);
+  
+  // Determine if final question should be shown
+  const threshold = puzzle?.revealThreshold ?? REVEAL_THRESHOLD;
+  const showFinalQuestion = totalConfirmations >= threshold || isSolved;
 
   // Initialize puzzle
   useEffect(() => {
@@ -268,6 +291,16 @@ export function useAlibiGame({ mode }: UseAlibiGameOptions) {
     return extractUserSolution(grids);
   }, [grids]);
 
+  // Track when question is first revealed for animation
+  const prevShowFinalQuestion = useRef(false);
+  useEffect(() => {
+    if (showFinalQuestion && !prevShowFinalQuestion.current && !isSolved) {
+      setQuestionJustRevealed(true);
+      setTimeout(() => setQuestionJustRevealed(false), 3000);
+    }
+    prevShowFinalQuestion.current = showFinalQuestion;
+  }, [showFinalQuestion, isSolved]);
+
   return {
     puzzle,
     grids,
@@ -284,5 +317,10 @@ export function useAlibiGame({ mode }: UseAlibiGameOptions) {
     runConsistencyCheck,
     resetGame,
     getUserAnswer,
+    // Hidden Final Question mechanic
+    totalConfirmations,
+    showFinalQuestion,
+    revealThreshold: threshold,
+    questionJustRevealed,
   };
 }

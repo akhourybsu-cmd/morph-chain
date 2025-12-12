@@ -69,6 +69,9 @@ export interface DeductionStep {
   clueId?: string;
 }
 
+// Hidden Final Question: Threshold for revealing the question
+export const REVEAL_THRESHOLD = 8; // Number of confirmations before question appears
+
 export interface AlibiPuzzle {
   id: string;
   index: number;
@@ -85,6 +88,8 @@ export interface AlibiPuzzle {
   finalQuestionData?: FinalQuestion;
   // V1.0: Include validation metadata
   validation?: PuzzleValidation;
+  // Hidden Final Question mechanic
+  revealThreshold?: number;
 }
 
 export type CellState = "unknown" | "confirmed" | "ruled_out";

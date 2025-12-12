@@ -19,7 +19,7 @@
 import { AlibiPuzzle, Difficulty, ALIBI_RULES, FinalQuestion } from './types';
 
 // Version bump forces puzzle regeneration when rules change
-export const PUZZLE_GENERATION_VERSION = 2;
+export const PUZZLE_GENERATION_VERSION = 3;
 import { 
   generateEntities, 
   generateSolution, 
