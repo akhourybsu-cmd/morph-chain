@@ -45,6 +45,11 @@ export default function MorphAlibi() {
     undo,
     runConsistencyCheck,
     resetGame,
+    // Hidden Final Question mechanic
+    totalConfirmations,
+    showFinalQuestion,
+    revealThreshold,
+    questionJustRevealed,
   } = useAlibiGame({ mode });
 
   if (!puzzle || !grids) {
@@ -169,30 +174,15 @@ export default function MorphAlibi() {
               style={{ borderTop: '1px solid hsl(var(--alibi-divider))' }}
             />
 
-            {/* Clues Section - editorial column */}
-            <CluePanel clues={puzzle.clues} />
-
-            {/* Divider */}
-            <div 
-              className="w-full"
-              style={{ borderTop: '1px solid hsl(var(--alibi-divider))' }}
+            {/* Clues Section with Hidden Final Question */}
+            <CluePanel 
+              clues={puzzle.clues} 
+              finalQuestion={puzzle.finalQuestion}
+              showFinalQuestion={showFinalQuestion}
+              totalConfirmations={totalConfirmations}
+              revealThreshold={revealThreshold}
+              questionJustRevealed={questionJustRevealed}
             />
-
-            {/* Final Question - conclusive emphasis */}
-            <div className="text-center py-4">
-              <span 
-                className="block text-[10px] tracking-[0.15em] uppercase mb-2"
-                style={{ color: 'hsl(var(--alibi-text-muted))' }}
-              >
-                Final Question
-              </span>
-              <p 
-                className="font-serif text-base md:text-lg"
-                style={{ color: 'hsl(var(--alibi-text-primary))' }}
-              >
-                {puzzle.finalQuestion}
-              </p>
-            </div>
           </div>
         )}
       </main>
