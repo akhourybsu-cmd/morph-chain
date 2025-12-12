@@ -1,6 +1,5 @@
 import { TileState } from "@/components/HintTile";
-import wordsAlphaText from "./words_alpha.txt?raw";
-import { filterModernEnglish } from "./wordFilters";
+import { CURATED_4L_WORDS, CURATED_5L_WORDS } from "./curatedDictionary";
 import { isPuzzleSolvable, calculateMinDistance } from "./puzzleValidator";
 import { CURATED_4L_PUZZLES } from "./curatedPuzzles4L";
 import { CURATED_5L_PUZZLES } from "./curatedPuzzles5L";
@@ -9,60 +8,15 @@ import { toZonedTime, formatInTimeZone } from "date-fns-tz";
 import { startOfDay, differenceInDays } from "date-fns";
 import { loadDailyPuzzle, VaultPuzzle } from "./puzzleVaultLoader";
 
-// Lazy-load and cache the word list to improve initial page load performance
-let cachedWords4: Set<string> | null = null;
-let cachedWords5: Set<string> | null = null;
+// Use curated dictionaries directly - no filtering needed, these are pre-validated
+const cachedWords4 = CURATED_4L_WORDS;
+const cachedWords5 = CURATED_5L_WORDS;
 
-const ensureWordsLoaded = () => {
-  if (cachedWords4 && cachedWords5) {
-    return;
-  }
-  
-  const words4Raw = new Set<string>();
-  const words5Raw = new Set<string>();
-  
-  const lines = wordsAlphaText.split("\n");
-  
-  for (const line of lines) {
-    const word = line.trim().toUpperCase();
-    if (word.length === 4) {
-      words4Raw.add(word);
-    } else if (word.length === 5) {
-      words5Raw.add(word);
-    }
-  }
-  
-  // Apply Modern English filters
-  cachedWords4 = filterModernEnglish(words4Raw);
-  cachedWords5 = filterModernEnglish(words5Raw);
-  
-  console.log(`Word counts after filtering: 4L=${cachedWords4.size}, 5L=${cachedWords5.size}`);
-};
+console.log(`Using curated dictionaries: 4L=${cachedWords4.size}, 5L=${cachedWords5.size}`);
 
-// Proxy objects that load on first access
-export const VALID_WORDS_4 = new Proxy(new Set<string>(), {
-  has(_, key) {
-    ensureWordsLoaded();
-    return cachedWords4!.has(key as string);
-  },
-  get(_, prop) {
-    ensureWordsLoaded();
-    const value = (cachedWords4 as any)[prop];
-    return typeof value === 'function' ? value.bind(cachedWords4) : value;
-  }
-}) as Set<string>;
-
-export const VALID_WORDS_5 = new Proxy(new Set<string>(), {
-  has(_, key) {
-    ensureWordsLoaded();
-    return cachedWords5!.has(key as string);
-  },
-  get(_, prop) {
-    ensureWordsLoaded();
-    const value = (cachedWords5 as any)[prop];
-    return typeof value === 'function' ? value.bind(cachedWords5) : value;
-  }
-}) as Set<string>;
+// Export curated dictionaries directly - no proxying needed
+export const VALID_WORDS_4 = cachedWords4;
+export const VALID_WORDS_5 = cachedWords5;
 
 export interface Puzzle {
   date: string;
