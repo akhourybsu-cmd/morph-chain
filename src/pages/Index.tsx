@@ -256,6 +256,22 @@ const Index = () => {
         return;
       }
 
+      // Proactive dead-end check BEFORE committing the move
+      const wouldBeUsedWords = new Set([...usedWords, wordToSubmit]);
+      const canUseTwoLetters = selectedLength === 5 && !doubleSwapUsed && !(isTwoDiff && doubleSwapReady);
+      const wouldHaveNextMove = wordToSubmit === puzzle.goalWord || 
+        (moves.length + 1 >= puzzle.maxMoves) || 
+        hasValidNextMove(wordToSubmit, wouldBeUsedWords, puzzle.wordLength, canUseTwoLetters);
+      
+      if (!wouldHaveNextMove) {
+        toast({
+          title: "⚠️ Dead End Ahead",
+          description: "This move leaves no valid next steps. Consider a different word.",
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
+
       const newMove: Move = {
         id: `move-${moves.length}`,
         from: currentWord,
@@ -278,20 +294,6 @@ const Index = () => {
 
       if (settings.vibration && navigator.vibrate) {
         navigator.vibrate(closerToGoal ? 10 : 20);
-      }
-
-      if (word !== puzzle.goalWord && updatedMoves.length < puzzle.maxMoves) {
-        const canUseTwoLetters = selectedLength === 5 && !doubleSwapUsed;
-        const hasNext = hasValidNextMove(word, updatedUsedWords, puzzle.wordLength, canUseTwoLetters);
-        
-        if (!hasNext) {
-          toast({
-            title: "Dead End!",
-            description: "This word has no valid next moves. You're stuck!",
-            variant: "destructive",
-            duration: 4000,
-          });
-        }
       }
 
       if (word === puzzle.goalWord) {
