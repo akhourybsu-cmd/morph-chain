@@ -1,18 +1,20 @@
 import { useNavigate } from "react-router-dom";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
-import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Menu, ChevronRight, User } from "lucide-react";
+import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Search, Menu, ChevronRight, User } from "lucide-react";
 import { toast } from "sonner";
 import { SideMenu } from "@/components/layout/SideMenu";
 import { useState, useEffect } from "react";
 import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 
 // Per-game accent colors (HSL values match CSS variables)
 const gameAccents = {
   chain: "187 94% 48%",  // cyan
   grid: "186 68% 36%",   // teal  
   rush: "24 78% 57%",    // orange
+  alibi: "40 75% 50%",   // gold
 };
 
 const GameSelector = () => {
@@ -20,6 +22,8 @@ const GameSelector = () => {
   const puzzle = getDailyPuzzle(4);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { role } = useUserRole();
+  const isAdmin = role === 'admin';
   
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -145,6 +149,18 @@ const GameSelector = () => {
             accent={gameAccents.rush}
             onClick={() => navigate('/rush?mode=daily')}
           />
+          
+          {/* Alibi - Admin Only */}
+          {isAdmin && (
+            <GameCard
+              icon={Search}
+              name="Morph Alibi"
+              description="Daily logic mystery puzzle"
+              accent={gameAccents.alibi}
+              onClick={() => navigate('/alibi')}
+              badge="Admin"
+            />
+          )}
         </div>
 
         {/* Share Footer */}
@@ -196,9 +212,10 @@ interface GameCardProps {
   description: string;
   accent: string;
   onClick: () => void;
+  badge?: string;
 }
 
-const GameCard = ({ icon: Icon, name, description, accent, onClick }: GameCardProps) => {
+const GameCard = ({ icon: Icon, name, description, accent, onClick, badge }: GameCardProps) => {
   // Extract the game word (e.g., "Chain" from "Morph Chain")
   const gameWord = name.replace('Morph ', '');
   
@@ -233,16 +250,23 @@ const GameCard = ({ icon: Icon, name, description, accent, onClick }: GameCardPr
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 
-              className="font-playfair font-semibold text-lg md:text-xl tracking-tight"
+              className="font-playfair font-semibold text-lg md:text-xl tracking-tight flex items-center gap-2"
               style={{ letterSpacing: '-0.01em' }}
             >
-              <span style={{ color: 'hsl(var(--home-text-primary))' }}>
-                Morph
+              <span>
+                <span style={{ color: 'hsl(var(--home-text-primary))' }}>
+                  Morph
+                </span>
+                {' '}
+                <span style={{ color: `hsl(${accent})` }}>
+                  {gameWord}
+                </span>
               </span>
-              {' '}
-              <span style={{ color: `hsl(${accent})` }}>
-                {gameWord}
-              </span>
+              {badge && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 uppercase tracking-wide">
+                  {badge}
+                </span>
+              )}
             </h3>
           </div>
           <p 
