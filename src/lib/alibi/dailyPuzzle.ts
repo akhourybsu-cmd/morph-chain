@@ -1,6 +1,19 @@
-import { AlibiPuzzle, Difficulty } from './types';
-import { generateEntities, generateSolution, generateFinalQuestion } from './solutionGenerator';
-import { selectMinimalClueSet, estimateDifficulty } from './clueSelection';
+/**
+ * Daily Puzzle Generator - V1.0 Ruleset Implementation
+ * 
+ * Generates puzzles with retry loop until all validation rules pass:
+ * - Mandatory anchors (Section 2)
+ * - Forced progress path (Section 4)
+ * - Minimum forced moves ≥5 (Section 4.2)
+ * - Category balance (Section 5)
+ * - Final question inevitability (Section 6)
+ */
+
+import { AlibiPuzzle, Difficulty, ALIBI_RULES } from './types';
+import { generateEntities, generateSolution, generateFinalQuestion, PuzzleEntities } from './solutionGenerator';
+import { selectHumanSolvableClueSet, estimateDifficulty, validatePuzzle } from './clueSelection';
+import { simulateHumanSolve, countForcedMoves } from './humanLogicSolver';
+import { countValidSolutions } from './constraintSolver';
 
 // Convert date string to numeric seed
 function dateToSeed(dateStr: string): number {
@@ -21,31 +34,104 @@ function getPuzzleIndex(dateStr: string): number {
   return Math.max(1, diffDays + 1);
 }
 
+/**
+ * Generate a daily puzzle with full validation
+ * Retries up to MAX_ATTEMPTS times to find a valid puzzle
+ */
 export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
-  const seed = dateToSeed(dateStr);
+  const baseSeed = dateToSeed(dateStr);
   const index = getPuzzleIndex(dateStr);
 
-  // Generate entities and solution
+  const MAX_ATTEMPTS = 100;
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const seed = baseSeed + attempt * 1000;
+
+    // Generate entities and solution
+    const entities = generateEntities(seed);
+    const solution = generateSolution(entities, seed);
+
+    // Select clues with human-solvability validation
+    const clues = selectHumanSolvableClueSet(
+      { ...entities, solution },
+      seed,
+      'medium'
+    );
+
+    if (!clues) continue;
+
+    // Validate the puzzle
+    const validation = validatePuzzle(clues, { ...entities, solution });
+
+    if (!validation.hasMinimumAnchors) continue;
+    if (!validation.hasForcedProgressPath) continue;
+    if (validation.forcedMoveCount < ALIBI_RULES.MIN_FORCED_MOVES) continue;
+    if (!validation.isUnique) continue;
+
+    // Category balance
+    if (
+      validation.categoryBalance.time < ALIBI_RULES.MIN_CONSTRAINTS_PER_CATEGORY ||
+      validation.categoryBalance.location < ALIBI_RULES.MIN_CONSTRAINTS_PER_CATEGORY ||
+      validation.categoryBalance.object < ALIBI_RULES.MIN_CONSTRAINTS_PER_CATEGORY
+    ) {
+      continue;
+    }
+
+    // Generate final question with inevitability validation
+    const finalQ = generateFinalQuestion(entities, solution, clues, seed);
+    if (!finalQ) continue;
+
+    // All validations passed!
+    const difficulty: Difficulty = estimateDifficulty(clues);
+
+    return {
+      id: dateStr,
+      index,
+      difficulty,
+      people: entities.people,
+      locations: entities.locations,
+      times: entities.times,
+      objects: entities.objects,
+      solution,
+      clues,
+      finalQuestion: finalQ.question,
+      finalAnswerPerson: finalQ.answer,
+      validation,
+    };
+  }
+
+  // Fallback: Generate a basic puzzle if all attempts fail
+  console.warn(`Failed to generate ideal puzzle for ${dateStr} after ${MAX_ATTEMPTS} attempts, using fallback`);
+  return generateFallbackPuzzle(dateStr, baseSeed, index);
+}
+
+/**
+ * Fallback puzzle generation when validation fails
+ * Uses simpler clue selection without strict validation
+ */
+function generateFallbackPuzzle(dateStr: string, seed: number, index: number): AlibiPuzzle {
   const entities = generateEntities(seed);
   const solution = generateSolution(entities, seed);
 
-  // Select clues
-  const clues = selectMinimalClueSet(
-    { ...entities, solution },
-    seed,
-    'medium'
-  );
+  // Import all generators
+  const { generateAllCandidateClues } = require('./clueTemplates');
+  const candidates = generateAllCandidateClues({ ...entities, solution }, seed);
 
-  // Generate final question
-  const { question, answer } = generateFinalQuestion(entities, solution, seed);
+  // Use a simple anchor-heavy clue set
+  const clues = [
+    ...candidates.anchors.time.slice(0, 2),
+    ...candidates.anchors.location.slice(0, 2),
+    ...candidates.anchors.object.slice(0, 2),
+    ...candidates.forcedNegatives.slice(0, 3),
+  ];
 
-  // Estimate difficulty based on clue count
-  const difficulty: Difficulty = estimateDifficulty(clues.length);
+  const { generateFinalQuestionLegacy } = require('./solutionGenerator');
+  const { question, answer } = generateFinalQuestionLegacy(entities, solution, seed);
 
   return {
     id: dateStr,
     index,
-    difficulty,
+    difficulty: 'medium',
     people: entities.people,
     locations: entities.locations,
     times: entities.times,
@@ -57,34 +143,59 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
   };
 }
 
+/**
+ * Generate a practice puzzle (random, not date-based)
+ */
 export function generatePracticePuzzle(): AlibiPuzzle {
-  // Use current timestamp as seed for random puzzle
   const seed = Date.now();
-  const entities = generateEntities(seed);
-  const solution = generateSolution(entities, seed);
+  const MAX_ATTEMPTS = 50;
 
-  const clues = selectMinimalClueSet(
-    { ...entities, solution },
-    seed,
-    'medium'
-  );
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const attemptSeed = seed + attempt * 1000;
+    const entities = generateEntities(attemptSeed);
+    const solution = generateSolution(entities, attemptSeed);
 
-  const { question, answer } = generateFinalQuestion(entities, solution, seed);
-  const difficulty: Difficulty = estimateDifficulty(clues.length);
+    const clues = selectHumanSolvableClueSet(
+      { ...entities, solution },
+      attemptSeed,
+      'medium'
+    );
 
-  return {
-    id: `practice-${seed}`,
-    index: 0,
-    difficulty,
-    people: entities.people,
-    locations: entities.locations,
-    times: entities.times,
-    objects: entities.objects,
-    solution,
-    clues,
-    finalQuestion: question,
-    finalAnswerPerson: answer,
-  };
+    if (!clues) continue;
+
+    // Quick validation
+    const solveResult = simulateHumanSolve({
+      id: 'practice',
+      index: 0,
+      difficulty: 'medium',
+      ...entities,
+      solution,
+      clues,
+      finalQuestion: '',
+      finalAnswerPerson: '',
+    });
+
+    if (!solveResult.solvable) continue;
+
+    const finalQ = generateFinalQuestion(entities, solution, clues, attemptSeed);
+    if (!finalQ) continue;
+
+    const difficulty: Difficulty = estimateDifficulty(clues);
+
+    return {
+      id: `practice-${attemptSeed}`,
+      index: 0,
+      difficulty,
+      ...entities,
+      solution,
+      clues,
+      finalQuestion: finalQ.question,
+      finalAnswerPerson: finalQ.answer,
+    };
+  }
+
+  // Fallback
+  return generateFallbackPuzzle(`practice-${seed}`, seed, 0);
 }
 
 export function getTodayDateStr(): string {
@@ -95,4 +206,26 @@ export function getTodayDateStr(): string {
 export function loadDailyPuzzle(): AlibiPuzzle {
   const dateStr = getTodayDateStr();
   return generateDailyPuzzle(dateStr);
+}
+
+/**
+ * Debug helper: Analyze a puzzle's solve path
+ */
+export function analyzePuzzle(puzzle: AlibiPuzzle): {
+  solvable: boolean;
+  forcedMoves: number;
+  stuckAt?: number;
+  stepBreakdown: { confirms: number; eliminates: number };
+} {
+  const result = simulateHumanSolve(puzzle);
+  
+  const confirms = result.steps.filter(s => s.type === 'confirm').length;
+  const eliminates = result.steps.filter(s => s.type === 'eliminate').length;
+
+  return {
+    solvable: result.solvable,
+    forcedMoves: countForcedMoves(result.steps),
+    stuckAt: result.stuckAt,
+    stepBreakdown: { confirms, eliminates },
+  };
 }

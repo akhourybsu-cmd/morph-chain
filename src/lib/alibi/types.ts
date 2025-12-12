@@ -4,15 +4,54 @@ export interface AlibiSolution {
   personToObject: Record<string, string>;
 }
 
+// V1.0 Ruleset: Clue tiers ordered by logic strength
+export type ClueTier = 'anchor' | 'forced_negative' | 'relational' | 'cross_category';
+
+// V1.0 Ruleset: Category that a clue constrains
+export type ClueCategory = 'time' | 'location' | 'object' | 'cross';
+
 export type ClueType = "direct_positive" | "direct_negative" | "relational" | "conditional";
 
 export interface AlibiClue {
   id: string;
   text: string;
   type: ClueType;
+  tier: ClueTier;
+  category: ClueCategory;
+  // Entities referenced by this clue for validation
+  entities?: {
+    people?: string[];
+    locations?: string[];
+    times?: string[];
+    objects?: string[];
+  };
 }
 
 export type Difficulty = "easy" | "medium" | "hard";
+
+// V1.0 Ruleset: Puzzle validation status
+export interface PuzzleValidation {
+  hasMinimumAnchors: boolean;      // ≥1 per category (Section 2)
+  hasForcedProgressPath: boolean;  // Can solve without guessing (Section 4)
+  forcedMoveCount: number;         // ≥5 required (Section 4.2)
+  isUnique: boolean;               // Exactly 1 solution
+  categoryBalance: {               // ≥2 constraints per category (Section 5)
+    time: number;
+    location: number;
+    object: number;
+  };
+  finalQuestionInevitable: boolean; // Answer deducible before asked (Section 6)
+}
+
+// V1.0 Ruleset: Deduction step for human solver
+export interface DeductionStep {
+  type: 'confirm' | 'eliminate';
+  grid: 'location' | 'time' | 'object';
+  person: string;
+  value: string;
+  reasoning: string;
+  clueId?: string;
+}
 
 export interface AlibiPuzzle {
   id: string;
@@ -26,6 +65,8 @@ export interface AlibiPuzzle {
   clues: AlibiClue[];
   finalQuestion: string;
   finalAnswerPerson: string;
+  // V1.0: Include validation metadata
+  validation?: PuzzleValidation;
 }
 
 export type CellState = "unknown" | "confirmed" | "ruled_out";
@@ -68,3 +109,37 @@ export interface AlibiStats {
   averageTime: number;
   perfectGames: number; // No consistency checks used
 }
+
+// V1.0 Ruleset Constants (Section 9 Summary)
+export const ALIBI_RULES = {
+  // Section 0: No Guessing
+  NO_GUESSING: "All progress must come from forced deductions",
+  
+  // Section 1: Fixed Puzzle Size
+  PUZZLE_SIZE: { people: 4, locations: 4, times: 4, objects: 4 },
+  
+  // Section 2: Mandatory Anchors
+  MIN_ANCHORS: { time: 1, location: 1, object: 1 },
+  
+  // Section 3: Clue Tiers
+  TIER_ORDER: ['anchor', 'forced_negative', 'relational'] as ClueTier[],
+  NEGATIVE_MIN_ELIMINATION: 0.5,  // Must eliminate ≥50%
+  RELATIVE_MUST_COLLAPSE: true,   // Must terminate at anchor
+  
+  // Section 4: Progression Guarantee
+  MIN_FORCED_MOVES: 5,
+  
+  // Section 5: Category Balance
+  MIN_CONSTRAINTS_PER_CATEGORY: 2,
+  
+  // Section 6: Final Question
+  ANSWER_MUST_BE_INEVITABLE: true,
+  
+  // Section 7: No Redundant Clues
+  PRUNE_REDUNDANT: true,
+  
+  // Section 10: Language Clarity
+  MAX_ENTITIES_PER_CLAUSE: 2,
+  NO_PRONOUNS: true,
+  SINGLE_SENTENCE: true,
+} as const;

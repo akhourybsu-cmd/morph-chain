@@ -1,4 +1,19 @@
-import { AlibiClue, AlibiSolution, ClueType } from './types';
+/**
+ * Clue Templates - V1.0 Ruleset Implementation
+ * 
+ * Clues are organized by tier (Section 3):
+ * - Tier 1: Direct Anchors (required first)
+ * - Tier 2: Forced Negatives (only if resolving)
+ * - Tier 3: Relational (heavily restricted)
+ * 
+ * Language Clarity Rules (Section 10):
+ * - Single-sentence
+ * - Declarative (no ambiguity)
+ * - No pronouns ("they", "someone", "that person")
+ * - Max 2 entities per clause
+ */
+
+import { AlibiClue, AlibiSolution, ClueType, ClueTier, ClueCategory } from './types';
 
 interface ClueContext {
   people: string[];
@@ -7,8 +22,6 @@ interface ClueContext {
   objects: string[];
   solution: AlibiSolution;
 }
-
-type ClueGenerator = (ctx: ClueContext, seed: number) => AlibiClue | null;
 
 // Seeded random helper
 function seededRandom(seed: number): () => number {
@@ -29,207 +42,284 @@ function pickTwoDistinct<T>(arr: T[], rand: () => number): [T, T] {
   return [shuffled[0], shuffled[1]];
 }
 
-// Get time index for comparison
 function getTimeIndex(time: string, times: string[]): number {
   return times.indexOf(time);
 }
 
-// Direct positive clue generators
-const directPositiveGenerators: ClueGenerator[] = [
-  // Person was at location
-  (ctx, seed) => {
-    const rand = seededRandom(seed);
-    const person = pickRandom(ctx.people, rand);
-    const location = ctx.solution.personToLocation[person];
-    const templates = [
-      `${person} was at the ${location}.`,
-      `${person} visited the ${location}.`,
-      `${person} spent time at the ${location}.`,
-    ];
-    return {
-      id: `dp_loc_${person}_${seed}`,
-      type: 'direct_positive',
-      text: pickRandom(templates, rand),
-    };
-  },
-  // Person had object
-  (ctx, seed) => {
-    const rand = seededRandom(seed);
-    const person = pickRandom(ctx.people, rand);
-    const object = ctx.solution.personToObject[person];
-    const templates = [
-      `${person} had the ${object}.`,
-      `${person} was carrying the ${object}.`,
-      `The ${object} belonged to ${person}.`,
-    ];
-    return {
-      id: `dp_obj_${person}_${seed}`,
-      type: 'direct_positive',
-      text: pickRandom(templates, rand),
-    };
-  },
-  // Person was there at time
-  (ctx, seed) => {
-    const rand = seededRandom(seed);
-    const person = pickRandom(ctx.people, rand);
-    const time = ctx.solution.personToTime[person];
-    const templates = [
-      `${person} was seen at ${time}.`,
-      `${person} arrived at ${time}.`,
-      `At ${time}, ${person} was spotted.`,
-    ];
-    return {
-      id: `dp_time_${person}_${seed}`,
-      type: 'direct_positive',
-      text: pickRandom(templates, rand),
-    };
-  },
-  // Object was at location (cross-category)
-  (ctx, seed) => {
-    const rand = seededRandom(seed);
-    const person = pickRandom(ctx.people, rand);
-    const object = ctx.solution.personToObject[person];
-    const location = ctx.solution.personToLocation[person];
-    const templates = [
-      `The ${object} was seen at the ${location}.`,
-      `Someone with the ${object} was at the ${location}.`,
-    ];
-    return {
-      id: `dp_obj_loc_${seed}`,
-      type: 'direct_positive',
-      text: pickRandom(templates, rand),
-    };
-  },
-];
+// ============================================
+// TIER 1: ANCHOR GENERATORS (Section 3.1)
+// These clues must appear early and force immediate marks
+// ============================================
 
-// Direct negative clue generators
-const directNegativeGenerators: ClueGenerator[] = [
-  // Person wasn't at two locations
-  (ctx, seed) => {
-    const rand = seededRandom(seed);
-    const person = pickRandom(ctx.people, rand);
-    const actualLocation = ctx.solution.personToLocation[person];
-    const otherLocations = ctx.locations.filter(l => l !== actualLocation);
-    if (otherLocations.length < 2) return null;
-    const [loc1, loc2] = pickTwoDistinct(otherLocations, rand);
-    return {
-      id: `dn_loc_${person}_${seed}`,
-      type: 'direct_negative',
-      text: `${person} wasn't at the ${loc1} or the ${loc2}.`,
-    };
-  },
-  // Person didn't have object
-  (ctx, seed) => {
-    const rand = seededRandom(seed);
-    const person = pickRandom(ctx.people, rand);
-    const actualObject = ctx.solution.personToObject[person];
-    const otherObjects = ctx.objects.filter(o => o !== actualObject);
-    if (otherObjects.length === 0) return null;
-    const wrongObject = pickRandom(otherObjects, rand);
-    return {
-      id: `dn_obj_${person}_${seed}`,
-      type: 'direct_negative',
-      text: `${person} did not have the ${wrongObject}.`,
-    };
-  },
-  // Person wasn't there at time
-  (ctx, seed) => {
-    const rand = seededRandom(seed);
-    const person = pickRandom(ctx.people, rand);
-    const actualTime = ctx.solution.personToTime[person];
-    const otherTimes = ctx.times.filter(t => t !== actualTime);
-    if (otherTimes.length === 0) return null;
-    const wrongTime = pickRandom(otherTimes, rand);
-    return {
-      id: `dn_time_${person}_${seed}`,
-      type: 'direct_negative',
-      text: `${person} wasn't seen at ${wrongTime}.`,
-    };
-  },
-];
+export function generateTimeAnchor(ctx: ClueContext, person: string): AlibiClue {
+  const time = ctx.solution.personToTime[person];
+  return {
+    id: `anchor_time_${person}`,
+    type: 'direct_positive',
+    tier: 'anchor',
+    category: 'time',
+    text: `${person} was seen at ${time}.`,
+    entities: { people: [person], times: [time] },
+  };
+}
 
-// Relational clue generators
-const relationalGenerators: ClueGenerator[] = [
-  // Person1 arrived earlier than Person2
-  (ctx, seed) => {
-    const rand = seededRandom(seed);
-    const [p1, p2] = pickTwoDistinct(ctx.people, rand);
-    const t1 = getTimeIndex(ctx.solution.personToTime[p1], ctx.times);
-    const t2 = getTimeIndex(ctx.solution.personToTime[p2], ctx.times);
-    if (t1 >= t2) return null;
-    return {
-      id: `rel_earlier_${p1}_${p2}_${seed}`,
-      type: 'relational',
-      text: `${p1} arrived earlier than ${p2}.`,
-    };
-  },
-  // Person1 arrived later than Person2
-  (ctx, seed) => {
-    const rand = seededRandom(seed);
-    const [p1, p2] = pickTwoDistinct(ctx.people, rand);
-    const t1 = getTimeIndex(ctx.solution.personToTime[p1], ctx.times);
-    const t2 = getTimeIndex(ctx.solution.personToTime[p2], ctx.times);
-    if (t1 <= t2) return null;
-    return {
-      id: `rel_later_${p1}_${p2}_${seed}`,
-      type: 'relational',
-      text: `${p1} arrived later than ${p2}.`,
-    };
-  },
-  // The person at location arrived before person
-  (ctx, seed) => {
-    const rand = seededRandom(seed);
-    const [p1, p2] = pickTwoDistinct(ctx.people, rand);
-    const loc1 = ctx.solution.personToLocation[p1];
-    const t1 = getTimeIndex(ctx.solution.personToTime[p1], ctx.times);
-    const t2 = getTimeIndex(ctx.solution.personToTime[p2], ctx.times);
-    if (t1 >= t2) return null;
-    return {
-      id: `rel_loc_before_${seed}`,
-      type: 'relational',
-      text: `The person at the ${loc1} arrived before ${p2}.`,
-    };
-  },
-  // The person with object arrived after person
-  (ctx, seed) => {
-    const rand = seededRandom(seed);
-    const [p1, p2] = pickTwoDistinct(ctx.people, rand);
-    const obj1 = ctx.solution.personToObject[p1];
-    const t1 = getTimeIndex(ctx.solution.personToTime[p1], ctx.times);
-    const t2 = getTimeIndex(ctx.solution.personToTime[p2], ctx.times);
-    if (t1 <= t2) return null;
-    return {
-      id: `rel_obj_after_${seed}`,
-      type: 'relational',
-      text: `The person with the ${obj1} arrived after ${p2}.`,
-    };
-  },
-];
+export function generateLocationAnchor(ctx: ClueContext, person: string): AlibiClue {
+  const location = ctx.solution.personToLocation[person];
+  return {
+    id: `anchor_loc_${person}`,
+    type: 'direct_positive',
+    tier: 'anchor',
+    category: 'location',
+    text: `${person} was at the ${location}.`,
+    entities: { people: [person], locations: [location] },
+  };
+}
 
-export function generateCandidateClues(ctx: ClueContext, baseSeed: number): AlibiClue[] {
-  const clues: AlibiClue[] = [];
-  const allGenerators = [
-    ...directPositiveGenerators,
-    ...directNegativeGenerators,
-    ...relationalGenerators,
-  ];
+export function generateObjectAnchor(ctx: ClueContext, person: string): AlibiClue {
+  const object = ctx.solution.personToObject[person];
+  return {
+    id: `anchor_obj_${person}`,
+    type: 'direct_positive',
+    tier: 'anchor',
+    category: 'object',
+    text: `${person} had the ${object}.`,
+    entities: { people: [person], objects: [object] },
+  };
+}
 
-  // Generate multiple clues from each generator with different seeds
-  for (let i = 0; i < 50; i++) {
-    for (const generator of allGenerators) {
-      const clue = generator(ctx, baseSeed + i * 100);
-      if (clue) {
-        // Avoid duplicates by checking text
-        if (!clues.some(c => c.text === clue.text)) {
-          clues.push(clue);
-        }
-      }
+// Cross-category anchor: Object at Location
+export function generateCrossAnchor(ctx: ClueContext, person: string): AlibiClue {
+  const object = ctx.solution.personToObject[person];
+  const location = ctx.solution.personToLocation[person];
+  return {
+    id: `anchor_cross_${person}`,
+    type: 'direct_positive',
+    tier: 'cross_category',
+    category: 'cross',
+    text: `The ${object} was seen at the ${location}.`,
+    entities: { objects: [object], locations: [location] },
+  };
+}
+
+// ============================================
+// TIER 2: FORCED NEGATIVE GENERATORS (Section 3.2)
+// Only generate if they eliminate ≥50% of remaining options
+// ============================================
+
+export function generateTwoLocationNegative(ctx: ClueContext, person: string, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  const actualLocation = ctx.solution.personToLocation[person];
+  const otherLocations = ctx.locations.filter(l => l !== actualLocation);
+  
+  if (otherLocations.length < 2) return null;
+  
+  // Pick 2 locations to eliminate (eliminates 50% of 4 locations)
+  const [loc1, loc2] = pickTwoDistinct(otherLocations, rand);
+  
+  return {
+    id: `neg_loc_${person}_${seed}`,
+    type: 'direct_negative',
+    tier: 'forced_negative',
+    category: 'location',
+    text: `${person} wasn't at the ${loc1} or the ${loc2}.`,
+    entities: { people: [person], locations: [loc1, loc2] },
+  };
+}
+
+export function generateTwoTimeNegative(ctx: ClueContext, person: string, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  const actualTime = ctx.solution.personToTime[person];
+  const otherTimes = ctx.times.filter(t => t !== actualTime);
+  
+  if (otherTimes.length < 2) return null;
+  
+  const [time1, time2] = pickTwoDistinct(otherTimes, rand);
+  
+  return {
+    id: `neg_time_${person}_${seed}`,
+    type: 'direct_negative',
+    tier: 'forced_negative',
+    category: 'time',
+    text: `${person} wasn't seen at ${time1} or ${time2}.`,
+    entities: { people: [person], times: [time1, time2] },
+  };
+}
+
+export function generateTwoObjectNegative(ctx: ClueContext, person: string, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  const actualObject = ctx.solution.personToObject[person];
+  const otherObjects = ctx.objects.filter(o => o !== actualObject);
+  
+  if (otherObjects.length < 2) return null;
+  
+  const [obj1, obj2] = pickTwoDistinct(otherObjects, rand);
+  
+  return {
+    id: `neg_obj_${person}_${seed}`,
+    type: 'direct_negative',
+    tier: 'forced_negative',
+    category: 'object',
+    text: `${person} did not have the ${obj1} or the ${obj2}.`,
+    entities: { people: [person], objects: [obj1, obj2] },
+  };
+}
+
+// ============================================
+// TIER 3: RELATIONAL GENERATORS (Section 3.3)
+// Only allowed if they collapse to a single ordering
+// ============================================
+
+// Exact time gap (allowed: terminates to specific position)
+export function generateExactTimeGap(ctx: ClueContext, p1: string, p2: string): AlibiClue | null {
+  const t1 = getTimeIndex(ctx.solution.personToTime[p1], ctx.times);
+  const t2 = getTimeIndex(ctx.solution.personToTime[p2], ctx.times);
+  
+  if (t1 >= t2) return null; // p1 must be before p2
+  
+  const gap = t2 - t1;
+  
+  return {
+    id: `rel_exact_${p1}_${p2}`,
+    type: 'relational',
+    tier: 'relational',
+    category: 'time',
+    text: `${p1} arrived exactly ${gap} time slot${gap > 1 ? 's' : ''} before ${p2}.`,
+    entities: { people: [p1, p2] },
+  };
+}
+
+// Terminated relative (only valid when p2 has an anchor)
+export function generateTerminatedRelative(ctx: ClueContext, p1: string, p2: string, p2HasAnchor: boolean): AlibiClue | null {
+  if (!p2HasAnchor) return null; // Reject if p2 doesn't have a time anchor
+  
+  const t1 = getTimeIndex(ctx.solution.personToTime[p1], ctx.times);
+  const t2 = getTimeIndex(ctx.solution.personToTime[p2], ctx.times);
+  
+  if (t1 >= t2) return null;
+  
+  return {
+    id: `rel_term_${p1}_${p2}`,
+    type: 'relational',
+    tier: 'relational',
+    category: 'time',
+    text: `${p1} arrived earlier than ${p2}.`,
+    entities: { people: [p1, p2] },
+  };
+}
+
+// Chained order (3 people in sequence - closes the chain)
+export function generateChainedOrder(ctx: ClueContext, seed: number): AlibiClue | null {
+  // Sort people by their actual time
+  const sorted = [...ctx.people].sort((a, b) => {
+    const ta = getTimeIndex(ctx.solution.personToTime[a], ctx.times);
+    const tb = getTimeIndex(ctx.solution.personToTime[b], ctx.times);
+    return ta - tb;
+  });
+  
+  // Pick 3 consecutive people from the sorted list
+  const rand = seededRandom(seed);
+  const startIdx = Math.floor(rand() * 2); // 0 or 1 for 4 people
+  const [p1, p2, p3] = sorted.slice(startIdx, startIdx + 3);
+  
+  if (!p1 || !p2 || !p3) return null;
+  
+  return {
+    id: `rel_chain_${seed}`,
+    type: 'relational',
+    tier: 'relational',
+    category: 'time',
+    text: `${p1} arrived before ${p2}, who arrived before ${p3}.`,
+    entities: { people: [p1, p2, p3] },
+  };
+}
+
+// ============================================
+// CLUE GENERATION ORCHESTRATOR
+// ============================================
+
+export interface GeneratedClues {
+  anchors: {
+    time: AlibiClue[];
+    location: AlibiClue[];
+    object: AlibiClue[];
+  };
+  forcedNegatives: AlibiClue[];
+  relationals: AlibiClue[];
+  crossCategory: AlibiClue[];
+}
+
+export function generateAllCandidateClues(ctx: ClueContext, baseSeed: number): GeneratedClues {
+  const result: GeneratedClues = {
+    anchors: { time: [], location: [], object: [] },
+    forcedNegatives: [],
+    relationals: [],
+    crossCategory: [],
+  };
+  
+  // Generate all possible anchors (one per person per category)
+  for (const person of ctx.people) {
+    result.anchors.time.push(generateTimeAnchor(ctx, person));
+    result.anchors.location.push(generateLocationAnchor(ctx, person));
+    result.anchors.object.push(generateObjectAnchor(ctx, person));
+    result.crossCategory.push(generateCrossAnchor(ctx, person));
+  }
+  
+  // Generate forced negatives (2 per person per category)
+  for (let i = 0; i < ctx.people.length; i++) {
+    const person = ctx.people[i];
+    
+    const locNeg = generateTwoLocationNegative(ctx, person, baseSeed + i * 100);
+    if (locNeg) result.forcedNegatives.push(locNeg);
+    
+    const timeNeg = generateTwoTimeNegative(ctx, person, baseSeed + i * 100 + 50);
+    if (timeNeg) result.forcedNegatives.push(timeNeg);
+    
+    const objNeg = generateTwoObjectNegative(ctx, person, baseSeed + i * 100 + 75);
+    if (objNeg) result.forcedNegatives.push(objNeg);
+  }
+  
+  // Generate relational clues
+  for (let i = 0; i < ctx.people.length; i++) {
+    for (let j = 0; j < ctx.people.length; j++) {
+      if (i === j) continue;
+      
+      const exactGap = generateExactTimeGap(ctx, ctx.people[i], ctx.people[j]);
+      if (exactGap) result.relationals.push(exactGap);
     }
   }
+  
+  // Generate chained order variations
+  for (let s = 0; s < 5; s++) {
+    const chain = generateChainedOrder(ctx, baseSeed + s * 200);
+    if (chain && !result.relationals.some(r => r.text === chain.text)) {
+      result.relationals.push(chain);
+    }
+  }
+  
+  return result;
+}
 
-  return clues;
+// Legacy compatibility
+export function generateCandidateClues(ctx: ClueContext, baseSeed: number): AlibiClue[] {
+  const generated = generateAllCandidateClues(ctx, baseSeed);
+  return [
+    ...generated.anchors.time,
+    ...generated.anchors.location,
+    ...generated.anchors.object,
+    ...generated.crossCategory,
+    ...generated.forcedNegatives,
+    ...generated.relationals,
+  ];
 }
 
 export function getCluesByType(clues: AlibiClue[], type: ClueType): AlibiClue[] {
   return clues.filter(c => c.type === type);
+}
+
+export function getCluesByTier(clues: AlibiClue[], tier: ClueTier): AlibiClue[] {
+  return clues.filter(c => c.tier === tier);
+}
+
+export function getCluesByCategory(clues: AlibiClue[], category: ClueCategory): AlibiClue[] {
+  return clues.filter(c => c.category === category);
 }
