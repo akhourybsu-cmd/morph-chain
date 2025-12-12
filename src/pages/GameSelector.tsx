@@ -7,7 +7,7 @@ import { SideMenu } from "@/components/layout/SideMenu";
 import { useState, useEffect } from "react";
 import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { useUserRole } from "@/hooks/useUserRole";
+
 
 // Per-game accent colors (HSL values match CSS variables)
 const gameAccents = {
@@ -22,7 +22,7 @@ const GameSelector = () => {
   const puzzle = getDailyPuzzle(4);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const { hasBetaAccess } = useUserRole();
+  
   
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -149,17 +149,15 @@ const GameSelector = () => {
             onClick={() => navigate('/rush?mode=daily')}
           />
           
-          {/* Alibi - Beta Only */}
-          {hasBetaAccess && (
-            <GameCard
-              icon={Search}
-              name="Morph Alibi"
-              description="Daily logic mystery puzzle"
-              accent={gameAccents.alibi}
-              onClick={() => navigate('/alibi')}
-              badge="Beta"
-            />
-          )}
+          {/* Alibi - Public with Beta tag */}
+          <GameCard
+            icon={Search}
+            name="Morph Alibi"
+            description="Daily logic mystery puzzle"
+            accent={gameAccents.alibi}
+            onClick={() => navigate('/alibi')}
+            badge="Beta"
+          />
         </div>
 
         {/* Share Footer */}

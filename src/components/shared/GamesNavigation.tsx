@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { Link2, Grid3X3, Zap, Search } from "lucide-react";
-import { useUserRole } from "@/hooks/useUserRole";
 
 interface GamesNavigationProps {
   currentGame: 'chain' | 'grid' | 'rush' | 'arcade' | 'alibi';
@@ -8,23 +7,19 @@ interface GamesNavigationProps {
 }
 
 const games = [
-  { id: 'chain', name: "Morph Chain", icon: Link2, path: "/chain", description: "Word ladder puzzle", betaOnly: false },
-  { id: 'grid', name: "Morph Grid", icon: Grid3X3, path: "/grid", description: "Daily 5×5 puzzle", betaOnly: false },
-  { id: 'rush', name: "Morph Rush", icon: Zap, path: "/rush?mode=daily", description: "Timed score dash", betaOnly: false },
-  { id: 'alibi', name: "Morph Alibi", icon: Search, path: "/alibi", description: "Daily logic mystery", betaOnly: true },
+  { id: 'chain', name: "Morph Chain", icon: Link2, path: "/chain", description: "Word ladder puzzle", isBeta: false },
+  { id: 'grid', name: "Morph Grid", icon: Grid3X3, path: "/grid", description: "Daily 5×5 puzzle", isBeta: false },
+  { id: 'rush', name: "Morph Rush", icon: Zap, path: "/rush?mode=daily", description: "Timed score dash", isBeta: false },
+  { id: 'alibi', name: "Morph Alibi", icon: Search, path: "/alibi", description: "Daily logic mystery", isBeta: true },
 ];
 
 export const GamesNavigation = ({ currentGame, onNavigate }: GamesNavigationProps) => {
   const navigate = useNavigate();
-  const { hasBetaAccess } = useUserRole();
 
   const handleNavigate = (path: string) => {
     navigate(path);
     onNavigate?.();
   };
-
-  // Filter games based on beta access
-  const visibleGames = games.filter(game => !game.betaOnly || hasBetaAccess);
 
   return (
     <div>
@@ -35,7 +30,7 @@ export const GamesNavigation = ({ currentGame, onNavigate }: GamesNavigationProp
         Games
       </h3>
       <div className="space-y-1">
-        {visibleGames.map((game) => {
+        {games.map((game) => {
           const Icon = game.icon;
           const isActive = game.id === currentGame;
           
@@ -63,7 +58,7 @@ export const GamesNavigation = ({ currentGame, onNavigate }: GamesNavigationProp
                 <div className="flex flex-col">
                   <span className="text-sm font-medium flex items-center gap-2">
                     {game.name}
-                    {game.betaOnly && (
+                    {game.isBeta && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-600 dark:text-violet-400 uppercase tracking-wide">
                         Beta
                       </span>
