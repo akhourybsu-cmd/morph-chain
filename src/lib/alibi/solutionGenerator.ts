@@ -228,7 +228,6 @@ function validateQuestionInevitability(
   const solveResult = simulateHumanSolve({
     id: 'test',
     index: 0,
-    difficulty: 'medium',
     people: entities.people,
     locations: entities.locations,
     times: entities.times,

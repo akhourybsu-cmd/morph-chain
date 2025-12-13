@@ -17,10 +17,10 @@
  *    - No trivial elimination (answer not obvious from anchors)
  */
 
-import { AlibiPuzzle, Difficulty, ALIBI_RULES, FinalQuestion } from './types';
+import { AlibiPuzzle, ALIBI_RULES, FinalQuestion } from './types';
 
 // Version bump forces puzzle regeneration when rules change
-export const PUZZLE_GENERATION_VERSION = 4;
+export const PUZZLE_GENERATION_VERSION = 5;
 
 import { 
   generateEntities, 
@@ -28,7 +28,7 @@ import {
   pickFinalQuestion,
   PuzzleEntities 
 } from './solutionGenerator';
-import { selectHumanSolvableClueSet, estimateDifficulty, validatePuzzle } from './clueSelection';
+import { selectHumanSolvableClueSet, estimateComplexity, validatePuzzle } from './clueSelection';
 import { 
   simulateHumanSolve, 
   countForcedMoves, 
@@ -37,8 +37,8 @@ import {
 } from './humanLogicSolver';
 import { countValidSolutions } from './constraintSolver';
 
-// Stricter minimum deduction depth for the answer
-const MIN_ANSWER_DEDUCTION_DEPTH = 3;
+// Stricter minimum deduction depth for challenging puzzles
+const MIN_ANSWER_DEDUCTION_DEPTH = 4;
 
 // Convert date string to numeric seed
 function dateToSeed(dateStr: string): number {
@@ -84,7 +84,7 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
     const clues = selectHumanSolvableClueSet(
       { ...entities, solution },
       seed,
-      'medium',
+      undefined,
       finalQuestion
     );
 
@@ -133,18 +133,18 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
     if (checkTrivialElimination(clues, finalQuestion, entitiesObj)) continue;
 
     // All validations passed!
-    const difficulty: Difficulty = estimateDifficulty(clues);
+    const complexity = estimateComplexity(clues);
 
     console.log(`[Alibi] Generated valid puzzle for ${dateStr} on attempt ${attempt + 1}`);
     console.log(`  - Forced moves: ${validation.forcedMoveCount}`);
     console.log(`  - Answer deduction depth: ${validation.answerRevealedAtStep}`);
     console.log(`  - Cross-category required: ${validation.requiresCrossCategoryDeduction}`);
     console.log(`  - Clue count: ${clues.length}`);
+    console.log(`  - Complexity score: ${complexity}`);
 
     return {
       id: dateStr,
       index,
-      difficulty,
       people: entities.people,
       locations: entities.locations,
       times: entities.times,
@@ -190,7 +190,6 @@ function generateFallbackPuzzle(dateStr: string, seed: number, index: number): A
   return {
     id: dateStr,
     index,
-    difficulty: 'medium',
     people: entities.people,
     locations: entities.locations,
     times: entities.times,
@@ -221,7 +220,7 @@ export function generatePracticePuzzle(): AlibiPuzzle {
     const clues = selectHumanSolvableClueSet(
       { ...entities, solution },
       attemptSeed,
-      'medium',
+      undefined,
       finalQuestion
     );
 
@@ -235,12 +234,9 @@ export function generatePracticePuzzle(): AlibiPuzzle {
     if (validation.answerRevealedAtStep < MIN_ANSWER_DEDUCTION_DEPTH) continue;
     if (!validation.requiresCrossCategoryDeduction) continue;
 
-    const difficulty: Difficulty = estimateDifficulty(clues);
-
     return {
       id: `practice-${attemptSeed}`,
       index: 0,
-      difficulty,
       ...entities,
       solution,
       clues,

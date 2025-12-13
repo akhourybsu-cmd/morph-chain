@@ -21,7 +21,7 @@
  * 8. Prune redundant clues (Section 7)
  */
 
-import { AlibiClue, AlibiSolution, Difficulty, ALIBI_RULES, PuzzleValidation, FinalQuestion } from './types';
+import { AlibiClue, AlibiSolution, ALIBI_RULES, PuzzleValidation, FinalQuestion } from './types';
 import { generateAllCandidateClues, GeneratedClues, ProtectedAnswer } from './clueTemplates';
 import { countValidSolutions, checkSolutionAgainstClues } from './constraintSolver';
 import { 
@@ -42,8 +42,8 @@ interface ClueSelectionContext {
   solution: AlibiSolution;
 }
 
-// Minimum deduction depth required for the answer (stricter than ALIBI_RULES)
-const MIN_ANSWER_DEDUCTION_DEPTH = 3;
+// Minimum deduction depth required for the answer (stricter for challenge)
+const MIN_ANSWER_DEDUCTION_DEPTH = 4;
 
 /**
  * Check if any clue in the set directly reveals the final answer
@@ -68,7 +68,7 @@ function checkAnswerObfuscation(
 export function selectHumanSolvableClueSet(
   ctx: ClueSelectionContext,
   seed: number,
-  targetDifficulty: Difficulty = 'medium',
+  _unused?: string, // Keep for backwards compatibility
   finalQuestion?: FinalQuestion
 ): AlibiClue[] | null {
   // Build protected answer if we have a final question
@@ -128,7 +128,6 @@ export function selectHumanSolvableClueSet(
     const solveResult = simulateHumanSolve({
       id: 'test',
       index: 0,
-      difficulty: 'medium',
       ...ctx,
       clues: selectedClues,
       finalQuestion: finalQuestion?.questionText || '',
@@ -180,7 +179,6 @@ export function selectHumanSolvableClueSet(
   const finalResult = simulateHumanSolve({
     id: 'test',
     index: 0,
-    difficulty: 'medium',
     ...ctx,
     clues: selectedClues,
     finalQuestion: finalQuestion?.questionText || '',
@@ -217,13 +215,9 @@ export function selectHumanSolvableClueSet(
     return null;
   }
 
-  // STEP 5: Prune redundant clues (Section 7) - only for hard difficulty
-  if (targetDifficulty === 'hard') {
-    const pruned = pruneRedundantClues(selectedClues, ctx, finalQuestion);
-    return pruned;
-  }
-
-  return selectedClues;
+  // STEP 5: Always prune redundant clues for challenging puzzles
+  const pruned = pruneRedundantClues(selectedClues, ctx, finalQuestion);
+  return pruned;
 }
 
 /**
@@ -448,7 +442,6 @@ function pruneRedundantClues(
     const solveResult = simulateHumanSolve({
       id: 'test',
       index: 0,
-      difficulty: 'medium',
       people: ctx.people,
       locations: ctx.locations,
       times: ctx.times,
@@ -478,17 +471,15 @@ function pruneRedundantClues(
 }
 
 /**
- * Estimate difficulty based on clue count and types
+ * Estimate complexity score based on clue count and types (for logging only)
  */
-export function estimateDifficulty(clues: AlibiClue[]): Difficulty {
+export function estimateComplexity(clues: AlibiClue[]): number {
   const anchorCount = clues.filter(c => c.tier === 'anchor').length;
   const relationalCount = clues.filter(c => c.tier === 'relational').length;
-  const totalClues = clues.length;
-
-  // More anchors = easier, more relationals = harder
-  if (anchorCount >= 5 && relationalCount === 0) return 'easy';
-  if (totalClues <= 5 || relationalCount >= 2) return 'hard';
-  return 'medium';
+  const crossCategoryCount = clues.filter(c => c.tier === 'cross_category').length;
+  
+  // Higher score = more complex
+  return (clues.length * 10) + (relationalCount * 15) + (crossCategoryCount * 20) - (anchorCount * 5);
 }
 
 /**
@@ -525,7 +516,6 @@ export function validatePuzzle(
   const solveResult = simulateHumanSolve({
     id: 'validation',
     index: 0,
-    difficulty: 'medium',
     ...ctx,
     clues,
     finalQuestion: finalQuestion?.questionText || '',
@@ -589,10 +579,9 @@ export function validatePuzzle(
  */
 export function selectMinimalClueSet(
   ctx: ClueSelectionContext,
-  seed: number,
-  targetDifficulty: Difficulty = 'medium'
+  seed: number
 ): AlibiClue[] {
-  const result = selectHumanSolvableClueSet(ctx, seed, targetDifficulty);
+  const result = selectHumanSolvableClueSet(ctx, seed);
   if (result) return result;
 
   // Fallback: return basic anchors
