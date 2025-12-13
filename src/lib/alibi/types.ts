@@ -133,7 +133,7 @@ export interface AlibiStats {
   perfectGames: number; // No consistency checks used
 }
 
-// V1.0 Ruleset Constants (Section 9 Summary)
+// V2.0 Ruleset Constants (Enhanced Deduction Requirements)
 export const ALIBI_RULES = {
   // Section 0: No Guessing
   NO_GUESSING: "All progress must come from forced deductions",
@@ -166,8 +166,9 @@ export const ALIBI_RULES = {
   NO_PRONOUNS: true,
   SINGLE_SENTENCE: true,
   
-  // Deductive Logic Edition
-  MIN_DEDUCTION_DEPTH: 2,         // Answer needs ≥2 deductions
+  // Enhanced Deductive Logic Edition (V2.0)
+  MIN_DEDUCTION_DEPTH: 3,         // Answer needs ≥3 deductions (increased from 2)
   REQUIRE_CROSS_CATEGORY: true,   // Must use different category for answer
   ANSWER_OBFUSCATION: true,       // No clue may directly state the answer
+  NO_TRIVIAL_ELIMINATION: true,   // Answer cannot be obvious from anchors alone
 } as const;

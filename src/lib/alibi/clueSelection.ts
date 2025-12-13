@@ -1,13 +1,14 @@
 /**
- * Clue Selection - V1.0 Ruleset + Deductive Logic Edition
+ * Clue Selection - V2.0 Enhanced Deduction Requirements
  * 
  * Core Philosophy: Every puzzle must be solvable by a human using only
  * forced logical deductions, with no guessing, backtracking, or hypothesis testing.
  * 
- * Deductive Logic Edition Additions:
+ * Deductive Logic Edition Requirements:
  * - Answer obfuscation: No clue may directly state the answer
- * - Deduction depth: Answer requires ≥2 forced deductions
+ * - Deduction depth: Answer requires ≥3 deduction steps (increased from 2)
  * - Cross-category requirement: Answer must involve different category reasoning
+ * - No trivial elimination: Answer cannot be determined from anchors alone
  * 
  * Selection Process:
  * 1. Pick final question FIRST
@@ -23,7 +24,14 @@
 import { AlibiClue, AlibiSolution, Difficulty, ALIBI_RULES, PuzzleValidation, FinalQuestion } from './types';
 import { generateAllCandidateClues, GeneratedClues, ProtectedAnswer } from './clueTemplates';
 import { countValidSolutions, checkSolutionAgainstClues } from './constraintSolver';
-import { simulateHumanSolve, countForcedMoves, validateSolverResult, clueRevealsAnswer, validateCrossCategoryDeduction } from './humanLogicSolver';
+import { 
+  simulateHumanSolve, 
+  countForcedMoves, 
+  validateSolverResult, 
+  clueRevealsAnswer, 
+  validateCrossCategoryDeduction,
+  checkTrivialElimination 
+} from './humanLogicSolver';
 import { seededShuffle } from './entityPools';
 
 interface ClueSelectionContext {
@@ -33,6 +41,9 @@ interface ClueSelectionContext {
   objects: string[];
   solution: AlibiSolution;
 }
+
+// Minimum deduction depth required for the answer (stricter than ALIBI_RULES)
+const MIN_ANSWER_DEDUCTION_DEPTH = 3;
 
 /**
  * Check if any clue in the set directly reveals the final answer
@@ -51,7 +62,7 @@ function checkAnswerObfuscation(
 
 /**
  * Select a minimal clue set that guarantees human solvability
- * with answer obfuscation and deduction depth requirements
+ * with STRICT answer obfuscation and deduction depth requirements
  * Returns null if no valid puzzle can be generated
  */
 export function selectHumanSolvableClueSet(
@@ -68,7 +79,7 @@ export function selectHumanSolvableClueSet(
   } : undefined;
 
   // Generate candidates, filtering out answer-revealing clues
-  const candidates = generateAllCandidateClues(ctx, seed, protectedAnswer);
+  const candidates = generateAllCandidateClues({ ...ctx, solution: ctx.solution }, seed, protectedAnswer);
   const entities = {
     people: ctx.people,
     locations: ctx.locations,
@@ -77,15 +88,22 @@ export function selectHumanSolvableClueSet(
   };
 
   // STEP 1: Select mandatory anchors (Section 2)
-  const anchors = selectMandatoryAnchors(candidates, seed, protectedAnswer);
+  const anchors = selectMandatoryAnchors(candidates, seed, protectedAnswer, finalQuestion);
   if (!anchors) return null;
 
   const selectedClues: AlibiClue[] = [...anchors];
 
+  // Early check: Ensure anchors alone don't trivially reveal the answer
+  if (finalQuestion && checkTrivialElimination(selectedClues, finalQuestion, entities)) {
+    return null; // This anchor combination makes the answer trivial
+  }
+
   // Build candidate pool in tier order
   const candidatePool = buildTieredCandidatePool(candidates, anchors, seed);
 
-  // STEP 2: Add clues until human-solvable
+  // STEP 2: Add clues until human-solvable with proper depth
+  let foundValidSet = false;
+  
   for (const candidate of candidatePool) {
     // Skip if already selected
     if (selectedClues.some(c => c.id === candidate.id)) continue;
@@ -98,6 +116,13 @@ export function selectHumanSolvableClueSet(
 
     // Add candidate
     selectedClues.push(candidate);
+
+    // Check if trivial elimination now occurs
+    if (finalQuestion && checkTrivialElimination(selectedClues, finalQuestion, entities)) {
+      // This clue makes the answer trivial - remove it and continue
+      selectedClues.pop();
+      continue;
+    }
 
     // Check if now human-solvable
     const solveResult = simulateHumanSolve({
@@ -114,9 +139,10 @@ export function selectHumanSolvableClueSet(
       const forcedMoves = countForcedMoves(solveResult.steps);
       const isUnique = countValidSolutions(selectedClues, entities) === 1;
 
-      // Check deduction depth requirement (answer needs ≥2 deductions)
+      // Enhanced deduction depth requirement (use answerDeductionDepth for true depth)
+      const answerDepth = solveResult.answerDeductionDepth ?? solveResult.answerRevealedAtStep ?? 0;
       const meetsDepthRequirement = finalQuestion 
-        ? (solveResult.answerRevealedAtStep ?? 0) >= ALIBI_RULES.MIN_DEDUCTION_DEPTH
+        ? answerDepth >= MIN_ANSWER_DEDUCTION_DEPTH
         : true;
       
       // Check cross-category requirement
@@ -132,22 +158,25 @@ export function selectHumanSolvableClueSet(
       ) {
         // Validate solution correctness
         if (validateSolverResult(solveResult.steps, ctx.solution, ctx.people)) {
+          foundValidSet = true;
           break;
         }
       }
     }
   }
 
+  if (!foundValidSet) return null;
+
   // STEP 3: Validate category balance (Section 5)
   if (!validateCategoryBalance(selectedClues)) {
     // Try adding more clues to balance
-    const balanced = balanceCategories(selectedClues, candidates, ctx, seed, protectedAnswer);
+    const balanced = balanceCategories(selectedClues, candidates, ctx, seed, protectedAnswer, finalQuestion);
     if (!balanced) return null;
     selectedClues.length = 0;
     selectedClues.push(...balanced);
   }
 
-  // STEP 4: Final validation
+  // STEP 4: Final comprehensive validation
   const finalResult = simulateHumanSolve({
     id: 'test',
     index: 0,
@@ -170,16 +199,21 @@ export function selectHumanSolvableClueSet(
     return null;
   }
 
-  // Validate deduction depth
+  // Validate deduction depth (using enhanced tracking)
   if (finalQuestion) {
-    const answerStep = finalResult.answerRevealedAtStep ?? 0;
-    if (answerStep < ALIBI_RULES.MIN_DEDUCTION_DEPTH) {
+    const answerDepth = finalResult.answerDeductionDepth ?? finalResult.answerRevealedAtStep ?? 0;
+    if (answerDepth < MIN_ANSWER_DEDUCTION_DEPTH) {
       return null;
     }
   }
 
   // Validate cross-category requirement
   if (finalQuestion && !finalResult.crossCategoryUsedForAnswer) {
+    return null;
+  }
+
+  // Validate no trivial elimination
+  if (finalQuestion && checkTrivialElimination(selectedClues, finalQuestion, entities)) {
     return null;
   }
 
@@ -195,11 +229,13 @@ export function selectHumanSolvableClueSet(
 /**
  * Select exactly one anchor per category (Section 2)
  * Filters out anchors that would reveal the protected answer
+ * Also ensures anchors don't make the answer trivially determinable
  */
 function selectMandatoryAnchors(
   candidates: GeneratedClues, 
   seed: number,
-  protectedAnswer?: ProtectedAnswer
+  protectedAnswer?: ProtectedAnswer,
+  finalQuestion?: FinalQuestion
 ): AlibiClue[] | null {
   // Filter out any anchors that reveal the protected answer
   const filterAnchors = (anchors: AlibiClue[]): AlibiClue[] => {
@@ -229,44 +265,28 @@ function selectMandatoryAnchors(
     return null;
   }
 
-  // Pick different people for each anchor to spread information
-  const usedPeople = new Set<string>();
-  const result: AlibiClue[] = [];
-
-  // Time anchor
-  for (const anchor of timeAnchors) {
-    const person = anchor.entities?.people?.[0];
-    if (person && !usedPeople.has(person)) {
-      result.push(anchor);
-      usedPeople.add(person);
-      break;
+  // Try different anchor combinations to avoid trivial elimination
+  for (let t = 0; t < Math.min(timeAnchors.length, 3); t++) {
+    for (let l = 0; l < Math.min(locationAnchors.length, 3); l++) {
+      for (let o = 0; o < Math.min(objectAnchors.length, 3); o++) {
+        const result: AlibiClue[] = [timeAnchors[t], locationAnchors[l], objectAnchors[o]];
+        
+        // Check if this anchor set is viable (answer person shouldn't have ALL their values anchored)
+        if (protectedAnswer) {
+          const anchorPeople = result.map(a => a.entities?.people?.[0]).filter(Boolean);
+          const answerPersonAnchors = anchorPeople.filter(p => p === protectedAnswer.person).length;
+          
+          // If answer person has all 3 anchors, skip this combination
+          if (answerPersonAnchors >= 3) continue;
+        }
+        
+        return result;
+      }
     }
   }
-  if (result.length === 0) result.push(timeAnchors[0]);
 
-  // Location anchor - try different person
-  for (const anchor of locationAnchors) {
-    const person = anchor.entities?.people?.[0];
-    if (person && !usedPeople.has(person)) {
-      result.push(anchor);
-      usedPeople.add(person);
-      break;
-    }
-  }
-  if (result.length === 1) result.push(locationAnchors[0]);
-
-  // Object anchor - try different person
-  for (const anchor of objectAnchors) {
-    const person = anchor.entities?.people?.[0];
-    if (person && !usedPeople.has(person)) {
-      result.push(anchor);
-      usedPeople.add(person);
-      break;
-    }
-  }
-  if (result.length === 2) result.push(objectAnchors[0]);
-
-  return result;
+  // Fallback to first available anchors
+  return [timeAnchors[0], locationAnchors[0], objectAnchors[0]];
 }
 
 /**
@@ -332,7 +352,8 @@ function balanceCategories(
   candidates: GeneratedClues,
   ctx: ClueSelectionContext,
   seed: number,
-  protectedAnswer?: ProtectedAnswer
+  protectedAnswer?: ProtectedAnswer,
+  finalQuestion?: FinalQuestion
 ): AlibiClue[] | null {
   const result = [...clues];
   const entities = {
@@ -384,18 +405,8 @@ function balanceCategories(
       if (existingIds.has(c.id)) return false;
       
       // Skip if it reveals the protected answer
-      if (protectedAnswer) {
-        const person = c.entities?.people?.[0];
-        if (person === protectedAnswer.person) {
-          if (neededCategory === protectedAnswer.category) {
-            const values = neededCategory === 'time' ? c.entities?.times :
-                          neededCategory === 'location' ? c.entities?.locations :
-                          c.entities?.objects;
-            if (values?.includes(protectedAnswer.value)) {
-              return false;
-            }
-          }
-        }
+      if (finalQuestion && clueRevealsAnswer(c, finalQuestion)) {
+        return false;
       }
       
       return true;
@@ -449,11 +460,13 @@ function pruneRedundantClues(
     }, finalQuestion);
 
     // Check all requirements are still met
+    const answerDepth = solveResult.answerDeductionDepth ?? solveResult.answerRevealedAtStep ?? 0;
+    
     if (
       solveResult.solvable &&
       countForcedMoves(solveResult.steps) >= ALIBI_RULES.MIN_FORCED_MOVES &&
       countValidSolutions(testClues, entities) === 1 &&
-      (finalQuestion ? (solveResult.answerRevealedAtStep ?? 0) >= ALIBI_RULES.MIN_DEDUCTION_DEPTH : true) &&
+      (finalQuestion ? answerDepth >= MIN_ANSWER_DEDUCTION_DEPTH : true) &&
       (finalQuestion ? solveResult.crossCategoryUsedForAnswer : true)
     ) {
       // This clue was redundant
@@ -479,7 +492,7 @@ export function estimateDifficulty(clues: AlibiClue[]): Difficulty {
 }
 
 /**
- * Validate a complete puzzle against all rules including Deductive Logic Edition
+ * Validate a complete puzzle against all rules including enhanced Deductive Logic Edition
  */
 export function validatePuzzle(
   clues: AlibiClue[],
@@ -503,17 +516,14 @@ export function validatePuzzle(
     }
   }
 
-  // Check category balance
-  const categoryBalance = { time: 0, location: 0, object: 0 };
-  for (const clue of clues) {
-    if (clue.category === 'time' || clue.category === 'cross') categoryBalance.time++;
-    if (clue.category === 'location' || clue.category === 'cross') categoryBalance.location++;
-    if (clue.category === 'object' || clue.category === 'cross') categoryBalance.object++;
-  }
+  const hasMinimumAnchors = 
+    anchorCounts.time >= 1 && 
+    anchorCounts.location >= 1 && 
+    anchorCounts.object >= 1;
 
-  // Run human solver with answer tracking
+  // Simulate human solve
   const solveResult = simulateHumanSolve({
-    id: 'test',
+    id: 'validation',
     index: 0,
     difficulty: 'medium',
     ...ctx,
@@ -523,38 +533,60 @@ export function validatePuzzle(
   }, finalQuestion);
 
   const forcedMoveCount = countForcedMoves(solveResult.steps);
+  const hasForcedProgressPath = solveResult.solvable;
   const isUnique = countValidSolutions(clues, entities) === 1;
-  
-  // Deductive Logic Edition validations
-  const answerObfuscated = finalQuestion 
-    ? checkAnswerObfuscation(clues, finalQuestion)
-    : true;
+
+  // Category balance
+  const categoryBalance = { time: 0, location: 0, object: 0 };
+  for (const clue of clues) {
+    if (clue.category === 'time' || clue.category === 'cross') categoryBalance.time++;
+    if (clue.category === 'location' || clue.category === 'cross') categoryBalance.location++;
+    if (clue.category === 'object' || clue.category === 'cross') categoryBalance.object++;
+  }
+
+  // Final question inevitability (answer must be determinable)
+  const finalQuestionInevitable = solveResult.solvable && 
+    (solveResult.answerRevealedAtStep !== undefined || !finalQuestion);
+
+  // Deductive Logic Edition checks
+  let answerObfuscated = true;
+  let answerRevealedAtStep = solveResult.answerDeductionDepth ?? solveResult.answerRevealedAtStep ?? 0;
+  let requiresCrossCategoryDeduction = solveResult.crossCategoryUsedForAnswer ?? false;
+  let deductionDepth = answerRevealedAtStep;
+
+  if (finalQuestion) {
+    // Check answer obfuscation
+    for (const clue of clues) {
+      if (clueRevealsAnswer(clue, finalQuestion)) {
+        answerObfuscated = false;
+        break;
+      }
+    }
     
-  const answerRevealedAtStep = solveResult.answerRevealedAtStep ?? 0;
-  
-  const requiresCrossCategoryDeduction = finalQuestion
-    ? solveResult.crossCategoryUsedForAnswer ?? false
-    : true;
+    // Check for trivial elimination
+    if (checkTrivialElimination(clues, finalQuestion, entities)) {
+      answerObfuscated = false;
+      answerRevealedAtStep = 0;
+    }
+  }
 
   return {
-    hasMinimumAnchors:
-      anchorCounts.time >= ALIBI_RULES.MIN_ANCHORS.time &&
-      anchorCounts.location >= ALIBI_RULES.MIN_ANCHORS.location &&
-      anchorCounts.object >= ALIBI_RULES.MIN_ANCHORS.object,
-    hasForcedProgressPath: solveResult.solvable,
+    hasMinimumAnchors,
+    hasForcedProgressPath,
     forcedMoveCount,
     isUnique,
     categoryBalance,
-    finalQuestionInevitable: solveResult.solvable && isUnique,
-    // Deductive Logic Edition
+    finalQuestionInevitable,
     answerObfuscated,
     answerRevealedAtStep,
     requiresCrossCategoryDeduction,
-    deductionDepth: answerRevealedAtStep,
+    deductionDepth,
   };
 }
 
-// Legacy compatibility
+/**
+ * Legacy compatibility - returns basic clue set
+ */
 export function selectMinimalClueSet(
   ctx: ClueSelectionContext,
   seed: number,
@@ -563,13 +595,11 @@ export function selectMinimalClueSet(
   const result = selectHumanSolvableClueSet(ctx, seed, targetDifficulty);
   if (result) return result;
 
-  // Fallback: generate a basic clue set (may not be ideal)
-  console.warn('Failed to generate human-solvable puzzle, using fallback');
-  const candidates = generateAllCandidateClues(ctx, seed);
+  // Fallback: return basic anchors
+  const candidates = generateAllCandidateClues({ ...ctx, solution: ctx.solution }, seed);
   return [
     ...candidates.anchors.time.slice(0, 2),
     ...candidates.anchors.location.slice(0, 2),
     ...candidates.anchors.object.slice(0, 2),
-    ...candidates.forcedNegatives.slice(0, 2),
   ];
 }

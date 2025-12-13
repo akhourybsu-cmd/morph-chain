@@ -1,35 +1,44 @@
 /**
- * Daily Puzzle Generator - V2.0 Deductive Logic Edition
+ * Daily Puzzle Generator - V3.0 Enhanced Deduction Requirements
  * 
  * Generation Flow:
  * 1. Generate entities and solution
  * 2. Pick final question FIRST (establishes protected answer)
  * 3. Generate clues that DON'T reveal the answer
- * 4. Validate all rules:
+ * 4. Validate ALL rules:
  *    - Mandatory anchors (Section 2)
  *    - Forced progress path (Section 4)
  *    - Minimum forced moves ≥5 (Section 4.2)
  *    - Category balance (Section 5)
  *    - Final question inevitability (Section 6)
- *    - Answer obfuscation (Deductive Logic Edition)
- *    - Deduction depth ≥2 (Deductive Logic Edition)
- *    - Cross-category deduction (Deductive Logic Edition)
+ *    - Answer obfuscation (NO clue reveals the answer)
+ *    - Deduction depth ≥3 (STRICT requirement)
+ *    - Cross-category deduction (REQUIRED)
+ *    - No trivial elimination (answer not obvious from anchors)
  */
 
 import { AlibiPuzzle, Difficulty, ALIBI_RULES, FinalQuestion } from './types';
 
 // Version bump forces puzzle regeneration when rules change
-export const PUZZLE_GENERATION_VERSION = 3;
+export const PUZZLE_GENERATION_VERSION = 4;
+
 import { 
   generateEntities, 
   generateSolution, 
   pickFinalQuestion,
-  generateFinalQuestion,
   PuzzleEntities 
 } from './solutionGenerator';
 import { selectHumanSolvableClueSet, estimateDifficulty, validatePuzzle } from './clueSelection';
-import { simulateHumanSolve, countForcedMoves } from './humanLogicSolver';
+import { 
+  simulateHumanSolve, 
+  countForcedMoves, 
+  clueRevealsAnswer,
+  checkTrivialElimination 
+} from './humanLogicSolver';
 import { countValidSolutions } from './constraintSolver';
+
+// Stricter minimum deduction depth for the answer
+const MIN_ANSWER_DEDUCTION_DEPTH = 3;
 
 // Convert date string to numeric seed
 function dateToSeed(dateStr: string): number {
@@ -51,14 +60,14 @@ function getPuzzleIndex(dateStr: string): number {
 }
 
 /**
- * Generate a daily puzzle with full validation including Deductive Logic Edition rules
+ * Generate a daily puzzle with STRICT validation including enhanced deduction requirements
  * Retries up to MAX_ATTEMPTS times to find a valid puzzle
  */
 export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
   const baseSeed = dateToSeed(dateStr);
   const index = getPuzzleIndex(dateStr);
 
-  const MAX_ATTEMPTS = 100;
+  const MAX_ATTEMPTS = 150; // Increased attempts due to stricter requirements
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const seed = baseSeed + attempt * 1000;
@@ -67,8 +76,7 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
     const entities = generateEntities(seed);
     const solution = generateSolution(entities, seed);
 
-    // STEP 2: Pick final question FIRST (Deductive Logic Edition)
-    // This establishes the protected answer that clues cannot reveal
+    // STEP 2: Pick final question FIRST (establishes protected answer)
     const finalQuestion = pickFinalQuestion(entities, solution, seed);
     if (!finalQuestion) continue;
 
@@ -100,13 +108,38 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
       continue;
     }
 
-    // Deductive Logic Edition checks
+    // Enhanced Deductive Logic Edition checks
     if (!validation.answerObfuscated) continue;
-    if (validation.answerRevealedAtStep < ALIBI_RULES.MIN_DEDUCTION_DEPTH) continue;
+    if (validation.answerRevealedAtStep < MIN_ANSWER_DEDUCTION_DEPTH) continue;
     if (!validation.requiresCrossCategoryDeduction) continue;
+
+    // Additional validation: Check no single clue reveals the answer
+    let singleClueReveals = false;
+    for (const clue of clues) {
+      if (clueRevealsAnswer(clue, finalQuestion)) {
+        singleClueReveals = true;
+        break;
+      }
+    }
+    if (singleClueReveals) continue;
+
+    // Additional validation: Check for trivial elimination
+    const entitiesObj = {
+      people: entities.people,
+      locations: entities.locations,
+      times: entities.times,
+      objects: entities.objects,
+    };
+    if (checkTrivialElimination(clues, finalQuestion, entitiesObj)) continue;
 
     // All validations passed!
     const difficulty: Difficulty = estimateDifficulty(clues);
+
+    console.log(`[Alibi] Generated valid puzzle for ${dateStr} on attempt ${attempt + 1}`);
+    console.log(`  - Forced moves: ${validation.forcedMoveCount}`);
+    console.log(`  - Answer deduction depth: ${validation.answerRevealedAtStep}`);
+    console.log(`  - Cross-category required: ${validation.requiresCrossCategoryDeduction}`);
+    console.log(`  - Clue count: ${clues.length}`);
 
     return {
       id: dateStr,
@@ -126,13 +159,13 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
   }
 
   // Fallback: Generate a basic puzzle if all attempts fail
-  console.warn(`Failed to generate ideal puzzle for ${dateStr} after ${MAX_ATTEMPTS} attempts, using fallback`);
+  console.warn(`[Alibi] Failed to generate ideal puzzle for ${dateStr} after ${MAX_ATTEMPTS} attempts, using fallback`);
   return generateFallbackPuzzle(dateStr, baseSeed, index);
 }
 
 /**
  * Fallback puzzle generation when validation fails
- * Uses simpler clue selection without strict Deductive Logic Edition requirements
+ * Uses simpler clue selection - still valid but may not meet all enhanced requirements
  */
 function generateFallbackPuzzle(dateStr: string, seed: number, index: number): AlibiPuzzle {
   const entities = generateEntities(seed);
@@ -142,12 +175,13 @@ function generateFallbackPuzzle(dateStr: string, seed: number, index: number): A
   const { generateAllCandidateClues } = require('./clueTemplates');
   const candidates = generateAllCandidateClues({ ...entities, solution }, seed);
 
-  // Use a simple anchor-heavy clue set
+  // Use a balanced clue set
   const clues = [
     ...candidates.anchors.time.slice(0, 2),
     ...candidates.anchors.location.slice(0, 2),
     ...candidates.anchors.object.slice(0, 2),
-    ...candidates.forcedNegatives.slice(0, 3),
+    ...candidates.forcedNegatives.slice(0, 4),
+    ...candidates.crossCategory.slice(0, 1),
   ];
 
   const { generateFinalQuestionLegacy } = require('./solutionGenerator');
@@ -173,7 +207,7 @@ function generateFallbackPuzzle(dateStr: string, seed: number, index: number): A
  */
 export function generatePracticePuzzle(): AlibiPuzzle {
   const seed = Date.now();
-  const MAX_ATTEMPTS = 50;
+  const MAX_ATTEMPTS = 75;
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const attemptSeed = seed + attempt * 1000;
@@ -198,7 +232,8 @@ export function generatePracticePuzzle(): AlibiPuzzle {
 
     if (!validation.hasForcedProgressPath) continue;
     if (!validation.answerObfuscated) continue;
-    if (validation.answerRevealedAtStep < 2) continue;
+    if (validation.answerRevealedAtStep < MIN_ANSWER_DEDUCTION_DEPTH) continue;
+    if (!validation.requiresCrossCategoryDeduction) continue;
 
     const difficulty: Difficulty = estimateDifficulty(clues);
 
@@ -238,11 +273,14 @@ export function analyzePuzzle(puzzle: AlibiPuzzle): {
   forcedMoves: number;
   stuckAt?: number;
   stepBreakdown: { confirms: number; eliminates: number };
-  // Deductive Logic Edition analysis
+  // Enhanced Deductive Logic Edition analysis
   answerRevealedAtStep: number;
+  answerDeductionDepth: number;
   usedCrossCategoryReasoning: boolean;
   answerObfuscated: boolean;
+  trivialElimination: boolean;
   isValid: boolean;
+  cluesContributingToAnswer: string[];
 } {
   const finalQuestion = puzzle.finalQuestionData;
   const result = simulateHumanSolve(puzzle, finalQuestion);
@@ -251,7 +289,6 @@ export function analyzePuzzle(puzzle: AlibiPuzzle): {
   const eliminates = result.steps.filter(s => s.type === 'eliminate').length;
 
   // Check answer obfuscation
-  const { clueRevealsAnswer } = require('./humanLogicSolver');
   let answerObfuscated = true;
   if (finalQuestion) {
     for (const clue of puzzle.clues) {
@@ -262,15 +299,29 @@ export function analyzePuzzle(puzzle: AlibiPuzzle): {
     }
   }
 
+  // Check for trivial elimination
+  let trivialElimination = false;
+  if (finalQuestion) {
+    const entities = {
+      people: puzzle.people,
+      locations: puzzle.locations,
+      times: puzzle.times,
+      objects: puzzle.objects,
+    };
+    trivialElimination = checkTrivialElimination(puzzle.clues, finalQuestion, entities);
+  }
+
   const answerRevealedAtStep = result.answerRevealedAtStep ?? 0;
+  const answerDeductionDepth = result.answerDeductionDepth ?? answerRevealedAtStep;
   const usedCrossCategoryReasoning = result.crossCategoryUsedForAnswer ?? false;
 
-  // Overall validity check
+  // Overall validity check (stricter)
   const isValid = 
     result.solvable &&
     countForcedMoves(result.steps) >= ALIBI_RULES.MIN_FORCED_MOVES &&
     answerObfuscated &&
-    answerRevealedAtStep >= ALIBI_RULES.MIN_DEDUCTION_DEPTH &&
+    !trivialElimination &&
+    answerDeductionDepth >= MIN_ANSWER_DEDUCTION_DEPTH &&
     usedCrossCategoryReasoning;
 
   return {
@@ -279,8 +330,11 @@ export function analyzePuzzle(puzzle: AlibiPuzzle): {
     stuckAt: result.stuckAt,
     stepBreakdown: { confirms, eliminates },
     answerRevealedAtStep,
+    answerDeductionDepth,
     usedCrossCategoryReasoning,
     answerObfuscated,
+    trivialElimination,
     isValid,
+    cluesContributingToAnswer: result.answerPathClues ?? [],
   };
 }
