@@ -1,5 +1,6 @@
 import { TileState } from "@/components/HintTile";
 import { CURATED_4L_WORDS, CURATED_5L_WORDS } from "./curatedDictionary";
+import { getExpanded4LDictionary } from "./chainDictionary4L";
 import { getExpanded5LDictionary } from "./chainDictionary5L";
 import { isPuzzleSolvable, calculateMinDistance } from "./puzzleValidator";
 import { CURATED_4L_PUZZLES } from "./curatedPuzzles4L";
@@ -9,17 +10,16 @@ import { toZonedTime, formatInTimeZone } from "date-fns-tz";
 import { startOfDay, differenceInDays } from "date-fns";
 import { loadDailyPuzzle, VaultPuzzle } from "./puzzleVaultLoader";
 
-// 4L uses curated dictionary
-const cachedWords4 = CURATED_4L_WORDS;
-
-// 5L uses expanded wordlist for move validation (16k+ words)
-// but keeps curated words for puzzle generation (start/goal)
+// Both use expanded wordlists for move validation
+// but curated words are used for puzzle generation (start/goal)
+const cachedWords4 = getExpanded4LDictionary();
 const cachedWords5 = getExpanded5LDictionary();
 
-// Curated 5L words are used for puzzle generation only
+// Curated words are used for puzzle generation only
+export const CURATED_WORDS_4 = CURATED_4L_WORDS;
 export const CURATED_WORDS_5 = CURATED_5L_WORDS;
 
-console.log(`Using dictionaries: 4L=${cachedWords4.size} (curated), 5L=${cachedWords5.size} (expanded)`);
+console.log(`Using dictionaries: 4L=${cachedWords4.size} (expanded), 5L=${cachedWords5.size} (expanded)`);
 
 // Export word sets for validation
 export const VALID_WORDS_4 = cachedWords4;
