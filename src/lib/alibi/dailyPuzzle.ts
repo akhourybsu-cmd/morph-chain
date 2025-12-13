@@ -20,7 +20,7 @@
 import { AlibiPuzzle, ALIBI_RULES, FinalQuestion } from './types';
 
 // Version bump forces puzzle regeneration when rules change
-export const PUZZLE_GENERATION_VERSION = 6;
+export const PUZZLE_GENERATION_VERSION = 7;
 
 import { 
   generateEntities, 
@@ -113,6 +113,11 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
     if (validation.answerRevealedAtStep < MIN_ANSWER_DEDUCTION_DEPTH) continue;
     if (!validation.requiresCrossCategoryDeduction) continue;
 
+    // V3.0 Puzzle Design Guardrails
+    if (!validation.hasNoDeadEnds) continue;        // Rule 1: No dead ends
+    if (!validation.allCluesContribute) continue;   // Rule 6: No floating info
+    if (!validation.requiresGridInteraction) continue; // Rule 12: Grid earns its ink
+
     // Additional validation: Check no single clue reveals the answer
     let singleClueReveals = false;
     for (const clue of clues) {
@@ -139,8 +144,14 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
     console.log(`  - Forced moves: ${validation.forcedMoveCount}`);
     console.log(`  - Answer deduction depth: ${validation.answerRevealedAtStep}`);
     console.log(`  - Cross-category required: ${validation.requiresCrossCategoryDeduction}`);
+    console.log(`  - No dead ends: ${validation.hasNoDeadEnds}`);
+    console.log(`  - All clues contribute: ${validation.allCluesContribute}`);
+    console.log(`  - Requires grid interaction: ${validation.requiresGridInteraction}`);
     console.log(`  - Clue count: ${clues.length}`);
     console.log(`  - Complexity score: ${complexity}`);
+    if (validation.keyInsight) {
+      console.log(`  - Key insight: ${validation.keyInsight.description}`);
+    }
 
     return {
       id: dateStr,

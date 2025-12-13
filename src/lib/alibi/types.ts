@@ -58,6 +58,14 @@ export interface PuzzleValidation {
   answerRevealedAtStep: number;    // Step at which answer becomes known
   requiresCrossCategoryDeduction: boolean; // Uses reasoning from different category
   deductionDepth: number;          // Number of deductions to reach answer
+  // V3.0 Puzzle Design Guardrails
+  hasNoDeadEnds: boolean;          // At every step, forced move exists (Rule 1)
+  allCluesContribute: boolean;     // Every clue forces at least one mark (Rule 6)
+  requiresGridInteraction: boolean; // Cannot solve by reading alone (Rule 12)
+  keyInsight?: {                   // The "Silent Aha" moment (Rule 13)
+    description: string;
+    contributingClues: string[];
+  };
 }
 
 // V1.0 Ruleset: Deduction step for human solver

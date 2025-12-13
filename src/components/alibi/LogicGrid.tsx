@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { GridState, CellState } from '@/lib/alibi/types';
 import { Check, X } from 'lucide-react';
 
@@ -9,6 +9,41 @@ interface LogicGridProps {
 }
 
 export function LogicGrid({ grid, onCellClick, disabled = false }: LogicGridProps) {
+  // Calculate which cells are "inevitable" - only one unknown left in row or column (Rule 8)
+  const inevitableCells = useMemo(() => {
+    const inevitable = new Set<string>();
+    
+    // Check rows - if only one unknown left
+    for (const row of grid.rows) {
+      const unknowns: string[] = [];
+      let hasConfirmed = false;
+      for (const col of grid.cols) {
+        const state = grid.cells[row]?.[col] || 'unknown';
+        if (state === 'unknown') unknowns.push(col);
+        if (state === 'confirmed') hasConfirmed = true;
+      }
+      if (unknowns.length === 1 && !hasConfirmed) {
+        inevitable.add(`${row}-${unknowns[0]}`);
+      }
+    }
+    
+    // Check columns - if only one unknown left
+    for (const col of grid.cols) {
+      const unknowns: string[] = [];
+      let hasConfirmed = false;
+      for (const row of grid.rows) {
+        const state = grid.cells[row]?.[col] || 'unknown';
+        if (state === 'unknown') unknowns.push(row);
+        if (state === 'confirmed') hasConfirmed = true;
+      }
+      if (unknowns.length === 1 && !hasConfirmed) {
+        inevitable.add(`${unknowns[0]}-${col}`);
+      }
+    }
+    
+    return inevitable;
+  }, [grid]);
+
   const getCellContent = (state: CellState) => {
     switch (state) {
       case 'confirmed':
@@ -20,7 +55,7 @@ export function LogicGrid({ grid, onCellClick, disabled = false }: LogicGridProp
     }
   };
 
-  const getCellStyles = (state: CellState): React.CSSProperties => {
+  const getCellStyles = (state: CellState, isInevitable: boolean): React.CSSProperties => {
     switch (state) {
       case 'confirmed':
         return {
@@ -33,6 +68,13 @@ export function LogicGrid({ grid, onCellClick, disabled = false }: LogicGridProp
           borderColor: 'hsl(var(--alibi-divider) / 0.5)'
         };
       default:
+        // Subtle highlight for inevitable cells (Rule 8: Elimination Visibility)
+        if (isInevitable) {
+          return {
+            background: 'hsl(var(--alibi-accent) / 0.06)',
+            borderColor: 'hsl(var(--alibi-accent) / 0.25)',
+          };
+        }
         return {
           background: 'hsl(var(--alibi-card-bg))',
           borderColor: 'hsl(var(--alibi-divider) / 0.5)'
@@ -106,17 +148,21 @@ export function LogicGrid({ grid, onCellClick, disabled = false }: LogicGridProp
             {/* Cells */}
             {grid.cols.map(col => {
               const state = grid.cells[row]?.[col] || 'unknown';
-              const cellStyles = getCellStyles(state);
+              const isInevitable = inevitableCells.has(`${row}-${col}`);
+              const cellStyles = getCellStyles(state, isInevitable);
               return (
                 <button
                   key={`${row}-${col}`}
                   onClick={() => !disabled && onCellClick(row, col)}
                   disabled={disabled}
-                  className="w-11 h-11 flex items-center justify-center border rounded transition-all duration-150"
+                  className={`w-11 h-11 flex items-center justify-center border rounded transition-all duration-150 ${
+                    isInevitable && state === 'unknown' ? 'animate-pulse' : ''
+                  }`}
                   style={{
                     ...cellStyles,
                     cursor: disabled ? 'not-allowed' : 'pointer',
-                    opacity: disabled ? 0.6 : 1
+                    opacity: disabled ? 0.6 : 1,
+                    animationDuration: isInevitable ? '2s' : undefined,
                   }}
                   onMouseEnter={(e) => {
                     if (!disabled && state === 'unknown') {
