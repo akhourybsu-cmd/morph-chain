@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Sheet,
@@ -6,12 +6,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { GamesNavigation } from '@/components/shared/GamesNavigation';
 import { useAlibiSettings } from '@/hooks/useAlibiSettings';
-import { Settings, User } from 'lucide-react';
+import { Settings, User, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AlibiMenuSheetProps {
@@ -27,9 +28,10 @@ export function AlibiMenuSheet({ open, onOpenChange }: AlibiMenuSheetProps) {
     autoDeduction, 
     setAutoDeduction 
   } = useAlibiSettings();
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsLoggedIn(!!session);
@@ -52,38 +54,86 @@ export function AlibiMenuSheet({ open, onOpenChange }: AlibiMenuSheetProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         side="left" 
-        className="w-[300px] bg-alibi-page-bg border-alibi-divider"
+        className="w-80 overflow-y-auto"
+        style={{
+          background: 'hsl(var(--alibi-card-bg))',
+          borderColor: 'hsl(var(--alibi-card-border))',
+        }}
       >
         <SheetHeader>
-          <SheetTitle className="font-serif text-alibi-text-primary">
+          <SheetTitle 
+            className="font-serif"
+            style={{ color: 'hsl(var(--alibi-text-primary))' }}
+          >
             Menu
           </SheetTitle>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
-          {/* Games Navigation */}
-          <GamesNavigation 
-            currentGame="alibi" 
-            onNavigate={() => onOpenChange(false)} 
-          />
+        <div className="space-y-5 py-4">
+          {/* Games Section */}
+          <GamesNavigation currentGame="alibi" onNavigate={() => onOpenChange(false)} />
 
-          {/* Settings */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-alibi-text-secondary">
-              <Settings className="h-4 w-4" />
-              <span className="text-sm font-medium uppercase tracking-wide">
-                Settings
-              </span>
+          <Separator style={{ background: 'hsl(var(--alibi-divider))' }} />
+
+          {/* Account Section */}
+          <div>
+            <h3 
+              className="text-xs font-semibold uppercase tracking-wider mb-3 px-2"
+              style={{ color: 'hsl(var(--alibi-text-muted))' }}
+            >
+              Account
+            </h3>
+            <div className="space-y-1">
+              <button
+                onClick={() => handleNavigate(isLoggedIn ? '/profile' : '/login')}
+                className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+                style={{ color: 'hsl(var(--alibi-text-primary))' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--alibi-divider))'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <User className="w-4 h-4" style={{ color: 'hsl(var(--alibi-accent))' }} />
+                <span className="text-sm">{isLoggedIn ? 'My Account' : 'Sign In'}</span>
+              </button>
             </div>
+          </div>
 
-            <div className="space-y-3 pl-6">
-              <div className="flex items-center justify-between">
-                <Label 
-                  htmlFor="show-timer" 
-                  className="text-sm text-alibi-text-primary"
-                >
-                  Show Timer
-                </Label>
+          <Separator style={{ background: 'hsl(var(--alibi-divider))' }} />
+
+          {/* Settings Section - Collapsible */}
+          <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
+            <CollapsibleTrigger 
+              className="flex items-center justify-between w-full px-2 py-1.5 rounded-lg transition-colors"
+              style={{ color: 'hsl(var(--alibi-text-primary))' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--alibi-divider))'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4" style={{ color: 'hsl(var(--alibi-text-muted))' }} />
+                <span className="font-medium text-sm">Settings</span>
+              </div>
+              <ChevronDown 
+                className={`h-4 w-4 transition-transform ${settingsOpen ? 'rotate-180' : ''}`} 
+                style={{ color: 'hsl(var(--alibi-text-muted))' }}
+              />
+            </CollapsibleTrigger>
+            
+            <CollapsibleContent className="space-y-4 pt-4">
+              <div className="flex items-center justify-between px-2">
+                <div className="space-y-0.5">
+                  <Label 
+                    htmlFor="show-timer" 
+                    className="text-sm"
+                    style={{ color: 'hsl(var(--alibi-text-primary))' }}
+                  >
+                    Show Timer
+                  </Label>
+                  <p 
+                    className="text-xs"
+                    style={{ color: 'hsl(var(--alibi-text-muted))' }}
+                  >
+                    Display elapsed time
+                  </p>
+                </div>
                 <Switch
                   id="show-timer"
                   checked={showTimer}
@@ -91,41 +141,30 @@ export function AlibiMenuSheet({ open, onOpenChange }: AlibiMenuSheetProps) {
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <Label 
-                  htmlFor="auto-deduction" 
-                  className="text-sm text-alibi-text-primary"
-                >
-                  Auto-Deduction
-                </Label>
+              <div className="flex items-center justify-between px-2">
+                <div className="space-y-0.5">
+                  <Label 
+                    htmlFor="auto-deduction" 
+                    className="text-sm"
+                    style={{ color: 'hsl(var(--alibi-text-primary))' }}
+                  >
+                    Auto-Deduction
+                  </Label>
+                  <p 
+                    className="text-xs"
+                    style={{ color: 'hsl(var(--alibi-text-muted))' }}
+                  >
+                    Auto-fill forced cells
+                  </p>
+                </div>
                 <Switch
                   id="auto-deduction"
                   checked={autoDeduction}
                   onCheckedChange={setAutoDeduction}
                 />
               </div>
-            </div>
-          </div>
-
-          {/* Account */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-alibi-text-secondary">
-              <User className="h-4 w-4" />
-              <span className="text-sm font-medium uppercase tracking-wide">
-                Account
-              </span>
-            </div>
-
-            <div className="pl-6">
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-alibi-text-primary hover:bg-alibi-divider/50"
-                onClick={() => handleNavigate(isLoggedIn ? '/profile' : '/login')}
-              >
-                {isLoggedIn ? 'View Profile' : 'Sign In'}
-              </Button>
-            </div>
-          </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </SheetContent>
     </Sheet>
