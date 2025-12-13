@@ -113,16 +113,6 @@ export default function MorphAlibi() {
             {formatTime(elapsedTime)}
           </span>
         )}
-        
-        <span 
-          className="text-[10px] px-2 py-0.5 rounded-full lowercase"
-          style={{ 
-            background: 'hsl(var(--alibi-divider) / 0.5)',
-            color: 'hsl(var(--alibi-text-muted))'
-          }}
-        >
-          {puzzle.difficulty}
-        </span>
       </div>
 
       {/* Main Content */}

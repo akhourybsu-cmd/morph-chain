@@ -27,7 +27,7 @@ export interface AlibiClue {
   };
 }
 
-export type Difficulty = "easy" | "medium" | "hard";
+// Difficulty removed - all puzzles are challenging by default
 
 // Deductive Logic Edition: Structured final question format
 export type FinalQuestionType = 'person_at_time' | 'person_at_location' | 'person_with_object';
@@ -75,7 +75,6 @@ export const REVEAL_THRESHOLD = 8; // Number of confirmations before question ap
 export interface AlibiPuzzle {
   id: string;
   index: number;
-  difficulty: Difficulty;
   people: string[];
   locations: string[];
   times: string[];
@@ -166,9 +165,11 @@ export const ALIBI_RULES = {
   NO_PRONOUNS: true,
   SINGLE_SENTENCE: true,
   
-  // Enhanced Deductive Logic Edition (V2.0)
-  MIN_DEDUCTION_DEPTH: 3,         // Answer needs ≥3 deductions (increased from 2)
+  // Enhanced Deductive Logic Edition (V2.0) - All puzzles are challenging
+  MIN_DEDUCTION_DEPTH: 4,         // Answer needs ≥4 deductions (increased for challenge)
   REQUIRE_CROSS_CATEGORY: true,   // Must use different category for answer
   ANSWER_OBFUSCATION: true,       // No clue may directly state the answer
   NO_TRIVIAL_ELIMINATION: true,   // Answer cannot be obvious from anchors alone
+  MIN_CLUE_COUNT: 6,              // Minimum clues to ensure complexity
+  REQUIRE_MULTI_STEP_CHAINS: true, // Require chained reasoning across grids
 } as const;
