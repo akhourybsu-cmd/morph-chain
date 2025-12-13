@@ -53,6 +53,14 @@ export interface SolveResult {
   crossCategoryUsedForAnswer?: boolean;
   categoriesUsedBeforeAnswer?: Set<string>;
   answerPathClues?: string[]; // Clue IDs that contribute to answer
+  // V3.0 Puzzle Design Guardrails
+  hasNoDeadEnds: boolean;        // At every step, forced move exists (Rule 1)
+  cluesUsed: Set<string>;        // Track which clues actually contribute (Rule 6)
+  gridInteractionCount: number;  // Number of marks made (Rule 12)
+  keyInsight?: {                 // "Silent Aha" moment (Rule 13)
+    description: string;
+    contributingClues: string[];
+  };
 }
 
 // Initialize empty grids
@@ -670,6 +678,12 @@ export function simulateHumanSolve(
   let answerRevealedAtStep: number | undefined;
   let answerDeductionDepth: number | undefined;
   let crossCategoryUsedForAnswer = false;
+  let hasNoDeadEnds = true; // Assume true until proven otherwise
+  let gridInteractionCount = 0;
+  let keyInsight: { description: string; contributingClues: string[] } | undefined;
+  
+  // Track cross-category deductions for "Silent Aha" detection
+  const crossCategoryMoments: { step: DeductionStep; clues: string[] }[] = [];
   
   const MAX_ITERATIONS = 100;
   let iteration = 0;
@@ -700,7 +714,8 @@ export function simulateHumanSolve(
     });
     
     if (newSteps.length === 0) {
-      // No forced deduction available - stuck!
+      // No forced deduction available - stuck! (Rule 1 violation)
+      hasNoDeadEnds = false;
       return {
         solvable: false,
         steps: allSteps,
@@ -709,6 +724,10 @@ export function simulateHumanSolve(
         answerDeductionDepth,
         crossCategoryUsedForAnswer,
         categoriesUsedBeforeAnswer: categoriesUsed,
+        hasNoDeadEnds: false,
+        cluesUsed,
+        gridInteractionCount,
+        keyInsight,
       };
     }
     
@@ -717,11 +736,20 @@ export function simulateHumanSolve(
       applyDeduction(state, step);
       allSteps.push(step);
       stepCount++;
+      gridInteractionCount++;
       
       // Track which categories and clues are being used
       categoriesUsed.add(step.grid);
       if (step.clueId) {
         cluesUsed.add(step.clueId);
+      }
+      
+      // Detect cross-category deductions for "Silent Aha" (Rule 13)
+      if (step.reasoning.includes('Cross-category') || step.reasoning.includes('cross')) {
+        crossCategoryMoments.push({
+          step,
+          clues: step.clueId ? [step.clueId] : [],
+        });
       }
       
       // Track when answer is revealed (if tracking)
@@ -757,6 +785,15 @@ export function simulateHumanSolve(
   
   const solved = isSolved(state, people);
   
+  // Generate key insight if we have cross-category moments (Rule 13)
+  if (crossCategoryMoments.length > 0) {
+    const bestMoment = crossCategoryMoments[crossCategoryMoments.length - 1];
+    keyInsight = {
+      description: bestMoment.step.reasoning,
+      contributingClues: bestMoment.clues,
+    };
+  }
+  
   return {
     solvable: solved,
     steps: allSteps,
@@ -766,6 +803,10 @@ export function simulateHumanSolve(
     crossCategoryUsedForAnswer,
     categoriesUsedBeforeAnswer: categoriesUsed,
     answerPathClues: Array.from(cluesUsed),
+    hasNoDeadEnds,
+    cluesUsed,
+    gridInteractionCount,
+    keyInsight,
   };
 }
 

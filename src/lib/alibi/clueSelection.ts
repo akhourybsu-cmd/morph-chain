@@ -217,7 +217,9 @@ export function selectHumanSolvableClueSet(
 
   // STEP 5: Always prune redundant clues for challenging puzzles
   const pruned = pruneRedundantClues(selectedClues, ctx, finalQuestion);
-  return pruned;
+  
+  // STEP 6: Order clues editorially for best player experience (Rule 2)
+  return orderCluesEditorially(pruned);
 }
 
 /**
@@ -320,6 +322,34 @@ function buildTieredCandidatePool(
     ...seededShuffle(relationals, seed + 600),
     ...seededShuffle(advanced, seed + 700),
   ];
+}
+
+/**
+ * Order clues editorially for best player experience (Rule 2)
+ * Order: 1. Anchors → 2. Cross-category → 3. Relationals → 4. Eliminations
+ */
+export function orderCluesEditorially(clues: AlibiClue[]): AlibiClue[] {
+  const anchors: AlibiClue[] = [];
+  const crossCategory: AlibiClue[] = [];
+  const relationals: AlibiClue[] = [];
+  const eliminations: AlibiClue[] = [];
+  const other: AlibiClue[] = [];
+
+  for (const clue of clues) {
+    if (clue.tier === 'anchor') {
+      anchors.push(clue);
+    } else if (clue.tier === 'cross_category') {
+      crossCategory.push(clue);
+    } else if (clue.tier === 'relational') {
+      relationals.push(clue);
+    } else if (clue.tier === 'forced_negative' || clue.type === 'direct_negative') {
+      eliminations.push(clue);
+    } else {
+      other.push(clue);
+    }
+  }
+
+  return [...anchors, ...crossCategory, ...relationals, ...eliminations, ...other];
 }
 
 /**
@@ -564,6 +594,12 @@ export function validatePuzzle(
     }
   }
 
+  // V3.0 Puzzle Design Guardrails
+  const hasNoDeadEnds = solveResult.hasNoDeadEnds ?? true;
+  const allCluesContribute = clues.every(c => solveResult.cluesUsed?.has(c.id) ?? true);
+  const requiresGridInteraction = (solveResult.gridInteractionCount ?? 0) >= 12; // Minimum grid marks required
+  const keyInsight = solveResult.keyInsight;
+
   return {
     hasMinimumAnchors,
     hasForcedProgressPath,
@@ -575,6 +611,10 @@ export function validatePuzzle(
     answerRevealedAtStep,
     requiresCrossCategoryDeduction,
     deductionDepth,
+    hasNoDeadEnds,
+    allCluesContribute,
+    requiresGridInteraction,
+    keyInsight,
   };
 }
 

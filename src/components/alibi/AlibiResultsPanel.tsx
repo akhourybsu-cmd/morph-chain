@@ -2,7 +2,7 @@ import React from 'react';
 import { AlibiPuzzle, AlibiStats } from '@/lib/alibi/types';
 import { loadStats } from '@/lib/alibi/storage';
 import { Button } from '@/components/ui/button';
-import { Share2, RotateCcw } from 'lucide-react';
+import { Share2, RotateCcw, Lightbulb } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface AlibiResultsPanelProps {
@@ -32,6 +32,47 @@ function getDetectiveRank(consistencyChecks: number): { title: string; emoji: st
   }
 }
 
+/**
+ * Generate key insight text based on puzzle validation data (Rule 15)
+ */
+function generateKeyInsight(puzzle: AlibiPuzzle): string | null {
+  // Try to extract from validation data
+  if (puzzle.validation?.keyInsight?.description) {
+    // Clean up the reasoning text for player-friendly display
+    const desc = puzzle.validation.keyInsight.description;
+    
+    // Extract the key elements from cross-category reasoning
+    if (desc.includes('Cross-category')) {
+      const match = desc.match(/Cross-category: (.+)/);
+      if (match) {
+        return match[1];
+      }
+    }
+    
+    return desc;
+  }
+  
+  // Generate a generic insight based on the solution
+  const { solution, people, locations, times, objects } = puzzle;
+  
+  // Find an interesting connection
+  for (const person of people) {
+    const location = solution.personToLocation[person];
+    const object = solution.personToObject[person];
+    const time = solution.personToTime[person];
+    
+    // Look for a cross-category pattern
+    if (location && object) {
+      return `The ${object} and ${location} pointed to the same person.`;
+    }
+    if (location && time) {
+      return `The timing at ${time} connected to the ${location}.`;
+    }
+  }
+  
+  return null;
+}
+
 export function AlibiResultsPanel({
   puzzle,
   elapsedTime,
@@ -41,6 +82,7 @@ export function AlibiResultsPanel({
 }: AlibiResultsPanelProps) {
   const stats = loadStats();
   const rank = getDetectiveRank(consistencyChecks);
+  const keyInsight = generateKeyInsight(puzzle);
 
   // Generate narrative recap
   const generateNarrative = () => {
@@ -116,6 +158,21 @@ export function AlibiResultsPanel({
           </div>
         </div>
       </div>
+
+      {/* Key Insight (Rule 15: Post-Solve Reinforcement) */}
+      {keyInsight && (
+        <div className="border-t border-alibi-divider pt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Lightbulb className="h-4 w-4 text-alibi-accent" />
+            <h3 className="text-sm font-semibold text-alibi-accent uppercase tracking-wide">
+              Key Insight
+            </h3>
+          </div>
+          <p className="text-sm text-alibi-text-secondary italic">
+            {keyInsight}
+          </p>
+        </div>
+      )}
 
       {/* Narrative Recap */}
       <div className="border-t border-alibi-divider pt-4">
