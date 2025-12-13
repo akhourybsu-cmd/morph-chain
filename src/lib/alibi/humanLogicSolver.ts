@@ -1,14 +1,15 @@
 /**
- * Human Logic Solver - V1.0 Ruleset + Deductive Logic Edition
+ * Human Logic Solver - V2.0 Complete Rewrite
  * 
- * Simulates human deduction step-by-step.
+ * Simulates human deduction step-by-step with proper answer tracking.
  * At every step, there must be at least one forced deduction.
  * No guessing, backtracking, or hypothesis testing allowed.
  * 
- * Deductive Logic Edition Additions:
- * - Tracks when the final answer becomes known
- * - Validates cross-category deduction requirement
- * - Ensures answer is not known from anchors alone
+ * Key Features:
+ * - Tracks which deductions contribute to the final answer
+ * - Validates cross-category deduction requirement properly
+ * - Counts true deduction depth for the answer (not just any confirmations)
+ * - Detects trivial elimination scenarios
  */
 
 import { AlibiClue, AlibiPuzzle, DeductionStep, CellState, FinalQuestion } from './types';
@@ -35,14 +36,23 @@ interface ParsedConstraint {
   gap?: number;
 }
 
+// Enhanced step tracking for answer path analysis
+interface TrackedStep extends DeductionStep {
+  stepIndex: number;
+  dependsOn: number[]; // Indices of steps this one depends on
+  contributesToAnswer: boolean;
+}
+
 export interface SolveResult {
   solvable: boolean;
   steps: DeductionStep[];
   stuckAt?: number;
-  // Deductive Logic Edition tracking
+  // Enhanced Deductive Logic Edition tracking
   answerRevealedAtStep?: number;
+  answerDeductionDepth?: number; // True deduction chain length for answer
   crossCategoryUsedForAnswer?: boolean;
   categoriesUsedBeforeAnswer?: Set<string>;
+  answerPathClues?: string[]; // Clue IDs that contribute to answer
 }
 
 // Initialize empty grids
@@ -62,6 +72,15 @@ function initializeState(people: string[], locations: string[], times: string[],
     location: createGrid(people, locations),
     time: createGrid(people, times),
     object: createGrid(people, objects),
+  };
+}
+
+// Deep clone solver state
+function cloneState(state: SolverState): SolverState {
+  return {
+    location: { cells: JSON.parse(JSON.stringify(state.location.cells)) },
+    time: { cells: JSON.parse(JSON.stringify(state.time.cells)) },
+    object: { cells: JSON.parse(JSON.stringify(state.object.cells)) },
   };
 }
 
@@ -500,6 +519,24 @@ function findClueDeductions(
               }
             }
           }
+          
+          const p1Time = times.find(t => timeGrid.cells[p1][t] === 'confirmed');
+          if (p1Time) {
+            const p1Index = times.indexOf(p1Time);
+            const p2Index = p1Index + constraint.gap;
+            if (p2Index >= 0 && p2Index < times.length) {
+              if (timeGrid.cells[p2][times[p2Index]] === 'unknown') {
+                steps.push({
+                  type: 'confirm',
+                  grid: 'time',
+                  person: p2,
+                  value: times[p2Index],
+                  reasoning: `${p2} arrived exactly ${constraint.gap} slot(s) after ${p1}`,
+                  clueId: clue.id,
+                });
+              }
+            }
+          }
         }
       }
     }
@@ -559,8 +596,64 @@ function isAnswerKnown(
 }
 
 /**
- * Main human logic solver with answer tracking
- * Returns solvable=true only if puzzle can be solved with forced deductions only
+ * Calculate true deduction depth for the answer
+ * Counts only the confirm steps that actually contributed to knowing the answer
+ */
+function calculateAnswerDeductionDepth(
+  steps: DeductionStep[],
+  answerRevealedAtStep: number,
+  targetCategory: 'location' | 'time' | 'object',
+  targetValue: string,
+  answerPerson: string
+): number {
+  // Count confirm steps that affected the answer cell or related cells
+  let depth = 0;
+  const relevantSteps = steps.slice(0, answerRevealedAtStep);
+  
+  for (const step of relevantSteps) {
+    if (step.type === 'confirm') {
+      depth++;
+    }
+    // Eliminations in the answer column also count
+    if (step.type === 'eliminate' && step.grid === targetCategory && step.value === targetValue) {
+      depth++;
+    }
+  }
+  
+  return depth;
+}
+
+/**
+ * Check if cross-category reasoning was REQUIRED for the answer
+ * Returns true only if deductions from another category were necessary
+ */
+function checkCrossCategoryRequirement(
+  steps: DeductionStep[],
+  answerRevealedAtStep: number,
+  questionCategory: 'location' | 'time' | 'object'
+): boolean {
+  const relevantSteps = steps.slice(0, answerRevealedAtStep);
+  const categoriesUsed = new Set<string>();
+  
+  // Track all categories that had confirm steps
+  for (const step of relevantSteps) {
+    if (step.type === 'confirm') {
+      categoriesUsed.add(step.grid);
+    }
+  }
+  
+  // Must have used at least one category OTHER than the question category
+  for (const cat of categoriesUsed) {
+    if (cat !== questionCategory) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Main human logic solver with enhanced answer tracking
  */
 export function simulateHumanSolve(
   puzzle: AlibiPuzzle,
@@ -572,13 +665,15 @@ export function simulateHumanSolve(
   const state = initializeState(people, locations, times, objects);
   const allSteps: DeductionStep[] = [];
   const categoriesUsed = new Set<string>();
+  const cluesUsed = new Set<string>();
   
   let answerRevealedAtStep: number | undefined;
+  let answerDeductionDepth: number | undefined;
   let crossCategoryUsedForAnswer = false;
   
   const MAX_ITERATIONS = 100;
   let iteration = 0;
-  let confirmCount = 0;
+  let stepCount = 0;
   
   while (!isSolved(state, people) && iteration < MAX_ITERATIONS) {
     iteration++;
@@ -611,6 +706,7 @@ export function simulateHumanSolve(
         steps: allSteps,
         stuckAt: allSteps.length,
         answerRevealedAtStep,
+        answerDeductionDepth,
         crossCategoryUsedForAnswer,
         categoriesUsedBeforeAnswer: categoriesUsed,
       };
@@ -620,12 +716,12 @@ export function simulateHumanSolve(
     for (const step of newSteps) {
       applyDeduction(state, step);
       allSteps.push(step);
+      stepCount++;
       
-      // Track which categories are being used
+      // Track which categories and clues are being used
       categoriesUsed.add(step.grid);
-      
-      if (step.type === 'confirm') {
-        confirmCount++;
+      if (step.clueId) {
+        cluesUsed.add(step.clueId);
       }
       
       // Track when answer is revealed (if tracking)
@@ -637,15 +733,22 @@ export function simulateHumanSolve(
           people
         );
         if (answerCheck.known && answerCheck.answer === trackFinalAnswer.answer) {
-          answerRevealedAtStep = confirmCount;
-          // Check if cross-category reasoning was used
-          crossCategoryUsedForAnswer = categoriesUsed.has(
-            trackFinalAnswer.targetCategory === 'location' ? 'object' :
-            trackFinalAnswer.targetCategory === 'object' ? 'location' :
-            'location'  // For time, check if location or object was used
-          ) || categoriesUsed.has(
-            trackFinalAnswer.targetCategory === 'time' ? 'object' : 
-            'time'
+          answerRevealedAtStep = stepCount;
+          
+          // Calculate true deduction depth
+          answerDeductionDepth = calculateAnswerDeductionDepth(
+            allSteps,
+            answerRevealedAtStep,
+            trackFinalAnswer.targetCategory,
+            trackFinalAnswer.targetValue,
+            trackFinalAnswer.answer
+          );
+          
+          // Check if cross-category reasoning was required
+          crossCategoryUsedForAnswer = checkCrossCategoryRequirement(
+            allSteps,
+            answerRevealedAtStep,
+            trackFinalAnswer.targetCategory
           );
         }
       }
@@ -659,8 +762,10 @@ export function simulateHumanSolve(
     steps: allSteps,
     stuckAt: solved ? undefined : allSteps.length,
     answerRevealedAtStep,
+    answerDeductionDepth,
     crossCategoryUsedForAnswer,
     categoriesUsedBeforeAnswer: categoriesUsed,
+    answerPathClues: Array.from(cluesUsed),
   };
 }
 
@@ -703,8 +808,8 @@ export function validateSolverResult(
 }
 
 /**
- * Check if a clue directly reveals the final answer
- * Used for answer obfuscation validation
+ * COMPREHENSIVE answer revelation check
+ * Catches ALL patterns that reveal the answer, not just direct anchors
  */
 export function clueRevealsAnswer(
   clue: AlibiClue,
@@ -712,20 +817,102 @@ export function clueRevealsAnswer(
 ): boolean {
   const { targetCategory, targetValue, answer } = finalQuestion;
   
-  // Check if clue directly links answer person to target value
+  // Pattern 1: Direct anchor linking answer person to target value
   if (clue.entities?.people?.includes(answer)) {
     if (targetCategory === 'time' && clue.entities?.times?.includes(targetValue)) {
-      return clue.tier === 'anchor' && clue.category === 'time';
+      if (clue.type === 'direct_positive') return true;
     }
     if (targetCategory === 'location' && clue.entities?.locations?.includes(targetValue)) {
-      return clue.tier === 'anchor' && clue.category === 'location';
+      if (clue.type === 'direct_positive') return true;
     }
     if (targetCategory === 'object' && clue.entities?.objects?.includes(targetValue)) {
-      return clue.tier === 'anchor' && clue.category === 'object';
+      if (clue.type === 'direct_positive') return true;
+    }
+  }
+  
+  // Pattern 2: Check the actual clue text for direct revelation
+  const text = clue.text.toLowerCase();
+  const answerLower = answer.toLowerCase();
+  const targetLower = targetValue.toLowerCase();
+  
+  // Direct mention patterns
+  if (targetCategory === 'time') {
+    if (text.includes(`${answerLower} was seen at ${targetLower}`) ||
+        text.includes(`${answerLower} arrived at ${targetLower}`)) {
+      return true;
+    }
+  }
+  if (targetCategory === 'location') {
+    if (text.includes(`${answerLower} was at the ${targetLower}`) ||
+        text.includes(`${answerLower} visited the ${targetLower}`)) {
+      return true;
+    }
+  }
+  if (targetCategory === 'object') {
+    if (text.includes(`${answerLower} had the ${targetLower}`) ||
+        text.includes(`${answerLower} was carrying the ${targetLower}`) ||
+        text.includes(`the ${targetLower} belonged to ${answerLower}`)) {
+      return true;
     }
   }
   
   return false;
+}
+
+/**
+ * Check if the answer would be trivially determinable after applying just the anchors
+ * This catches scenarios where elimination makes the answer obvious too early
+ */
+export function checkTrivialElimination(
+  clues: AlibiClue[],
+  finalQuestion: FinalQuestion,
+  entities: {
+    people: string[];
+    locations: string[];
+    times: string[];
+    objects: string[];
+  }
+): boolean {
+  const { targetCategory, targetValue, answer } = finalQuestion;
+  
+  // Simulate applying just anchor clues
+  const state = initializeState(entities.people, entities.locations, entities.times, entities.objects);
+  
+  // Apply only direct anchor/positive clues
+  for (const clue of clues) {
+    if (clue.type !== 'direct_positive' && clue.tier !== 'anchor') continue;
+    
+    const constraints = parseClue(clue, entities);
+    for (const constraint of constraints) {
+      if (constraint.type === 'confirm' && constraint.grid && constraint.person && constraint.value) {
+        applyDeduction(state, {
+          type: 'confirm',
+          grid: constraint.grid,
+          person: constraint.person,
+          value: constraint.value,
+          reasoning: 'anchor',
+        });
+        
+        // Also apply the elimination cascades
+        for (const otherValue of entities[constraint.grid === 'location' ? 'locations' : constraint.grid === 'time' ? 'times' : 'objects']) {
+          if (otherValue !== constraint.value) {
+            state[constraint.grid].cells[constraint.person][otherValue] = 'ruled_out';
+          }
+        }
+        for (const otherPerson of entities.people) {
+          if (otherPerson !== constraint.person) {
+            state[constraint.grid].cells[otherPerson][constraint.value] = 'ruled_out';
+          }
+        }
+      }
+    }
+  }
+  
+  // Check if answer is already known
+  const answerCheck = isAnswerKnown(state, targetCategory, targetValue, entities.people);
+  
+  // If answer is known after just anchors, it's trivial
+  return answerCheck.known && answerCheck.answer === answer;
 }
 
 /**
@@ -740,9 +927,9 @@ export function validateCrossCategoryDeduction(
   // Look at all steps up to (not including) the answer reveal
   const relevantSteps = steps.slice(0, answerRevealedAtStep);
   
-  // Check if any step used a different category
+  // Check if any confirm step used a different category
   for (const step of relevantSteps) {
-    if (step.grid !== questionCategory) {
+    if (step.type === 'confirm' && step.grid !== questionCategory) {
       return true;
     }
   }
