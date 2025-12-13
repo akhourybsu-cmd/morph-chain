@@ -306,8 +306,11 @@ function buildTieredCandidatePool(
   // Forced negatives
   const negatives = candidates.forcedNegatives.filter(c => !existingIds.has(c.id));
 
-  // Relationals (most restricted, add last)
+  // Relationals (most restricted)
   const relationals = candidates.relationals.filter(c => !existingIds.has(c.id));
+
+  // Advanced clues (require multi-step deduction - add after relationals)
+  const advanced = candidates.advanced.filter(c => !existingIds.has(c.id));
 
   // Shuffle each tier
   return [
@@ -315,6 +318,7 @@ function buildTieredCandidatePool(
     ...seededShuffle(cross, seed + 400),
     ...seededShuffle(negatives, seed + 500),
     ...seededShuffle(relationals, seed + 600),
+    ...seededShuffle(advanced, seed + 700),
   ];
 }
 

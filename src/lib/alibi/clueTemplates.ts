@@ -239,6 +239,213 @@ export function generateChainedOrder(ctx: ClueContext, seed: number): AlibiClue 
 }
 
 // ============================================
+// ADVANCED CLUE GENERATORS (Tier: advanced)
+// These clues require multi-step deduction
+// ============================================
+
+// CONDITIONAL: If X has A, then Y has B
+export function generateConditionalClue(ctx: ClueContext, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  
+  // Pick two different people
+  const [p1, p2] = pickTwoDistinct(ctx.people, rand);
+  
+  // Pick category for the condition (object, location, or time)
+  const categories: Array<'object' | 'location' | 'time'> = ['object', 'location', 'time'];
+  const cat1 = pickRandom(categories, rand);
+  const cat2 = pickRandom(categories.filter(c => c !== cat1) as Array<'object' | 'location' | 'time'>, rand);
+  
+  // Get the actual values from solution
+  const getValue = (person: string, category: 'object' | 'location' | 'time'): string => {
+    if (category === 'object') return ctx.solution.personToObject[person];
+    if (category === 'location') return ctx.solution.personToLocation[person];
+    return ctx.solution.personToTime[person];
+  };
+  
+  const val1 = getValue(p1, cat1);
+  const val2 = getValue(p2, cat2);
+  
+  const catLabel1 = cat1 === 'object' ? 'had the' : cat1 === 'location' ? 'was at the' : 'was seen at';
+  const catLabel2 = cat2 === 'object' ? 'had the' : cat2 === 'location' ? 'was at the' : 'was seen at';
+  
+  return {
+    id: `cond_${p1}_${p2}_${seed}`,
+    type: 'conditional',
+    tier: 'advanced',
+    category: 'cross',
+    text: `If ${p1} ${catLabel1} ${val1}, then ${p2} ${catLabel2} ${val2}.`,
+    entities: { 
+      people: [p1, p2], 
+      ...(cat1 === 'object' ? { objects: [val1] } : cat1 === 'location' ? { locations: [val1] } : { times: [val1] }),
+      ...(cat2 === 'object' ? { objects: [val2] } : cat2 === 'location' ? { locations: [val2] } : { times: [val2] }),
+    },
+  };
+}
+
+// XOR: Either X has A OR Y has B, but not both
+export function generateXorClue(ctx: ClueContext, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  
+  const [p1, p2] = pickTwoDistinct(ctx.people, rand);
+  
+  // For valid XOR, exactly one statement must be true
+  // We pick values where only one person has the stated attribute
+  const obj1 = ctx.solution.personToObject[p1];
+  const loc2 = ctx.solution.personToLocation[p2];
+  
+  // Get a false object for p1 (different from what they actually have)
+  const otherObjects = ctx.objects.filter(o => o !== obj1);
+  if (otherObjects.length === 0) return null;
+  const falseObj = pickRandom(otherObjects, rand);
+  
+  // Check who actually has the falseObj
+  const actualOwner = Object.entries(ctx.solution.personToObject).find(([, o]) => o === falseObj)?.[0];
+  
+  // Make sure the XOR is valid: exactly one branch is true
+  // If p1 has falseObj: first branch true. If p2 is at loc2: second branch true.
+  // We want exactly one to be true
+  const p1HasFalseObj = ctx.solution.personToObject[p1] === falseObj;
+  const p2AtLoc2 = ctx.solution.personToLocation[p2] === loc2;
+  
+  // Only generate if exactly one is true
+  if ((p1HasFalseObj && p2AtLoc2) || (!p1HasFalseObj && !p2AtLoc2)) return null;
+  
+  return {
+    id: `xor_${p1}_${p2}_${seed}`,
+    type: 'xor',
+    tier: 'advanced',
+    category: 'cross',
+    text: `Either ${p1} had the ${falseObj} OR ${p2} was at the ${loc2}, but not both.`,
+    entities: { people: [p1, p2], objects: [falseObj], locations: [loc2] },
+  };
+}
+
+// MUTUAL EXCLUSION: X and Y were not at adjacent time slots
+export function generateMutualExclusionClue(ctx: ClueContext, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  
+  // Find pairs of people who are NOT adjacent in time
+  const pairs: [string, string][] = [];
+  
+  for (let i = 0; i < ctx.people.length; i++) {
+    for (let j = i + 1; j < ctx.people.length; j++) {
+      const t1 = getTimeIndex(ctx.solution.personToTime[ctx.people[i]], ctx.times);
+      const t2 = getTimeIndex(ctx.solution.personToTime[ctx.people[j]], ctx.times);
+      const gap = Math.abs(t1 - t2);
+      
+      // Only include pairs that are NOT adjacent (gap > 1)
+      if (gap > 1) {
+        pairs.push([ctx.people[i], ctx.people[j]]);
+      }
+    }
+  }
+  
+  if (pairs.length === 0) return null;
+  
+  const [p1, p2] = pickRandom(pairs, rand);
+  
+  return {
+    id: `mutual_excl_${p1}_${p2}_${seed}`,
+    type: 'mutual_exclusion',
+    tier: 'advanced',
+    category: 'time',
+    text: `${p1} and ${p2} were not at adjacent time slots.`,
+    entities: { people: [p1, p2] },
+  };
+}
+
+// BOUNDED RANGE: The person with X arrived before noon / after 10 AM
+export function generateBoundedRangeClue(ctx: ClueContext, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  
+  // Get midpoint of times
+  const midpoint = Math.floor(ctx.times.length / 2);
+  
+  // Pick a person randomly
+  const person = pickRandom(ctx.people, rand);
+  const personTime = getTimeIndex(ctx.solution.personToTime[person], ctx.times);
+  const personObject = ctx.solution.personToObject[person];
+  
+  // Determine if person is in early or late half
+  const isEarly = personTime < midpoint;
+  const boundaryTime = ctx.times[midpoint];
+  
+  // Generate appropriate constraint
+  if (isEarly) {
+    return {
+      id: `bounded_early_${person}_${seed}`,
+      type: 'bounded_range',
+      tier: 'advanced',
+      category: 'time',
+      text: `The person with the ${personObject} arrived before ${boundaryTime}.`,
+      entities: { objects: [personObject], times: [boundaryTime] },
+    };
+  } else {
+    const earlyBound = ctx.times[midpoint - 1] || ctx.times[0];
+    return {
+      id: `bounded_late_${person}_${seed}`,
+      type: 'bounded_range',
+      tier: 'advanced',
+      category: 'time',
+      text: `The person with the ${personObject} arrived after ${earlyBound}.`,
+      entities: { objects: [personObject], times: [earlyBound] },
+    };
+  }
+}
+
+// TRIPLE ELIMINATION: Three people didn't have X
+export function generateTripleEliminationClue(ctx: ClueContext, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  
+  // Pick a random object
+  const obj = pickRandom(ctx.objects, rand);
+  
+  // Find who has this object
+  const owner = Object.entries(ctx.solution.personToObject).find(([, o]) => o === obj)?.[0];
+  if (!owner) return null;
+  
+  // Get the three people who don't have it
+  const nonOwners = ctx.people.filter(p => p !== owner);
+  
+  if (nonOwners.length !== 3) return null; // Should always be 3 for 4-person puzzle
+  
+  return {
+    id: `triple_elim_obj_${seed}`,
+    type: 'triple_elimination',
+    tier: 'advanced',
+    category: 'object',
+    text: `Three people didn't have the ${obj}: ${nonOwners[0]}, ${nonOwners[1]}, and ${nonOwners[2]}.`,
+    entities: { people: nonOwners, objects: [obj] },
+  };
+}
+
+// Location-based triple elimination
+export function generateTripleLocationEliminationClue(ctx: ClueContext, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  
+  // Pick a random location
+  const loc = pickRandom(ctx.locations, rand);
+  
+  // Find who was at this location
+  const occupant = Object.entries(ctx.solution.personToLocation).find(([, l]) => l === loc)?.[0];
+  if (!occupant) return null;
+  
+  // Get the three people who weren't there
+  const notThere = ctx.people.filter(p => p !== occupant);
+  
+  if (notThere.length !== 3) return null;
+  
+  return {
+    id: `triple_elim_loc_${seed}`,
+    type: 'triple_elimination',
+    tier: 'advanced',
+    category: 'location',
+    text: `Three people weren't at the ${loc}: ${notThere[0]}, ${notThere[1]}, and ${notThere[2]}.`,
+    entities: { people: notThere, locations: [loc] },
+  };
+}
+
+// ============================================
 // CLUE GENERATION ORCHESTRATOR
 // ============================================
 
@@ -251,6 +458,7 @@ export interface GeneratedClues {
   forcedNegatives: AlibiClue[];
   relationals: AlibiClue[];
   crossCategory: AlibiClue[];
+  advanced: AlibiClue[];
 }
 
 // Protected answer pair - used to filter out answer-revealing clues
@@ -342,6 +550,7 @@ export function generateAllCandidateClues(
     forcedNegatives: [],
     relationals: [],
     crossCategory: [],
+    advanced: [],
   };
   
   // Generate all possible anchors (one per person per category)
@@ -406,6 +615,39 @@ export function generateAllCandidateClues(
     }
   }
   
+  // Generate advanced clues for deeper deduction
+  for (let s = 0; s < 8; s++) {
+    const cond = generateConditionalClue(ctx, baseSeed + s * 300);
+    if (cond && (!protectedAnswer || !wouldRevealAnswer(cond, protectedAnswer, ctx))) {
+      result.advanced.push(cond);
+    }
+    
+    const xor = generateXorClue(ctx, baseSeed + s * 310);
+    if (xor && (!protectedAnswer || !wouldRevealAnswer(xor, protectedAnswer, ctx))) {
+      result.advanced.push(xor);
+    }
+    
+    const mutEx = generateMutualExclusionClue(ctx, baseSeed + s * 320);
+    if (mutEx && (!protectedAnswer || !wouldRevealAnswer(mutEx, protectedAnswer, ctx))) {
+      result.advanced.push(mutEx);
+    }
+    
+    const bounded = generateBoundedRangeClue(ctx, baseSeed + s * 330);
+    if (bounded && (!protectedAnswer || !wouldRevealAnswer(bounded, protectedAnswer, ctx))) {
+      result.advanced.push(bounded);
+    }
+    
+    const triple = generateTripleEliminationClue(ctx, baseSeed + s * 340);
+    if (triple && (!protectedAnswer || !wouldRevealAnswer(triple, protectedAnswer, ctx))) {
+      result.advanced.push(triple);
+    }
+    
+    const tripleLoc = generateTripleLocationEliminationClue(ctx, baseSeed + s * 350);
+    if (tripleLoc && (!protectedAnswer || !wouldRevealAnswer(tripleLoc, protectedAnswer, ctx))) {
+      result.advanced.push(tripleLoc);
+    }
+  }
+  
   return result;
 }
 
@@ -419,6 +661,7 @@ export function generateCandidateClues(ctx: ClueContext, baseSeed: number): Alib
     ...generated.crossCategory,
     ...generated.forcedNegatives,
     ...generated.relationals,
+    ...generated.advanced,
   ];
 }
 

@@ -20,7 +20,7 @@
 import { AlibiPuzzle, ALIBI_RULES, FinalQuestion } from './types';
 
 // Version bump forces puzzle regeneration when rules change
-export const PUZZLE_GENERATION_VERSION = 5;
+export const PUZZLE_GENERATION_VERSION = 6;
 
 import { 
   generateEntities, 

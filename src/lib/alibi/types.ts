@@ -4,13 +4,14 @@ export interface AlibiSolution {
   personToObject: Record<string, string>;
 }
 
-// V1.0 Ruleset: Clue tiers ordered by logic strength
-export type ClueTier = 'anchor' | 'forced_negative' | 'relational' | 'cross_category';
+// V2.0 Ruleset: Clue tiers ordered by logic strength
+export type ClueTier = 'anchor' | 'forced_negative' | 'relational' | 'cross_category' | 'advanced';
 
-// V1.0 Ruleset: Category that a clue constrains
+// V2.0 Ruleset: Category that a clue constrains
 export type ClueCategory = 'time' | 'location' | 'object' | 'cross';
 
-export type ClueType = "direct_positive" | "direct_negative" | "relational" | "conditional";
+// V2.0 Expanded clue types for deeper deduction
+export type ClueType = "direct_positive" | "direct_negative" | "relational" | "conditional" | "xor" | "mutual_exclusion" | "bounded_range" | "triple_elimination";
 
 export interface AlibiClue {
   id: string;
