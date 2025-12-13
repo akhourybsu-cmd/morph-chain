@@ -214,15 +214,6 @@ const Index = () => {
         if (audioSettings.soundEnabled) playMorphError();
         return;
       }
-      
-      if (selectedLength === 5) {
-        if (isTwoDiff && doubleSwapReady) {
-          setDoubleSwapUsed(true);
-          setConsecutiveSingleSwaps(0);
-        } else if (isOneDiff) {
-          setConsecutiveSingleSwaps(prev => prev + 1);
-        }
-      }
 
       if (!isValidWord(wordToSubmit, puzzle.wordLength)) {
         setInvalidGuessCount(prev => prev + 1);
@@ -288,6 +279,16 @@ const Index = () => {
       setMoves(updatedMoves);
       setCurrentWord(wordToSubmit);
       setUsedWords(updatedUsedWords);
+
+      // Consume double swap ONLY after a valid two-letter move is committed
+      if (selectedLength === 5) {
+        if (isTwoDiff && doubleSwapReady) {
+          setDoubleSwapUsed(true);
+          setConsecutiveSingleSwaps(0);
+        } else if (isOneDiff) {
+          setConsecutiveSingleSwaps(prev => prev + 1);
+        }
+      }
 
       // Play success sound for valid morph
       if (audioSettings.soundEnabled) playMorphSuccess();
