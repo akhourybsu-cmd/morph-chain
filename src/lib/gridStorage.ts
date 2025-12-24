@@ -1,5 +1,5 @@
 // Grid-specific storage for stats and leaderboard
-import { loadTieredProgress, saveTieredProgress, TieredProgress } from './gridAchievements';
+import { loadTieredProgress, saveTieredProgress, TieredProgress, getMedalForMoves, MedalType } from './gridAchievements';
 
 export interface SubmittedWord {
   word: string;
@@ -14,6 +14,13 @@ export interface GridLBEntry {
   timeToCompleteMs?: number;
   completedAt: string;
   deviceAlias?: string;
+}
+
+export interface MedalCounts {
+  platinum: number;
+  gold: number;
+  silver: number;
+  bronze: number;
 }
 
 export interface GridStats {
@@ -46,6 +53,8 @@ export interface GridStats {
   totalCascadeUpgrades: number;
   sixLetterWords: number;
   sevenPlusLetterWords: number;
+  // Medal tracking
+  medals: MedalCounts;
 }
 
 const GRID_STATS_KEY = 'morphGrid_stats';
@@ -53,12 +62,20 @@ const GRID_ALIAS_KEY = 'morphGrid_alias';
 const GRID_LEADERBOARD_KEY = 'morphGrid_leaderboard';
 const GRID_GAME_STATE_KEY = 'morphGrid_gameState';
 
+const DEFAULT_MEDALS: MedalCounts = {
+  platinum: 0,
+  gold: 0,
+  silver: 0,
+  bronze: 0,
+};
+
 export const loadGridStats = (): GridStats => {
   try {
     const saved = localStorage.getItem(GRID_STATS_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Ensure new fields have defaults
+      // Ensure new fields have defaults, merge medals separately
+      const mergedMedals = { ...DEFAULT_MEDALS, ...(parsed.medals || {}) };
       return {
         gamesLost: 0,
         maxStreakDays: 0,
@@ -67,6 +84,7 @@ export const loadGridStats = (): GridStats => {
         sixLetterWords: 0,
         sevenPlusLetterWords: 0,
         ...parsed,
+        medals: mergedMedals,
       };
     }
   } catch (e) {
@@ -96,6 +114,7 @@ export const loadGridStats = (): GridStats => {
     totalCascadeUpgrades: 0,
     sixLetterWords: 0,
     sevenPlusLetterWords: 0,
+    medals: { ...DEFAULT_MEDALS },
   };
 };
 
@@ -340,11 +359,18 @@ export const recordGridWin = (payload: {
     // Track max streak
     stats.maxStreakDays = Math.max(stats.maxStreakDays || 0, stats.streakDays);
     
+    // Award medal based on moves
+    const medal = getMedalForMoves(payload.moves, true);
+    if (medal !== 'none') {
+      stats.medals[medal] += 1;
+      console.log(`Medal awarded: ${medal} for ${payload.moves} moves`);
+    }
+    
     stats.lastWinDate = today;
     stats.lastPlayedDate = today;
     
     saveGridStats(stats);
-    console.log(`Grid win recorded: ${payload.moves} moves, streak: ${stats.streakDays} days`);
+    console.log(`Grid win recorded: ${payload.moves} moves, streak: ${stats.streakDays} days, medal: ${medal}`);
     
     // Update tiered progress
     const tiered = loadTieredProgress();

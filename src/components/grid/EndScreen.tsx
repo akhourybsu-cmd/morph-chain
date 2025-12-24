@@ -9,6 +9,7 @@ import { GridInitialsInput } from './GridInitialsInput';
 import { GridLeaderboard } from './GridLeaderboard';
 import { checkGridSubmissionExists } from '@/integrations/supabase/gridLeaderboard';
 import { supabase } from '@/integrations/supabase/client';
+import { getMedalForMoves, MEDAL_CONFIGS } from '@/lib/gridAchievements';
 
 const MAX_MOVES = 20;
 
@@ -65,13 +66,18 @@ export const EndScreen = ({ open, onClose }: EndScreenProps) => {
     current.word.length > longest.length ? current.word : longest
   , '');
   
+  // Get medal for this game
+  const medal = getMedalForMoves(moves, isWin);
+  const medalConfig = MEDAL_CONFIGS[medal];
+  
   const handleShare = async () => {
     const resultEmoji = isWin ? '✓' : '✗';
+    const medalText = medal !== 'none' ? ` ${medalConfig.emoji} ${medalConfig.label.toUpperCase()}` : '';
     const resultText = isWin 
       ? `Completed in ${moves} moves`
       : `${purpleCount}/25 tiles in ${moves} moves`;
     
-    const text = `${resultEmoji} Morph Grid — Daily ${dailySeed}
+    const text = `${resultEmoji} Morph Grid — Daily ${dailySeed}${medalText}
 ${isWin ? 'Won' : 'Lost'}: ${resultText}
 Words: ${submittedWords.length} | Longest: "${longestWord}"
 Morphs: ${morphCount}
@@ -123,6 +129,13 @@ morphchaingame.com`;
           <div className="text-center">
             {isWin ? (
               <>
+                {/* Medal Badge */}
+                {medal !== 'none' && (
+                  <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-3 border ${medalConfig.bgClass} ${medalConfig.borderClass}`}>
+                    <span className="text-2xl">{medalConfig.emoji}</span>
+                    <span className={`font-bold text-lg ${medalConfig.textClass}`}>{medalConfig.label}</span>
+                  </div>
+                )}
                 <div className="text-5xl font-bold text-[hsl(var(--grid-accent))] mb-1">
                   {moves}
                 </div>
