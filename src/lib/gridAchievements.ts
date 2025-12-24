@@ -2,6 +2,76 @@
 
 export type AchievementTier = 'none' | 'bronze' | 'silver' | 'gold' | 'diamond';
 
+// Medal system for daily puzzle completion
+export type MedalType = 'platinum' | 'gold' | 'silver' | 'bronze' | 'none';
+
+export interface MedalConfig {
+  type: MedalType;
+  label: string;
+  emoji: string;
+  bgClass: string;
+  textClass: string;
+  borderClass: string;
+}
+
+export const MEDAL_CONFIGS: Record<MedalType, MedalConfig> = {
+  platinum: {
+    type: 'platinum',
+    label: 'Platinum',
+    emoji: '💎',
+    bgClass: 'bg-gradient-to-br from-cyan-400/20 to-purple-400/20',
+    textClass: 'text-cyan-400',
+    borderClass: 'border-cyan-400/50',
+  },
+  gold: {
+    type: 'gold',
+    label: 'Gold',
+    emoji: '🥇',
+    bgClass: 'bg-gradient-to-br from-yellow-400/20 to-amber-500/20',
+    textClass: 'text-yellow-500',
+    borderClass: 'border-yellow-500/50',
+  },
+  silver: {
+    type: 'silver',
+    label: 'Silver',
+    emoji: '🥈',
+    bgClass: 'bg-gradient-to-br from-slate-300/20 to-slate-400/20',
+    textClass: 'text-slate-400',
+    borderClass: 'border-slate-400/50',
+  },
+  bronze: {
+    type: 'bronze',
+    label: 'Bronze',
+    emoji: '🥉',
+    bgClass: 'bg-gradient-to-br from-amber-600/20 to-orange-600/20',
+    textClass: 'text-amber-600',
+    borderClass: 'border-amber-600/50',
+  },
+  none: {
+    type: 'none',
+    label: '',
+    emoji: '',
+    bgClass: '',
+    textClass: '',
+    borderClass: '',
+  },
+};
+
+/**
+ * Returns the medal type earned based on moves used to complete the puzzle.
+ * - Platinum: ≤8 moves
+ * - Gold: 9-12 moves
+ * - Silver: 13-15 moves
+ * - Bronze: 16+ moves (only for wins)
+ */
+export const getMedalForMoves = (moves: number, won: boolean): MedalType => {
+  if (!won) return 'none';
+  if (moves <= 8) return 'platinum';
+  if (moves <= 12) return 'gold';
+  if (moves <= 15) return 'silver';
+  return 'bronze';
+};
+
 export interface Achievement {
   id: string;
   title: string;

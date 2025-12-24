@@ -3,9 +3,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Trophy, Target, TrendingUp, Percent, Hash, CheckCircle, Type, Zap, Grid3x3 } from "lucide-react";
+import { Trophy, Target, TrendingUp, Percent, Hash, CheckCircle, Type, Zap, Grid3x3, Award } from "lucide-react";
 import { loadGridStats, loadGridAlias, saveGridAlias, resetGridStats, GridStats } from "@/lib/gridStorage";
 import { toast } from "sonner";
+import { MEDAL_CONFIGS, MedalType } from "@/lib/gridAchievements";
 
 interface GridStatsModalProps {
   open: boolean;
@@ -83,9 +84,36 @@ export const GridStatsModal = ({ open, onOpenChange }: GridStatsModalProps) => {
             label="Games Completed"
             value={stats.gamesCompleted}
           />
-        </div>
+          </div>
 
-        {/* Word & Tile Insights */}
+          {/* Medals Section */}
+          <div 
+            className="rounded-lg border p-4 bg-[hsl(var(--grid-pill-bg))] border-[hsl(var(--grid-card-border))]"
+          >
+            <h3 className="font-semibold text-sm mb-3 text-[hsl(var(--grid-text-primary))] flex items-center gap-2">
+              <Award className="h-4 w-4" />
+              Medals Earned
+            </h3>
+            <div className="grid grid-cols-4 gap-2">
+              {(['platinum', 'gold', 'silver', 'bronze'] as MedalType[]).map((medalType) => {
+                const config = MEDAL_CONFIGS[medalType];
+                const count = stats.medals?.[medalType] || 0;
+                return (
+                  <div 
+                    key={medalType}
+                    className={`text-center p-3 rounded-lg border ${config.bgClass} ${config.borderClass}`}
+                  >
+                    <div className="text-2xl mb-1">{config.emoji}</div>
+                    <div className={`text-xl font-bold ${config.textClass}`}>{count}</div>
+                    <div className="text-xs text-[hsl(var(--grid-text-muted))]">{config.label}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-3 text-xs text-[hsl(var(--grid-text-muted))] text-center">
+              💎 ≤8 moves • 🥇 9-12 • 🥈 13-15 • 🥉 16+
+            </div>
+          </div>
         <div 
           className="rounded-lg border p-4 bg-[hsl(var(--grid-pill-bg))] border-[hsl(var(--grid-card-border))]"
         >
