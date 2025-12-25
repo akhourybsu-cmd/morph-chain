@@ -1,12 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
-import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Search, Menu, ChevronRight, User } from "lucide-react";
+import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Search, Menu, ChevronRight, User, Snowflake, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { SideMenu } from "@/components/layout/SideMenu";
 import { useState, useEffect } from "react";
 import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
+import { isChristmas } from "@/lib/seasonal/christmas";
 
 
 // Per-game accent colors (HSL values match CSS variables)
@@ -17,11 +18,23 @@ const gameAccents = {
   alibi: "40 75% 50%",   // gold
 };
 
+// Christmas accent colors
+const christmasAccents = {
+  chain: "142 70% 45%",  // green
+  grid: "0 75% 50%",     // red
+  rush: "45 90% 50%",    // gold
+  alibi: "142 70% 45%",  // green
+};
+
 const GameSelector = () => {
   const navigate = useNavigate();
   const puzzle = getDailyPuzzle(4);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const christmas = isChristmas();
+  
+  // Use Christmas colors on Dec 25
+  const accents = christmas ? christmasAccents : gameAccents;
   
   
   useEffect(() => {
@@ -75,6 +88,35 @@ const GameSelector = () => {
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-6 md:py-10 max-w-xl">
+        {/* Christmas Banner */}
+        {christmas && (
+          <div 
+            className="mb-6 py-3 px-4 rounded-xl text-center animate-fade-in"
+            style={{
+              background: 'linear-gradient(135deg, hsl(0 75% 50% / 0.15), hsl(142 70% 45% / 0.15))',
+              border: '1px solid hsl(0 75% 50% / 0.3)',
+            }}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <Snowflake className="w-4 h-4 text-[hsl(187,94%,48%)]" />
+              <span 
+                className="font-playfair text-lg font-semibold"
+                style={{ 
+                  background: 'linear-gradient(90deg, hsl(0,75%,50%), hsl(142,70%,45%), hsl(45,90%,50%))',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                Merry Christmas!
+              </span>
+              <Gift className="w-4 h-4 text-[hsl(0,75%,50%)]" />
+            </div>
+            <p className="text-xs mt-1" style={{ color: 'hsl(var(--home-text-muted))' }}>
+              Enjoy today's festive puzzles 🎄
+            </p>
+          </div>
+        )}
+
         {/* Centered Masthead */}
         <div className="text-center mb-8">
           <h1 
@@ -87,7 +129,9 @@ const GameSelector = () => {
             {' '}
             <span 
               style={{ 
-                background: 'linear-gradient(90deg, hsl(var(--accent-chain)), hsl(var(--accent-grid)), hsl(var(--accent-rush)))',
+                background: christmas 
+                  ? 'linear-gradient(90deg, hsl(0,75%,50%), hsl(142,70%,45%), hsl(45,90%,50%))'
+                  : 'linear-gradient(90deg, hsl(var(--accent-chain)), hsl(var(--accent-grid)), hsl(var(--accent-rush)))',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text'
@@ -104,7 +148,7 @@ const GameSelector = () => {
               fontFamily: "'Playfair Display', Georgia, serif"
             }}
           >
-            A letter changes everything.
+            {christmas ? "Joy to the morphs!" : "A letter changes everything."}
           </p>
           
           <p 
@@ -120,7 +164,7 @@ const GameSelector = () => {
           className="text-xs font-semibold uppercase tracking-widest mb-3 px-1 max-w-[640px] mx-auto"
           style={{ color: 'hsl(var(--home-text-muted))' }}
         >
-          Today's Puzzles
+          {christmas ? "🎁 Today's Festive Puzzles" : "Today's Puzzles"}
         </h2>
 
         {/* Games List */}
@@ -129,24 +173,27 @@ const GameSelector = () => {
             icon={Link2}
             name="Morph Chain"
             description="Transform words one letter at a time"
-            accent={gameAccents.chain}
+            accent={accents.chain}
             onClick={() => navigate('/chain')}
+            christmas={christmas}
           />
           
           <GameCard
             icon={Grid3X3}
             name="Morph Grid"
             description="Color-changing daily 5×5 word puzzle"
-            accent={gameAccents.grid}
+            accent={accents.grid}
             onClick={() => navigate('/grid')}
+            christmas={christmas}
           />
           
           <GameCard
             icon={Zap}
             name="Morph Rush"
             description="Fast-paced morphing under pressure"
-            accent={gameAccents.rush}
+            accent={accents.rush}
             onClick={() => navigate('/rush?mode=daily')}
+            christmas={christmas}
           />
           
           {/* Alibi - Public with Beta tag */}
@@ -154,9 +201,10 @@ const GameSelector = () => {
             icon={Search}
             name="Morph Alibi"
             description="Daily logic mystery puzzle"
-            accent={gameAccents.alibi}
+            accent={accents.alibi}
             onClick={() => navigate('/alibi')}
             badge="Beta"
+            christmas={christmas}
           />
         </div>
 
@@ -210,36 +258,45 @@ interface GameCardProps {
   accent: string;
   onClick: () => void;
   badge?: string;
+  christmas?: boolean;
 }
 
-const GameCard = ({ icon: Icon, name, description, accent, onClick, badge }: GameCardProps) => {
+const GameCard = ({ icon: Icon, name, description, accent, onClick, badge, christmas }: GameCardProps) => {
   // Extract the game word (e.g., "Chain" from "Morph Chain")
   const gameWord = name.replace('Morph ', '');
   
   return (
     <button
       onClick={onClick}
-      className="w-full rounded-xl text-left transition-all duration-200 group overflow-hidden relative"
+      className={`w-full rounded-xl text-left transition-all duration-200 group overflow-hidden relative ${christmas ? 'animate-christmas-card-glow' : ''}`}
       style={{ 
         background: 'hsl(var(--home-card-bg))',
-        border: '1px solid hsl(var(--home-card-border))',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)'
+        border: christmas ? '1px solid hsl(0 75% 50% / 0.4)' : '1px solid hsl(var(--home-card-border))',
+        boxShadow: christmas 
+          ? '0 4px 12px rgba(0, 0, 0, 0.04), 0 0 20px hsl(0 75% 50% / 0.1)'
+          : '0 4px 12px rgba(0, 0, 0, 0.04)'
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = `hsl(${accent})`;
-        e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.08)';
+        e.currentTarget.style.boxShadow = christmas 
+          ? `0 6px 16px rgba(0, 0, 0, 0.08), 0 0 24px hsl(${accent} / 0.3)`
+          : '0 6px 16px rgba(0, 0, 0, 0.08)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'hsl(var(--home-card-border))';
-        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.04)';
+        e.currentTarget.style.borderColor = christmas ? 'hsl(0 75% 50% / 0.4)' : 'hsl(var(--home-card-border))';
+        e.currentTarget.style.boxShadow = christmas 
+          ? '0 4px 12px rgba(0, 0, 0, 0.04), 0 0 20px hsl(0 75% 50% / 0.1)'
+          : '0 4px 12px rgba(0, 0, 0, 0.04)';
       }}
     >
-      {/* Left accent strip */}
+      {/* Left accent strip - alternating red/green for Christmas */}
       <div 
         className="absolute left-0 top-0 bottom-0 w-1"
         style={{ 
-          background: `hsl(${accent})`,
-          opacity: 'var(--accent-strip-opacity, 0.15)'
+          background: christmas 
+            ? 'linear-gradient(to bottom, hsl(0, 75%, 50%), hsl(142, 70%, 45%))'
+            : `hsl(${accent})`,
+          opacity: christmas ? 1 : 'var(--accent-strip-opacity, 0.15)'
         }}
       />
       

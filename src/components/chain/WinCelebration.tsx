@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isChristmas } from "@/lib/seasonal/christmas";
 
 interface WinCelebrationProps {
   movesUsed: number;
@@ -18,20 +19,24 @@ interface Particle {
 export const WinCelebration = ({ movesUsed, minDistance, isPersonalBest, streak }: WinCelebrationProps) => {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [showGlow, setShowGlow] = useState(true);
+  const christmas = isChristmas();
   
   const isPerfect = movesUsed === minDistance;
   const isUnderPar = movesUsed < minDistance + 2;
   
   useEffect(() => {
-    // Generate confetti particles
-    const confettiEmojis = isPerfect 
+    // Generate confetti particles - Christmas themed on Dec 25
+    const christmasEmojis = ['🎄', '🎅', '❄️', '🎁', '⭐', '🔔', '🦌'];
+    const regularEmojis = isPerfect 
       ? ['💎', '⭐', '✨', '🌟', '💫']
       : isUnderPar 
         ? ['⭐', '✨', '🎉', '🌟']
         : ['🎉', '✨', '🎊'];
     
+    const confettiEmojis = christmas ? christmasEmojis : regularEmojis;
+    
     const newParticles: Particle[] = [];
-    const count = isPerfect ? 20 : isUnderPar ? 15 : 10;
+    const count = christmas ? 25 : (isPerfect ? 20 : isUnderPar ? 15 : 10);
     
     for (let i = 0; i < count; i++) {
       newParticles.push({
@@ -48,11 +53,11 @@ export const WinCelebration = ({ movesUsed, minDistance, isPersonalBest, streak 
     // Remove glow after animation
     const timer = setTimeout(() => setShowGlow(false), 1500);
     return () => clearTimeout(timer);
-  }, [isPerfect, isUnderPar]);
+  }, [isPerfect, isUnderPar, christmas]);
   
   return (
     <>
-      {/* Screen glow overlay */}
+      {/* Screen glow overlay - Christmas themed on Dec 25 */}
       {showGlow && (
         <div 
           className={`
@@ -61,11 +66,13 @@ export const WinCelebration = ({ movesUsed, minDistance, isPersonalBest, streak 
             ${showGlow ? 'opacity-100' : 'opacity-0'}
           `}
           style={{
-            background: isPerfect 
-              ? 'radial-gradient(circle at center, hsl(var(--primary) / 0.3) 0%, transparent 70%)'
-              : isUnderPar
-                ? 'radial-gradient(circle at center, hsl(var(--primary) / 0.2) 0%, transparent 60%)'
-                : 'radial-gradient(circle at center, hsl(var(--primary) / 0.15) 0%, transparent 50%)',
+            background: christmas
+              ? 'radial-gradient(circle at center, hsl(0 75% 50% / 0.2) 0%, hsl(142 70% 45% / 0.15) 40%, transparent 70%)'
+              : isPerfect 
+                ? 'radial-gradient(circle at center, hsl(var(--primary) / 0.3) 0%, transparent 70%)'
+                : isUnderPar
+                  ? 'radial-gradient(circle at center, hsl(var(--primary) / 0.2) 0%, transparent 60%)'
+                  : 'radial-gradient(circle at center, hsl(var(--primary) / 0.15) 0%, transparent 50%)',
           }}
         />
       )}
