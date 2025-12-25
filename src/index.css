@@ -805,6 +805,57 @@ All colors MUST be HSL.
   animation: score-pop 0.3s ease-out forwards;
 }
 
+/* Christmas snowfall animation */
+@keyframes snowfall {
+  0% {
+    transform: translateY(-10px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.animate-snowfall {
+  animation: snowfall linear infinite;
+}
+
+/* Christmas red/green flash for Chain tiles */
+@keyframes christmas-flash {
+  0%, 100% { background-color: hsl(var(--chain-tile-bg)); }
+  25% { background-color: hsl(142, 70%, 45%); } /* Green */
+  50% { background-color: hsl(var(--chain-tile-bg)); }
+  75% { background-color: hsl(0, 75%, 50%); } /* Red */
+}
+
+.animate-christmas-flash {
+  animation: christmas-flash 0.6s ease-in-out;
+}
+
+/* Christmas sparkle for Rush tiles */
+@keyframes christmas-sparkle {
+  0%, 100% { 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  25% { 
+    box-shadow: 0 0 12px 4px hsla(0, 75%, 50%, 0.5); /* Red glow */
+  }
+  75% { 
+    box-shadow: 0 0 12px 4px hsla(142, 70%, 45%, 0.5); /* Green glow */
+  }
+}
+
+.animate-christmas-sparkle {
+  animation: christmas-sparkle 1.5s ease-in-out infinite;
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,

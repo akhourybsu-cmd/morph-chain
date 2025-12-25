@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { isChristmas } from "@/lib/seasonal/christmas";
 
 interface ChainInputRowProps {
   currentWord: string;
@@ -10,6 +11,7 @@ interface ChainInputRowProps {
   disabled?: boolean;
   isLoading?: boolean;
   useOnScreenKeyboard?: boolean;
+  successfulSubmit?: boolean; // New prop to trigger Christmas flash
 }
 
 export const ChainInputRow = ({
@@ -22,9 +24,11 @@ export const ChainInputRow = ({
   disabled,
   isLoading,
   useOnScreenKeyboard,
+  successfulSubmit,
 }: ChainInputRowProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [shake, setShake] = useState(false);
+  const [christmasFlash, setChristmasFlash] = useState(false);
 
   useEffect(() => {
     if (error) {
@@ -33,6 +37,15 @@ export const ChainInputRow = ({
       return () => clearTimeout(timer);
     }
   }, [error]);
+
+  // Trigger Christmas flash on successful submit
+  useEffect(() => {
+    if (successfulSubmit && isChristmas()) {
+      setChristmasFlash(true);
+      const timer = setTimeout(() => setChristmasFlash(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [successfulSubmit]);
 
   useEffect(() => {
     if (!useOnScreenKeyboard && inputRef.current) {
@@ -62,7 +75,7 @@ export const ChainInputRow = ({
         key={i}
         className={`chain-tile chain-tile-input flex items-center justify-center font-serif text-lg md:text-xl font-semibold text-[hsl(var(--chain-text-primary))] ${
           isCurrentPosition ? "chain-tile-cursor" : ""
-        } ${shake ? "animate-chain-shake" : ""}`}
+        } ${shake ? "animate-chain-shake" : ""} ${christmasFlash ? "animate-christmas-flash" : ""}`}
         style={{
           width: 'var(--chain-input-tile-size, 48px)',
           height: 'var(--chain-input-tile-size, 48px)',
