@@ -32,6 +32,7 @@ import Privacy from "./pages/Privacy";
 import ProfilePage from "./pages/ProfilePage";
 import WhatsNew from "./pages/WhatsNew";
 import { useVersionCheck } from "./hooks/useVersionCheck";
+import { SnowfallOverlay } from "./components/seasonal/SnowfallOverlay";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="morph-ui-theme">
         <TooltipProvider>
+          <SnowfallOverlay />
           <Toaster />
           <Sonner />
           <BrowserRouter>

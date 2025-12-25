@@ -1,3 +1,5 @@
+import { isChristmas } from '@/lib/seasonal/christmas';
+
 interface DraggableTileProps {
   letter: string;
   index: number;
@@ -11,6 +13,8 @@ export const DraggableTile = ({
   isSelected,
   onSelect 
 }: DraggableTileProps) => {
+  const christmas = isChristmas();
+  
   return (
     <button
       onClick={() => onSelect(letter, index)}
@@ -21,6 +25,7 @@ export const DraggableTile = ({
           ? 'scale-110 ring-2 ring-[hsl(var(--rush-accent))] shadow-lg' 
           : 'hover:shadow-md hover:scale-105'
         }
+        ${christmas ? 'animate-christmas-sparkle' : ''}
       `}
       style={{
         background: 'hsl(var(--rush-tile-bg))',

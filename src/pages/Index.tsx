@@ -99,6 +99,9 @@ const Index = () => {
   const [consecutiveSingleSwaps, setConsecutiveSingleSwaps] = useState(0);
   const doubleSwapReady = consecutiveSingleSwaps >= 3 && !doubleSwapUsed;
   
+  // Christmas flash state
+  const [successfulSubmit, setSuccessfulSubmit] = useState(false);
+  
   // Modals
   const [menuOpen, setMenuOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
@@ -292,6 +295,10 @@ const Index = () => {
 
       // Play success sound for valid morph
       if (audioSettings.soundEnabled) playMorphSuccess();
+      
+      // Trigger Christmas flash
+      setSuccessfulSubmit(true);
+      setTimeout(() => setSuccessfulSubmit(false), 100);
 
       if (settings.vibration && navigator.vibrate) {
         navigator.vibrate(closerToGoal ? 10 : 20);
@@ -662,6 +669,7 @@ const Index = () => {
               disabled={gameCompleted}
               isLoading={isLoading}
               useOnScreenKeyboard={settings.useOnScreenKeyboard}
+              successfulSubmit={successfulSubmit}
             />
             
             {/* Double Swap power-up for 5L only */}

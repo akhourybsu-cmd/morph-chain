@@ -1,5 +1,6 @@
 import { Tile } from '@/lib/grid/gridGenerator';
 import { cn } from '@/lib/utils';
+import { isChristmas } from '@/lib/seasonal/christmas';
 
 interface GridTileProps {
   tile: Tile;
@@ -11,12 +12,21 @@ interface GridTileProps {
 }
 
 export const GridTile = ({ tile, isSelected, selectionIndex, onClick, animationClass, isUpgrading }: GridTileProps) => {
+  const christmas = isChristmas();
+  
   // NYT Prestige: Flat tile backgrounds by progress
-  const tileBackground = tile.progress === 0 
-    ? "bg-[hsl(var(--grid-tier1))]" 
-    : tile.progress === 1 
-      ? "bg-[hsl(var(--grid-tier2))]" 
-      : "bg-[hsl(var(--grid-tier3))]";
+  // Christmas: Red → Green → Gold
+  const tileBackground = christmas
+    ? tile.progress === 0 
+      ? "bg-[hsl(0,75%,50%)]"  // Christmas Red
+      : tile.progress === 1 
+        ? "bg-[hsl(142,70%,45%)]"  // Christmas Green
+        : "bg-[hsl(45,90%,50%)]"  // Christmas Gold
+    : tile.progress === 0 
+      ? "bg-[hsl(var(--grid-tier1))]" 
+      : tile.progress === 1 
+        ? "bg-[hsl(var(--grid-tier2))]" 
+        : "bg-[hsl(var(--grid-tier3))]";
   
   return (
     <button
