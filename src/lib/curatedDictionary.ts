@@ -1,17 +1,17 @@
 /**
  * Curated Modern English Dictionary
  * 
- * This is the authoritative source of valid words for all Morph Games.
- * Words are curated to include only:
- * - Modern U.S. English words
- * - Common, recognizable vocabulary
- * - No archaic, obsolete, or dialectal terms
- * - No proper nouns, brands, or technical jargon
- * - No slang, abbreviations, or profanity
+ * Used for puzzle START/GOAL words (quality control).
+ * Player moves are validated against the full TWL06 Scrabble dictionary,
+ * but puzzle generation uses these curated common words.
+ * 
+ * All words in this file are validated against TWL06 at runtime.
  */
 
-// 4-Letter Curated Words (~800 common words)
-export const CURATED_4L_WORDS = new Set([
+import { isValidScrabbleWord } from './scrabbleDictionary';
+
+// 4-Letter Curated Words (~800 common words for puzzle generation)
+const RAW_CURATED_4L_WORDS = [
   // A
   'ABLE', 'ACHE', 'ACID', 'AGED', 'AIDE', 'AREA', 'ARMY', 'AUNT',
   // B
@@ -146,10 +146,10 @@ export const CURATED_4L_WORDS = new Set([
   'YARD', 'YARN', 'YEAR', 'YELL', 'YOGA', 'YOLK', 'YOUR',
   // Z
   'ZEAL', 'ZERO', 'ZEST', 'ZONE', 'ZOOM',
-]);
+];
 
-// 5-Letter Curated Words (~1000 common words)
-export const CURATED_5L_WORDS = new Set([
+// 5-Letter Curated Words (~1000 common words for puzzle generation)
+const RAW_CURATED_5L_WORDS = [
   // A
   'ABOUT', 'ABOVE', 'ABUSE', 'ACTOR', 'ACUTE', 'ADAPT', 'ADMIT', 'ADOPT', 'ADULT', 'AFTER',
   'AGAIN', 'AGENT', 'AGILE', 'AGREE', 'AHEAD', 'AISLE', 'ALARM', 'ALBUM', 'ALERT', 'ALIEN',
@@ -174,7 +174,7 @@ export const CURATED_5L_WORDS = new Set([
   'CHIEF', 'CHILD', 'CHILL', 'CHIRP', 'CHOIR', 'CHORD', 'CHORE', 'CHOSE', 'CHUNK', 'CIVIC',
   'CIVIL', 'CLAIM', 'CLAMP', 'CLANG', 'CLASH', 'CLASP', 'CLASS', 'CLEAN', 'CLEAR', 'CLERK',
   'CLICK', 'CLIFF', 'CLIMB', 'CLING', 'CLOAK', 'CLOCK', 'CLONE', 'CLOSE', 'CLOTH', 'CLOUD',
-  'CLOUT', 'CLOWN', 'CLUB', 'CLUCK', 'CLUMP', 'CLUNG', 'COACH', 'COAST', 'COLOR', 'COLON',
+  'CLOUT', 'CLOWN', 'CLUMP', 'CLUNG', 'COACH', 'COAST', 'COLOR', 'COLON',
   'COMET', 'COMIC', 'CORAL', 'COUCH', 'COUGH', 'COULD', 'COUNT', 'COURT', 'COVER', 'COVET',
   'CRACK', 'CRAFT', 'CRANE', 'CRASH', 'CRAWL', 'CRAZE', 'CRAZY', 'CREAK', 'CREAM', 'CREEK',
   'CREEP', 'CREST', 'CRIME', 'CRISP', 'CROSS', 'CROWD', 'CROWN', 'CRUDE', 'CRUEL', 'CRUSH',
@@ -184,7 +184,7 @@ export const CURATED_5L_WORDS = new Set([
   'DECOY', 'DELAY', 'DELTA', 'DENSE', 'DEPOT', 'DEPTH', 'DETER', 'DEVIL', 'DIARY', 'DIGIT',
   'DINER', 'DIRTY', 'DISCO', 'DITCH', 'DIVER', 'DODGE', 'DOING', 'DONOR', 'DOUBT', 'DOUGH',
   'DRAFT', 'DRAIN', 'DRAKE', 'DRAMA', 'DRANK', 'DRAPE', 'DRAWN', 'DREAD', 'DREAM', 'DRESS',
-  'DRIED', 'DRIFT', 'DRILL', 'DRINK', 'DRIVE', 'DROIT', 'DRONE', 'DROOP', 'DROWN', 'DRUNK',
+  'DRIED', 'DRIFT', 'DRILL', 'DRINK', 'DRIVE', 'DRONE', 'DROOP', 'DROWN', 'DRUNK',
   'DUSTY', 'DWARF', 'DWELL',
   // E
   'EAGER', 'EARLY', 'EARTH', 'EATEN', 'EATER', 'EDGES', 'EERIE', 'EIGHT', 'ELBOW', 'ELDER',
@@ -196,9 +196,9 @@ export const CURATED_5L_WORDS = new Set([
   'FAVOR', 'FEAST', 'FENCE', 'FERAL', 'FERRY', 'FETCH', 'FEVER', 'FIBER', 'FIELD', 'FIEND',
   'FIERY', 'FIFTH', 'FIFTY', 'FIGHT', 'FINAL', 'FINER', 'FIRST', 'FIXED', 'FIXER', 'FIZZY',
   'FLACK', 'FLAIR', 'FLAKE', 'FLAKY', 'FLAME', 'FLANK', 'FLARE', 'FLASH', 'FLASK', 'FLATS',
-  'FLAWY', 'FLECK', 'FLESH', 'FLICK', 'FLIER', 'FLING', 'FLINT', 'FLOAT', 'FLOCK', 'FLOOD',
+  'FLECK', 'FLESH', 'FLICK', 'FLIER', 'FLING', 'FLINT', 'FLOAT', 'FLOCK', 'FLOOD',
   'FLOOR', 'FLORA', 'FLOUR', 'FLUID', 'FLUKE', 'FLUNG', 'FLUSH', 'FLUTE', 'FOCAL', 'FOCUS',
-  'FOGGY', 'FOLKS', 'FOLLY', 'FORCE', 'FORGE', 'FORGO', 'FORTH', 'FORTY', 'FORUM', 'FOSSIL',
+  'FOGGY', 'FOLKS', 'FOLLY', 'FORCE', 'FORGE', 'FORGO', 'FORTH', 'FORTY', 'FORUM',
   'FOUND', 'FRAME', 'FRANK', 'FRAUD', 'FREAK', 'FREED', 'FRESH', 'FRIED', 'FRONT', 'FROST',
   'FROWN', 'FROZE', 'FRUIT', 'FUDGE', 'FULLY', 'FUNDS', 'FUNNY', 'FUZZY',
   // G
@@ -212,7 +212,7 @@ export const CURATED_5L_WORDS = new Set([
   // H
   'HABIT', 'HAIRY', 'HANDS', 'HANDY', 'HAPPY', 'HARDY', 'HARSH', 'HASTE', 'HASTY', 'HATCH',
   'HAUNT', 'HAVEN', 'HAZEL', 'HEADS', 'HEALS', 'HEARD', 'HEART', 'HEAVY', 'HEDGE', 'HEELS',
-  'HEFTY', 'HEIST', 'HELLO', 'HENCE', 'HERBS', 'HERON', 'HEIST', 'HILLS', 'HILLY', 'HINGE',
+  'HEFTY', 'HEIST', 'HELLO', 'HENCE', 'HERBS', 'HERON', 'HILLS', 'HILLY', 'HINGE',
   'HIPPO', 'HITCH', 'HOARD', 'HOBBY', 'HOIST', 'HOMER', 'HONEY', 'HONOR', 'HOPED', 'HORDE',
   'HORSE', 'HOTEL', 'HOUND', 'HOURS', 'HOUSE', 'HOVER', 'HUMAN', 'HUMID', 'HUMOR', 'HUNCH',
   'HUNKY', 'HURRY', 'HUSKY',
@@ -221,7 +221,7 @@ export const CURATED_5L_WORDS = new Set([
   'INFRA', 'INNER', 'INPUT', 'INTER', 'INTRO', 'IRONY', 'ISSUE', 'ITEMS', 'IVORY',
   // J
   'JAUNT', 'JAZZY', 'JEANS', 'JELLY', 'JERKY', 'JEWEL', 'JIFFY', 'JOINT', 'JOKER', 'JOLLY',
-  'JOLTS', 'JOUST', 'JOYED', 'JUDGE', 'JUICE', 'JUICY', 'JUMBO', 'JUMPS', 'JUMPY', 'JUNKY',
+  'JOLTS', 'JOUST', 'JUDGE', 'JUICE', 'JUICY', 'JUMBO', 'JUMPS', 'JUMPY', 'JUNKY',
   // K
   'KAYAK', 'KEBAB', 'KEEPS', 'KEYED', 'KICKS', 'KILLS', 'KINDS', 'KINGS', 'KIOSK', 'KNACK',
   'KNEAD', 'KNEEL', 'KNEES', 'KNIFE', 'KNOCK', 'KNOLL', 'KNOTS', 'KNOWN', 'KNOWS',
@@ -233,7 +233,7 @@ export const CURATED_5L_WORDS = new Set([
   'LIKEN', 'LILAC', 'LIMBO', 'LIMBS', 'LIMIT', 'LINEN', 'LINER', 'LINES', 'LINGO', 'LINKS',
   'LIONS', 'LISTS', 'LITER', 'LIVEN', 'LIVER', 'LIVES', 'LIVID', 'LLAMA', 'LOADS', 'LOANS',
   'LOBBY', 'LOCAL', 'LOCKS', 'LODGE', 'LOFTY', 'LOGIC', 'LOOKS', 'LOOMS', 'LOOPS', 'LOOSE',
-  'LORRY', 'LOSER', 'LOSES', 'LOTTO', 'LOTUS', 'LOUD', 'LOUSY', 'LOVED', 'LOVER', 'LOVES',
+  'LORRY', 'LOSER', 'LOSES', 'LOTTO', 'LOTUS', 'LOUSY', 'LOVED', 'LOVER', 'LOVES',
   'LOWER', 'LOYAL', 'LUCID', 'LUCKY', 'LUMEN', 'LUMPS', 'LUMPY', 'LUNAR', 'LUNCH', 'LUNGE',
   'LUNGS', 'LURCH', 'LYRIC',
   // M
@@ -264,8 +264,8 @@ export const CURATED_5L_WORDS = new Set([
   'PERIL', 'PERKS', 'PERKY', 'PETAL', 'PETTY', 'PHASE', 'PHONE', 'PHOTO', 'PIANO', 'PICKS',
   'PIECE', 'PIERS', 'PIGGY', 'PILED', 'PILES', 'PILLS', 'PILOT', 'PINCH', 'PINES', 'PINKY',
   'PINTS', 'PIPER', 'PIPES', 'PITCH', 'PITHY', 'PIVOT', 'PIXEL', 'PIZZA', 'PLACE', 'PLAID',
-  'PLAIN', 'PLANE', 'PLANK', 'PLANS', 'PLANT', 'PLATE', 'PLAYA', 'PLAYS', 'PLAZA', 'PLEAD',
-  'PLEAT', 'PLIER', 'PLOPS', 'PLOTS', 'PLUCK', 'PLUMB', 'PLUME', 'PLUMP', 'PLUMS', 'PLUNK',
+  'PLAIN', 'PLANE', 'PLANK', 'PLANS', 'PLANT', 'PLATE', 'PLAZA', 'PLEAD',
+  'PLEAT', 'PLIER', 'PLOTS', 'PLUCK', 'PLUMB', 'PLUME', 'PLUMP', 'PLUMS', 'PLUNK',
   'PLUSH', 'POACH', 'POEMS', 'POETS', 'POINT', 'POISE', 'POKER', 'POLAR', 'POLES', 'POLLS',
   'PONDS', 'POOLS', 'PORCH', 'PORES', 'PORTS', 'POSED', 'POSER', 'POSES', 'POSTS', 'POTTY',
   'POUCH', 'POUND', 'POURS', 'POWER', 'PRANK', 'PRAWN', 'PRESS', 'PRICE', 'PRIDE', 'PRIME',
@@ -277,10 +277,10 @@ export const CURATED_5L_WORDS = new Set([
   'QUILT', 'QUIRK', 'QUITE', 'QUOTA', 'QUOTE',
   // R
   'RACER', 'RACES', 'RACKS', 'RADAR', 'RADIO', 'RAIDS', 'RAILS', 'RAINY', 'RAISE', 'RALLY',
-  'RAMPS', 'RANCH', 'RANGE', 'RANKS', 'RAPID', 'RARER', 'RARER', 'RATED', 'RATES', 'RATIO',
+  'RAMPS', 'RANCH', 'RANGE', 'RANKS', 'RAPID', 'RATED', 'RATES', 'RATIO',
   'RAZOR', 'REACH', 'REACT', 'READS', 'READY', 'REALM', 'REAMS', 'REBEL', 'RECAP', 'RECUR',
   'REEFS', 'REEKS', 'REELS', 'REFER', 'REIGN', 'RELAX', 'RELAY', 'RELIC', 'REMIT', 'REMIX',
-  'RENAL', 'RENEW', 'REPAY', 'REPEL', 'REPLY', 'REPOS', 'RESET', 'RESIN', 'RESIT', 'RESTS',
+  'RENAL', 'RENEW', 'REPAY', 'REPEL', 'REPLY', 'REPOS', 'RESET', 'RESIN', 'RESTS',
   'RETRO', 'RIDER', 'RIDES', 'RIDGE', 'RIFLE', 'RIFTS', 'RIGHT', 'RIGID', 'RIGOR', 'RINGS',
   'RINSE', 'RIOTS', 'RIPEN', 'RIPER', 'RISEN', 'RISES', 'RISKS', 'RISKY', 'RITZY', 'RIVAL',
   'RIVER', 'ROADS', 'ROAMS', 'ROARS', 'ROAST', 'ROBES', 'ROBIN', 'ROBOT', 'ROCKS', 'ROCKY',
@@ -341,10 +341,10 @@ export const CURATED_5L_WORDS = new Set([
   'TRIER', 'TRIES', 'TRIMS', 'TRIPS', 'TRITE', 'TROLL', 'TROOP', 'TROUT', 'TRUCE', 'TRUCK',
   'TRULY', 'TRUMP', 'TRUNK', 'TRUST', 'TRUTH', 'TUBBY', 'TUBES', 'TULIP', 'TUMOR', 'TUNED',
   'TUNER', 'TUNES', 'TUNIC', 'TURBO', 'TURFS', 'TURNS', 'TUTOR', 'TWEAK', 'TWEET', 'TWICE',
-  'TWIGS', 'TWILL', 'TWINS', 'TWIRL', 'TWIST', 'TYPED', 'TYPES', 'TYPIC',
+  'TWIGS', 'TWILL', 'TWINS', 'TWIRL', 'TWIST', 'TYPED', 'TYPES',
   // U
   'UDDER', 'ULTRA', 'UMBRA', 'UNCLE', 'UNDER', 'UNDID', 'UNDUE', 'UNFED', 'UNFIT', 'UNIFY',
-  'UNION', 'UNITE', 'UNITS', 'UNITY', 'UNSAY', 'UNSET', 'UNTIL', 'UNWED', 'UPPER', 'UPSET',
+  'UNION', 'UNITE', 'UNITS', 'UNITY', 'UNTIL', 'UNWED', 'UPPER', 'UPSET',
   'URBAN', 'URGED', 'URGES', 'USAGE', 'USHER', 'USING', 'USUAL', 'UTTER',
   // V
   'VAGUE', 'VALID', 'VALOR', 'VALUE', 'VALVE', 'VAPOR', 'VAULT', 'VAUNT', 'VEGAN', 'VEILS',
@@ -356,7 +356,7 @@ export const CURATED_5L_WORDS = new Set([
   'WACKY', 'WADED', 'WADER', 'WADES', 'WAFER', 'WAGED', 'WAGER', 'WAGES', 'WAGON', 'WAIST',
   'WAITS', 'WAKEN', 'WAKES', 'WALKS', 'WALLS', 'WALTZ', 'WANDS', 'WANTS', 'WARDS', 'WARMS',
   'WARNS', 'WARPS', 'WARTS', 'WASPS', 'WASTE', 'WATCH', 'WATER', 'WATTS', 'WAVED', 'WAVER',
-  'WAVES', 'WAIST', 'WEARY', 'WEAVE', 'WEDGE', 'WEEDS', 'WEEDY', 'WEEKS', 'WEIGH', 'WEIRD',
+  'WAVES', 'WEARY', 'WEAVE', 'WEDGE', 'WEEDS', 'WEEDY', 'WEEKS', 'WEIGH', 'WEIRD',
   'WELLS', 'WELSH', 'WENCH', 'WETLY', 'WHALE', 'WHARF', 'WHEAT', 'WHEEL', 'WHERE', 'WHICH',
   'WHIFF', 'WHILE', 'WHIMS', 'WHINE', 'WHINY', 'WHIPS', 'WHIRL', 'WHISK', 'WHITE', 'WHOLE',
   'WHOSE', 'WIDEN', 'WIDER', 'WIDTH', 'WIELD', 'WILLS', 'WIMPY', 'WINCE', 'WINCH', 'WINDS',
@@ -370,13 +370,76 @@ export const CURATED_5L_WORDS = new Set([
   'YOURS', 'YOUTH', 'YUMMY',
   // Z
   'ZAPPY', 'ZEBRA', 'ZEROS', 'ZESTY', 'ZIPPY', 'ZONAL', 'ZONES', 'ZOOMS',
-]);
+];
+
+// Validated sets - only include words that exist in TWL06
+let validated4L: Set<string> | null = null;
+let validated5L: Set<string> | null = null;
+
+function getValidated4L(): Set<string> {
+  if (validated4L) return validated4L;
+  
+  validated4L = new Set<string>();
+  const invalid: string[] = [];
+  
+  for (const word of RAW_CURATED_4L_WORDS) {
+    if (isValidScrabbleWord(word)) {
+      validated4L.add(word);
+    } else {
+      invalid.push(word);
+    }
+  }
+  
+  if (invalid.length > 0) {
+    console.warn(`Curated 4L words not in TWL06: ${invalid.join(', ')}`);
+  }
+  
+  console.log(`Curated 4L dictionary: ${validated4L.size} words (${invalid.length} removed)`);
+  return validated4L;
+}
+
+function getValidated5L(): Set<string> {
+  if (validated5L) return validated5L;
+  
+  validated5L = new Set<string>();
+  const invalid: string[] = [];
+  
+  for (const word of RAW_CURATED_5L_WORDS) {
+    if (isValidScrabbleWord(word)) {
+      validated5L.add(word);
+    } else {
+      invalid.push(word);
+    }
+  }
+  
+  if (invalid.length > 0) {
+    console.warn(`Curated 5L words not in TWL06: ${invalid.join(', ')}`);
+  }
+  
+  console.log(`Curated 5L dictionary: ${validated5L.size} words (${invalid.length} removed)`);
+  return validated5L;
+}
+
+// Export validated sets for backwards compatibility
+export const CURATED_4L_WORDS = new Proxy(new Set<string>(), {
+  get(target, prop) {
+    const validated = getValidated4L();
+    return Reflect.get(validated, prop, validated);
+  }
+}) as Set<string>;
+
+export const CURATED_5L_WORDS = new Proxy(new Set<string>(), {
+  get(target, prop) {
+    const validated = getValidated5L();
+    return Reflect.get(validated, prop, validated);
+  }
+}) as Set<string>;
 
 /**
  * Get the curated dictionary for a specific word length
  */
 export const getCuratedDictionary = (wordLength: 4 | 5): Set<string> => {
-  return wordLength === 4 ? CURATED_4L_WORDS : CURATED_5L_WORDS;
+  return wordLength === 4 ? getValidated4L() : getValidated5L();
 };
 
 /**
