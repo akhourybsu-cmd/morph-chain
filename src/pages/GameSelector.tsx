@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { isChristmas } from "@/lib/seasonal/christmas";
+import { DailyProgressTracker } from "@/components/DailyProgressTracker";
 
 
 // Per-game accent colors (HSL values match CSS variables)
@@ -207,6 +208,9 @@ const GameSelector = () => {
             christmas={christmas}
           />
         </div>
+
+        {/* Daily Progress Tracker */}
+        <DailyProgressTracker />
 
         {/* Share Footer */}
         <ShareFooter />
