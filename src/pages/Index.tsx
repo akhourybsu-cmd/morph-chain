@@ -768,6 +768,7 @@ const Index = () => {
         onToggleOnScreenKeyboard={() => handleToggleSetting("useOnScreenKeyboard")}
         onResetData={handleResetData}
         onOpenAchievements={() => setAchievementsOpen(true)}
+        onOpenStats={() => setStatsOpen(true)}
       />
 
       <HowToPlayModal open={helpOpen} onOpenChange={setHelpOpen} />

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { AddToHomeScreen } from "@/components/AddToHomeScreen";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Trophy, Settings, User, Calendar } from "lucide-react";
+import { ChevronDown, Trophy, Settings, User, Calendar, BarChart3 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { GamesNavigation } from "@/components/shared/GamesNavigation";
 import { useNavigate } from "react-router-dom";
@@ -29,6 +29,7 @@ interface GameMenuSheetProps {
   onToggleOnScreenKeyboard: () => void;
   onResetData: () => void;
   onOpenAchievements?: () => void;
+  onOpenStats?: () => void;
 }
 
 export const GameMenuSheet = ({
@@ -44,6 +45,7 @@ export const GameMenuSheet = ({
   onToggleOnScreenKeyboard,
   onResetData,
   onOpenAchievements,
+  onOpenStats,
 }: GameMenuSheetProps) => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const navigate = useNavigate();
@@ -135,6 +137,21 @@ export const GameMenuSheet = ({
                 >
                   <Trophy className="w-4 h-4" style={{ color: 'hsl(var(--chain-accent))' }} />
                   <span className="text-sm">Achievements</span>
+                </button>
+              )}
+              {onOpenStats && (
+                <button
+                  onClick={() => {
+                    onOpenStats();
+                    onOpenChange(false);
+                  }}
+                  className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+                  style={{ color: 'hsl(var(--chain-text-primary))' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--chain-divider))'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  <BarChart3 className="w-4 h-4" style={{ color: 'hsl(var(--chain-accent))' }} />
+                  <span className="text-sm">Stats</span>
                 </button>
               )}
               <button
