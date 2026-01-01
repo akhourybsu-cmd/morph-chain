@@ -287,6 +287,7 @@ function selectMandatoryAnchors(
 
 /**
  * Build candidate pool in tier order (Section 3)
+ * V3.0: Prioritize constrained positives over direct anchors
  */
 function buildTieredCandidatePool(
   candidates: GeneratedClues,
@@ -295,7 +296,10 @@ function buildTieredCandidatePool(
 ): AlibiClue[] {
   const existingIds = new Set(existingAnchors.map(a => a.id));
 
-  // Remaining anchors first
+  // V3.0: Constrained positives first (binary choices)
+  const constrainedPositives = (candidates.constrainedPositives || []).filter(c => !existingIds.has(c.id));
+
+  // Remaining anchors (use sparingly)
   const remainingAnchors = [
     ...candidates.anchors.time.filter(c => !existingIds.has(c.id)),
     ...candidates.anchors.location.filter(c => !existingIds.has(c.id)),
@@ -311,16 +315,25 @@ function buildTieredCandidatePool(
   // Relationals (most restricted)
   const relationals = candidates.relationals.filter(c => !existingIds.has(c.id));
 
-  // Advanced clues (require multi-step deduction - add after relationals)
+  // Advanced clues (require multi-step deduction)
   const advanced = candidates.advanced.filter(c => !existingIds.has(c.id));
+  
+  // V3.0: Quantifier clues
+  const quantifiers = (candidates.quantifiers || []).filter(c => !existingIds.has(c.id));
+  
+  // V3.0: Red herring clues
+  const redHerrings = (candidates.redHerrings || []).filter(c => !existingIds.has(c.id));
 
-  // Shuffle each tier
+  // Shuffle each tier - V3.0: Constrained positives come before anchors
   return [
+    ...seededShuffle(constrainedPositives, seed + 250),
     ...seededShuffle(remainingAnchors, seed + 300),
     ...seededShuffle(cross, seed + 400),
     ...seededShuffle(negatives, seed + 500),
     ...seededShuffle(relationals, seed + 600),
     ...seededShuffle(advanced, seed + 700),
+    ...seededShuffle(quantifiers, seed + 800),
+    ...seededShuffle(redHerrings, seed + 900),
   ];
 }
 
@@ -533,18 +546,23 @@ export function validatePuzzle(
 
   // Count anchors per category
   const anchorCounts = { time: 0, location: 0, object: 0 };
+  let totalAnchorCount = 0;
   for (const clue of clues) {
-    if (clue.tier === 'anchor') {
+    if (clue.tier === 'anchor' || clue.type === 'direct_positive') {
+      totalAnchorCount++;
       if (clue.category === 'time') anchorCounts.time++;
       else if (clue.category === 'location') anchorCounts.location++;
       else if (clue.category === 'object') anchorCounts.object++;
     }
   }
 
+  // For V3.0, we use constrained positives instead of mandatory anchors
+  // At least one constraint per category is needed
   const hasMinimumAnchors = 
-    anchorCounts.time >= 1 && 
-    anchorCounts.location >= 1 && 
-    anchorCounts.object >= 1;
+    anchorCounts.time >= 1 || 
+    anchorCounts.location >= 1 || 
+    anchorCounts.object >= 1 ||
+    clues.some(c => c.tier === 'constrained_positive');
 
   // Simulate human solve
   const solveResult = simulateHumanSolve({
@@ -599,6 +617,10 @@ export function validatePuzzle(
   const allCluesContribute = clues.every(c => solveResult.cluesUsed?.has(c.id) ?? true);
   const requiresGridInteraction = (solveResult.gridInteractionCount ?? 0) >= 12; // Minimum grid marks required
   const keyInsight = solveResult.keyInsight;
+  
+  // V3.0 New validation fields
+  const hasSilentAha = keyInsight !== undefined && keyInsight.description.length > 0;
+  const clueCount = clues.length;
 
   return {
     hasMinimumAnchors,
@@ -615,6 +637,10 @@ export function validatePuzzle(
     allCluesContribute,
     requiresGridInteraction,
     keyInsight,
+    // V3.0 New fields
+    anchorCount: totalAnchorCount,
+    clueCount,
+    hasSilentAha,
   };
 }
 

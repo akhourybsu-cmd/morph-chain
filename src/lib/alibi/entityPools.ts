@@ -32,6 +32,18 @@ export const OBJECT_POOL = [
   "Sunglasses", "Journal", "Scarf", "Phone"
 ];
 
+// V3.0: Red herring attribute pools
+export const TRANSPORTATION_POOL = ['Bus', 'Train', 'Walk', 'Bike'];
+export const WEATHER_POOL = ['Rain', 'Clear', 'Windy', 'Snowy'];
+
+// V3.0: Location categories for quantifier clues
+export const INDOOR_LOCATIONS = ['Library', 'Museum', 'Café', 'Cinema', 'Bookshop', 'Gallery', 'Theater', 'Post Office', 'Bank', 'Bakery'];
+export const OUTDOOR_LOCATIONS = ['Park', 'Train Station', 'Plaza', 'Courtyard', 'Market', 'Garden', 'Pier', 'Fountain'];
+
+// V3.0: Time categories for quantifier clues
+export const MORNING_TIMES = ['8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM'];
+export const AFTERNOON_TIMES = ['12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM', '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM'];
+
 // Helper function to shuffle an array with a seeded RNG
 export function seededShuffle<T>(array: T[], seed: number): T[] {
   const result = [...array];
