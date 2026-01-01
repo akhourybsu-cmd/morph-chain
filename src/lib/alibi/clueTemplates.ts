@@ -1,24 +1,38 @@
 /**
- * Clue Templates - V2.0 Enhanced Answer Protection
+ * Clue Templates - V3.0 Master Ruleset Implementation
  * 
- * Clues are organized by tier (Section 3):
- * - Tier 1: Direct Anchors (required first)
- * - Tier 2: Forced Negatives (only if resolving)
- * - Tier 3: Relational (heavily restricted)
+ * NYT-Style Puzzle Generation with Enhanced Answer Protection
+ * 
+ * Clue Tiers (Section 3):
+ * - Tier 1: Constrained Positives (binary choices, rare)
+ * - Tier 2: Negatives (core, eliminate multiple options)
+ * - Tier 3: Relational (ordering, comparisons)
+ * - Tier 4: Cross-Category (mandatory, backbone of difficulty)
+ * - Tier 5: Quantifiers (advanced, exactly one, at least one)
+ * 
+ * V3.0 Key Changes:
+ * - Replace direct anchors with constrained positives
+ * - Add quantifier clues (exactly one, at least one, no more than)
+ * - Add binary positive clues (either A or B)
+ * - Add red herring support (optional 5th attribute)
+ * - Stricter answer protection
  * 
  * Language Clarity Rules (Section 10):
  * - Single-sentence
  * - Declarative (no ambiguity)
  * - No pronouns ("they", "someone", "that person")
  * - Max 2 entities per clause
- * 
- * Enhanced Answer Protection:
- * - Blocks direct links between answer person and target value
- * - Blocks clues that would trivially eliminate to the answer
- * - Blocks cross-category chains that reveal the answer
  */
 
-import { AlibiClue, AlibiSolution, ClueType, ClueTier, ClueCategory } from './types';
+import { AlibiClue, AlibiSolution, ClueType, ClueTier, ClueCategory, RedHerringCategory } from './types';
+import { 
+  INDOOR_LOCATIONS, 
+  OUTDOOR_LOCATIONS, 
+  MORNING_TIMES, 
+  AFTERNOON_TIMES,
+  TRANSPORTATION_POOL,
+  WEATHER_POOL 
+} from './entityPools';
 
 interface ClueContext {
   people: string[];
@@ -26,6 +40,9 @@ interface ClueContext {
   times: string[];
   objects: string[];
   solution: AlibiSolution;
+  // V3.0: Red herring support
+  redHerringCategory?: RedHerringCategory;
+  redHerringAssignments?: Record<string, string>;
 }
 
 // Seeded random helper
@@ -235,6 +252,236 @@ export function generateChainedOrder(ctx: ClueContext, seed: number): AlibiClue 
     category: 'time',
     text: `${p1} arrived before ${p2}, who arrived before ${p3}.`,
     entities: { people: [p1, p2, p3] },
+  };
+}
+
+// ============================================
+// V3.0: CONSTRAINED POSITIVE GENERATORS (Tier 1)
+// Replace direct anchors with binary/constrained choices
+// ============================================
+
+/**
+ * Binary Location Clue: "X was either at A or B"
+ * Constrains to 2 options instead of direct revelation
+ */
+export function generateBinaryLocationClue(ctx: ClueContext, person: string, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  const actualLocation = ctx.solution.personToLocation[person];
+  const otherLocations = ctx.locations.filter(l => l !== actualLocation);
+  
+  if (otherLocations.length < 1) return null;
+  
+  // Include actual location and one other
+  const falseOption = pickRandom(otherLocations, rand);
+  
+  // Randomize order so actual isn't always first
+  const [loc1, loc2] = rand() > 0.5 
+    ? [actualLocation, falseOption] 
+    : [falseOption, actualLocation];
+  
+  return {
+    id: `binary_loc_${person}_${seed}`,
+    type: 'binary_positive',
+    tier: 'constrained_positive',
+    category: 'location',
+    text: `${person} was either at the ${loc1} or the ${loc2}.`,
+    entities: { people: [person], locations: [loc1, loc2] },
+  };
+}
+
+/**
+ * Binary Object Clue: "X had either A or B"
+ */
+export function generateBinaryObjectClue(ctx: ClueContext, person: string, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  const actualObject = ctx.solution.personToObject[person];
+  const otherObjects = ctx.objects.filter(o => o !== actualObject);
+  
+  if (otherObjects.length < 1) return null;
+  
+  const falseOption = pickRandom(otherObjects, rand);
+  const [obj1, obj2] = rand() > 0.5 
+    ? [actualObject, falseOption] 
+    : [falseOption, actualObject];
+  
+  return {
+    id: `binary_obj_${person}_${seed}`,
+    type: 'binary_positive',
+    tier: 'constrained_positive',
+    category: 'object',
+    text: `${person} had either the ${obj1} or the ${obj2}.`,
+    entities: { people: [person], objects: [obj1, obj2] },
+  };
+}
+
+/**
+ * Binary Time Clue: "X was seen at either A or B"
+ */
+export function generateBinaryTimeClue(ctx: ClueContext, person: string, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  const actualTime = ctx.solution.personToTime[person];
+  const otherTimes = ctx.times.filter(t => t !== actualTime);
+  
+  if (otherTimes.length < 1) return null;
+  
+  const falseOption = pickRandom(otherTimes, rand);
+  const [time1, time2] = rand() > 0.5 
+    ? [actualTime, falseOption] 
+    : [falseOption, actualTime];
+  
+  return {
+    id: `binary_time_${person}_${seed}`,
+    type: 'binary_positive',
+    tier: 'constrained_positive',
+    category: 'time',
+    text: `${person} was seen at either ${time1} or ${time2}.`,
+    entities: { people: [person], times: [time1, time2] },
+  };
+}
+
+// ============================================
+// V3.0: QUANTIFIER GENERATORS (Tier 5)
+// Advanced clues requiring multi-step deduction
+// ============================================
+
+/**
+ * Exactly One Clue: "Exactly one of X or Y had Z"
+ */
+export function generateExactlyOneClue(ctx: ClueContext, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  const [p1, p2] = pickTwoDistinct(ctx.people, rand);
+  
+  // Pick an object that exactly one of them has
+  const p1Object = ctx.solution.personToObject[p1];
+  const p2Object = ctx.solution.personToObject[p2];
+  
+  // Use p1's object - exactly p1 has it (one of the two)
+  return {
+    id: `exactly_one_${p1}_${p2}_${seed}`,
+    type: 'quantifier_exactly_one',
+    tier: 'advanced',
+    category: 'object',
+    text: `Exactly one of ${p1} or ${p2} had the ${p1Object}.`,
+    entities: { people: [p1, p2], objects: [p1Object] },
+  };
+}
+
+/**
+ * At Least One Indoor Clue: "At least one outdoor location was visited after noon"
+ */
+export function generateAtLeastOneClue(ctx: ClueContext, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  
+  // Find outdoor locations in the puzzle
+  const puzzleOutdoor = ctx.locations.filter(l => OUTDOOR_LOCATIONS.includes(l));
+  if (puzzleOutdoor.length === 0) return null;
+  
+  // Check if at least one outdoor location was visited in the afternoon
+  const afternoonVisits = puzzleOutdoor.filter(loc => {
+    const person = Object.entries(ctx.solution.personToLocation).find(([, l]) => l === loc)?.[0];
+    if (!person) return false;
+    const time = ctx.solution.personToTime[person];
+    return AFTERNOON_TIMES.includes(time);
+  });
+  
+  if (afternoonVisits.length === 0) return null;
+  
+  return {
+    id: `at_least_outdoor_${seed}`,
+    type: 'quantifier_at_least',
+    tier: 'advanced',
+    category: 'cross',
+    text: `At least one outdoor location was visited after noon.`,
+    entities: { locations: puzzleOutdoor },
+  };
+}
+
+/**
+ * No More Than Clue: "No more than one person was at an indoor location before 10 AM"
+ */
+export function generateNoMoreThanClue(ctx: ClueContext, seed: number): AlibiClue | null {
+  const rand = seededRandom(seed);
+  
+  // Find indoor locations
+  const puzzleIndoor = ctx.locations.filter(l => INDOOR_LOCATIONS.includes(l));
+  if (puzzleIndoor.length === 0) return null;
+  
+  // Check how many visited indoor locations in the morning
+  const morningIndoorCount = ctx.people.filter(p => {
+    const loc = ctx.solution.personToLocation[p];
+    const time = ctx.solution.personToTime[p];
+    return puzzleIndoor.includes(loc) && MORNING_TIMES.slice(0, 4).includes(time); // Before 10 AM
+  }).length;
+  
+  if (morningIndoorCount > 1) return null;
+  
+  return {
+    id: `no_more_indoor_${seed}`,
+    type: 'quantifier_no_more',
+    tier: 'advanced',
+    category: 'cross',
+    text: `No more than one person was at an indoor location before 10:00 AM.`,
+    entities: { locations: puzzleIndoor },
+  };
+}
+
+// ============================================
+// V3.0: RED HERRING GENERATORS
+// Optional 5th attribute for Hard mode
+// ============================================
+
+/**
+ * Red Herring Transportation Clue
+ */
+export function generateRedHerringTransportClue(ctx: ClueContext, seed: number): AlibiClue | null {
+  if (ctx.redHerringCategory !== 'transportation' || !ctx.redHerringAssignments) return null;
+  
+  const rand = seededRandom(seed);
+  const person = pickRandom(ctx.people, rand);
+  const transport = ctx.redHerringAssignments[person];
+  
+  if (!transport) return null;
+  
+  const time = ctx.solution.personToTime[person];
+  const timeIndex = getTimeIndex(time, ctx.times);
+  const midpoint = Math.floor(ctx.times.length / 2);
+  
+  const isBeforeNoon = timeIndex < midpoint;
+  
+  return {
+    id: `red_transport_${person}_${seed}`,
+    type: 'red_herring',
+    tier: 'advanced',
+    category: 'cross',
+    text: isBeforeNoon 
+      ? `The person who took the ${transport} arrived before noon.`
+      : `The person who took the ${transport} arrived after noon.`,
+    entities: { people: [person] },
+    redHerringValue: transport,
+  };
+}
+
+/**
+ * Red Herring Weather Clue
+ */
+export function generateRedHerringWeatherClue(ctx: ClueContext, seed: number): AlibiClue | null {
+  if (ctx.redHerringCategory !== 'weather' || !ctx.redHerringAssignments) return null;
+  
+  const rand = seededRandom(seed);
+  const person = pickRandom(ctx.people, rand);
+  const weather = ctx.redHerringAssignments[person];
+  const location = ctx.solution.personToLocation[person];
+  
+  if (!weather) return null;
+  
+  return {
+    id: `red_weather_${person}_${seed}`,
+    type: 'red_herring',
+    tier: 'advanced',
+    category: 'cross',
+    text: `It was ${weather.toLowerCase()} when someone visited the ${location}.`,
+    entities: { people: [person], locations: [location] },
+    redHerringValue: weather,
   };
 }
 
@@ -455,10 +702,16 @@ export interface GeneratedClues {
     location: AlibiClue[];
     object: AlibiClue[];
   };
+  // V3.0: Constrained positives (binary choices)
+  constrainedPositives: AlibiClue[];
   forcedNegatives: AlibiClue[];
   relationals: AlibiClue[];
   crossCategory: AlibiClue[];
   advanced: AlibiClue[];
+  // V3.0: Quantifier clues
+  quantifiers: AlibiClue[];
+  // V3.0: Red herring clues
+  redHerrings: AlibiClue[];
 }
 
 // Protected answer pair - used to filter out answer-revealing clues
@@ -479,12 +732,22 @@ function wouldRevealAnswer(clue: AlibiClue, protected_: ProtectedAnswer, ctx: Cl
   // Pattern 1: Direct positive linking answer person to target value
   if (clue.entities?.people?.includes(protected_.person)) {
     if (protected_.category === 'time' && clue.entities?.times?.includes(protected_.value)) {
-      return true; // Any clue linking them, not just anchors
+      // Binary clues are OK - they don't directly reveal
+      if (clue.type === 'binary_positive') {
+        return false;
+      }
+      return true;
     }
     if (protected_.category === 'location' && clue.entities?.locations?.includes(protected_.value)) {
+      if (clue.type === 'binary_positive') {
+        return false;
+      }
       return true;
     }
     if (protected_.category === 'object' && clue.entities?.objects?.includes(protected_.value)) {
+      if (clue.type === 'binary_positive') {
+        return false;
+      }
       return true;
     }
   }
@@ -493,43 +756,34 @@ function wouldRevealAnswer(clue: AlibiClue, protected_: ProtectedAnswer, ctx: Cl
   if (clue.type === 'direct_negative') {
     const otherPeople = ctx.people.filter(p => p !== protected_.person);
     
-    // If this clue eliminates the target value for ALL other people, it reveals the answer
     if (protected_.category === 'location' && clue.category === 'location') {
       const eliminatedLocations = clue.entities?.locations || [];
       if (eliminatedLocations.includes(protected_.value)) {
-        // Check if this person is NOT the answer - if everyone else gets eliminated from target value, answer is revealed
         const cluePerson = clue.entities?.people?.[0];
         if (cluePerson && cluePerson !== protected_.person) {
-          // This eliminates cluePerson from the target value - could contribute to trivial elimination
-          // But we allow it as long as it doesn't directly reveal the answer
+          // Allow as long as it doesn't directly reveal
         }
       }
     }
-    // Similar checks for time and object...
   }
   
   // Pattern 3: Cross-category clues that chain to reveal the answer
   if (clue.tier === 'cross_category' || clue.category === 'cross') {
-    // Get the object and location from the cross clue
     const clueObject = clue.entities?.objects?.[0];
     const clueLocation = clue.entities?.locations?.[0];
     
     if (clueObject && clueLocation) {
-      // Find who has this object
       const objectOwner = Object.entries(ctx.solution.personToObject).find(([, obj]) => obj === clueObject)?.[0];
       
       if (objectOwner === protected_.person) {
-        // If the answer person owns this object, check if the cross-clue reveals their location
         if (protected_.category === 'location' && clueLocation === protected_.value) {
           return true;
         }
       }
       
-      // Similar check for if location matches
       const locationOccupant = Object.entries(ctx.solution.personToLocation).find(([, loc]) => loc === clueLocation)?.[0];
       
       if (locationOccupant === protected_.person) {
-        // If the answer person is at this location, check if the cross-clue reveals their object
         if (protected_.category === 'object' && clueObject === protected_.value) {
           return true;
         }
@@ -547,10 +801,13 @@ export function generateAllCandidateClues(
 ): GeneratedClues {
   const result: GeneratedClues = {
     anchors: { time: [], location: [], object: [] },
+    constrainedPositives: [],
     forcedNegatives: [],
     relationals: [],
     crossCategory: [],
     advanced: [],
+    quantifiers: [],
+    redHerrings: [],
   };
   
   // Generate all possible anchors (one per person per category)
@@ -574,6 +831,26 @@ export function generateAllCandidateClues(
     const crossAnchor = generateCrossAnchor(ctx, person);
     if (!protectedAnswer || !wouldRevealAnswer(crossAnchor, protectedAnswer, ctx)) {
       result.crossCategory.push(crossAnchor);
+    }
+  }
+  
+  // V3.0: Generate constrained positives (binary choices)
+  for (let i = 0; i < ctx.people.length; i++) {
+    const person = ctx.people[i];
+    
+    const binaryLoc = generateBinaryLocationClue(ctx, person, baseSeed + i * 1000);
+    if (binaryLoc && (!protectedAnswer || !wouldRevealAnswer(binaryLoc, protectedAnswer, ctx))) {
+      result.constrainedPositives.push(binaryLoc);
+    }
+    
+    const binaryObj = generateBinaryObjectClue(ctx, person, baseSeed + i * 1000 + 100);
+    if (binaryObj && (!protectedAnswer || !wouldRevealAnswer(binaryObj, protectedAnswer, ctx))) {
+      result.constrainedPositives.push(binaryObj);
+    }
+    
+    const binaryTime = generateBinaryTimeClue(ctx, person, baseSeed + i * 1000 + 200);
+    if (binaryTime && (!protectedAnswer || !wouldRevealAnswer(binaryTime, protectedAnswer, ctx))) {
+      result.constrainedPositives.push(binaryTime);
     }
   }
   
@@ -648,6 +925,37 @@ export function generateAllCandidateClues(
     }
   }
   
+  // V3.0: Generate quantifier clues
+  for (let s = 0; s < 4; s++) {
+    const exactlyOne = generateExactlyOneClue(ctx, baseSeed + s * 400);
+    if (exactlyOne && (!protectedAnswer || !wouldRevealAnswer(exactlyOne, protectedAnswer, ctx))) {
+      result.quantifiers.push(exactlyOne);
+    }
+    
+    const atLeastOne = generateAtLeastOneClue(ctx, baseSeed + s * 410);
+    if (atLeastOne && (!protectedAnswer || !wouldRevealAnswer(atLeastOne, protectedAnswer, ctx))) {
+      result.quantifiers.push(atLeastOne);
+    }
+    
+    const noMoreThan = generateNoMoreThanClue(ctx, baseSeed + s * 420);
+    if (noMoreThan && (!protectedAnswer || !wouldRevealAnswer(noMoreThan, protectedAnswer, ctx))) {
+      result.quantifiers.push(noMoreThan);
+    }
+  }
+  
+  // V3.0: Generate red herring clues if applicable
+  if (ctx.redHerringCategory && ctx.redHerringAssignments) {
+    for (let s = 0; s < 4; s++) {
+      if (ctx.redHerringCategory === 'transportation') {
+        const transport = generateRedHerringTransportClue(ctx, baseSeed + s * 500);
+        if (transport) result.redHerrings.push(transport);
+      } else if (ctx.redHerringCategory === 'weather') {
+        const weather = generateRedHerringWeatherClue(ctx, baseSeed + s * 510);
+        if (weather) result.redHerrings.push(weather);
+      }
+    }
+  }
+  
   return result;
 }
 
@@ -658,10 +966,13 @@ export function generateCandidateClues(ctx: ClueContext, baseSeed: number): Alib
     ...generated.anchors.time,
     ...generated.anchors.location,
     ...generated.anchors.object,
+    ...generated.constrainedPositives,
     ...generated.crossCategory,
     ...generated.forcedNegatives,
     ...generated.relationals,
     ...generated.advanced,
+    ...generated.quantifiers,
+    ...generated.redHerrings,
   ];
 }
 

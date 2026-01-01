@@ -1,9 +1,10 @@
 import React from 'react';
-import { AlibiPuzzle, AlibiStats } from '@/lib/alibi/types';
+import { AlibiPuzzle, AlibiStats, DifficultyTier } from '@/lib/alibi/types';
 import { loadStats } from '@/lib/alibi/storage';
 import { Button } from '@/components/ui/button';
-import { Share2, RotateCcw, Lightbulb } from 'lucide-react';
+import { Share2, RotateCcw, Lightbulb, Award } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface AlibiResultsPanelProps {
   puzzle: AlibiPuzzle;
@@ -11,6 +12,16 @@ interface AlibiResultsPanelProps {
   consistencyChecks: number;
   onPlayAgain?: () => void;
   isPractice?: boolean;
+}
+
+// V3.0: Difficulty badge colors
+function getDifficultyBadge(difficulty?: DifficultyTier) {
+  switch (difficulty) {
+    case 'easy': return { label: 'Easy', className: 'bg-green-500/20 text-green-600 border-green-500/30' };
+    case 'medium': return { label: 'Medium', className: 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30' };
+    case 'hard': return { label: 'Hard', className: 'bg-red-500/20 text-red-600 border-red-500/30' };
+    default: return null;
+  }
 }
 
 function formatTime(ms: number): string {
@@ -120,6 +131,8 @@ export function AlibiResultsPanel({
     }
   };
 
+  const difficultyBadge = getDifficultyBadge(puzzle.difficulty);
+
   return (
     <div className="bg-alibi-card-bg border border-alibi-divider rounded-lg p-6 space-y-6">
       {/* Header */}
@@ -129,6 +142,13 @@ export function AlibiResultsPanel({
           Case Solved!
         </h2>
         <p className="text-alibi-accent font-medium">{rank.title}</p>
+        {/* V3.0: Difficulty Badge */}
+        {difficultyBadge && (
+          <Badge variant="outline" className={`mt-2 ${difficultyBadge.className}`}>
+            <Award className="h-3 w-3 mr-1" />
+            {difficultyBadge.label}
+          </Badge>
+        )}
       </div>
 
       {/* Stats */}

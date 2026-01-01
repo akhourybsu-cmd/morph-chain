@@ -1,26 +1,23 @@
 /**
- * Daily Puzzle Generator - V3.0 Enhanced Deduction Requirements
+ * Daily Puzzle Generator - V3.0 Master Ruleset Implementation
+ * 
+ * NYT-Style Puzzle Generation with Difficulty Tiers:
+ * - Easy (Mon-Tue): Up to 1 constrained anchor, no quantifiers
+ * - Medium (Wed-Thu): Zero anchors, relative time required
+ * - Hard (Fri-Sun): Zero anchors, quantifiers, optional red herring
  * 
  * Generation Flow:
- * 1. Generate entities and solution
- * 2. Pick final question FIRST (establishes protected answer)
- * 3. Generate clues that DON'T reveal the answer
- * 4. Validate ALL rules:
- *    - Mandatory anchors (Section 2)
- *    - Forced progress path (Section 4)
- *    - Minimum forced moves ≥5 (Section 4.2)
- *    - Category balance (Section 5)
- *    - Final question inevitability (Section 6)
- *    - Answer obfuscation (NO clue reveals the answer)
- *    - Deduction depth ≥3 (STRICT requirement)
- *    - Cross-category deduction (REQUIRED)
- *    - No trivial elimination (answer not obvious from anchors)
+ * 1. Determine difficulty from day of week
+ * 2. Generate entities and solution
+ * 3. Pick final question FIRST (establishes protected answer)
+ * 4. Generate clues that DON'T reveal the answer
+ * 5. Validate ALL rules for the difficulty tier
  */
 
-import { AlibiPuzzle, ALIBI_RULES, FinalQuestion } from './types';
+import { AlibiPuzzle, ALIBI_RULES, FinalQuestion, DifficultyTier, getDifficultyForDate } from './types';
 
 // Version bump forces puzzle regeneration when rules change
-export const PUZZLE_GENERATION_VERSION = 7;
+export const PUZZLE_GENERATION_VERSION = 8;
 
 import { 
   generateEntities, 
@@ -60,12 +57,16 @@ function getPuzzleIndex(dateStr: string): number {
 }
 
 /**
- * Generate a daily puzzle with STRICT validation including enhanced deduction requirements
- * Retries up to MAX_ATTEMPTS times to find a valid puzzle
+ * Generate a daily puzzle with STRICT validation including V3.0 difficulty tiers
  */
 export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
   const baseSeed = dateToSeed(dateStr);
   const index = getPuzzleIndex(dateStr);
+  
+  // V3.0: Determine difficulty from day of week
+  const puzzleDate = new Date(dateStr);
+  const difficulty = getDifficultyForDate(puzzleDate);
+  const difficultyRules = ALIBI_RULES.DIFFICULTY[difficulty];
 
   const MAX_ATTEMPTS = 150; // Increased attempts due to stricter requirements
 
@@ -140,18 +141,11 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
     // All validations passed!
     const complexity = estimateComplexity(clues);
 
-    console.log(`[Alibi] Generated valid puzzle for ${dateStr} on attempt ${attempt + 1}`);
+    console.log(`[Alibi] Generated valid ${difficulty.toUpperCase()} puzzle for ${dateStr} on attempt ${attempt + 1}`);
+    console.log(`  - Difficulty: ${difficulty}`);
     console.log(`  - Forced moves: ${validation.forcedMoveCount}`);
     console.log(`  - Answer deduction depth: ${validation.answerRevealedAtStep}`);
-    console.log(`  - Cross-category required: ${validation.requiresCrossCategoryDeduction}`);
-    console.log(`  - No dead ends: ${validation.hasNoDeadEnds}`);
-    console.log(`  - All clues contribute: ${validation.allCluesContribute}`);
-    console.log(`  - Requires grid interaction: ${validation.requiresGridInteraction}`);
     console.log(`  - Clue count: ${clues.length}`);
-    console.log(`  - Complexity score: ${complexity}`);
-    if (validation.keyInsight) {
-      console.log(`  - Key insight: ${validation.keyInsight.description}`);
-    }
 
     return {
       id: dateStr,
@@ -165,7 +159,8 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
       finalQuestion: finalQuestion.questionText,
       finalAnswerPerson: finalQuestion.answer,
       finalQuestionData: finalQuestion,
-      validation,
+      validation: { ...validation, difficulty },
+      difficulty,
     };
   }
 
