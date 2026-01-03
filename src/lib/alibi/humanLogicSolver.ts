@@ -102,6 +102,22 @@ function parseClue(clue: AlibiClue, entities: {
   const constraints: ParsedConstraint[] = [];
   const text = clue.text;
 
+  // V3.0: Binary positive clues - "X was either at A or B"
+  // These don't directly confirm, they narrow to 2 options
+  if (clue.type === 'binary_positive') {
+    // Binary clues are handled by elimination logic rather than direct constraints
+    // When one option is eliminated, the other becomes confirmed
+    // This is handled in the solver's iterative process
+  }
+
+  // V3.0: Quantifier clues - parse "Exactly one of X or Y had Z"
+  const exactlyOneMatch = text.match(/^Exactly one of (\w+) or (\w+) had the (\w+)\.$/);
+  if (exactlyOneMatch) {
+    const [, p1, p2, object] = exactlyOneMatch;
+    // We know exactly one has it - this is a constraint used in elimination
+    // Implementation: if one person is confirmed/eliminated for object, deduce the other
+  }
+
   // Direct positive: Person at location
   for (const person of entities.people) {
     for (const location of entities.locations) {
