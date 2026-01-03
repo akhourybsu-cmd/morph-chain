@@ -80,15 +80,18 @@ interface FinalQuestionCandidate {
   type: FinalQuestionType;
   targetCategory: 'location' | 'time' | 'object';
   targetValue: string;
+  isNegative?: boolean;
 }
 
 /**
  * Generate all possible final questions for a puzzle
  * Called FIRST before clue selection to establish protected answer
+ * V3.0: Includes negative question types for Hard mode
  */
 export function generateFinalQuestionCandidates(
   entities: PuzzleEntities,
-  solution: AlibiSolution
+  solution: AlibiSolution,
+  includeNegative: boolean = false
 ): FinalQuestionCandidate[] {
   const candidates: FinalQuestionCandidate[] = [];
 
@@ -137,24 +140,100 @@ export function generateFinalQuestionCandidates(
     }
   }
 
+  // V3.0: Add "Who arrived last?" and "Who arrived first?" questions
+  const sortedByTime = [...entities.people].sort((a, b) => {
+    const timeA = entities.times.indexOf(solution.personToTime[a]);
+    const timeB = entities.times.indexOf(solution.personToTime[b]);
+    return timeA - timeB;
+  });
+
+  const firstPerson = sortedByTime[0];
+  const lastPerson = sortedByTime[sortedByTime.length - 1];
+
+  candidates.push({
+    question: `Who arrived first?`,
+    answer: firstPerson,
+    type: 'who_arrived_first',
+    targetCategory: 'time',
+    targetValue: solution.personToTime[firstPerson],
+  });
+
+  candidates.push({
+    question: `Who arrived last?`,
+    answer: lastPerson,
+    type: 'who_arrived_last',
+    targetCategory: 'time',
+    targetValue: solution.personToTime[lastPerson],
+  });
+
+  // V3.0: Negative questions for Hard mode
+  if (includeNegative) {
+    // "Who could NOT have had the X?" - answer is everyone except the actual owner
+    // We phrase it as "Who definitely did NOT have the X?" where answer is first non-owner
+    for (const object of entities.objects) {
+      const owner = Object.entries(solution.personToObject)
+        .find(([, obj]) => obj === object)?.[0];
+      if (owner) {
+        // The "answer" for a negative question is the owner (the one who DID have it)
+        // The question asks who didn't - but we need one answer for validation
+        // So we use the owner as the "protected" answer still
+        candidates.push({
+          question: `Who could NOT have had the ${object}?`,
+          answer: owner, // Protected answer is still the owner
+          type: 'person_not_with_object',
+          targetCategory: 'object',
+          targetValue: object,
+          isNegative: true,
+        });
+      }
+    }
+
+    // "Who was NOT at the X?"
+    for (const location of entities.locations) {
+      const occupant = Object.entries(solution.personToLocation)
+        .find(([, loc]) => loc === location)?.[0];
+      if (occupant) {
+        candidates.push({
+          question: `Who was NOT at the ${location}?`,
+          answer: occupant,
+          type: 'person_not_at_location',
+          targetCategory: 'location',
+          targetValue: location,
+          isNegative: true,
+        });
+      }
+    }
+  }
+
   return candidates;
 }
 
 /**
  * Pick a final question for the puzzle
  * This is called FIRST, before clue generation
+ * V3.0: Supports difficulty-based question selection
  */
 export function pickFinalQuestion(
   entities: PuzzleEntities,
   solution: AlibiSolution,
-  seed: number
+  seed: number,
+  preferNegative: boolean = false
 ): FinalQuestion | null {
-  const candidates = generateFinalQuestionCandidates(entities, solution);
+  const candidates = generateFinalQuestionCandidates(entities, solution, preferNegative);
   if (candidates.length === 0) return null;
 
   // Shuffle and pick one
   const rand = seededRandom(seed + 7000);
-  const shuffled = [...candidates].sort(() => rand() - 0.5);
+  
+  // V3.0: For Hard mode, prefer negative questions
+  let shuffled = [...candidates].sort(() => rand() - 0.5);
+  
+  if (preferNegative) {
+    // Move negative questions to the front
+    const negative = shuffled.filter(c => c.isNegative);
+    const positive = shuffled.filter(c => !c.isNegative);
+    shuffled = [...negative, ...positive];
+  }
   
   const chosen = shuffled[0];
   return {
@@ -163,6 +242,7 @@ export function pickFinalQuestion(
     targetValue: chosen.targetValue,
     questionText: chosen.question,
     answer: chosen.answer,
+    isNegative: chosen.isNegative,
   };
 }
 

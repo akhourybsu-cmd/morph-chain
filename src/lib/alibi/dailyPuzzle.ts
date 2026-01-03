@@ -78,7 +78,9 @@ export function generateDailyPuzzle(dateStr: string): AlibiPuzzle {
     const solution = generateSolution(entities, seed);
 
     // STEP 2: Pick final question FIRST (establishes protected answer)
-    const finalQuestion = pickFinalQuestion(entities, solution, seed);
+    // V3.0: Hard mode prefers negative questions
+    const preferNegative = difficulty === 'hard';
+    const finalQuestion = pickFinalQuestion(entities, solution, seed, preferNegative);
     if (!finalQuestion) continue;
 
     // STEP 3: Select clues that don't reveal the answer

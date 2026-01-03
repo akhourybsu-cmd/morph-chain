@@ -94,6 +94,26 @@ export default function MorphAlibi() {
           >
             #{puzzle.index}
           </span>
+          {/* V3.0: Difficulty Badge */}
+          {puzzle.difficulty && (
+            <span 
+              className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded"
+              style={{ 
+                background: puzzle.difficulty === 'easy' 
+                  ? 'hsl(142 76% 36% / 0.15)' 
+                  : puzzle.difficulty === 'medium' 
+                    ? 'hsl(38 92% 50% / 0.15)' 
+                    : 'hsl(0 72% 51% / 0.15)',
+                color: puzzle.difficulty === 'easy' 
+                  ? 'hsl(142 76% 36%)' 
+                  : puzzle.difficulty === 'medium' 
+                    ? 'hsl(38 92% 50%)' 
+                    : 'hsl(0 72% 51%)',
+              }}
+            >
+              {puzzle.difficulty}
+            </span>
+          )}
           {stats.currentStreak > 0 && (
             <span 
               className="flex items-center gap-0.5 text-xs"
