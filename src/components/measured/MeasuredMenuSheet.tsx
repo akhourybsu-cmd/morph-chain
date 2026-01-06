@@ -8,15 +8,16 @@ import {
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { GamesNavigation } from '@/components/shared/GamesNavigation';
-import { User } from 'lucide-react';
+import { User, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface MeasuredMenuSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onStatsClick?: () => void;
 }
 
-export function MeasuredMenuSheet({ open, onOpenChange }: MeasuredMenuSheetProps) {
+export function MeasuredMenuSheet({ open, onOpenChange, onStatsClick }: MeasuredMenuSheetProps) {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -39,6 +40,11 @@ export function MeasuredMenuSheet({ open, onOpenChange }: MeasuredMenuSheetProps
     onOpenChange(false);
   };
 
+  const handleStatsClick = () => {
+    onOpenChange(false);
+    onStatsClick?.();
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
@@ -56,6 +62,27 @@ export function MeasuredMenuSheet({ open, onOpenChange }: MeasuredMenuSheetProps
           <GamesNavigation currentGame="measured" onNavigate={() => onOpenChange(false)} />
 
           <Separator className="bg-measured-card-border" />
+
+          {/* Stats Section */}
+          {onStatsClick && (
+            <>
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider mb-3 px-2 text-measured-text-muted">
+                  Statistics
+                </h3>
+                <div className="space-y-1">
+                  <button
+                    onClick={handleStatsClick}
+                    className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2 text-measured-text-primary hover:bg-measured-page"
+                  >
+                    <BarChart3 className="w-4 h-4 text-measured-accent" />
+                    <span className="text-sm">View Stats</span>
+                  </button>
+                </div>
+              </div>
+              <Separator className="bg-measured-card-border" />
+            </>
+          )}
 
           {/* Account Section */}
           <div>

@@ -4,7 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Trophy, Target, Zap, Award } from "lucide-react";
+import { Trophy, Target, Zap, Award, Flame } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { loadRushStats } from "@/lib/rushStorage";
 
@@ -22,6 +22,28 @@ export const RushStats = ({ open, onOpenChange }: RushStatsProps) => {
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Rush Statistics</DialogTitle>
         </DialogHeader>
+        
+        {/* Daily Streak Section */}
+        {(stats.dailyStreak > 0 || stats.maxDailyStreak > 0) && (
+          <div className="rounded-lg border p-4 text-center bg-muted/30">
+            <div className="flex justify-center gap-8">
+              <div>
+                <div className="flex items-center justify-center gap-2 text-primary">
+                  <Flame className="h-5 w-5" />
+                  <span className="text-2xl font-bold">{stats.dailyStreak}</span>
+                </div>
+                <p className="text-xs text-muted-foreground uppercase mt-1">Daily Streak</p>
+              </div>
+              <div>
+                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                  <Award className="h-5 w-5" />
+                  <span className="text-2xl font-bold">{stats.maxDailyStreak}</span>
+                </div>
+                <p className="text-xs text-muted-foreground uppercase mt-1">Best Streak</p>
+              </div>
+            </div>
+          </div>
+        )}
         
         <Tabs defaultValue="normal" className="w-full">
           <TabsList className="grid w-full grid-cols-2">

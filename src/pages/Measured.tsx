@@ -2,8 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { supabase } from '@/integrations/supabase/client';
 import { SlotValues, computeResult, calculateGameResult, areSlotsComplete, generateShareText, Band } from '@/lib/measured/gameLogic';
+import { updateMeasuredStats } from '@/lib/measured/statsStorage';
 import { MeasuredPrestigeHeader } from '@/components/measured/MeasuredPrestigeHeader';
 import { MeasuredMenuSheet } from '@/components/measured/MeasuredMenuSheet';
+import { MeasuredStats } from '@/components/measured/MeasuredStats';
 import { ClueCard } from '@/components/measured/ClueCard';
 import { EquationBuilder } from '@/components/measured/EquationBuilder';
 import { TileBank } from '@/components/measured/TileBank';
@@ -51,6 +53,7 @@ export default function Measured() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const today = formatInTimeZone(new Date(), 'America/New_York', 'yyyy-MM-dd');
@@ -218,6 +221,15 @@ export default function Measured() {
         return;
       }
 
+      // Update local stats
+      updateMeasuredStats({
+        score: gameResult.score,
+        band: gameResult.band,
+        isExact: gameResult.isExact,
+        error: gameResult.error,
+        targetValue: puzzle.target_value_int,
+      });
+
       setAttempt({
         chosen: { A: slots.A!, B: slots.B!, C: slots.C!, D: slots.D! },
         result_value_int: gameResult.result,
@@ -242,7 +254,8 @@ export default function Measured() {
         <div className="flex-1 flex items-center justify-center">
           <div className="animate-pulse text-measured-text-secondary">Loading...</div>
         </div>
-        <MeasuredMenuSheet open={showMenu} onOpenChange={setShowMenu} />
+        <MeasuredMenuSheet open={showMenu} onOpenChange={setShowMenu} onStatsClick={() => setShowStats(true)} />
+        <MeasuredStats open={showStats} onOpenChange={setShowStats} />
       </div>
     );
   }
@@ -259,7 +272,8 @@ export default function Measured() {
             <p className="text-measured-text-secondary">Please check back soon.</p>
           </div>
         </div>
-        <MeasuredMenuSheet open={showMenu} onOpenChange={setShowMenu} />
+        <MeasuredMenuSheet open={showMenu} onOpenChange={setShowMenu} onStatsClick={() => setShowStats(true)} />
+        <MeasuredStats open={showStats} onOpenChange={setShowStats} />
       </div>
     );
   }
@@ -273,8 +287,9 @@ export default function Measured() {
           attempt={attempt}
           puzzle={puzzle}
         />
-        <MeasuredMenuSheet open={showMenu} onOpenChange={setShowMenu} />
+        <MeasuredMenuSheet open={showMenu} onOpenChange={setShowMenu} onStatsClick={() => setShowStats(true)} />
         <MeasuredHowToPlay open={showHowToPlay} onOpenChange={setShowHowToPlay} />
+        <MeasuredStats open={showStats} onOpenChange={setShowStats} />
       </div>
     );
   }
@@ -336,8 +351,9 @@ export default function Measured() {
         result={result}
       />
 
-      <MeasuredMenuSheet open={showMenu} onOpenChange={setShowMenu} />
+      <MeasuredMenuSheet open={showMenu} onOpenChange={setShowMenu} onStatsClick={() => setShowStats(true)} />
       <MeasuredHowToPlay open={showHowToPlay} onOpenChange={setShowHowToPlay} />
+      <MeasuredStats open={showStats} onOpenChange={setShowStats} />
     </div>
   );
 }
