@@ -520,6 +520,63 @@ export type Database = {
           },
         ]
       }
+      measured_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
+      measured_category_usage: {
+        Row: {
+          category: string
+          last_used_date: string | null
+          updated_at: string
+          usage_count_30d: number
+          usage_count_7d: number
+        }
+        Insert: {
+          category: string
+          last_used_date?: string | null
+          updated_at?: string
+          usage_count_30d?: number
+          usage_count_7d?: number
+        }
+        Update: {
+          category?: string
+          last_used_date?: string | null
+          updated_at?: string
+          usage_count_30d?: number
+          usage_count_7d?: number
+        }
+        Relationships: []
+      }
       measured_daily_puzzles: {
         Row: {
           created_at: string
@@ -587,11 +644,15 @@ export type Database = {
           clue_text: string
           created_at: string
           id: string
+          is_auto_ingested: boolean
+          last_used_date: string | null
           reveal_blurb: string
           rounding_note: string | null
           source_1: string
           source_2: string | null
+          source_candidate_id: string | null
           status: string
+          times_used: number
           title: string
           unit_label: string
           updated_at: string
@@ -604,11 +665,15 @@ export type Database = {
           clue_text: string
           created_at?: string
           id?: string
+          is_auto_ingested?: boolean
+          last_used_date?: string | null
           reveal_blurb: string
           rounding_note?: string | null
           source_1: string
           source_2?: string | null
+          source_candidate_id?: string | null
           status?: string
+          times_used?: number
           title: string
           unit_label: string
           updated_at?: string
@@ -621,16 +686,89 @@ export type Database = {
           clue_text?: string
           created_at?: string
           id?: string
+          is_auto_ingested?: boolean
+          last_used_date?: string | null
           reveal_blurb?: string
           rounding_note?: string | null
           source_1?: string
           source_2?: string | null
+          source_candidate_id?: string | null
           status?: string
+          times_used?: number
           title?: string
           unit_label?: string
           updated_at?: string
           verified_at?: string | null
           verified_by?: string | null
+        }
+        Relationships: []
+      }
+      measured_fact_candidates: {
+        Row: {
+          category: string
+          clue_text: string
+          confidence_score: number
+          created_at: string
+          id: string
+          normalized_value_int: number
+          raw_unit: string | null
+          raw_value: number
+          reference_count: number
+          reveal_blurb: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sanity_flags: Json
+          source_entity_id: string | null
+          source_name: string
+          source_property_id: string | null
+          sources: Json
+          status: string
+          title: string
+          unit_label: string
+        }
+        Insert: {
+          category: string
+          clue_text: string
+          confidence_score?: number
+          created_at?: string
+          id?: string
+          normalized_value_int: number
+          raw_unit?: string | null
+          raw_value: number
+          reference_count?: number
+          reveal_blurb: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sanity_flags?: Json
+          source_entity_id?: string | null
+          source_name?: string
+          source_property_id?: string | null
+          sources?: Json
+          status?: string
+          title: string
+          unit_label: string
+        }
+        Update: {
+          category?: string
+          clue_text?: string
+          confidence_score?: number
+          created_at?: string
+          id?: string
+          normalized_value_int?: number
+          raw_unit?: string | null
+          raw_value?: number
+          reference_count?: number
+          reveal_blurb?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sanity_flags?: Json
+          source_entity_id?: string | null
+          source_name?: string
+          source_property_id?: string | null
+          sources?: Json
+          status?: string
+          title?: string
+          unit_label?: string
         }
         Relationships: []
       }
@@ -1238,6 +1376,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      recalculate_measured_category_usage: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "beta_tester"
