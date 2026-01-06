@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
-import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Search, Menu, ChevronRight, User, Snowflake, Gift } from "lucide-react";
+import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Search, Menu, ChevronRight, User, Snowflake, Gift, Target } from "lucide-react";
 import { toast } from "sonner";
 import { SideMenu } from "@/components/layout/SideMenu";
 import { useState, useEffect } from "react";
@@ -17,6 +17,7 @@ const gameAccents = {
   grid: "186 68% 36%",   // teal  
   rush: "24 78% 57%",    // orange
   alibi: "40 75% 50%",   // gold
+  measured: "220 70% 50%", // blue
 };
 
 // Christmas accent colors
@@ -25,6 +26,7 @@ const christmasAccents = {
   grid: "0 75% 50%",     // red
   rush: "45 90% 50%",    // gold
   alibi: "142 70% 45%",  // green
+  measured: "220 70% 50%", // blue (same)
 };
 
 const GameSelector = () => {
@@ -205,6 +207,17 @@ const GameSelector = () => {
             accent={accents.alibi}
             onClick={() => navigate('/alibi')}
             badge="Beta"
+            christmas={christmas}
+          />
+          
+          {/* Measured - New */}
+          <GameCard
+            icon={Target}
+            name="Measured"
+            description="Match real-world numbers"
+            accent={accents.measured}
+            onClick={() => navigate('/measured')}
+            badge="New"
             christmas={christmas}
           />
         </div>

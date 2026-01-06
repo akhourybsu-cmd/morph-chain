@@ -11,6 +11,7 @@ export interface DailyProgress {
   grid: boolean;
   rush: boolean;
   alibi: boolean;
+  measured: boolean;
 }
 
 /**
@@ -63,6 +64,16 @@ function isAlibiCompleted(): boolean {
 }
 
 /**
+ * Check if Measured game is completed for today
+ * Note: This requires checking Supabase for attempts
+ */
+function isMeasuredCompleted(): boolean {
+  // For now, we'll return false since checking requires async Supabase call
+  // The DailyProgressTracker component will handle this differently
+  return false;
+}
+
+/**
  * Get the completion status for all games today
  */
 export function checkDailyProgress(): DailyProgress {
@@ -72,6 +83,7 @@ export function checkDailyProgress(): DailyProgress {
     grid: isGridCompleted(),
     rush: isRushCompleted(),
     alibi: isAlibiCompleted(),
+    measured: isMeasuredCompleted(),
   };
 }
 
@@ -80,12 +92,12 @@ export function checkDailyProgress(): DailyProgress {
  */
 export function getCompletionCount(progress?: DailyProgress): number {
   const p = progress || checkDailyProgress();
-  return [p.chain4L, p.chain5L, p.grid, p.rush, p.alibi].filter(Boolean).length;
+  return [p.chain4L, p.chain5L, p.grid, p.rush, p.alibi, p.measured].filter(Boolean).length;
 }
 
 /**
  * Get total number of trackable games
  */
 export function getTotalGames(): number {
-  return 5;
+  return 6;
 }

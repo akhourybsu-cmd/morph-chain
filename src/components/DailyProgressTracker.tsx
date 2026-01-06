@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { checkDailyProgress, getCompletionCount, getTotalGames, DailyProgress } from '@/lib/dailyProgress';
 import { Progress } from '@/components/ui/progress';
-import { Check, Circle, Link2, Grid3X3, Zap, Search } from 'lucide-react';
+import { Check, Circle, Link2, Grid3X3, Zap, Search, Target } from 'lucide-react';
 import { isChristmas } from '@/lib/seasonal/christmas';
 
 interface GameItem {
@@ -18,6 +18,7 @@ const games: GameItem[] = [
   { key: 'grid', label: 'Grid', icon: Grid3X3, accent: '186 68% 36%', christmasAccent: '0 75% 50%' },
   { key: 'rush', label: 'Rush', icon: Zap, accent: '24 78% 57%', christmasAccent: '45 90% 50%' },
   { key: 'alibi', label: 'Alibi', icon: Search, accent: '40 75% 50%', christmasAccent: '142 70% 45%' },
+  { key: 'measured', label: 'Measured', icon: Target, accent: '220 70% 50%', christmasAccent: '220 70% 50%' },
 ];
 
 export const DailyProgressTracker = () => {

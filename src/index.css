@@ -228,6 +228,26 @@ All colors MUST be HSL.
     --alibi-success: 145 50% 37%;      /* #2F8F5B green */
     --alibi-error: 3 52% 54%;          /* #C6534C red */
     --accent-alibi: 40 75% 50%;        /* Gold accent */
+    
+    /* Measured Prestige Theme (Blue accent - editorial style) */
+    --measured-page-bg: 39 32% 96%;       /* #F9F5ED paper background */
+    --measured-card-bg: 0 0% 100%;        /* #FFFFFF card background */
+    --measured-card-border: 37 20% 86%;   /* #E0D9CC card border */
+    --measured-divider: 37 14% 90%;       /* #E5E0D7 dividers */
+    --measured-text-primary: 0 0% 13%;    /* #222222 primary text */
+    --measured-text-secondary: 0 0% 40%;  /* #666666 secondary text */
+    --measured-text-muted: 33 6% 57%;     /* #9A9388 muted text */
+    --measured-accent: 220 70% 50%;       /* #2563EB blue accent */
+    --measured-tile-bg: 36 27% 92%;       /* #F1ECE3 tile background */
+    --measured-tile-border: 37 20% 86%;   /* #E0D9CC tile border */
+    
+    /* Measured Score Band Colors */
+    --measured-band-exact: 142 70% 40%;   /* Green - Dead On */
+    --measured-band-sharp: 220 70% 50%;   /* Blue - Sharp */
+    --measured-band-close: 45 85% 47%;    /* Gold - Close */
+    --measured-band-warm: 25 90% 50%;     /* Orange - Warm */
+    --measured-band-wide: 0 65% 50%;      /* Red - Wide */
+    --accent-measured: 220 70% 50%;       /* Blue accent */
   }
 
   /* NYT Prestige Dark Mode - Grid Page Colors */
@@ -289,6 +309,26 @@ All colors MUST be HSL.
     --alibi-success: 145 35% 57%;        /* #6EB58C green */
     --alibi-error: 5 63% 67%;            /* #E07A71 red */
     --accent-alibi: 40 55% 60%;          /* Gold accent */
+    
+    /* Measured Prestige Dark Mode */
+    --measured-page-bg: 216 22% 7%;         /* #0F1216 dark background */
+    --measured-card-bg: 216 17% 11%;        /* #171B20 card background */
+    --measured-card-border: 216 14% 17%;    /* #262B33 card border */
+    --measured-divider: 213 16% 20%;        /* #2C333C dividers */
+    --measured-text-primary: 36 36% 92%;    /* #F3ECE0 primary text */
+    --measured-text-secondary: 33 9% 75%;   /* #C5BFB4 secondary text */
+    --measured-text-muted: 33 7% 52%;       /* #8D877C muted text */
+    --measured-accent: 220 60% 60%;         /* Brighter blue for dark mode */
+    --measured-tile-bg: 216 15% 15%;        /* #20252C tile background */
+    --measured-tile-border: 216 14% 22%;    /* Dark tile border */
+    
+    /* Measured Score Band Colors Dark Mode */
+    --measured-band-exact: 142 50% 50%;     /* Green - Dead On */
+    --measured-band-sharp: 220 60% 60%;     /* Blue - Sharp */
+    --measured-band-close: 45 70% 55%;      /* Gold - Close */
+    --measured-band-warm: 25 80% 55%;       /* Orange - Warm */
+    --measured-band-wide: 0 55% 55%;        /* Red - Wide */
+    --accent-measured: 220 60% 60%;         /* Blue accent */
   }
   
   .light {

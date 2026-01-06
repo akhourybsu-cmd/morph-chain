@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Link2, Grid3X3, Zap, Search } from "lucide-react";
+import { Link2, Grid3X3, Zap, Search, Target } from "lucide-react";
 
 interface GamesNavigationProps {
-  currentGame: 'chain' | 'grid' | 'rush' | 'arcade' | 'alibi';
+  currentGame: 'chain' | 'grid' | 'rush' | 'arcade' | 'alibi' | 'measured';
   onNavigate?: () => void;
 }
 
@@ -11,6 +11,7 @@ const games = [
   { id: 'grid', name: "Morph Grid", icon: Grid3X3, path: "/grid", description: "Daily 5×5 puzzle", isBeta: false },
   { id: 'rush', name: "Morph Rush", icon: Zap, path: "/rush?mode=daily", description: "Timed score dash", isBeta: false },
   { id: 'alibi', name: "Morph Alibi", icon: Search, path: "/alibi", description: "Daily logic mystery", isBeta: true },
+  { id: 'measured', name: "Measured", icon: Target, path: "/measured", description: "Number puzzle", isBeta: false },
 ];
 
 export const GamesNavigation = ({ currentGame, onNavigate }: GamesNavigationProps) => {
