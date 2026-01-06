@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { supabase } from '@/integrations/supabase/client';
 import { SlotValues, computeResult, calculateGameResult, areSlotsComplete, generateShareText, Band } from '@/lib/measured/gameLogic';
-import { MeasuredHeader } from '@/components/measured/MeasuredHeader';
+import { MeasuredPrestigeHeader } from '@/components/measured/MeasuredPrestigeHeader';
+import { MeasuredMenuSheet } from '@/components/measured/MeasuredMenuSheet';
 import { ClueCard } from '@/components/measured/ClueCard';
 import { EquationBuilder } from '@/components/measured/EquationBuilder';
 import { TileBank } from '@/components/measured/TileBank';
@@ -49,6 +50,7 @@ export default function Measured() {
   const [focusedSlot, setFocusedSlot] = useState<'A' | 'B' | 'C' | 'D' | null>('A');
   const [showConfirm, setShowConfirm] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const today = formatInTimeZone(new Date(), 'America/New_York', 'yyyy-MM-dd');
@@ -235,16 +237,20 @@ export default function Measured() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-measured-page flex items-center justify-center">
-        <div className="animate-pulse text-measured-text-secondary">Loading...</div>
+      <div className="min-h-screen bg-measured-page flex flex-col">
+        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-pulse text-measured-text-secondary">Loading...</div>
+        </div>
+        <MeasuredMenuSheet open={showMenu} onOpenChange={setShowMenu} />
       </div>
     );
   }
 
   if (!puzzle) {
     return (
-      <div className="min-h-screen bg-measured-page">
-        <MeasuredHeader onHelpClick={() => setShowHowToPlay(true)} />
+      <div className="min-h-screen bg-measured-page flex flex-col">
+        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} />
         <div className="max-w-lg mx-auto p-6">
           <div className="bg-measured-card border border-measured-card-border rounded-2xl p-8 text-center">
             <h2 className="text-xl font-semibold text-measured-text-primary mb-2">
@@ -253,6 +259,7 @@ export default function Measured() {
             <p className="text-measured-text-secondary">Please check back soon.</p>
           </div>
         </div>
+        <MeasuredMenuSheet open={showMenu} onOpenChange={setShowMenu} />
       </div>
     );
   }
@@ -260,20 +267,21 @@ export default function Measured() {
   // Show reveal state if already attempted
   if (attempt) {
     return (
-      <div className="min-h-screen bg-measured-page">
-        <MeasuredHeader onHelpClick={() => setShowHowToPlay(true)} />
+      <div className="min-h-screen bg-measured-page flex flex-col">
+        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} />
         <RevealPanel
           attempt={attempt}
           puzzle={puzzle}
         />
+        <MeasuredMenuSheet open={showMenu} onOpenChange={setShowMenu} />
         <MeasuredHowToPlay open={showHowToPlay} onOpenChange={setShowHowToPlay} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-measured-page">
-      <MeasuredHeader onHelpClick={() => setShowHowToPlay(true)} />
+    <div className="min-h-screen bg-measured-page flex flex-col">
+      <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} />
       
       <div className="max-w-lg mx-auto p-4 space-y-4">
         <ClueCard
@@ -328,6 +336,7 @@ export default function Measured() {
         result={result}
       />
 
+      <MeasuredMenuSheet open={showMenu} onOpenChange={setShowMenu} />
       <MeasuredHowToPlay open={showHowToPlay} onOpenChange={setShowHowToPlay} />
     </div>
   );
