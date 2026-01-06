@@ -161,3 +161,12 @@ export function updateMeasuredStats(payload: {
 export function resetMeasuredStats(): void {
   localStorage.removeItem(STATS_KEY);
 }
+
+/**
+ * Check if Measured was completed today
+ */
+export function isMeasuredCompletedToday(): boolean {
+  const stats = loadMeasuredStats();
+  const today = getEasternDateString();
+  return stats.lastPlayedDate === today;
+}

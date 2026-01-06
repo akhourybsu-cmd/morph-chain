@@ -1,9 +1,10 @@
 // Daily progress tracking across all game modes
 import { loadGameState } from './storage';
 import { loadGridGameState } from './gridStorage';
-import { loadTodayCompletion, getTodayDateString } from './rushStorage';
+import { loadTodayCompletion } from './rushStorage';
 import { loadGameState as loadAlibiGameState } from './alibi/storage';
-import { formatInTimeZone } from 'date-fns-tz';
+import { isMeasuredCompletedToday } from './measured/statsStorage';
+import { getEasternDateString } from './dateUtils';
 
 export interface DailyProgress {
   chain4L: boolean;
@@ -18,7 +19,7 @@ export interface DailyProgress {
  * Get today's date string in Eastern timezone (matches game date logic)
  */
 function getTodayDate(): string {
-  return formatInTimeZone(new Date(), 'America/New_York', 'yyyy-MM-dd');
+  return getEasternDateString();
 }
 
 /**
@@ -65,12 +66,9 @@ function isAlibiCompleted(): boolean {
 
 /**
  * Check if Measured game is completed for today
- * Note: This requires checking Supabase for attempts
  */
 function isMeasuredCompleted(): boolean {
-  // For now, we'll return false since checking requires async Supabase call
-  // The DailyProgressTracker component will handle this differently
-  return false;
+  return isMeasuredCompletedToday();
 }
 
 /**
