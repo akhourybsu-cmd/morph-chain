@@ -15,6 +15,7 @@ import MorphRush from "./pages/MorphRush";
 import GridArchive from "./pages/GridArchive";
 import MorphGrid from "./pages/MorphGrid";
 import MorphAlibi from "./pages/MorphAlibi";
+import Measured from "./pages/Measured";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import PuzzleCenter from "./pages/admin/PuzzleCenter";
@@ -55,6 +56,7 @@ const App = () => {
               <Route path="/grid/archive" element={<GridArchive />} />
               <Route path="/rush" element={<MorphRush />} />
               <Route path="/alibi" element={<MorphAlibi />} />
+              <Route path="/measured" element={<Measured />} />
               <Route path="/rules" element={<Rules />} />
               <Route path="/kids" element={<Kids />} />
               <Route path="/press" element={<Press />} />

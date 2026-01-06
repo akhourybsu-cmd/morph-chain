@@ -3,13 +3,14 @@ import {
   Database, 
   Users, 
   Activity,
-  FileText,
   LogOut,
   LayoutDashboard,
   CheckCircle2,
   Archive,
   MessageSquare,
-  Shield
+  Shield,
+  BookOpen,
+  Target
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
@@ -37,6 +38,8 @@ const navigation = [
   { title: "Analytics", url: "/admin/analytics", icon: Activity },
   { title: "Player Sessions", url: "/admin/sessions", icon: Users },
   { title: "Archive", url: "/admin/archive", icon: Archive },
+  { title: "Measured Facts", url: "/admin/measured-facts", icon: BookOpen },
+  { title: "Measured Puzzles", url: "/admin/measured-puzzles", icon: Target },
 ];
 
 export function AdminSidebar() {
