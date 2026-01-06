@@ -119,9 +119,13 @@ export default function MeasuredFactBank() {
 
         if (error) throw error;
 
-        await logAuditAction("create_fact", "fact", undefined, {
-          title: editingFact.title,
-          category: editingFact.category,
+        await logAuditAction({
+          action: "create_fact",
+          entity_type: "fact",
+          details: {
+            title: editingFact.title,
+            category: editingFact.category,
+          },
         });
 
         toast({ title: "Fact created successfully" });
@@ -143,8 +147,13 @@ export default function MeasuredFactBank() {
 
         if (error) throw error;
 
-        await logAuditAction("edit_fact", "fact", editingFact.id, {
-          title: editingFact.title,
+        await logAuditAction({
+          action: "edit_fact",
+          entity_type: "fact",
+          entity_id: editingFact.id,
+          details: {
+            title: editingFact.title,
+          },
         });
 
         toast({ title: "Fact updated successfully" });
@@ -170,8 +179,13 @@ export default function MeasuredFactBank() {
 
       if (error) throw error;
 
-      await logAuditAction("retire_fact", "fact", fact.id, {
-        title: fact.title,
+      await logAuditAction({
+        action: "retire_fact",
+        entity_type: "fact",
+        entity_id: fact.id,
+        details: {
+          title: fact.title,
+        },
       });
 
       toast({ title: "Fact retired" });

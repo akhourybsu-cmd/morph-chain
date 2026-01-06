@@ -72,8 +72,8 @@ export default function MeasuredReview() {
       
       setPuzzles((puzzlesData || []).map(p => ({
         ...p,
-        tiles: p.tiles as number[],
-        solution: p.solution as PuzzleSolution,
+        tiles: p.tiles as unknown as number[],
+        solution: p.solution as unknown as PuzzleSolution,
         fact: p.fact as PuzzleWithFact["fact"],
       })));
 
@@ -104,10 +104,15 @@ export default function MeasuredReview() {
 
       if (error) throw error;
 
-      await logAuditAction("publish_puzzle", "puzzle", puzzle.id, {
-        date: puzzle.puzzle_date,
-        fact_title: puzzle.fact.title,
-        target: puzzle.target_value_int,
+      await logAuditAction({
+        action: "publish_puzzle",
+        entity_type: "puzzle",
+        entity_id: puzzle.id,
+        details: {
+          date: puzzle.puzzle_date,
+          fact_title: puzzle.fact.title,
+          target: puzzle.target_value_int,
+        },
       });
 
       toast({ title: `Puzzle for ${format(new Date(puzzle.puzzle_date), "MMM d")} published!` });
@@ -138,9 +143,14 @@ export default function MeasuredReview() {
 
       if (error) throw error;
 
-      await logAuditAction("delete_puzzle", "puzzle", puzzle.id, {
-        date: puzzle.puzzle_date,
-        fact_title: puzzle.fact.title,
+      await logAuditAction({
+        action: "generate_puzzle",
+        entity_type: "puzzle",
+        entity_id: puzzle.id,
+        details: {
+          date: puzzle.puzzle_date,
+          fact_title: puzzle.fact.title,
+        },
       });
 
       toast({ title: "Puzzle deleted" });
@@ -172,11 +182,17 @@ export default function MeasuredReview() {
 
       if (error) throw error;
 
-      await logAuditAction("emergency_swap", "puzzle", swapTarget.id, {
-        date: swapTarget.puzzle_date,
-        fact_title: swapTarget.fact.title,
-        was_published: swapTarget.is_published,
-      }, swapReason);
+      await logAuditAction({
+        action: "emergency_swap",
+        entity_type: "puzzle",
+        entity_id: swapTarget.id,
+        details: {
+          date: swapTarget.puzzle_date,
+          fact_title: swapTarget.fact.title,
+          was_published: swapTarget.is_published,
+        },
+        reason: swapReason,
+      });
 
       toast({
         title: "Emergency swap completed",
