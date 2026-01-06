@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { supabase } from '@/integrations/supabase/client';
 import { SlotValues, computeResult, calculateGameResult, areSlotsComplete, generateShareText, Band } from '@/lib/measured/gameLogic';
-import { updateMeasuredStats } from '@/lib/measured/statsStorage';
+import { updateMeasuredStats, markMeasuredCompletedToday } from '@/lib/measured/statsStorage';
 import { MeasuredPrestigeHeader } from '@/components/measured/MeasuredPrestigeHeader';
 import { MeasuredMenuSheet } from '@/components/measured/MeasuredMenuSheet';
 import { MeasuredStats } from '@/components/measured/MeasuredStats';
@@ -129,21 +129,7 @@ export default function Measured() {
           
           // Ensure local stats are updated for today's completion
           // This syncs stats if user completed on another device or stats were lost
-          import('@/lib/measured/statsStorage').then(({ loadMeasuredStats, saveMeasuredStats }) => {
-            const stats = loadMeasuredStats();
-            const todayDate = formatInTimeZone(new Date(), 'America/New_York', 'yyyy-MM-dd');
-            if (stats.lastPlayedDate !== todayDate) {
-              // Mark today as played without double-counting stats
-              stats.lastPlayedDate = todayDate;
-              if (!stats.completedDates.includes(todayDate)) {
-                stats.completedDates.push(todayDate);
-                if (stats.completedDates.length > 30) {
-                  stats.completedDates = stats.completedDates.slice(-30);
-                }
-              }
-              saveMeasuredStats(stats);
-            }
-          });
+          markMeasuredCompletedToday();
         }
       }
     } catch (e) {

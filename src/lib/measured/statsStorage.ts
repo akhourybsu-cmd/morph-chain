@@ -170,3 +170,24 @@ export function isMeasuredCompletedToday(): boolean {
   const today = getEasternDateString();
   return stats.lastPlayedDate === today;
 }
+
+/**
+ * Mark today as completed (for syncing from database without double-counting stats)
+ * Used when loading an existing attempt from the server
+ */
+export function markMeasuredCompletedToday(): void {
+  const stats = loadMeasuredStats();
+  const today = getEasternDateString();
+  
+  if (stats.lastPlayedDate !== today) {
+    stats.lastPlayedDate = today;
+    if (!stats.completedDates.includes(today)) {
+      stats.completedDates.push(today);
+      if (stats.completedDates.length > 30) {
+        stats.completedDates = stats.completedDates.slice(-30);
+      }
+    }
+    saveMeasuredStats(stats);
+    console.log('Marked Measured as completed for today (synced from database)');
+  }
+}
