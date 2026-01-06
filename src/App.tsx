@@ -26,6 +26,10 @@ import WordFeedback from "./pages/admin/WordFeedback";
 import PlayerSessions from "./pages/admin/PlayerSessions";
 import Analytics from "./pages/admin/Analytics";
 import MorphArchive from "./pages/admin/MorphArchive";
+import MeasuredIntake from "./pages/admin/MeasuredIntake";
+import MeasuredFactBank from "./pages/admin/MeasuredFactBank";
+import MeasuredPuzzles from "./pages/admin/MeasuredPuzzles";
+import MeasuredReview from "./pages/admin/MeasuredReview";
 import Rules from "./pages/Rules";
 import Kids from "./pages/Kids";
 import Press from "./pages/Press";
@@ -76,6 +80,10 @@ const App = () => {
                 <Route path="sessions" element={<PlayerSessions />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="archive" element={<MorphArchive />} />
+                <Route path="measured-intake" element={<MeasuredIntake />} />
+                <Route path="measured-facts" element={<MeasuredFactBank />} />
+                <Route path="measured-puzzles" element={<MeasuredPuzzles />} />
+                <Route path="measured-review" element={<MeasuredReview />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
