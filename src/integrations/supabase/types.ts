@@ -470,6 +470,209 @@ export type Database = {
         }
         Relationships: []
       }
+      measured_attempts: {
+        Row: {
+          band: string
+          chosen: Json
+          error_abs_int: number
+          id: string
+          is_exact: boolean
+          puzzle_id: string
+          result_value_int: number
+          score_int: number
+          share_string: string
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          band: string
+          chosen: Json
+          error_abs_int: number
+          id?: string
+          is_exact?: boolean
+          puzzle_id: string
+          result_value_int: number
+          score_int: number
+          share_string: string
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          band?: string
+          chosen?: Json
+          error_abs_int?: number
+          id?: string
+          is_exact?: boolean
+          puzzle_id?: string
+          result_value_int?: number
+          score_int?: number
+          share_string?: string
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measured_attempts_puzzle_id_fkey"
+            columns: ["puzzle_id"]
+            isOneToOne: false
+            referencedRelation: "measured_daily_puzzles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      measured_daily_puzzles: {
+        Row: {
+          created_at: string
+          difficulty: string
+          fact_id: string
+          id: string
+          is_published: boolean
+          puzzle_date: string
+          seed: string | null
+          solution: Json
+          target_value_int: number
+          template_id: string
+          tiles: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: string
+          fact_id: string
+          id?: string
+          is_published?: boolean
+          puzzle_date: string
+          seed?: string | null
+          solution: Json
+          target_value_int: number
+          template_id: string
+          tiles: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string
+          fact_id?: string
+          id?: string
+          is_published?: boolean
+          puzzle_date?: string
+          seed?: string | null
+          solution?: Json
+          target_value_int?: number
+          template_id?: string
+          tiles?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measured_daily_puzzles_fact_id_fkey"
+            columns: ["fact_id"]
+            isOneToOne: false
+            referencedRelation: "measured_fact_bank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "measured_daily_puzzles_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "measured_puzzle_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      measured_fact_bank: {
+        Row: {
+          canonical_value_int: number
+          category: string
+          clue_text: string
+          created_at: string
+          id: string
+          reveal_blurb: string
+          rounding_note: string | null
+          source_1: string
+          source_2: string | null
+          status: string
+          title: string
+          unit_label: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          canonical_value_int: number
+          category: string
+          clue_text: string
+          created_at?: string
+          id?: string
+          reveal_blurb: string
+          rounding_note?: string | null
+          source_1: string
+          source_2?: string | null
+          status?: string
+          title: string
+          unit_label: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          canonical_value_int?: number
+          category?: string
+          clue_text?: string
+          created_at?: string
+          id?: string
+          reveal_blurb?: string
+          rounding_note?: string | null
+          source_1?: string
+          source_2?: string | null
+          status?: string
+          title?: string
+          unit_label?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      measured_puzzle_templates: {
+        Row: {
+          allow_negative_intermediate: boolean
+          created_at: string
+          equation_display: string
+          id: string
+          max_tile: number
+          min_tile: number
+          operators: Json
+          slot_count: number
+          template_key: string
+          tile_count: number
+        }
+        Insert: {
+          allow_negative_intermediate?: boolean
+          created_at?: string
+          equation_display?: string
+          id?: string
+          max_tile?: number
+          min_tile?: number
+          operators?: Json
+          slot_count?: number
+          template_key: string
+          tile_count?: number
+        }
+        Update: {
+          allow_negative_intermediate?: boolean
+          created_at?: string
+          equation_display?: string
+          id?: string
+          max_tile?: number
+          min_tile?: number
+          operators?: Json
+          slot_count?: number
+          template_key?: string
+          tile_count?: number
+        }
+        Relationships: []
+      }
       player_sessions: {
         Row: {
           completed: boolean | null
