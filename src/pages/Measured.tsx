@@ -126,6 +126,24 @@ export default function Measured() {
             is_exact: attemptData.is_exact,
             share_string: attemptData.share_string,
           });
+          
+          // Ensure local stats are updated for today's completion
+          // This syncs stats if user completed on another device or stats were lost
+          import('@/lib/measured/statsStorage').then(({ loadMeasuredStats, saveMeasuredStats }) => {
+            const stats = loadMeasuredStats();
+            const todayDate = formatInTimeZone(new Date(), 'America/New_York', 'yyyy-MM-dd');
+            if (stats.lastPlayedDate !== todayDate) {
+              // Mark today as played without double-counting stats
+              stats.lastPlayedDate = todayDate;
+              if (!stats.completedDates.includes(todayDate)) {
+                stats.completedDates.push(todayDate);
+                if (stats.completedDates.length > 30) {
+                  stats.completedDates = stats.completedDates.slice(-30);
+                }
+              }
+              saveMeasuredStats(stats);
+            }
+          });
         }
       }
     } catch (e) {
