@@ -116,42 +116,35 @@ export function saveStats(stats: AlibiStats): void {
 }
 
 // Update stats after game completion
+// Uses consistent date utilities for streak calculation
 export function updateStatsAfterGame(
   won: boolean,
   timeMs: number,
   consistencyChecks: number,
   dateStr: string
 ): AlibiStats {
+  // Import dynamically to avoid circular deps
+  const { isConsecutiveDay, getEasternDateString } = require('@/lib/dateUtils');
+  
   const stats = loadStats();
+  const today = getEasternDateString();
   
   stats.gamesPlayed++;
   
   if (won) {
     stats.gamesWon++;
     
-    // Update streak
-    const today = new Date(dateStr).toDateString();
-    const lastPlayed = stats.lastPlayedDate 
-      ? new Date(stats.lastPlayedDate).toDateString() 
-      : null;
-    
-    if (lastPlayed) {
-      const lastDate = new Date(stats.lastPlayedDate!);
-      const currentDate = new Date(dateStr);
-      const diffDays = Math.floor(
-        (currentDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      
-      if (diffDays === 1) {
-        stats.currentStreak++;
-      } else if (diffDays > 1) {
-        stats.currentStreak = 1;
-      }
+    // Update streak using consistent logic
+    if (stats.lastPlayedDate === today) {
+      // Already played today, no streak change
+    } else if (isConsecutiveDay(stats.lastPlayedDate, today)) {
+      stats.currentStreak += 1;
+      stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
     } else {
+      // Not consecutive - reset streak
       stats.currentStreak = 1;
+      stats.maxStreak = Math.max(stats.maxStreak, 1);
     }
-    
-    stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
     
     // Update average time
     const totalTime = stats.averageTime * (stats.gamesWon - 1) + timeMs;
@@ -165,7 +158,7 @@ export function updateStatsAfterGame(
     stats.currentStreak = 0;
   }
   
-  stats.lastPlayedDate = dateStr;
+  stats.lastPlayedDate = today;
   saveStats(stats);
   
   return stats;

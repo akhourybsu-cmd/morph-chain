@@ -1,49 +1,57 @@
 // Rush-specific storage for stats and settings
+import { getEasternDateString, isConsecutiveDay } from '@/lib/dateUtils';
+
+interface ModeStats {
+  gamesPlayed: number;
+  highScore: number;
+  totalWords: number;
+  maxMultiplier: number;
+  totalScore: number;
+}
 
 export interface RushStats {
-  normal: {
-    gamesPlayed: number;
-    highScore: number;
-    totalWords: number;
-    maxMultiplier: number;
-    totalScore: number;
-  };
-  hard: {
-    gamesPlayed: number;
-    highScore: number;
-    totalWords: number;
-    maxMultiplier: number;
-    totalScore: number;
-  };
+  normal: ModeStats;
+  hard: ModeStats;
+  // Streak tracking
+  dailyStreak: number;
+  maxDailyStreak: number;
+  lastDailyDate: string | null;
 }
 
 const RUSH_STATS_KEY = 'morphchain_rush_stats';
+
+const DEFAULT_MODE_STATS: ModeStats = {
+  gamesPlayed: 0,
+  highScore: 0,
+  totalWords: 0,
+  maxMultiplier: 1.0,
+  totalScore: 0,
+};
 
 export const loadRushStats = (): RushStats => {
   try {
     const saved = localStorage.getItem(RUSH_STATS_KEY);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Migrate old stats without streak tracking
+      return {
+        normal: { ...DEFAULT_MODE_STATS, ...parsed.normal },
+        hard: { ...DEFAULT_MODE_STATS, ...parsed.hard },
+        dailyStreak: parsed.dailyStreak ?? 0,
+        maxDailyStreak: parsed.maxDailyStreak ?? 0,
+        lastDailyDate: parsed.lastDailyDate ?? null,
+      };
     }
   } catch (e) {
     console.error('Error loading Rush stats:', e);
   }
   
   return {
-    normal: {
-      gamesPlayed: 0,
-      highScore: 0,
-      totalWords: 0,
-      maxMultiplier: 1.0,
-      totalScore: 0,
-    },
-    hard: {
-      gamesPlayed: 0,
-      highScore: 0,
-      totalWords: 0,
-      maxMultiplier: 1.0,
-      totalScore: 0,
-    },
+    normal: { ...DEFAULT_MODE_STATS },
+    hard: { ...DEFAULT_MODE_STATS },
+    dailyStreak: 0,
+    maxDailyStreak: 0,
+    lastDailyDate: null,
   };
 };
 
@@ -63,11 +71,13 @@ export const updateRushStats = (
   score: number,
   wordsCount: number,
   maxMultiplier: number,
-  hardMode: boolean
+  hardMode: boolean,
+  isDaily: boolean = false
 ): void => {
   try {
     const stats = loadRushStats();
     const mode = hardMode ? 'hard' : 'normal';
+    const today = getEasternDateString();
     
     stats[mode].gamesPlayed += 1;
     stats[mode].highScore = Math.max(stats[mode].highScore, score);
@@ -75,8 +85,23 @@ export const updateRushStats = (
     stats[mode].maxMultiplier = Math.max(stats[mode].maxMultiplier, maxMultiplier);
     stats[mode].totalScore += score;
     
+    // Update daily streak (only for daily mode)
+    if (isDaily) {
+      if (stats.lastDailyDate === today) {
+        // Already played today, no streak change
+      } else if (isConsecutiveDay(stats.lastDailyDate, today)) {
+        stats.dailyStreak += 1;
+        stats.maxDailyStreak = Math.max(stats.maxDailyStreak, stats.dailyStreak);
+      } else {
+        // Not consecutive - reset streak
+        stats.dailyStreak = 1;
+        stats.maxDailyStreak = Math.max(stats.maxDailyStreak, 1);
+      }
+      stats.lastDailyDate = today;
+    }
+    
     saveRushStats(stats);
-    console.log(`Rush stats updated for ${mode} mode:`, stats[mode]);
+    console.log(`Rush stats updated for ${mode} mode:`, stats[mode], `streak: ${stats.dailyStreak}`);
   } catch (e) {
     console.error('Error updating Rush stats:', e);
   }
