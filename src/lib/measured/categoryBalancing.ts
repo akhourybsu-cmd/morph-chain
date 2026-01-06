@@ -159,3 +159,29 @@ export function getPressureIcon(pressure: CategoryPressure['pressure']): string 
     case 'blocked': return '✕';
   }
 }
+
+/**
+ * Fetch category pressure from database
+ */
+export async function getCategoryPressure(): Promise<CategoryPressure[]> {
+  const { supabase } = await import('@/integrations/supabase/client');
+  const today = new Date().toISOString().split('T')[0];
+  
+  const { data, error } = await supabase
+    .from('measured_category_usage')
+    .select('*');
+  
+  if (error || !data) {
+    console.error('Failed to load category usage:', error);
+    return [];
+  }
+  
+  const usages: CategoryUsage[] = data.map(d => ({
+    category: d.category,
+    last_used_date: d.last_used_date,
+    usage_count_7d: d.usage_count_7d,
+    usage_count_30d: d.usage_count_30d,
+  }));
+  
+  return getAllCategoryPressures(usages, today);
+}

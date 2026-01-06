@@ -82,8 +82,8 @@ export default function MeasuredPuzzles() {
       if (puzzlesError) throw puzzlesError;
       setPuzzles((puzzlesData || []).map(p => ({
         ...p,
-        tiles: p.tiles as number[],
-        solution: p.solution as PuzzleSolution,
+        tiles: p.tiles as unknown as number[],
+        solution: p.solution as unknown as PuzzleSolution,
       })));
 
       // Calculate category pressure
@@ -166,23 +166,29 @@ export default function MeasuredPuzzles() {
 
       const templateId = template?.id || "00000000-0000-0000-0000-000000000001";
 
-      const { error } = await supabase.from("measured_daily_puzzles").insert({
+      const insertData = {
         puzzle_date: dateStr,
         fact_id: selectedFact.id,
         template_id: templateId,
         target_value_int: selectedFact.canonical_value_int,
-        tiles: generatedPreview.tiles,
-        solution: generatedPreview.solution,
+        tiles: generatedPreview.tiles as unknown as import("@/integrations/supabase/types").Json,
+        solution: generatedPreview.solution as unknown as import("@/integrations/supabase/types").Json,
         difficulty: getDifficulty(selectedFact.canonical_value_int),
         is_published: false,
-      });
+      };
+
+      const { error } = await supabase.from("measured_daily_puzzles").insert(insertData);
 
       if (error) throw error;
 
-      await logAuditAction("generate_puzzle", "puzzle", undefined, {
-        date: dateStr,
-        fact_title: selectedFact.title,
-        target: selectedFact.canonical_value_int,
+      await logAuditAction({
+        action: "generate_puzzle",
+        entity_type: "puzzle",
+        details: {
+          date: dateStr,
+          fact_title: selectedFact.title,
+          target: selectedFact.canonical_value_int,
+        },
       });
 
       toast({ title: "Puzzle saved successfully" });

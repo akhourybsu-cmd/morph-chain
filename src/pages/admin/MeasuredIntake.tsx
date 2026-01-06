@@ -23,10 +23,10 @@ interface FactCandidate {
   title: string;
   clue_text: string;
   reveal_blurb: string;
-  sources: { url: string; name: string }[];
+  sources: unknown;
   reference_count: number;
   confidence_score: number;
-  sanity_flags: string[];
+  sanity_flags: unknown;
   status: string;
   created_at: string;
 }
@@ -76,7 +76,7 @@ export default function MeasuredIntake() {
       const { data, error } = await query;
 
       if (error) throw error;
-      setCandidates((data || []) as FactCandidate[]);
+      setCandidates((data || []) as unknown as FactCandidate[]);
     } catch (err) {
       console.error("Error loading candidates:", err);
       toast({ title: "Error loading candidates", variant: "destructive" });
@@ -145,6 +145,15 @@ export default function MeasuredIntake() {
     setSelectedIds(newSet);
   };
 
+  const getSourceUrl = (c: FactCandidate): string => {
+    try {
+      const s = c.sources as { url?: string }[];
+      return s?.[0]?.url || "";
+    } catch {
+      return "";
+    }
+  };
+
   const batchUpdateStatus = async (newStatus: string) => {
     if (selectedIds.size === 0) return;
 
@@ -152,11 +161,9 @@ export default function MeasuredIntake() {
       const ids = Array.from(selectedIds);
 
       if (newStatus === "approved") {
-        // Move to fact bank
         const candidatesToApprove = candidates.filter(c => ids.includes(c.id));
         
         for (const candidate of candidatesToApprove) {
-          // Insert into fact bank
           const { error: insertError } = await supabase
             .from("measured_fact_bank")
             .insert({
@@ -166,7 +173,7 @@ export default function MeasuredIntake() {
               canonical_value_int: candidate.normalized_value_int,
               unit_label: candidate.unit_label,
               category: candidate.category,
-              source_1: candidate.sources[0]?.url || "",
+              source_1: getSourceUrl(candidate),
               source_candidate_id: candidate.id,
               is_auto_ingested: true,
               status: "verified",
@@ -177,21 +184,24 @@ export default function MeasuredIntake() {
             continue;
           }
 
-          // Update candidate status
           await supabase
             .from("measured_fact_candidates")
             .update({ status: "approved", reviewed_at: new Date().toISOString() })
             .eq("id", candidate.id);
 
-          await logAuditAction("approve_candidate", "candidate", candidate.id, {
-            title: candidate.title,
-            category: candidate.category,
+          await logAuditAction({
+            action: "approve_candidate",
+            entity_type: "candidate",
+            entity_id: candidate.id,
+            details: {
+              title: candidate.title,
+              category: candidate.category,
+            },
           });
         }
 
         toast({ title: `Approved ${candidatesToApprove.length} candidates and added to Fact Bank` });
       } else {
-        // Just update status
         const { error } = await supabase
           .from("measured_fact_candidates")
           .update({ status: newStatus, reviewed_at: new Date().toISOString() })
@@ -200,12 +210,12 @@ export default function MeasuredIntake() {
         if (error) throw error;
 
         for (const id of ids) {
-          await logAuditAction(
-            newStatus === "blocked" ? "block_candidate" : "update_candidate",
-            "candidate",
-            id,
-            { newStatus }
-          );
+          await logAuditAction({
+            action: newStatus === "blocked" ? "block_candidate" : "edit_candidate",
+            entity_type: "candidate",
+            entity_id: id,
+            details: { newStatus },
+          });
         }
 
         toast({ title: `Updated ${ids.length} candidates to ${newStatus}` });
@@ -223,6 +233,14 @@ export default function MeasuredIntake() {
     c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.clue_text.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const getSanityFlags = (candidate: FactCandidate): string[] => {
+    try {
+      return (candidate.sanity_flags as string[]) || [];
+    } catch {
+      return [];
+    }
+  };
 
   const getConfidenceBadge = (score: number) => {
     if (score >= 0.85) return <Badge className="bg-green-500/20 text-green-500">High ({Math.round(score * 100)}%)</Badge>;
@@ -389,10 +407,10 @@ export default function MeasuredIntake() {
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span>Target: <strong>{candidate.normalized_value_int.toLocaleString()}</strong> {candidate.unit_label}</span>
                       <span>Source: {candidate.source_name}</span>
-                      {candidate.sanity_flags.length > 0 && (
+                      {getSanityFlags(candidate).length > 0 && (
                         <span className="flex items-center gap-1 text-yellow-500">
                           <AlertTriangle className="h-3 w-3" />
-                          {candidate.sanity_flags.join(", ")}
+                          {getSanityFlags(candidate).join(", ")}
                         </span>
                       )}
                     </div>
