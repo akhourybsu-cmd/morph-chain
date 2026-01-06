@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.generate-puzzles]
 verify_jwt = true
+
+[functions.ingest-measured-facts]
+verify_jwt = false

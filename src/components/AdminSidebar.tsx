@@ -10,7 +10,10 @@ import {
   MessageSquare,
   Shield,
   BookOpen,
-  Target
+  Target,
+  Download,
+  Sparkles,
+  Eye
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
@@ -38,8 +41,13 @@ const navigation = [
   { title: "Analytics", url: "/admin/analytics", icon: Activity },
   { title: "Player Sessions", url: "/admin/sessions", icon: Users },
   { title: "Archive", url: "/admin/archive", icon: Archive },
-  { title: "Measured Facts", url: "/admin/measured-facts", icon: BookOpen },
-  { title: "Measured Puzzles", url: "/admin/measured-puzzles", icon: Target },
+];
+
+const measuredNavigation = [
+  { title: "Fact Intake", url: "/admin/measured-intake", icon: Download },
+  { title: "Fact Bank", url: "/admin/measured-facts", icon: BookOpen },
+  { title: "Puzzle Gen", url: "/admin/measured-puzzles", icon: Sparkles },
+  { title: "Review Queue", url: "/admin/measured-review", icon: Eye },
 ];
 
 export function AdminSidebar() {
@@ -85,6 +93,29 @@ export function AdminSidebar() {
                     <NavLink 
                       to={item.url} 
                       end={item.url === "/admin"}
+                      className={({ isActive }) =>
+                        isActive ? "bg-muted text-primary font-medium" : "hover:bg-muted/50"
+                      }
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Measured</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {measuredNavigation.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink 
+                      to={item.url}
                       className={({ isActive }) =>
                         isActive ? "bg-muted text-primary font-medium" : "hover:bg-muted/50"
                       }
