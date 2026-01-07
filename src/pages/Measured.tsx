@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { supabase } from '@/integrations/supabase/client';
-import { SlotValues, computeResult, calculateGameResult, areSlotsComplete, generateShareText, Band } from '@/lib/measured/gameLogic';
+import { SlotValues, computeResult, calculateGameResult, areSlotsComplete, generateShareText, getPuzzleNumber, Band } from '@/lib/measured/gameLogic';
 import { updateMeasuredStats, loadMeasuredStats } from '@/lib/measured/statsStorage';
 import { MeasuredPrestigeHeader } from '@/components/measured/MeasuredPrestigeHeader';
 import { MeasuredMenuSheet } from '@/components/measured/MeasuredMenuSheet';
@@ -57,6 +57,7 @@ export default function Measured() {
   const [submitting, setSubmitting] = useState(false);
 
   const today = formatInTimeZone(new Date(), 'America/New_York', 'yyyy-MM-dd');
+  const puzzleNumber = puzzle ? getPuzzleNumber(puzzle.puzzle_date) : undefined;
   const result = computeResult(slots);
   const isComplete = areSlotsComplete(slots);
 
@@ -263,7 +264,7 @@ export default function Measured() {
   if (loading) {
     return (
       <div className="min-h-screen bg-measured-page flex flex-col">
-        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} />
+        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} puzzleNumber={puzzleNumber} />
         <div className="flex-1 flex items-center justify-center">
           <div className="animate-pulse text-measured-text-secondary">Loading...</div>
         </div>
@@ -276,7 +277,7 @@ export default function Measured() {
   if (!puzzle) {
     return (
       <div className="min-h-screen bg-measured-page flex flex-col">
-        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} />
+        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} puzzleNumber={puzzleNumber} />
         <div className="max-w-lg mx-auto p-6">
           <div className="bg-measured-card border border-measured-card-border rounded-2xl p-8 text-center">
             <h2 className="text-xl font-semibold text-measured-text-primary mb-2">
@@ -295,7 +296,7 @@ export default function Measured() {
   if (attempt) {
     return (
       <div className="min-h-screen bg-measured-page flex flex-col">
-        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} />
+        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} puzzleNumber={puzzleNumber} />
         <RevealPanel
           attempt={attempt}
           puzzle={puzzle}
@@ -309,7 +310,7 @@ export default function Measured() {
 
   return (
     <div className="min-h-screen bg-measured-page flex flex-col">
-      <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} />
+      <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} puzzleNumber={puzzleNumber} />
       
       <div className="max-w-lg mx-auto p-4 space-y-4">
         <ClueCard

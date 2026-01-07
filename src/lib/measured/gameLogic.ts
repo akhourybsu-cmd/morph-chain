@@ -76,10 +76,22 @@ export function getBandEmoji(band: Band): string {
 }
 
 /**
+ * Calculate the puzzle number based on date (Jan 6, 2026 = Puzzle #1)
+ */
+export function getPuzzleNumber(dateStr: string): number {
+  const launchDate = new Date('2026-01-06');
+  const puzzleDate = new Date(dateStr);
+  const diffTime = puzzleDate.getTime() - launchDate.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays + 1; // Jan 6 = 1, Jan 7 = 2, etc.
+}
+
+/**
  * Generate the spoiler-free share string
  */
 export function generateShareText(date: string, band: Band): string {
-  return `Measured · ${date}\n${getBandEmoji(band)}  ${band}`;
+  const puzzleNum = getPuzzleNumber(date);
+  return `Measured #${puzzleNum}\n${getBandEmoji(band)}  ${band}`;
 }
 
 /**
