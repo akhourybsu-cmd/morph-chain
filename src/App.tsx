@@ -30,6 +30,7 @@ import MeasuredIntake from "./pages/admin/MeasuredIntake";
 import MeasuredFactBank from "./pages/admin/MeasuredFactBank";
 import MeasuredPuzzles from "./pages/admin/MeasuredPuzzles";
 import MeasuredReview from "./pages/admin/MeasuredReview";
+import MeasuredBatchReview from "./pages/admin/MeasuredBatchReview";
 import Rules from "./pages/Rules";
 import Kids from "./pages/Kids";
 import Press from "./pages/Press";
@@ -84,6 +85,7 @@ const App = () => {
                 <Route path="measured-facts" element={<MeasuredFactBank />} />
                 <Route path="measured-puzzles" element={<MeasuredPuzzles />} />
                 <Route path="measured-review" element={<MeasuredReview />} />
+                <Route path="measured-batch" element={<MeasuredBatchReview />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

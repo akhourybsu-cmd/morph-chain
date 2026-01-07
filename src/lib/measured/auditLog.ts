@@ -16,9 +16,12 @@ export type AuditAction =
   | 'publish_puzzle'
   | 'unpublish_puzzle'
   | 'emergency_swap'
-  | 'regenerate_puzzle';
+  | 'regenerate_puzzle'
+  | 'batch_generate'
+  | 'batch_publish'
+  | 'batch_delete';
 
-export type EntityType = 'candidate' | 'fact' | 'puzzle' | 'system';
+export type EntityType = 'candidate' | 'fact' | 'puzzle' | 'puzzle_batch' | 'system';
 
 export interface AuditLogEntry {
   action: AuditAction;
@@ -81,7 +84,10 @@ export function getActionLabel(action: AuditAction): string {
     'publish_puzzle': 'Published Puzzle',
     'unpublish_puzzle': 'Unpublished Puzzle',
     'emergency_swap': 'Emergency Swap',
-    'regenerate_puzzle': 'Regenerated Puzzle'
+    'regenerate_puzzle': 'Regenerated Puzzle',
+    'batch_generate': 'Batch Generated',
+    'batch_publish': 'Batch Published',
+    'batch_delete': 'Batch Deleted'
   };
   return labels[action] || action;
 }
