@@ -264,7 +264,7 @@ export default function Measured() {
   if (loading) {
     return (
       <div className="min-h-screen bg-measured-page flex flex-col">
-        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} puzzleNumber={puzzleNumber} />
+        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} />
         <div className="flex-1 flex items-center justify-center">
           <div className="animate-pulse text-measured-text-secondary">Loading...</div>
         </div>
@@ -277,7 +277,7 @@ export default function Measured() {
   if (!puzzle) {
     return (
       <div className="min-h-screen bg-measured-page flex flex-col">
-        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} puzzleNumber={puzzleNumber} />
+        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} />
         <div className="max-w-lg mx-auto p-6">
           <div className="bg-measured-card border border-measured-card-border rounded-2xl p-8 text-center">
             <h2 className="text-xl font-semibold text-measured-text-primary mb-2">
@@ -296,7 +296,12 @@ export default function Measured() {
   if (attempt) {
     return (
       <div className="min-h-screen bg-measured-page flex flex-col">
-        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} puzzleNumber={puzzleNumber} />
+        <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} />
+        <div className="text-center py-2">
+          <span className="text-xs font-medium tracking-wider text-measured-text-muted">
+            Puzzle #{puzzleNumber}
+          </span>
+        </div>
         <RevealPanel
           attempt={attempt}
           puzzle={puzzle}
@@ -310,7 +315,13 @@ export default function Measured() {
 
   return (
     <div className="min-h-screen bg-measured-page flex flex-col">
-      <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} puzzleNumber={puzzleNumber} />
+      <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} />
+      
+      <div className="text-center py-2">
+        <span className="text-xs font-medium tracking-wider text-measured-text-muted">
+          Puzzle #{puzzleNumber}
+        </span>
+      </div>
       
       <div className="max-w-lg mx-auto p-4 space-y-4">
         <ClueCard

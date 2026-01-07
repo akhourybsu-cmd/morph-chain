@@ -77,12 +77,15 @@ export function getBandEmoji(band: Band): string {
 
 /**
  * Calculate the puzzle number based on date (Jan 6, 2026 = Puzzle #1)
+ * Uses UTC noon to avoid timezone issues with date parsing
  */
 export function getPuzzleNumber(dateStr: string): number {
-  const launchDate = new Date('2026-01-06');
-  const puzzleDate = new Date(dateStr);
-  const diffTime = puzzleDate.getTime() - launchDate.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  // Parse dates at UTC noon to avoid timezone issues
+  const launchDate = Date.UTC(2026, 0, 6, 12, 0, 0); // Jan 6, 2026 @ noon UTC
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const puzzleDate = Date.UTC(year, month - 1, day, 12, 0, 0);
+  const diffTime = puzzleDate - launchDate;
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
   return diffDays + 1; // Jan 6 = 1, Jan 7 = 2, etc.
 }
 

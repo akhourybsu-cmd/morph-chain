@@ -6,13 +6,11 @@ import { PrestigeThemeToggle } from '@/components/shared/PrestigeThemeToggle';
 interface MeasuredPrestigeHeaderProps {
   onMenuClick: () => void;
   onHelpClick: () => void;
-  puzzleNumber?: number;
 }
 
 export function MeasuredPrestigeHeader({ 
   onMenuClick, 
   onHelpClick,
-  puzzleNumber
 }: MeasuredPrestigeHeaderProps) {
   return (
     <header 
@@ -39,15 +37,8 @@ export function MeasuredPrestigeHeader({
         {/* Center spacer */}
         <div className="flex-1" />
         
-        {/* Center: Logo + Puzzle Number */}
-        <div className="flex flex-col items-center">
-          <MeasuredLogo />
-          {puzzleNumber !== undefined && (
-            <span className="text-[10px] font-medium tracking-wider text-measured-text-muted -mt-0.5">
-              #{puzzleNumber}
-            </span>
-          )}
-        </div>
+        {/* Center: Logo */}
+        <MeasuredLogo />
         
         {/* Center spacer */}
         <div className="flex-1" />
