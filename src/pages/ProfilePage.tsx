@@ -4,29 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { loadRushStats } from "@/lib/rushStorage";
-import { loadGridStats } from "@/lib/gridStorage";
-import { loadStats } from "@/lib/storage";
 import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
-import { Menu, ArrowLeft, Link2, Grid3X3, Zap, LogOut, KeyRound, User as UserIcon, Upload, Trash2 } from "lucide-react";
-
-type MyStats = {
-  user_id: string;
-  rush_plays: number;
-  rush_best_score: number;
-  rush_avg_score: number;
-  rush_best_multiplier: number;
-  rush_time_ms: number;
-  chain_plays: number;
-  chain_best_moves: number;
-  chain_wins: number;
-  chain_avg_time_ms: number;
-  grid_plays: number;
-  grid_wins: number;
-  grid_best_moves: number;
-  grid_avg_time_ms: number;
-};
+import { GameStatsTiles } from "@/components/profile/GameStatsTiles";
+import { ArrowLeft, LogOut, KeyRound, Upload, Trash2 } from "lucide-react";
 
 type Profile = {
   user_id: string;
@@ -38,19 +18,12 @@ type Profile = {
 export default function ProfilePage() {
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [stats, setStats] = useState<MyStats | null>(null);
   const [saving, setSaving] = useState(false);
   const [pwdSaving, setPwdSaving] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [activeTab, setActiveTab] = useState("chain");
   const [showPwdForm, setShowPwdForm] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  // Load local stats
-  const [localRushStats] = useState(() => loadRushStats());
-  const [localGridStats] = useState(() => loadGridStats());
-  const [localChainStats] = useState(() => loadStats());
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -74,10 +47,6 @@ export default function ProfilePage() {
           .select("*").eq("user_id", user.id).single()
           .then(({ data }) => setProfile(data as Profile | null));
       });
-
-    supabase.from("v_my_stats").select("*").single().then(({ data }) => {
-      setStats(data as MyStats | null);
-    });
   }, [user?.id]);
 
   const onSaveProfile = async () => {
@@ -212,47 +181,7 @@ export default function ProfilePage() {
             <h3 className="text-xs font-semibold uppercase tracking-wider mb-3 px-1" style={{ color: 'hsl(var(--home-text-muted))' }}>
               Your Local Stats
             </h3>
-            
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full mb-4" style={{ background: 'hsl(var(--home-divider))' }}>
-                <TabsTrigger value="chain" className="flex-1 gap-1.5 text-xs">
-                  <Link2 className="w-3.5 h-3.5" /> Chain
-                </TabsTrigger>
-                <TabsTrigger value="grid" className="flex-1 gap-1.5 text-xs">
-                  <Grid3X3 className="w-3.5 h-3.5" /> Grid
-                </TabsTrigger>
-                <TabsTrigger value="rush" className="flex-1 gap-1.5 text-xs">
-                  <Zap className="w-3.5 h-3.5" /> Rush
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="chain">
-                <StatsGrid>
-                  <StatCard label="Plays" value={localChainStats.overall.played} />
-                  <StatCard label="Wins" value={localChainStats.overall.won} />
-                  <StatCard label="Current Streak" value={localChainStats.overall.currentStreak} />
-                  <StatCard label="Best Streak" value={localChainStats.overall.maxStreak} />
-                </StatsGrid>
-              </TabsContent>
-
-              <TabsContent value="grid">
-                <StatsGrid>
-                  <StatCard label="Plays" value={localGridStats.gamesPlayed} />
-                  <StatCard label="Completed" value={localGridStats.gamesCompleted} />
-                  <StatCard label="Best Moves" value={localGridStats.bestMoves ?? '-'} />
-                  <StatCard label="Win Rate" value={`${Math.round(localGridStats.completionRate * 100)}%`} />
-                </StatsGrid>
-              </TabsContent>
-
-              <TabsContent value="rush">
-                <StatsGrid>
-                  <StatCard label="Plays" value={localRushStats.normal.gamesPlayed + localRushStats.hard.gamesPlayed} />
-                  <StatCard label="Best Score" value={Math.max(localRushStats.normal.highScore, localRushStats.hard.highScore)} />
-                  <StatCard label="Total Words" value={localRushStats.normal.totalWords + localRushStats.hard.totalWords} />
-                  <StatCard label="Max Multiplier" value={`${Math.max(localRushStats.normal.maxMultiplier, localRushStats.hard.maxMultiplier).toFixed(1)}x`} />
-                </StatsGrid>
-              </TabsContent>
-            </Tabs>
+            <GameStatsTiles />
           </div>
         </main>
       </div>
@@ -378,50 +307,7 @@ export default function ProfilePage() {
           <h3 className="font-playfair font-semibold text-lg mb-4" style={{ color: 'hsl(var(--home-text-primary))' }}>
             My Stats
           </h3>
-
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full mb-4" style={{ background: 'hsl(var(--home-divider))' }}>
-              <TabsTrigger value="chain" className="flex-1 gap-1.5 text-xs">
-                <Link2 className="w-3.5 h-3.5" /> Chain
-              </TabsTrigger>
-              <TabsTrigger value="grid" className="flex-1 gap-1.5 text-xs">
-                <Grid3X3 className="w-3.5 h-3.5" /> Grid
-              </TabsTrigger>
-              <TabsTrigger value="rush" className="flex-1 gap-1.5 text-xs">
-                <Zap className="w-3.5 h-3.5" /> Rush
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="chain">
-              <StatsGrid>
-                <StatCard label="Plays" value={stats?.chain_plays ?? localChainStats.overall.played} />
-                <StatCard label="Wins" value={stats?.chain_wins ?? localChainStats.overall.won} />
-                <StatCard label="Best Moves" value={stats?.chain_best_moves ?? '-'} />
-                <StatCard label="Avg Time" value={stats?.chain_avg_time_ms ? `${Math.round(stats.chain_avg_time_ms/1000)}s` : '-'} />
-              </StatsGrid>
-            </TabsContent>
-
-            <TabsContent value="grid">
-              <StatsGrid>
-                <StatCard label="Plays" value={stats?.grid_plays ?? localGridStats.gamesPlayed} />
-                <StatCard label="Wins" value={stats?.grid_wins ?? localGridStats.gamesCompleted} />
-                <StatCard label="Best Moves" value={stats?.grid_best_moves || localGridStats.bestMoves || '-'} />
-                <StatCard label="Avg Time" value={stats?.grid_avg_time_ms ? `${Math.round(stats.grid_avg_time_ms/1000)}s` : '-'} />
-                <StatCard label="Win Streak" value={localGridStats.streakDays} />
-                <StatCard label="Best Streak" value={localGridStats.maxStreakDays} />
-              </StatsGrid>
-            </TabsContent>
-
-            <TabsContent value="rush">
-              <StatsGrid>
-                <StatCard label="Plays" value={stats?.rush_plays ?? (localRushStats.normal.gamesPlayed + localRushStats.hard.gamesPlayed)} />
-                <StatCard label="Best Score" value={stats?.rush_best_score ?? Math.max(localRushStats.normal.highScore, localRushStats.hard.highScore)} />
-                <StatCard label="Avg Score" value={stats?.rush_avg_score ?? '-'} />
-                <StatCard label="Best Multiplier" value={stats?.rush_best_multiplier ? `${stats.rush_best_multiplier}x` : `${Math.max(localRushStats.normal.maxMultiplier, localRushStats.hard.maxMultiplier).toFixed(1)}x`} />
-                <StatCard label="Time Played" value={stats?.rush_time_ms ? `${Math.round(stats.rush_time_ms / 60000)}m` : '-'} />
-              </StatsGrid>
-            </TabsContent>
-          </Tabs>
+          <GameStatsTiles />
         </div>
 
         {/* Security Card */}
@@ -497,35 +383,7 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-function StatsGrid({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {children}
-    </div>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div 
-      className="rounded-lg p-3"
-      style={{ 
-        background: 'hsl(var(--home-page-bg))',
-        border: '1px solid hsl(var(--home-divider))'
-      }}
-    >
-      <div className="text-xs uppercase tracking-wider" style={{ color: 'hsl(var(--home-text-muted))' }}>
-        {label}
-      </div>
-      <div className="text-xl font-semibold mt-0.5" style={{ color: 'hsl(var(--home-text-primary))' }}>
-        {value}
-      </div>
-    </div>
-  );
-}
-
-function ChangePasswordForm({ onSubmit, busy, onCancel }: { 
+function ChangePasswordForm({ onSubmit, busy, onCancel }: {
   onSubmit: (current: string, next: string) => void; 
   busy: boolean;
   onCancel: () => void;
