@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { supabase } from '@/integrations/supabase/client';
 import { SlotValues, computeResult, calculateGameResult, areSlotsComplete, generateShareText, Band } from '@/lib/measured/gameLogic';
-import { updateMeasuredStats, markMeasuredCompletedToday } from '@/lib/measured/statsStorage';
+import { updateMeasuredStats, loadMeasuredStats } from '@/lib/measured/statsStorage';
 import { MeasuredPrestigeHeader } from '@/components/measured/MeasuredPrestigeHeader';
 import { MeasuredMenuSheet } from '@/components/measured/MeasuredMenuSheet';
 import { MeasuredStats } from '@/components/measured/MeasuredStats';
@@ -127,9 +127,18 @@ export default function Measured() {
             share_string: attemptData.share_string,
           });
           
-          // Ensure local stats are updated for today's completion
+          // Hydrate full stats from database attempt if not already counted today
           // This syncs stats if user completed on another device or stats were lost
-          markMeasuredCompletedToday();
+          const stats = loadMeasuredStats();
+          if (stats.lastPlayedDate !== today) {
+            updateMeasuredStats({
+              score: attemptData.score_int,
+              band: attemptData.band as Band,
+              isExact: attemptData.is_exact,
+              error: attemptData.error_abs_int,
+              targetValue: formattedPuzzle.target_value_int,
+            });
+          }
         }
       }
     } catch (e) {

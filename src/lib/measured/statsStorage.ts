@@ -102,6 +102,12 @@ export function updateMeasuredStats(payload: {
   const stats = loadMeasuredStats();
   const today = getEasternDateString();
   
+  // Guard: If already played today, don't double-count stats
+  if (stats.completedDates.includes(today)) {
+    console.log('Measured: Skipping stat update - already counted today');
+    return stats;
+  }
+  
   // Increment games played
   stats.gamesPlayed += 1;
   
