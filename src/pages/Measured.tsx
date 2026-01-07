@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { formatInTimeZone } from 'date-fns-tz';
 import { supabase } from '@/integrations/supabase/client';
+import { getEasternDateString } from '@/lib/dateUtils';
 import { SlotValues, computeResult, calculateGameResult, areSlotsComplete, generateShareText, getPuzzleNumber, Band } from '@/lib/measured/gameLogic';
 import { updateMeasuredStats, loadMeasuredStats } from '@/lib/measured/statsStorage';
 import { MeasuredPrestigeHeader } from '@/components/measured/MeasuredPrestigeHeader';
@@ -56,8 +56,8 @@ export default function Measured() {
   const [showStats, setShowStats] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const today = formatInTimeZone(new Date(), 'America/New_York', 'yyyy-MM-dd');
-  const puzzleNumber = puzzle ? getPuzzleNumber(puzzle.puzzle_date) : undefined;
+  const today = getEasternDateString();
+  const puzzleNumber = puzzle ? getPuzzleNumber(puzzle.puzzle_date) : getPuzzleNumber(today);
   const result = computeResult(slots);
   const isComplete = areSlotsComplete(slots);
 
@@ -278,16 +278,22 @@ export default function Measured() {
     return (
       <div className="min-h-screen bg-measured-page flex flex-col">
         <MeasuredPrestigeHeader onMenuClick={() => setShowMenu(true)} onHelpClick={() => setShowHowToPlay(true)} />
-        <div className="max-w-lg mx-auto p-6">
-          <div className="bg-measured-card border border-measured-card-border rounded-2xl p-8 text-center">
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <div className="text-center mb-4">
+            <span className="text-xs font-medium tracking-wider text-measured-text-muted">
+              Puzzle #{puzzleNumber}
+            </span>
+          </div>
+          <div className="bg-measured-card border border-measured-card-border rounded-2xl p-8 text-center shadow-lg max-w-sm w-full">
             <h2 className="text-xl font-semibold text-measured-text-primary mb-2">
               Today's puzzle is not available yet.
             </h2>
-            <p className="text-measured-text-secondary">Please check back soon.</p>
+            <p className="text-measured-text-secondary text-sm">Please check back soon.</p>
           </div>
         </div>
         <MeasuredMenuSheet open={showMenu} onOpenChange={setShowMenu} onStatsClick={() => setShowStats(true)} />
         <MeasuredStats open={showStats} onOpenChange={setShowStats} />
+        <MeasuredHowToPlay open={showHowToPlay} onOpenChange={setShowHowToPlay} />
       </div>
     );
   }
