@@ -3,10 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
 import { GameStatsTiles } from "@/components/profile/GameStatsTiles";
-import { ArrowLeft, LogOut, KeyRound, Upload, Trash2 } from "lucide-react";
+import { FriendsPanel } from "@/components/social/FriendsPanel";
+import { ArrowLeft, LogOut, KeyRound, Upload, Trash2, Users } from "lucide-react";
 
 type Profile = {
   user_id: string;
