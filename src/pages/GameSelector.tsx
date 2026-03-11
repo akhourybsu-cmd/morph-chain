@@ -222,6 +222,17 @@ const GameSelector = () => {
             badge="New"
             christmas={christmas}
           />
+
+          {/* Morphcode - PvP */}
+          <GameCard
+            icon={Swords}
+            name="Morphcode"
+            description="Head-to-head deduction duel"
+            accent={accents.morphcode}
+            onClick={() => navigate('/morphcode')}
+            badge="Beta"
+            christmas={christmas}
+          />
         </div>
 
         {/* Daily Progress Tracker */}
