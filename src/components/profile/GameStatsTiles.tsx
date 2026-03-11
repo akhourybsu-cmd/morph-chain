@@ -1,12 +1,9 @@
 import { useState } from 'react';
 import { StatsModal } from '@/components/StatsModal';
-import { RushStats } from '@/components/rush/RushStats';
 import { GridStatsModal } from '@/components/grid/GridStats';
-import { MeasuredStats } from '@/components/measured/MeasuredStats';
-import { AlibiStats } from '@/components/alibi/AlibiStats';
 import { loadStats } from '@/lib/storage';
 
-type GameType = 'chain' | 'grid' | 'rush' | 'measured' | 'alibi' | null;
+type GameType = 'chain' | 'grid' | null;
 
 export function GameStatsTiles() {
   const [openModal, setOpenModal] = useState<GameType>(null);
