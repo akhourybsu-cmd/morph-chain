@@ -54,7 +54,7 @@ export function checkDailyProgress(): DailyProgress {
  */
 export function getCompletionCount(progress?: DailyProgress): number {
   const p = progress || checkDailyProgress();
-  return [p.chain4L, p.chain5L, p.grid, p.rush, p.alibi, p.measured].filter(Boolean).length;
+  return [p.chain4L, p.chain5L, p.grid].filter(Boolean).length;
 }
 
 /**
