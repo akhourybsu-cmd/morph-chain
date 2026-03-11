@@ -23,6 +23,7 @@ import {
   generateEntities, 
   generateSolution, 
   pickFinalQuestion,
+  generateFinalQuestionLegacy,
   PuzzleEntities 
 } from './solutionGenerator';
 import { generateAllCandidateClues } from './clueTemplates';
