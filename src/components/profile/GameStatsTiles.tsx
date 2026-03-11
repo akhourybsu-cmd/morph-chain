@@ -52,29 +52,6 @@ export function GameStatsTiles() {
         stats={chainStats}
       />
 
-      {/* Grid Stats Modal */}
-      <GridStatsModal
-        open={openModal === 'grid'}
-        onOpenChange={(open) => setOpenModal(open ? 'grid' : null)}
-      />
-
-      {/* Rush Stats Modal */}
-      <RushStats
-        open={openModal === 'rush'}
-        onOpenChange={(open) => setOpenModal(open ? 'rush' : null)}
-      />
-
-      {/* Measured Stats Modal */}
-      <MeasuredStats
-        open={openModal === 'measured'}
-        onOpenChange={(open) => setOpenModal(open ? 'measured' : null)}
-      />
-
-      {/* Alibi Stats Modal */}
-      <AlibiStats
-        open={openModal === 'alibi'}
-        onOpenChange={(open) => setOpenModal(open ? 'alibi' : null)}
-      />
     </>
   );
 }

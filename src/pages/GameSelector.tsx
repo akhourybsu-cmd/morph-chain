@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
-import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Search, Menu, ChevronRight, User, Snowflake, Gift, Target, Swords } from "lucide-react";
+import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Grid3X3, Menu, ChevronRight, User, Snowflake, Gift, Swords } from "lucide-react";
 import { toast } from "sonner";
 import { SideMenu } from "@/components/layout/SideMenu";
 import { useState, useEffect } from "react";
