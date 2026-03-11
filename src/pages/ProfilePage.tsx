@@ -211,6 +211,44 @@ export default function ProfilePage() {
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-6 max-w-lg space-y-6">
+        {/* Tab Switcher */}
+        <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'hsl(var(--home-divider))' }}>
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'profile' ? '' : 'opacity-60'}`}
+            style={{
+              background: activeTab === 'profile' ? 'hsl(var(--home-card-bg))' : 'transparent',
+              color: 'hsl(var(--home-text-primary))',
+            }}
+          >
+            Profile
+          </button>
+          <button
+            onClick={() => setActiveTab('friends')}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-1.5 ${activeTab === 'friends' ? '' : 'opacity-60'}`}
+            style={{
+              background: activeTab === 'friends' ? 'hsl(var(--home-card-bg))' : 'transparent',
+              color: 'hsl(var(--home-text-primary))',
+            }}
+          >
+            <Users className="w-3.5 h-3.5" />
+            Friends
+          </button>
+        </div>
+
+        {activeTab === 'friends' ? (
+          <div
+            className="rounded-xl p-5"
+            style={{
+              background: 'hsl(var(--home-card-bg))',
+              border: '1px solid hsl(var(--home-card-border))',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+            }}
+          >
+            <FriendsPanel accentVar="--home-accent" />
+          </div>
+        ) : (
+        <>
         {/* Profile Card */}
         <div 
           className="rounded-xl p-5"
