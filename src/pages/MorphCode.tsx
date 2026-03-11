@@ -5,6 +5,7 @@ import { MorphcodeHeader } from '@/components/morphcode/MorphcodeHeader';
 import { MorphcodeLobby } from '@/components/morphcode/MorphcodeLobby';
 import { SequenceBuilder } from '@/components/morphcode/SequenceBuilder';
 import { GuessBoard } from '@/components/morphcode/GuessBoard';
+import { MatchScoreBar } from '@/components/morphcode/MatchScoreBar';
 import { RoundResults } from '@/components/morphcode/RoundResults';
 import { getActiveMatch, getCurrentRound, lockSequence, submitGuess, createNextRound } from '@/lib/morphcode/matchService';
 import { MatchState, RoundState, GamePhase, Symbol } from '@/lib/morphcode/types';
