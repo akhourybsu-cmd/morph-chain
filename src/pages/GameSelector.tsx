@@ -13,11 +13,12 @@ import { DailyProgressTracker } from "@/components/DailyProgressTracker";
 
 // Per-game accent colors (HSL values match CSS variables)
 const gameAccents = {
-  chain: "187 94% 48%",  // cyan
-  grid: "186 68% 36%",   // teal  
-  rush: "24 78% 57%",    // orange
-  alibi: "40 75% 50%",   // gold
-  measured: "220 70% 50%", // blue
+  chain: "187 94% 48%",
+  grid: "186 68% 36%",
+  rush: "24 78% 57%",
+  alibi: "40 75% 50%",
+  measured: "220 70% 50%",
+  morphcode: "280 70% 55%",
 };
 
 // Christmas accent colors
