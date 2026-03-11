@@ -35,7 +35,7 @@ export const MorphcodeHeader = ({ matchActive, roundInfo }: MorphcodeHeaderProps
             className="font-serif text-lg font-bold tracking-wide"
             style={{ color: 'hsl(var(--foreground))' }}
           >
-            MORPHCODE
+            MORPH CODE
           </h1>
           {roundInfo && (
             <span className="text-[10px] uppercase tracking-wider" style={{ color: 'hsl(var(--muted-foreground))' }}>

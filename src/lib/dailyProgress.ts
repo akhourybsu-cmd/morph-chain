@@ -1,18 +1,12 @@
 // Daily progress tracking across all game modes
 import { loadGameState } from './storage';
 import { loadGridGameState } from './gridStorage';
-import { loadTodayCompletion } from './rushStorage';
-import { loadGameState as loadAlibiGameState } from './alibi/storage';
-import { isMeasuredCompletedToday } from './measured/statsStorage';
 import { getEasternDateString } from './dateUtils';
 
 export interface DailyProgress {
   chain4L: boolean;
   chain5L: boolean;
   grid: boolean;
-  rush: boolean;
-  alibi: boolean;
-  measured: boolean;
 }
 
 /**
@@ -45,33 +39,6 @@ function isGridCompleted(): boolean {
 }
 
 /**
- * Check if Rush game is completed for today
- */
-function isRushCompleted(): boolean {
-  const completion = loadTodayCompletion();
-  return completion !== null;
-}
-
-/**
- * Check if Alibi game is completed for today
- */
-function isAlibiCompleted(): boolean {
-  const today = getTodayDate();
-  const puzzleId = `alibi_${today}`;
-  const state = loadAlibiGameState(puzzleId);
-  
-  if (!state) return false;
-  return state.isComplete === true && state.isSolved === true;
-}
-
-/**
- * Check if Measured game is completed for today
- */
-function isMeasuredCompleted(): boolean {
-  return isMeasuredCompletedToday();
-}
-
-/**
  * Get the completion status for all games today
  */
 export function checkDailyProgress(): DailyProgress {
@@ -79,9 +46,6 @@ export function checkDailyProgress(): DailyProgress {
     chain4L: isChainCompleted(4),
     chain5L: isChainCompleted(5),
     grid: isGridCompleted(),
-    rush: isRushCompleted(),
-    alibi: isAlibiCompleted(),
-    measured: isMeasuredCompleted(),
   };
 }
 
@@ -90,12 +54,12 @@ export function checkDailyProgress(): DailyProgress {
  */
 export function getCompletionCount(progress?: DailyProgress): number {
   const p = progress || checkDailyProgress();
-  return [p.chain4L, p.chain5L, p.grid, p.rush, p.alibi, p.measured].filter(Boolean).length;
+  return [p.chain4L, p.chain5L, p.grid].filter(Boolean).length;
 }
 
 /**
  * Get total number of trackable games
  */
 export function getTotalGames(): number {
-  return 6;
+  return 3;
 }

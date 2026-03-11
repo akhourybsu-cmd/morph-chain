@@ -1,12 +1,9 @@
 import { useState } from 'react';
 import { StatsModal } from '@/components/StatsModal';
-import { RushStats } from '@/components/rush/RushStats';
 import { GridStatsModal } from '@/components/grid/GridStats';
-import { MeasuredStats } from '@/components/measured/MeasuredStats';
-import { AlibiStats } from '@/components/alibi/AlibiStats';
 import { loadStats } from '@/lib/storage';
 
-type GameType = 'chain' | 'grid' | 'rush' | 'measured' | 'alibi' | null;
+type GameType = 'chain' | 'grid' | null;
 
 export function GameStatsTiles() {
   const [openModal, setOpenModal] = useState<GameType>(null);
@@ -15,9 +12,6 @@ export function GameStatsTiles() {
   const games = [
     { id: 'chain' as const, name: 'Chain', accent: 'hsl(var(--chain-accent, 200 80% 50%))' },
     { id: 'grid' as const, name: 'Grid', accent: 'hsl(var(--grid-accent, 150 80% 45%))' },
-    { id: 'rush' as const, name: 'Rush', accent: 'hsl(var(--rush-accent, 30 90% 55%))' },
-    { id: 'measured' as const, name: 'Measured', accent: 'hsl(var(--measured-accent, 260 60% 55%))' },
-    { id: 'alibi' as const, name: 'Alibi', accent: 'hsl(var(--alibi-accent, 340 70% 55%))' },
   ];
 
   return (
@@ -58,29 +52,6 @@ export function GameStatsTiles() {
         stats={chainStats}
       />
 
-      {/* Grid Stats Modal */}
-      <GridStatsModal
-        open={openModal === 'grid'}
-        onOpenChange={(open) => setOpenModal(open ? 'grid' : null)}
-      />
-
-      {/* Rush Stats Modal */}
-      <RushStats
-        open={openModal === 'rush'}
-        onOpenChange={(open) => setOpenModal(open ? 'rush' : null)}
-      />
-
-      {/* Measured Stats Modal */}
-      <MeasuredStats
-        open={openModal === 'measured'}
-        onOpenChange={(open) => setOpenModal(open ? 'measured' : null)}
-      />
-
-      {/* Alibi Stats Modal */}
-      <AlibiStats
-        open={openModal === 'alibi'}
-        onOpenChange={(open) => setOpenModal(open ? 'alibi' : null)}
-      />
     </>
   );
 }
