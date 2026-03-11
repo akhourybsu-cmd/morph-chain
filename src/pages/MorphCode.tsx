@@ -186,6 +186,11 @@ const MorphCode = () => {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'hsl(var(--background))' }}>
       <MorphcodeHeader matchActive={!!match} roundInfo={getRoundInfo()} />
+      
+      {/* Score bar during active match */}
+      {match && userId && (phase === 'setup' || phase === 'playing' || phase === 'waiting') && match.status !== 'waiting' && (
+        <MatchScoreBar match={match} myId={userId} />
+      )}
 
       <main className="flex-1 overflow-y-auto">
         {(phase === 'lobby') && (
