@@ -192,41 +192,10 @@ const GameSelector = () => {
             christmas={christmas}
           />
           
-          <GameCard
-            icon={Zap}
-            name="Morph Rush"
-            description="Fast-paced morphing under pressure"
-            accent={accents.rush}
-            onClick={() => navigate('/rush?mode=daily')}
-            christmas={christmas}
-          />
-          
-          {/* Alibi - Public with Beta tag */}
-          <GameCard
-            icon={Search}
-            name="Morph Alibi"
-            description="Daily logic mystery puzzle"
-            accent={accents.alibi}
-            onClick={() => navigate('/alibi')}
-            badge="Beta"
-            christmas={christmas}
-          />
-          
-          {/* Measured - New */}
-          <GameCard
-            icon={Target}
-            name="Measured"
-            description="Match real-world numbers"
-            accent={accents.measured}
-            onClick={() => navigate('/measured')}
-            badge="New"
-            christmas={christmas}
-          />
-
           {/* Morphcode - PvP */}
           <GameCard
             icon={Swords}
-            name="Morphcode"
+            name="Morph Code"
             description="Head-to-head deduction duel"
             accent={accents.morphcode}
             onClick={() => navigate('/morphcode')}

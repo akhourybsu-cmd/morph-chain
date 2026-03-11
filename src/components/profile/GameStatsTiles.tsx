@@ -15,9 +15,6 @@ export function GameStatsTiles() {
   const games = [
     { id: 'chain' as const, name: 'Chain', accent: 'hsl(var(--chain-accent, 200 80% 50%))' },
     { id: 'grid' as const, name: 'Grid', accent: 'hsl(var(--grid-accent, 150 80% 45%))' },
-    { id: 'rush' as const, name: 'Rush', accent: 'hsl(var(--rush-accent, 30 90% 55%))' },
-    { id: 'measured' as const, name: 'Measured', accent: 'hsl(var(--measured-accent, 260 60% 55%))' },
-    { id: 'alibi' as const, name: 'Alibi', accent: 'hsl(var(--alibi-accent, 340 70% 55%))' },
   ];
 
   return (

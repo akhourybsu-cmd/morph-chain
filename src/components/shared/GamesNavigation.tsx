@@ -9,10 +9,7 @@ interface GamesNavigationProps {
 const games = [
   { id: 'chain', name: "Morph Chain", icon: Link2, path: "/chain", description: "Word ladder puzzle", isBeta: false },
   { id: 'grid', name: "Morph Grid", icon: Grid3X3, path: "/grid", description: "Daily 5×5 puzzle", isBeta: false },
-  { id: 'rush', name: "Morph Rush", icon: Zap, path: "/rush?mode=daily", description: "Timed score dash", isBeta: false },
-  { id: 'alibi', name: "Morph Alibi", icon: Search, path: "/alibi", description: "Daily logic mystery", isBeta: true },
-  { id: 'measured', name: "Measured", icon: Target, path: "/measured", description: "Number puzzle", isBeta: false },
-  { id: 'morphcode', name: "Morphcode", icon: Swords, path: "/morphcode", description: "PvP deduction", isBeta: true },
+  { id: 'morphcode', name: "Morph Code", icon: Swords, path: "/morphcode", description: "PvP deduction", isBeta: true },
 ];
 
 export const GamesNavigation = ({ currentGame, onNavigate }: GamesNavigationProps) => {

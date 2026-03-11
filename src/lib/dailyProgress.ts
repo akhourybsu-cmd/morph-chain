@@ -61,5 +61,5 @@ export function getCompletionCount(progress?: DailyProgress): number {
  * Get total number of trackable games
  */
 export function getTotalGames(): number {
-  return 6;
+  return 3;
 }
