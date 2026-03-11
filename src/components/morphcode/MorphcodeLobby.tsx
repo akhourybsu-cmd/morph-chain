@@ -1,26 +1,34 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Link2, Loader2, Swords } from 'lucide-react';
-import { createMatch, joinMatchByCode, joinQueue, leaveQueue } from '@/lib/morphcode/matchService';
+import { Link2, Loader2, Swords, X } from 'lucide-react';
+import { createMatch, joinMatchByCode, joinQueue, leaveQueue, cancelMatch } from '@/lib/morphcode/matchService';
 import { FriendsList } from './FriendsList';
 import { toast } from 'sonner';
 
 interface MorphcodeLobbyProps {
-  onMatchFound: (matchId: string) => void;
+  onMatchFound: (matchId?: string) => void;
   isLoggedIn: boolean;
   onLoginRequired: () => void;
   existingInviteCode?: string | null;
+  existingMatchId?: string | null;
+  onMatchCancelled?: () => void;
 }
 
-export const MorphcodeLobby = ({ onMatchFound, isLoggedIn, onLoginRequired, existingInviteCode }: MorphcodeLobbyProps) => {
+export const MorphcodeLobby = ({
+  onMatchFound, isLoggedIn, onLoginRequired,
+  existingInviteCode, existingMatchId, onMatchCancelled,
+}: MorphcodeLobbyProps) => {
   const [inviteCode, setInviteCode] = useState('');
   const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState(false);
   const [queuing, setQueuing] = useState(false);
-  const [createdCode, setCreatedCode] = useState<string | null>(existingInviteCode || null);
+  const [cancelling, setCancelling] = useState(false);
+  const [createdCode, setCreatedCode] = useState<string | null>(null);
+  const [createdMatchId, setCreatedMatchId] = useState<string | null>(null);
 
   const displayCode = createdCode || existingInviteCode;
+  const activeMatchId = createdMatchId || existingMatchId;
 
   const handleCreate = async () => {
     if (!isLoggedIn) { onLoginRequired(); return; }
@@ -29,6 +37,7 @@ export const MorphcodeLobby = ({ onMatchFound, isLoggedIn, onLoginRequired, exis
     setCreating(false);
     if (result) {
       setCreatedCode(result.inviteCode);
+      setCreatedMatchId(result.matchId);
       toast.success('Match created! Share the code with a friend.');
     } else {
       toast.error('Failed to create match');
@@ -59,6 +68,21 @@ export const MorphcodeLobby = ({ onMatchFound, isLoggedIn, onLoginRequired, exis
     setQueuing(false);
   };
 
+  const handleCancel = async () => {
+    if (!activeMatchId) return;
+    setCancelling(true);
+    const success = await cancelMatch(activeMatchId);
+    setCancelling(false);
+    if (success) {
+      setCreatedCode(null);
+      setCreatedMatchId(null);
+      onMatchCancelled?.();
+      toast('Match cancelled');
+    } else {
+      toast.error('Failed to cancel');
+    }
+  };
+
   const copyCode = () => {
     if (displayCode) {
       navigator.clipboard.writeText(displayCode);
@@ -76,20 +100,14 @@ export const MorphcodeLobby = ({ onMatchFound, isLoggedIn, onLoginRequired, exis
         >
           MORPH CODE
         </h1>
-        <p
-          className="text-sm leading-relaxed"
-          style={{ color: 'hsl(var(--code-text-secondary))' }}
-        >
+        <p className="text-sm leading-relaxed" style={{ color: 'hsl(var(--code-text-secondary))' }}>
           Build a hidden sequence. Crack your opponent's. Fewest guesses wins.
         </p>
       </div>
 
       {/* Friends section */}
       {isLoggedIn && !displayCode && !queuing && (
-        <FriendsList
-          isLoggedIn={isLoggedIn}
-          onChallengeMatch={onMatchFound}
-        />
+        <FriendsList isLoggedIn={isLoggedIn} onChallengeMatch={onMatchFound} />
       )}
 
       {/* Created match - waiting */}
@@ -116,6 +134,17 @@ export const MorphcodeLobby = ({ onMatchFound, isLoggedIn, onLoginRequired, exis
             Tap to copy • Waiting for opponent...
           </p>
           <Loader2 className="w-5 h-5 animate-spin mx-auto" style={{ color: 'hsl(var(--code-accent))' }} />
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCancel}
+            disabled={cancelling}
+            className="gap-1 text-[hsl(var(--code-text-muted))] hover:text-[hsl(var(--code-error))]"
+          >
+            {cancelling ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" />}
+            Cancel Match
+          </Button>
         </div>
       )}
 
@@ -126,10 +155,7 @@ export const MorphcodeLobby = ({ onMatchFound, isLoggedIn, onLoginRequired, exis
             onClick={handleCreate}
             disabled={creating}
             className="w-full h-14 text-base gap-2 font-inter"
-            style={{
-              background: 'hsl(var(--code-accent))',
-              color: '#fff',
-            }}
+            style={{ background: 'hsl(var(--code-accent))', color: '#fff' }}
             size="lg"
           >
             {creating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Link2 className="w-5 h-5" />}

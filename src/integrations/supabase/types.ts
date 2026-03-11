@@ -1055,6 +1055,30 @@ export type Database = {
           },
         ]
       }
+      morphcode_stats: {
+        Row: {
+          draws: number
+          losses: number
+          updated_at: string
+          user_id: string
+          wins: number
+        }
+        Insert: {
+          draws?: number
+          losses?: number
+          updated_at?: string
+          user_id: string
+          wins?: number
+        }
+        Update: {
+          draws?: number
+          losses?: number
+          updated_at?: string
+          user_id?: string
+          wins?: number
+        }
+        Relationships: []
+      }
       player_sessions: {
         Row: {
           completed: boolean | null

@@ -25,8 +25,8 @@ export const MorphcodeHeader = ({ matchActive, roundInfo }: MorphcodeHeaderProps
         }}
       >
         <div className="px-3 md:px-4 h-full flex items-center">
-          {/* Left: Menu + Theme Toggle */}
-          <div className="flex items-center gap-1">
+          {/* Left column — fixed width */}
+          <div className="flex items-center gap-1 w-20">
             <Button
               variant="ghost"
               size="icon"
@@ -38,11 +38,8 @@ export const MorphcodeHeader = ({ matchActive, roundInfo }: MorphcodeHeaderProps
             <PrestigeThemeToggle colorVar="--code-text-secondary" />
           </div>
 
-          {/* Center spacer */}
-          <div className="flex-1" />
-
           {/* Center: Logo + round info */}
-          <div className="flex flex-col items-center">
+          <div className="flex-1 flex flex-col items-center justify-center">
             <MorphCodeLogo />
             {roundInfo && (
               <span
@@ -54,18 +51,17 @@ export const MorphcodeHeader = ({ matchActive, roundInfo }: MorphcodeHeaderProps
             )}
           </div>
 
-          {/* Center spacer */}
-          <div className="flex-1" />
-
-          {/* Right: Help */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setHowToPlayOpen(true)}
-            className="h-9 w-9 md:h-10 md:w-10 text-[hsl(var(--code-text-secondary))] hover:text-[hsl(var(--code-text-primary))] hover:bg-[hsl(var(--code-pill-bg))]"
-          >
-            <HelpCircle className="w-4 h-4 md:w-5 md:h-5" />
-          </Button>
+          {/* Right column — same fixed width as left */}
+          <div className="flex items-center justify-end gap-1 w-20">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setHowToPlayOpen(true)}
+              className="h-9 w-9 md:h-10 md:w-10 text-[hsl(var(--code-text-secondary))] hover:text-[hsl(var(--code-text-primary))] hover:bg-[hsl(var(--code-pill-bg))]"
+            >
+              <HelpCircle className="w-4 h-4 md:w-5 md:h-5" />
+            </Button>
+          </div>
         </div>
       </header>
 

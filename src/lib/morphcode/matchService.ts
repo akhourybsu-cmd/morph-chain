@@ -1,10 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
 import { generateInviteCode } from './gameEngine';
-import { Symbol, ALL_SYMBOLS, MatchState, RoundState, GuessEntry } from './types';
+import { Symbol, MatchState, RoundState, GuessEntry } from './types';
 
-/**
- * Call the morphcode-game edge function
- */
+// --- Edge function caller ---
+
 async function callGameFunction(action: string, params: Record<string, unknown>): Promise<{ data: any; error: string | null }> {
   const { data, error } = await supabase.functions.invoke('morphcode-game', {
     body: { action, ...params },
@@ -14,36 +13,24 @@ async function callGameFunction(action: string, params: Record<string, unknown>)
   return { data, error: null };
 }
 
-/**
- * Create a new match with an invite code
- */
+// --- Match CRUD ---
+
 export async function createMatch(): Promise<{ matchId: string; inviteCode: string } | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
   const inviteCode = generateInviteCode();
-  
+
   const { data, error } = await supabase
     .from('morphcode_matches')
-    .insert({
-      player_a: user.id,
-      invite_code: inviteCode,
-      status: 'waiting',
-    })
+    .insert({ player_a: user.id, invite_code: inviteCode, status: 'waiting' })
     .select('id')
     .single();
 
-  if (error) {
-    console.error('Error creating match:', error);
-    return null;
-  }
-
+  if (error) { console.error('Error creating match:', error); return null; }
   return { matchId: data.id, inviteCode };
 }
 
-/**
- * Join a match via invite code
- */
 export async function joinMatchByCode(code: string): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -60,31 +47,50 @@ export async function joinMatchByCode(code: string): Promise<string | null> {
 
   const { error: updateErr } = await supabase
     .from('morphcode_matches')
-    .update({ 
-      player_b: user.id, 
-      status: 'setup',
-      current_round: 1,
-    })
+    .update({ player_b: user.id, status: 'setup', current_round: 1 })
     .eq('id', match.id);
 
   if (updateErr) return null;
 
   const firstGuesser = Math.random() < 0.5 ? match.player_a : user.id;
-  await supabase
-    .from('morphcode_rounds')
-    .insert({
-      match_id: match.id,
-      round_number: 1,
-      first_guesser: firstGuesser,
-      status: 'setup',
-    });
+  await supabase.from('morphcode_rounds').insert({
+    match_id: match.id, round_number: 1, first_guesser: firstGuesser, status: 'setup',
+  });
 
   return match.id;
 }
 
-/**
- * Join matchmaking queue
- */
+export async function cancelMatch(matchId: string): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data: match } = await supabase
+    .from('morphcode_matches')
+    .select('status, player_a')
+    .eq('id', matchId)
+    .single();
+
+  if (!match) return false;
+
+  if (match.status === 'waiting') {
+    // Creator can cancel a waiting match by setting it to expired
+    const { error } = await supabase
+      .from('morphcode_matches')
+      .update({ status: 'expired' })
+      .eq('id', matchId);
+    return !error;
+  }
+
+  // For active matches, forfeit
+  const { error } = await supabase
+    .from('morphcode_matches')
+    .update({ status: 'forfeited', completed_at: new Date().toISOString() })
+    .eq('id', matchId);
+  return !error;
+}
+
+// --- Queue ---
+
 export async function joinQueue(): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
@@ -99,91 +105,93 @@ export async function joinQueue(): Promise<void> {
 
   if (waiting) {
     await supabase.from('morphcode_matchmaking').delete().eq('id', waiting.id);
-
     const inviteCode = generateInviteCode();
     const firstGuesser = Math.random() < 0.5 ? waiting.user_id : user.id;
 
     const { data: match } = await supabase
       .from('morphcode_matches')
       .insert({
-        player_a: waiting.user_id,
-        player_b: user.id,
-        status: 'setup',
-        current_round: 1,
-        invite_code: inviteCode,
+        player_a: waiting.user_id, player_b: user.id,
+        status: 'setup', current_round: 1, invite_code: inviteCode,
       })
       .select('id')
       .single();
 
     if (match) {
       await supabase.from('morphcode_rounds').insert({
-        match_id: match.id,
-        round_number: 1,
-        first_guesser: firstGuesser,
-        status: 'setup',
+        match_id: match.id, round_number: 1, first_guesser: firstGuesser, status: 'setup',
       });
     }
   } else {
-    await supabase
-      .from('morphcode_matchmaking')
-      .upsert({ user_id: user.id, timer_mode: 'live' });
+    await supabase.from('morphcode_matchmaking').upsert({ user_id: user.id, timer_mode: 'live' });
   }
 }
 
-/**
- * Leave matchmaking queue
- */
 export async function leaveQueue(): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
   await supabase.from('morphcode_matchmaking').delete().eq('user_id', user.id);
 }
 
-/**
- * Lock in a sequence via edge function (server-validated)
- */
+// --- Game Actions ---
+
 export async function lockSequence(roundId: string, sequence: Symbol[]): Promise<boolean> {
-  const { error } = await callGameFunction('lock_sequence', {
-    round_id: roundId,
-    sequence,
-  });
+  const { error } = await callGameFunction('lock_sequence', { round_id: roundId, sequence });
   return !error;
 }
 
-/**
- * Submit a guess via edge function (server-validated, anti-cheat)
- */
-export async function submitGuess(
-  roundId: string,
-  guess: Symbol[],
-  timeTakenMs: number
-): Promise<{ exact: number; shifted: number; isSolve: boolean } | null> {
-  const { data, error } = await callGameFunction('submit_guess', {
-    round_id: roundId,
-    guess,
-    time_taken_ms: timeTakenMs,
-  });
-
+export async function submitGuess(roundId: string, guess: Symbol[], timeTakenMs: number): Promise<{ exact: number; shifted: number; isSolve: boolean } | null> {
+  const { data, error } = await callGameFunction('submit_guess', { round_id: roundId, guess, time_taken_ms: timeTakenMs });
   if (error || !data) return null;
-
-  return {
-    exact: data.exact,
-    shifted: data.shifted,
-    isSolve: data.is_solve,
-  };
+  return { exact: data.exact, shifted: data.shifted, isSolve: data.is_solve };
 }
 
-/**
- * Create next round via edge function
- */
 export async function createNextRound(matchId: string): Promise<boolean> {
   const { error } = await callGameFunction('create_next_round', { match_id: matchId });
   return !error;
 }
 
-/**
- * Get current match state
- */
+// --- Stats ---
+
+export interface MorphcodePlayerStats {
+  wins: number;
+  losses: number;
+  draws: number;
+}
+
+export async function getPlayerStats(userId: string): Promise<MorphcodePlayerStats> {
+  const { data } = await supabase
+    .from('morphcode_stats')
+    .select('wins, losses, draws')
+    .eq('user_id', userId)
+    .single();
+  return data || { wins: 0, losses: 0, draws: 0 };
+}
+
+export async function recordMatchResult(userId: string, result: 'win' | 'loss' | 'draw'): Promise<void> {
+  const current = await getPlayerStats(userId);
+  const updated = {
+    wins: current.wins + (result === 'win' ? 1 : 0),
+    losses: current.losses + (result === 'loss' ? 1 : 0),
+    draws: current.draws + (result === 'draw' ? 1 : 0),
+    updated_at: new Date().toISOString(),
+  };
+  await supabase.from('morphcode_stats').upsert({ user_id: userId, ...updated });
+}
+
+// --- Player display name ---
+
+export async function getPlayerDisplayName(userId: string): Promise<string> {
+  const { data } = await supabase
+    .from('user_profiles')
+    .select('display_name, default_initials')
+    .eq('user_id', userId)
+    .single();
+  return data?.display_name || data?.default_initials || 'Player';
+}
+
+// --- State Getters ---
+
 export async function getActiveMatch(): Promise<MatchState | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -214,9 +222,6 @@ export async function getActiveMatch(): Promise<MatchState | null> {
   };
 }
 
-/**
- * Get current round for a match
- */
 export async function getCurrentRound(matchId: string): Promise<RoundState | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -244,46 +249,27 @@ export async function getCurrentRound(matchId: string): Promise<RoundState | nul
     .eq('round_id', round.id)
     .order('guess_number', { ascending: true });
 
-  const myGuesses: GuessEntry[] = (guesses || [])
-    .filter(g => g.player_id === user.id)
-    .map(g => ({
-      id: g.id,
-      guess: g.guess as Symbol[],
-      exact: g.exact_count,
-      shifted: g.shifted_count,
-      isSolve: g.is_solve,
-      timeTakenMs: g.time_taken_ms,
-    }));
+  const mapGuess = (g: any): GuessEntry => ({
+    id: g.id, guess: g.guess as Symbol[], exact: g.exact_count,
+    shifted: g.shifted_count, isSolve: g.is_solve, timeTakenMs: g.time_taken_ms,
+  });
 
-  const opponentGuesses: GuessEntry[] = (guesses || [])
-    .filter(g => g.player_id !== user.id)
-    .map(g => ({
-      id: g.id,
-      guess: g.guess as Symbol[],
-      exact: g.exact_count,
-      shifted: g.shifted_count,
-      isSolve: g.is_solve,
-      timeTakenMs: g.time_taken_ms,
-    }));
+  const myGuesses = (guesses || []).filter(g => g.player_id === user.id).map(mapGuess);
+  const opponentGuesses = (guesses || []).filter(g => g.player_id !== user.id).map(mapGuess);
 
   return {
-    id: round.id,
-    matchId: round.match_id,
-    roundNumber: round.round_number,
-    status: round.status as RoundState['status'],
-    firstGuesser: round.first_guesser,
+    id: round.id, matchId: round.match_id, roundNumber: round.round_number,
+    status: round.status as RoundState['status'], firstGuesser: round.first_guesser,
     currentTurn: round.current_turn,
     mySequence: isPlayerA ? (round.sequence_a as Symbol[] | null) : (round.sequence_b as Symbol[] | null),
     mySequenceLocked: isPlayerA ? round.sequence_a_locked : round.sequence_b_locked,
     opponentSequenceLocked: isPlayerA ? round.sequence_b_locked : round.sequence_a_locked,
-    myGuesses,
-    opponentGuesses,
+    myGuesses, opponentGuesses,
     myGuessCount: isPlayerA ? round.guesses_a : round.guesses_b,
     opponentGuessCount: isPlayerA ? round.guesses_b : round.guesses_a,
     mySolved: isPlayerA ? round.solved_by_a : round.solved_by_b,
     opponentSolved: isPlayerA ? round.solved_by_b : round.solved_by_a,
-    winnerId: round.winner_id,
-    symbolPool: round.symbol_pool as Symbol[],
+    winnerId: round.winner_id, symbolPool: round.symbol_pool as Symbol[],
     turnStartedAt: round.turn_started_at,
   };
 }
