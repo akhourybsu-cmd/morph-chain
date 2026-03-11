@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Check, X, Swords, Copy, Loader2, Circle } from 'lucide-react';
+import { UserPlus, Check, X, Swords, Copy, Loader2, Circle, ChevronDown, ChevronUp } from 'lucide-react';
 import { Friend, getFriends, sendFriendRequest, acceptFriendRequest, removeFriend, getMyFriendCode, updatePresence } from '@/lib/morphcode/friendsService';
 import { createMatch } from '@/lib/morphcode/matchService';
 import { toast } from 'sonner';
@@ -17,6 +17,7 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
   const [addCode, setAddCode] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   const loadFriends = useCallback(async () => {
     if (!isLoggedIn) return;
@@ -28,7 +29,6 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
 
   useEffect(() => {
     loadFriends();
-    // Heartbeat
     if (isLoggedIn) {
       updatePresence();
       const interval = setInterval(updatePresence, 30000);
@@ -36,7 +36,6 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
     }
   }, [isLoggedIn, loadFriends]);
 
-  // Refresh friends every 15s
   useEffect(() => {
     if (!isLoggedIn) return;
     const interval = setInterval(loadFriends, 15000);
@@ -71,7 +70,6 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
   const handleChallenge = async (friendUserId: string) => {
     const result = await createMatch();
     if (result) {
-      // TODO: Send realtime notification to friend
       toast.success('Match created! Share the code with your friend.');
       onChallengeMatch(result.matchId);
     }
@@ -90,160 +88,202 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
   const pendingReceived = friends.filter(f => f.status === 'pending' && !f.isSentByMe);
   const pendingSent = friends.filter(f => f.status === 'pending' && f.isSentByMe);
   const onlineFriends = accepted.filter(f => f.isOnline);
+  const offlineFriends = accepted.filter(f => !f.isOnline);
+
+  const hasContent = friends.length > 0 || !loading;
+  const hasOnline = onlineFriends.length > 0;
+
+  // Auto-expand if there are online friends or pending requests
+  const shouldAutoExpand = hasOnline || pendingReceived.length > 0;
 
   return (
     <div
-      className="w-full rounded-xl p-4 space-y-4"
+      className="w-full rounded-xl overflow-hidden"
       style={{
         background: 'hsl(var(--code-card-bg))',
         border: '1px solid hsl(var(--code-card-border))',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
       }}
     >
-      {/* My friend code */}
-      <div className="flex items-center justify-between">
+      {/* My friend code — always visible */}
+      <div className="p-4 flex items-center justify-between">
         <div>
-          <p className="text-xs font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>Your friend code</p>
-          <p className="font-mono font-bold text-lg tracking-wider" style={{ color: 'hsl(var(--code-accent))' }}>
-            {myCode || '...'}
+          <p
+            className="text-[10px] font-inter uppercase tracking-widest"
+            style={{ color: 'hsl(var(--code-text-muted))' }}
+          >
+            Your friend code
+          </p>
+          <p
+            className="font-mono font-bold text-xl tracking-[0.2em] mt-0.5"
+            style={{ color: 'hsl(var(--code-accent))' }}
+          >
+            {myCode || '···'}
           </p>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={copyMyCode}
-          className="text-[hsl(var(--code-text-muted))]"
-        >
-          <Copy className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={copyMyCode}
+            className="h-8 w-8 p-0 text-[hsl(var(--code-text-muted))] hover:text-[hsl(var(--code-accent))]"
+          >
+            <Copy className="w-4 h-4" />
+          </Button>
+          {hasContent && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setExpanded(!expanded)}
+              className="h-8 w-8 p-0 text-[hsl(var(--code-text-muted))]"
+            >
+              {(expanded || shouldAutoExpand) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
+          )}
+        </div>
       </div>
 
-      {/* Add friend */}
-      <div className="flex gap-2">
-        <Input
-          value={addCode}
-          onChange={(e) => setAddCode(e.target.value.toUpperCase())}
-          placeholder="Enter friend code..."
-          className="font-mono text-center tracking-widest uppercase bg-[hsl(var(--code-page-bg))] border-[hsl(var(--code-card-border))] text-[hsl(var(--code-text-primary))]"
-          maxLength={6}
-        />
-        <Button
-          onClick={handleSendRequest}
-          disabled={sending || !addCode.trim()}
-          size="sm"
-          style={{ background: 'hsl(var(--code-accent))', color: '#fff' }}
+      {/* Expandable content */}
+      {(expanded || shouldAutoExpand) && (
+        <div
+          className="px-4 pb-4 space-y-4"
+          style={{ borderTop: '1px solid hsl(var(--code-divider))' }}
         >
-          {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-        </Button>
-      </div>
+          {/* Add friend */}
+          <div className="flex gap-2 pt-3">
+            <Input
+              value={addCode}
+              onChange={(e) => setAddCode(e.target.value.toUpperCase())}
+              placeholder="Enter friend code…"
+              className="font-mono text-center tracking-widest uppercase bg-[hsl(var(--code-page-bg))] border-[hsl(var(--code-card-border))] text-[hsl(var(--code-text-primary))] placeholder:text-[hsl(var(--code-text-muted))]"
+              maxLength={6}
+            />
+            <Button
+              onClick={handleSendRequest}
+              disabled={sending || !addCode.trim()}
+              size="sm"
+              className="px-3"
+              style={{ background: 'hsl(var(--code-accent))', color: '#fff' }}
+            >
+              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+            </Button>
+          </div>
 
-      {/* Pending received */}
-      {pendingReceived.length > 0 && (
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'hsl(var(--code-text-muted))' }}>
-            Requests
-          </p>
-          {pendingReceived.map(f => (
-            <div key={f.id} className="flex items-center justify-between py-1.5">
-              <span className="text-sm font-inter" style={{ color: 'hsl(var(--code-text-primary))' }}>
-                {f.displayName || f.friendCode || 'Player'}
-              </span>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="sm" onClick={() => handleAccept(f.id)} className="h-7 w-7 p-0 text-[hsl(var(--code-success))]">
-                  <Check className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleRemove(f.id)} className="h-7 w-7 p-0 text-[hsl(var(--code-error))]">
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
+          {/* Pending received */}
+          {pendingReceived.length > 0 && (
+            <FriendsSection label="Requests">
+              {pendingReceived.map(f => (
+                <div key={f.id} className="flex items-center justify-between py-1.5">
+                  <span className="text-sm font-inter" style={{ color: 'hsl(var(--code-text-primary))' }}>
+                    {f.displayName || f.friendCode || 'Player'}
+                  </span>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleAccept(f.id)} className="h-7 w-7 p-0 text-[hsl(var(--code-success))]">
+                      <Check className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleRemove(f.id)} className="h-7 w-7 p-0 text-[hsl(var(--code-error))]">
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </FriendsSection>
+          )}
+
+          {/* Online friends */}
+          {onlineFriends.length > 0 && (
+            <FriendsSection label="Online Now">
+              {onlineFriends.map(f => (
+                <div key={f.id} className="flex items-center justify-between py-1.5">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-2 h-2 rounded-full animate-pulse"
+                      style={{ background: 'hsl(var(--code-success))' }}
+                    />
+                    <span className="text-sm font-inter" style={{ color: 'hsl(var(--code-text-primary))' }}>
+                      {f.displayName || f.friendCode || 'Player'}
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleChallenge(f.friendUserId)}
+                    className="h-7 text-xs gap-1 text-[hsl(var(--code-accent))]"
+                  >
+                    <Swords className="w-3 h-3" />
+                    Challenge
+                  </Button>
+                </div>
+              ))}
+            </FriendsSection>
+          )}
+
+          {/* Offline friends */}
+          {offlineFriends.length > 0 && (
+            <FriendsSection label="Friends">
+              {offlineFriends.map(f => (
+                <div key={f.id} className="flex items-center justify-between py-1.5">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-2 h-2 rounded-full"
+                      style={{ background: 'hsl(var(--code-divider))' }}
+                    />
+                    <span className="text-sm font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
+                      {f.displayName || f.friendCode || 'Player'}
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemove(f.id)}
+                    className="h-7 w-7 p-0 text-[hsl(var(--code-text-muted))]"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </FriendsSection>
+          )}
+
+          {/* Pending sent */}
+          {pendingSent.length > 0 && (
+            <FriendsSection label="Sent">
+              {pendingSent.map(f => (
+                <div key={f.id} className="flex items-center justify-between py-1.5">
+                  <span className="text-sm font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
+                    {f.displayName || f.friendCode || 'Player'}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wider" style={{ color: 'hsl(var(--code-text-muted))' }}>Pending</span>
+                </div>
+              ))}
+            </FriendsSection>
+          )}
+
+          {loading && (
+            <div className="flex justify-center py-2">
+              <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'hsl(var(--code-text-muted))' }} />
             </div>
-          ))}
-        </div>
-      )}
+          )}
 
-      {/* Online friends */}
-      {onlineFriends.length > 0 && (
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'hsl(var(--code-text-muted))' }}>
-            Online Now
-          </p>
-          {onlineFriends.map(f => (
-            <div key={f.id} className="flex items-center justify-between py-1.5">
-              <div className="flex items-center gap-2">
-                <Circle className="w-2 h-2 fill-current" style={{ color: 'hsl(var(--code-success))' }} />
-                <span className="text-sm font-inter" style={{ color: 'hsl(var(--code-text-primary))' }}>
-                  {f.displayName || f.friendCode || 'Player'}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleChallenge(f.friendUserId)}
-                className="h-7 text-xs gap-1 text-[hsl(var(--code-accent))]"
-              >
-                <Swords className="w-3 h-3" />
-                Challenge
-              </Button>
-            </div>
-          ))}
+          {!loading && friends.length === 0 && (
+            <p className="text-xs text-center py-2 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
+              Share your code to add friends
+            </p>
+          )}
         </div>
-      )}
-
-      {/* Offline friends */}
-      {accepted.filter(f => !f.isOnline).length > 0 && (
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'hsl(var(--code-text-muted))' }}>
-            Friends
-          </p>
-          {accepted.filter(f => !f.isOnline).map(f => (
-            <div key={f.id} className="flex items-center justify-between py-1.5">
-              <div className="flex items-center gap-2">
-                <Circle className="w-2 h-2" style={{ color: 'hsl(var(--code-divider))' }} />
-                <span className="text-sm font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
-                  {f.displayName || f.friendCode || 'Player'}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleRemove(f.id)}
-                className="h-7 w-7 p-0 text-[hsl(var(--code-text-muted))]"
-              >
-                <X className="w-3 h-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Pending sent */}
-      {pendingSent.length > 0 && (
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'hsl(var(--code-text-muted))' }}>
-            Sent
-          </p>
-          {pendingSent.map(f => (
-            <div key={f.id} className="flex items-center justify-between py-1.5">
-              <span className="text-sm font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
-                {f.displayName || f.friendCode || 'Player'}
-              </span>
-              <span className="text-[10px] uppercase" style={{ color: 'hsl(var(--code-text-muted))' }}>Pending</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {loading && (
-        <div className="flex justify-center py-2">
-          <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'hsl(var(--code-text-muted))' }} />
-        </div>
-      )}
-
-      {!loading && friends.length === 0 && (
-        <p className="text-xs text-center py-2 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
-          Share your friend code to add friends
-        </p>
       )}
     </div>
   );
 };
+
+const FriendsSection = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div>
+    <p
+      className="text-[10px] font-inter font-semibold uppercase tracking-widest mb-2"
+      style={{ color: 'hsl(var(--code-text-muted))' }}
+    >
+      {label}
+    </p>
+    {children}
+  </div>
+);
