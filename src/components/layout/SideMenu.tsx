@@ -10,6 +10,8 @@ export function SideMenu({ open, onClose }: { open: boolean; onClose: () => void
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   
+  const [onlineFriendCount, setOnlineFriendCount] = useState(0);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setIsLoggedIn(!!data.session);
@@ -21,6 +23,13 @@ export function SideMenu({ open, onClose }: { open: boolean; onClose: () => void
     
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    getFriends().then(friends => {
+      setOnlineFriendCount(friends.filter(f => f.status === 'accepted' && f.isOnline).length);
+    });
+  }, [isLoggedIn]);
 
   if (!open) return null;
   
