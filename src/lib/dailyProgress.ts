@@ -1,18 +1,12 @@
 // Daily progress tracking across all game modes
 import { loadGameState } from './storage';
 import { loadGridGameState } from './gridStorage';
-import { loadTodayCompletion } from './rushStorage';
-import { loadGameState as loadAlibiGameState } from './alibi/storage';
-import { isMeasuredCompletedToday } from './measured/statsStorage';
 import { getEasternDateString } from './dateUtils';
 
 export interface DailyProgress {
   chain4L: boolean;
   chain5L: boolean;
   grid: boolean;
-  rush: boolean;
-  alibi: boolean;
-  measured: boolean;
 }
 
 /**
