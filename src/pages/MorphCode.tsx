@@ -30,6 +30,17 @@ const MorphCode = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Presence heartbeat
+  useEffect(() => {
+    if (!userId) return;
+    updatePresence();
+    const interval = setInterval(updatePresence, 30000);
+    return () => {
+      clearInterval(interval);
+      setOffline();
+    };
+  }, [userId]);
+
   useEffect(() => {
     if (!userId) { setLoading(false); return; }
     loadGameState();
