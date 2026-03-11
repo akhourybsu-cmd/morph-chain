@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link2, Loader2, Swords } from 'lucide-react';
 import { createMatch, joinMatchByCode, joinQueue, leaveQueue } from '@/lib/morphcode/matchService';
+import { FriendsList } from './FriendsList';
 import { toast } from 'sonner';
 
 interface MorphcodeLobbyProps {
