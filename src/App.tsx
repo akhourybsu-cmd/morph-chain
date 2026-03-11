@@ -36,6 +36,7 @@ import Kids from "./pages/Kids";
 import Press from "./pages/Press";
 import Privacy from "./pages/Privacy";
 import ProfilePage from "./pages/ProfilePage";
+import MorphCode from "./pages/MorphCode";
 import WhatsNew from "./pages/WhatsNew";
 import { useVersionCheck } from "./hooks/useVersionCheck";
 import { SnowfallOverlay } from "./components/seasonal/SnowfallOverlay";
