@@ -141,6 +141,13 @@ export const ChainResultsPanel = ({
           </button>
         </div>
 
+        {/* Share with friends */}
+        <ShareToFriendsButton
+          game="chain"
+          payload={{ won, movesUsed, minDistance, streak }}
+          accentVar="--chain-accent"
+        />
+
         {/* Archive Access */}
         <div className="pt-2 border-t border-[hsl(var(--chain-divider))]">
           <p className="text-xs text-[hsl(var(--chain-text-muted))] mb-2">Want to play more?</p>
