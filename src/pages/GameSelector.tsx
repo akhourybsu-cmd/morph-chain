@@ -23,11 +23,12 @@ const gameAccents = {
 
 // Christmas accent colors
 const christmasAccents = {
-  chain: "142 70% 45%",  // green
-  grid: "0 75% 50%",     // red
-  rush: "45 90% 50%",    // gold
-  alibi: "142 70% 45%",  // green
-  measured: "220 70% 50%", // blue (same)
+  chain: "142 70% 45%",
+  grid: "0 75% 50%",
+  rush: "45 90% 50%",
+  alibi: "142 70% 45%",
+  measured: "220 70% 50%",
+  morphcode: "280 70% 55%",
 };
 
 const GameSelector = () => {
