@@ -1,6 +1,18 @@
 import { supabase } from '@/integrations/supabase/client';
-import { generateInviteCode, calculateFeedback, validateSequence } from './gameEngine';
+import { generateInviteCode } from './gameEngine';
 import { Symbol, ALL_SYMBOLS, MatchState, RoundState, GuessEntry } from './types';
+
+/**
+ * Call the morphcode-game edge function
+ */
+async function callGameFunction(action: string, params: Record<string, unknown>): Promise<{ data: any; error: string | null }> {
+  const { data, error } = await supabase.functions.invoke('morphcode-game', {
+    body: { action, ...params },
+  });
+  if (error) return { data: null, error: error.message };
+  if (data?.error) return { data: null, error: data.error };
+  return { data, error: null };
+}
 
 /**
  * Create a new match with an invite code
@@ -36,7 +48,6 @@ export async function joinMatchByCode(code: string): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  // Find the match
   const { data: match, error: findErr } = await supabase
     .from('morphcode_matches')
     .select('id, player_a')
@@ -45,9 +56,8 @@ export async function joinMatchByCode(code: string): Promise<string | null> {
     .single();
 
   if (findErr || !match) return null;
-  if (match.player_a === user.id) return null; // Can't join own match
+  if (match.player_a === user.id) return null;
 
-  // Join the match
   const { error: updateErr } = await supabase
     .from('morphcode_matches')
     .update({ 
@@ -59,7 +69,6 @@ export async function joinMatchByCode(code: string): Promise<string | null> {
 
   if (updateErr) return null;
 
-  // Create first round
   const firstGuesser = Math.random() < 0.5 ? match.player_a : user.id;
   await supabase
     .from('morphcode_rounds')
@@ -80,7 +89,6 @@ export async function joinQueue(): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  // Check if someone is already waiting
   const { data: waiting } = await supabase
     .from('morphcode_matchmaking')
     .select('id, user_id')
@@ -90,11 +98,7 @@ export async function joinQueue(): Promise<void> {
     .single();
 
   if (waiting) {
-    // Match found! Remove from queue and create match
-    await supabase
-      .from('morphcode_matchmaking')
-      .delete()
-      .eq('id', waiting.id);
+    await supabase.from('morphcode_matchmaking').delete().eq('id', waiting.id);
 
     const inviteCode = generateInviteCode();
     const firstGuesser = Math.random() < 0.5 ? waiting.user_id : user.id;
@@ -112,17 +116,14 @@ export async function joinQueue(): Promise<void> {
       .single();
 
     if (match) {
-      await supabase
-        .from('morphcode_rounds')
-        .insert({
-          match_id: match.id,
-          round_number: 1,
-          first_guesser: firstGuesser,
-          status: 'setup',
-        });
+      await supabase.from('morphcode_rounds').insert({
+        match_id: match.id,
+        round_number: 1,
+        first_guesser: firstGuesser,
+        status: 'setup',
+      });
     }
   } else {
-    // No one waiting, join queue
     await supabase
       .from('morphcode_matchmaking')
       .upsert({ user_id: user.id, timer_mode: 'live' });
@@ -135,245 +136,49 @@ export async function joinQueue(): Promise<void> {
 export async function leaveQueue(): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
-  await supabase
-    .from('morphcode_matchmaking')
-    .delete()
-    .eq('user_id', user.id);
+  await supabase.from('morphcode_matchmaking').delete().eq('user_id', user.id);
 }
 
 /**
- * Lock in a sequence for a round
+ * Lock in a sequence via edge function (server-validated)
  */
 export async function lockSequence(roundId: string, sequence: Symbol[]): Promise<boolean> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
-
-  const validation = validateSequence(sequence, ALL_SYMBOLS);
-  if (!validation.valid) return false;
-
-  // Get round to determine if player is A or B
-  const { data: round } = await supabase
-    .from('morphcode_rounds')
-    .select('match_id')
-    .eq('id', roundId)
-    .single();
-  if (!round) return false;
-
-  const { data: match } = await supabase
-    .from('morphcode_matches')
-    .select('player_a, player_b')
-    .eq('id', round.match_id)
-    .single();
-  if (!match) return false;
-
-  const isPlayerA = user.id === match.player_a;
-  const updateData: Record<string, unknown> = isPlayerA
-    ? { sequence_a: sequence, sequence_a_locked: true }
-    : { sequence_b: sequence, sequence_b_locked: true };
-
-  const { error } = await supabase
-    .from('morphcode_rounds')
-    .update(updateData)
-    .eq('id', roundId);
-
-  if (error) return false;
-
-  // Check if both locked - if so, start the round
-  const { data: updated } = await supabase
-    .from('morphcode_rounds')
-    .select('sequence_a_locked, sequence_b_locked, first_guesser')
-    .eq('id', roundId)
-    .single();
-
-  if (updated?.sequence_a_locked && updated?.sequence_b_locked) {
-    await supabase
-      .from('morphcode_rounds')
-      .update({ 
-        status: 'active', 
-        current_turn: updated.first_guesser,
-        turn_started_at: new Date().toISOString(),
-      })
-      .eq('id', roundId);
-
-    await supabase
-      .from('morphcode_matches')
-      .update({ status: 'active' })
-      .eq('id', round.match_id);
-  }
-
-  return true;
+  const { error } = await callGameFunction('lock_sequence', {
+    round_id: roundId,
+    sequence,
+  });
+  return !error;
 }
 
 /**
- * Submit a guess
+ * Submit a guess via edge function (server-validated, anti-cheat)
  */
 export async function submitGuess(
   roundId: string,
   guess: Symbol[],
   timeTakenMs: number
 ): Promise<{ exact: number; shifted: number; isSolve: boolean } | null> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const validation = validateSequence(guess, ALL_SYMBOLS);
-  if (!validation.valid) return null;
-
-  // Get round data
-  const { data: round } = await supabase
-    .from('morphcode_rounds')
-    .select('*, morphcode_matches!inner(player_a, player_b)')
-    .eq('id', roundId)
-    .single();
-
-  if (!round || round.status !== 'active') return null;
-  if (round.current_turn !== user.id) return null;
-
-  const match = (round as any).morphcode_matches;
-  const isPlayerA = user.id === match.player_a;
-  const opponentSequence = isPlayerA ? round.sequence_b : round.sequence_a;
-
-  if (!opponentSequence) return null;
-
-  // Calculate feedback
-  const feedback = calculateFeedback(guess, opponentSequence as Symbol[]);
-  const isSolve = feedback.exact === 4;
-  const guessNumber = isPlayerA ? round.guesses_a + 1 : round.guesses_b + 1;
-
-  // Insert guess
-  await supabase.from('morphcode_guesses').insert({
+  const { data, error } = await callGameFunction('submit_guess', {
     round_id: roundId,
-    player_id: user.id,
-    guess_number: guessNumber,
     guess,
-    exact_count: feedback.exact,
-    shifted_count: feedback.shifted,
-    is_solve: isSolve,
     time_taken_ms: timeTakenMs,
   });
 
-  // Update round state
-  const roundUpdate: Record<string, unknown> = isPlayerA
-    ? { 
-        guesses_a: guessNumber, 
-        solved_by_a: isSolve || round.solved_by_a,
-        time_used_a_ms: (round.time_used_a_ms || 0) + timeTakenMs,
-      }
-    : { 
-        guesses_b: guessNumber,
-        solved_by_b: isSolve || round.solved_by_b,
-        time_used_b_ms: (round.time_used_b_ms || 0) + timeTakenMs,
-      };
+  if (error || !data) return null;
 
-  // Determine next turn
-  const opponentId = isPlayerA ? match.player_b : match.player_a;
-  const myGuesses = guessNumber;
-  const opponentGuesses = isPlayerA ? round.guesses_b : round.guesses_a;
-  const opponentSolved = isPlayerA ? round.solved_by_b : round.solved_by_a;
+  return {
+    exact: data.exact,
+    shifted: data.shifted,
+    isSolve: data.is_solve,
+  };
+}
 
-  // Check if round should end
-  let roundEnded = false;
-  
-  if (isSolve) {
-    // I solved - does opponent get equal turn?
-    if (myGuesses > opponentGuesses && !opponentSolved) {
-      // Opponent gets a reply turn
-      roundUpdate.current_turn = opponentId;
-      roundUpdate.turn_started_at = new Date().toISOString();
-    } else if (opponentSolved || myGuesses === opponentGuesses) {
-      // Both have equal turns or both solved
-      roundEnded = true;
-    } else {
-      roundUpdate.current_turn = opponentId;
-      roundUpdate.turn_started_at = new Date().toISOString();
-    }
-  } else if (myGuesses >= 8) {
-    // I used all guesses
-    if (opponentGuesses >= 8 || opponentSolved) {
-      roundEnded = true;
-    } else if (myGuesses > opponentGuesses) {
-      roundUpdate.current_turn = opponentId;
-      roundUpdate.turn_started_at = new Date().toISOString();
-    } else {
-      roundEnded = true;
-    }
-  } else {
-    // Normal turn transition
-    roundUpdate.current_turn = opponentId;
-    roundUpdate.turn_started_at = new Date().toISOString();
-  }
-
-  if (roundEnded) {
-    roundUpdate.status = 'completed';
-    roundUpdate.completed_at = new Date().toISOString();
-    roundUpdate.current_turn = null;
-
-    // Determine winner
-    const finalSolvedA = isPlayerA ? (isSolve || round.solved_by_a) : round.solved_by_a;
-    const finalSolvedB = isPlayerA ? round.solved_by_b : (isSolve || round.solved_by_b);
-    const finalGuessesA = isPlayerA ? myGuesses : opponentGuesses;
-    const finalGuessesB = isPlayerA ? opponentGuesses : myGuesses;
-    const finalTimeA = isPlayerA 
-      ? (round.time_used_a_ms || 0) + timeTakenMs 
-      : (round.time_used_a_ms || 0);
-    const finalTimeB = isPlayerA 
-      ? (round.time_used_b_ms || 0) 
-      : (round.time_used_b_ms || 0) + timeTakenMs;
-
-    let winnerId: string | null = null;
-    if (finalSolvedA && finalSolvedB) {
-      if (finalGuessesA < finalGuessesB) winnerId = match.player_a;
-      else if (finalGuessesB < finalGuessesA) winnerId = match.player_b;
-      else if (finalTimeA < finalTimeB) winnerId = match.player_a;
-      else if (finalTimeB < finalTimeA) winnerId = match.player_b;
-    } else if (finalSolvedA) {
-      winnerId = match.player_a;
-    } else if (finalSolvedB) {
-      winnerId = match.player_b;
-    }
-
-    roundUpdate.winner_id = winnerId;
-
-    // Update match round wins
-    if (winnerId) {
-      const isWinnerA = winnerId === match.player_a;
-      const newWinsA = isWinnerA ? 1 : 0;
-      const newWinsB = isWinnerA ? 0 : 1;
-      
-      // We need current wins from match - fetch separately
-      const { data: currentMatch } = await supabase
-        .from('morphcode_matches')
-        .select('round_wins_a, round_wins_b, rounds_to_win')
-        .eq('id', round.match_id)
-        .single();
-
-      if (currentMatch) {
-        const totalWinsA = currentMatch.round_wins_a + newWinsA;
-        const totalWinsB = currentMatch.round_wins_b + newWinsB;
-        const matchUpdate: Record<string, unknown> = {
-          round_wins_a: totalWinsA,
-          round_wins_b: totalWinsB,
-        };
-
-        if (totalWinsA >= currentMatch.rounds_to_win || totalWinsB >= currentMatch.rounds_to_win) {
-          matchUpdate.status = 'completed';
-          matchUpdate.winner_id = totalWinsA >= currentMatch.rounds_to_win ? match.player_a : match.player_b;
-          matchUpdate.completed_at = new Date().toISOString();
-        }
-
-        await supabase
-          .from('morphcode_matches')
-          .update(matchUpdate)
-          .eq('id', round.match_id);
-      }
-    }
-  }
-
-  await supabase
-    .from('morphcode_rounds')
-    .update(roundUpdate)
-    .eq('id', roundId);
-
-  return { exact: feedback.exact, shifted: feedback.shifted, isSolve };
+/**
+ * Create next round via edge function
+ */
+export async function createNextRound(matchId: string): Promise<boolean> {
+  const { error } = await callGameFunction('create_next_round', { match_id: matchId });
+  return !error;
 }
 
 /**
@@ -433,7 +238,6 @@ export async function getCurrentRound(matchId: string): Promise<RoundState | nul
 
   const isPlayerA = user.id === match.player_a;
 
-  // Get guesses
   const { data: guesses } = await supabase
     .from('morphcode_guesses')
     .select('*')
