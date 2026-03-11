@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Link2, Grid3X3, Zap, Search, Target } from "lucide-react";
+import { Link2, Grid3X3, Zap, Search, Target, Swords } from "lucide-react";
 
 interface GamesNavigationProps {
   currentGame: 'chain' | 'grid' | 'rush' | 'arcade' | 'alibi' | 'measured';
