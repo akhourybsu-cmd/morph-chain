@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { checkDailyProgress, getCompletionCount, getTotalGames, DailyProgress } from '@/lib/dailyProgress';
+import { checkDailyProgress, getCompletionCount, getTotalGames, type DailyProgress } from '@/lib/dailyProgress';
 import { Progress } from '@/components/ui/progress';
 import { Check, Circle, Link2, Grid3X3, Zap, Search, Target } from 'lucide-react';
 import { isChristmas } from '@/lib/seasonal/christmas';
