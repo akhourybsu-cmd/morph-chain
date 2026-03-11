@@ -128,6 +128,13 @@ export const PrestigeResultsPanel = ({
           <Share2 className="h-4 w-4 mr-2" />
           Share Results
         </Button>
+
+        <ShareToFriendsButton
+          game="rush"
+          payload={{ score: finalScore, totalMorphs, mode, puzzleNumber }}
+          accentVar="--rush-accent"
+          className="w-full"
+        />
         
         <button 
           onClick={onViewLeaderboard}

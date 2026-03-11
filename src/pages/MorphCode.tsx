@@ -12,7 +12,7 @@ import {
   getActiveMatch, getCurrentRound, lockSequence, submitGuess,
   createNextRound, cancelMatch, getPlayerStats, getPlayerDisplayName, recordMatchResult,
 } from '@/lib/morphcode/matchService';
-import { updatePresence, setOffline } from '@/lib/morphcode/friendsService';
+import { updatePresence, setOffline } from '@/lib/social/friendsService';
 import { MatchState, RoundState, Symbol } from '@/lib/morphcode/types';
 import { toast } from 'sonner';
 

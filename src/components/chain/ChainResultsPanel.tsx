@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Share, Copy, Archive } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ShareToFriendsButton } from "@/components/social/ShareToFriendsButton";
 
 interface ChainResultsPanelProps {
   won: boolean;

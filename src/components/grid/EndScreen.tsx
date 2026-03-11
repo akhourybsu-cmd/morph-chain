@@ -10,6 +10,7 @@ import { GridLeaderboard } from './GridLeaderboard';
 import { checkGridSubmissionExists } from '@/integrations/supabase/gridLeaderboard';
 import { supabase } from '@/integrations/supabase/client';
 import { getMedalForMoves, MEDAL_CONFIGS } from '@/lib/gridAchievements';
+import { ShareToFriendsButton } from '@/components/social/ShareToFriendsButton';
 
 const MAX_MOVES = 20;
 

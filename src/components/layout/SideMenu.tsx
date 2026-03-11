@@ -69,6 +69,42 @@ export function SideMenu({ open, onClose }: { open: boolean; onClose: () => void
           
           <Separator style={{ background: 'hsl(var(--home-divider))' }} />
           
+          {/* Friends Section */}
+          {isLoggedIn && (
+            <div>
+              <h3 
+                className="text-xs font-semibold uppercase tracking-wider mb-3 px-2"
+                style={{ color: 'hsl(var(--home-text-muted))' }}
+              >
+                Social
+              </h3>
+              <button
+                onClick={() => {
+                  navigate('/profile?tab=friends');
+                  onClose();
+                }}
+                className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+                style={{ color: 'hsl(var(--home-text-primary))' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--home-divider))'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <Users className="w-4 h-4" style={{ color: 'hsl(var(--home-accent))' }} />
+                <span className="text-sm">Friends</span>
+                {onlineFriendCount > 0 && (
+                  <span 
+                    className="ml-auto text-xs px-1.5 py-0.5 rounded-full font-medium"
+                    style={{ 
+                      background: 'hsl(142 76% 36% / 0.15)',
+                      color: 'hsl(142 76% 36%)',
+                    }}
+                  >
+                    {onlineFriendCount} online
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
+
           {/* Account Section */}
           <div>
             <h3 
