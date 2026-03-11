@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MorphcodeHeader } from '@/components/morphcode/MorphcodeHeader';
 import { MorphcodeLobby } from '@/components/morphcode/MorphcodeLobby';
 import { SequenceBuilder } from '@/components/morphcode/SequenceBuilder';
 import { GuessBoard } from '@/components/morphcode/GuessBoard';
+import { MatchScoreBar } from '@/components/morphcode/MatchScoreBar';
 import { RoundResults } from '@/components/morphcode/RoundResults';
-import { getActiveMatch, getCurrentRound, lockSequence, submitGuess } from '@/lib/morphcode/matchService';
+import { getActiveMatch, getCurrentRound, lockSequence, submitGuess, createNextRound } from '@/lib/morphcode/matchService';
 import { MatchState, RoundState, GamePhase, Symbol } from '@/lib/morphcode/types';
 import { toast } from 'sonner';
 
@@ -64,62 +65,57 @@ const MorphCode = () => {
     setLoading(false);
   };
 
-  // Realtime subscriptions
+  // Realtime subscriptions for match updates
   useEffect(() => {
     if (!match?.id) return;
 
-    const matchChannel = supabase
+    const channel = supabase
       .channel(`morphcode-match-${match.id}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'morphcode_matches',
         filter: `id=eq.${match.id}`,
-      }, () => {
-        loadGameState();
-      })
+      }, () => { loadGameState(); })
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'morphcode_rounds',
         filter: `match_id=eq.${match.id}`,
-      }, () => {
-        loadGameState();
-      })
+      }, () => { loadGameState(); })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'morphcode_guesses',
+      }, () => { loadGameState(); })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(matchChannel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [match?.id]);
 
-  // Realtime for matchmaking queue
+  // Realtime for matchmaking
   useEffect(() => {
-    if (phase !== 'lobby' || !userId) return;
+    if (phase !== 'lobby' && phase !== 'waiting') return;
+    if (!userId) return;
 
-    const queueChannel = supabase
-      .channel('morphcode-queue')
+    const channel = supabase
+      .channel('morphcode-lobby')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'morphcode_matches',
       }, async (payload) => {
-        // Check if we're now in a match
-        const newMatch = payload.new as any;
-        if (newMatch && (newMatch.player_a === userId || newMatch.player_b === userId)) {
+        const row = payload.new as any;
+        if (row && (row.player_a === userId || row.player_b === userId)) {
           loadGameState();
         }
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(queueChannel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [phase, userId]);
 
-  const handleMatchFound = (matchId: string) => {
-    loadGameState();
-  };
+  const handleMatchFound = () => { loadGameState(); };
 
   const handleLockSequence = async (sequence: Symbol[]) => {
     if (!round) return;
@@ -150,13 +146,23 @@ const MorphCode = () => {
     }
   };
 
-  const handleNextRound = () => {
-    if (match?.status === 'completed') {
+  const handleNextRound = async () => {
+    if (!match) return;
+    
+    if (match.status === 'completed') {
+      // Match over — return to lobby
       setMatch(null);
       setRound(null);
       setPhase('lobby');
-    } else {
+      return;
+    }
+
+    // Create next round via edge function
+    const success = await createNextRound(match.id);
+    if (success) {
       loadGameState();
+    } else {
+      toast.error('Failed to start next round');
     }
   };
 
@@ -180,9 +186,13 @@ const MorphCode = () => {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'hsl(var(--background))' }}>
       <MorphcodeHeader matchActive={!!match} roundInfo={getRoundInfo()} />
+      
+      {/* Score bar during active match */}
+      {match && userId && (phase === 'setup' || phase === 'playing' || phase === 'waiting') && match.status !== 'waiting' && (
+        <MatchScoreBar match={match} myId={userId} />
+      )}
 
       <main className="flex-1 overflow-y-auto">
-        {/* Lobby */}
         {(phase === 'lobby') && (
           <MorphcodeLobby
             onMatchFound={handleMatchFound}
@@ -191,7 +201,6 @@ const MorphCode = () => {
           />
         )}
 
-        {/* Waiting for opponent */}
         {phase === 'waiting' && match?.status === 'waiting' && (
           <MorphcodeLobby
             onMatchFound={handleMatchFound}
@@ -200,7 +209,6 @@ const MorphCode = () => {
           />
         )}
 
-        {/* Setup - build sequence */}
         {phase === 'setup' && round && (
           <div className="py-8">
             <SequenceBuilder
@@ -211,7 +219,6 @@ const MorphCode = () => {
           </div>
         )}
 
-        {/* Waiting for opponent to lock */}
         {phase === 'waiting' && match?.status !== 'waiting' && round?.mySequenceLocked && (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 py-12">
             <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
@@ -222,7 +229,6 @@ const MorphCode = () => {
           </div>
         )}
 
-        {/* Playing */}
         {phase === 'playing' && round && userId && (
           <div className="py-4 px-4">
             <GuessBoard
@@ -239,7 +245,6 @@ const MorphCode = () => {
           </div>
         )}
 
-        {/* Round end */}
         {phase === 'round-end' && round && userId && match && (
           <RoundResults
             roundNumber={round.roundNumber}
@@ -255,7 +260,6 @@ const MorphCode = () => {
           />
         )}
 
-        {/* Match end */}
         {phase === 'match-end' && match && userId && (
           <RoundResults
             roundNumber={match.currentRound}
