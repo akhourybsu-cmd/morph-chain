@@ -25,6 +25,7 @@ import {
   pickFinalQuestion,
   PuzzleEntities 
 } from './solutionGenerator';
+import { generateAllCandidateClues } from './clueTemplates';
 import { selectHumanSolvableClueSet, estimateComplexity, validatePuzzle } from './clueSelection';
 import { 
   simulateHumanSolve, 
