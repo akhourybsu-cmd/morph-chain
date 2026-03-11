@@ -39,33 +39,6 @@ function isGridCompleted(): boolean {
 }
 
 /**
- * Check if Rush game is completed for today
- */
-function isRushCompleted(): boolean {
-  const completion = loadTodayCompletion();
-  return completion !== null;
-}
-
-/**
- * Check if Alibi game is completed for today
- */
-function isAlibiCompleted(): boolean {
-  const today = getTodayDate();
-  const puzzleId = `alibi_${today}`;
-  const state = loadAlibiGameState(puzzleId);
-  
-  if (!state) return false;
-  return state.isComplete === true && state.isSolved === true;
-}
-
-/**
- * Check if Measured game is completed for today
- */
-function isMeasuredCompleted(): boolean {
-  return isMeasuredCompletedToday();
-}
-
-/**
  * Get the completion status for all games today
  */
 export function checkDailyProgress(): DailyProgress {
@@ -73,9 +46,6 @@ export function checkDailyProgress(): DailyProgress {
     chain4L: isChainCompleted(4),
     chain5L: isChainCompleted(5),
     grid: isGridCompleted(),
-    rush: isRushCompleted(),
-    alibi: isAlibiCompleted(),
-    measured: isMeasuredCompleted(),
   };
 }
 
