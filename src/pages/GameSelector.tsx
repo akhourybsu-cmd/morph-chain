@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
-import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Search, Menu, ChevronRight, User, Snowflake, Gift, Target } from "lucide-react";
+import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Zap, Grid3X3, Search, Menu, ChevronRight, User, Snowflake, Gift, Target, Swords } from "lucide-react";
 import { toast } from "sonner";
 import { SideMenu } from "@/components/layout/SideMenu";
 import { useState, useEffect } from "react";
@@ -13,20 +13,22 @@ import { DailyProgressTracker } from "@/components/DailyProgressTracker";
 
 // Per-game accent colors (HSL values match CSS variables)
 const gameAccents = {
-  chain: "187 94% 48%",  // cyan
-  grid: "186 68% 36%",   // teal  
-  rush: "24 78% 57%",    // orange
-  alibi: "40 75% 50%",   // gold
-  measured: "220 70% 50%", // blue
+  chain: "187 94% 48%",
+  grid: "186 68% 36%",
+  rush: "24 78% 57%",
+  alibi: "40 75% 50%",
+  measured: "220 70% 50%",
+  morphcode: "280 70% 55%",
 };
 
 // Christmas accent colors
 const christmasAccents = {
-  chain: "142 70% 45%",  // green
-  grid: "0 75% 50%",     // red
-  rush: "45 90% 50%",    // gold
-  alibi: "142 70% 45%",  // green
-  measured: "220 70% 50%", // blue (same)
+  chain: "142 70% 45%",
+  grid: "0 75% 50%",
+  rush: "45 90% 50%",
+  alibi: "142 70% 45%",
+  measured: "220 70% 50%",
+  morphcode: "280 70% 55%",
 };
 
 const GameSelector = () => {
@@ -218,6 +220,17 @@ const GameSelector = () => {
             accent={accents.measured}
             onClick={() => navigate('/measured')}
             badge="New"
+            christmas={christmas}
+          />
+
+          {/* Morphcode - PvP */}
+          <GameCard
+            icon={Swords}
+            name="Morphcode"
+            description="Head-to-head deduction duel"
+            accent={accents.morphcode}
+            onClick={() => navigate('/morphcode')}
+            badge="Beta"
             christmas={christmas}
           />
         </div>

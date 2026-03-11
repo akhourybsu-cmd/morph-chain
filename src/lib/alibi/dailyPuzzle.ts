@@ -23,8 +23,10 @@ import {
   generateEntities, 
   generateSolution, 
   pickFinalQuestion,
+  generateFinalQuestionLegacy,
   PuzzleEntities 
 } from './solutionGenerator';
+import { generateAllCandidateClues } from './clueTemplates';
 import { selectHumanSolvableClueSet, estimateComplexity, validatePuzzle } from './clueSelection';
 import { 
   simulateHumanSolve, 
@@ -179,8 +181,6 @@ function generateFallbackPuzzle(dateStr: string, seed: number, index: number): A
   const entities = generateEntities(seed);
   const solution = generateSolution(entities, seed);
 
-  // Import all generators
-  const { generateAllCandidateClues } = require('./clueTemplates');
   const candidates = generateAllCandidateClues({ ...entities, solution }, seed);
 
   // Use a balanced clue set
@@ -192,7 +192,7 @@ function generateFallbackPuzzle(dateStr: string, seed: number, index: number): A
     ...candidates.crossCategory.slice(0, 1),
   ];
 
-  const { generateFinalQuestionLegacy } = require('./solutionGenerator');
+  // generateFinalQuestionLegacy imported at top
   const { question, answer } = generateFinalQuestionLegacy(entities, solution, seed);
 
   return {

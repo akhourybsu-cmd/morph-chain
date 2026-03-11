@@ -811,6 +811,208 @@ export type Database = {
         }
         Relationships: []
       }
+      morphcode_guesses: {
+        Row: {
+          created_at: string
+          exact_count: number
+          guess: string[]
+          guess_number: number
+          id: string
+          is_solve: boolean
+          player_id: string
+          round_id: string
+          shifted_count: number
+          time_taken_ms: number
+        }
+        Insert: {
+          created_at?: string
+          exact_count?: number
+          guess: string[]
+          guess_number: number
+          id?: string
+          is_solve?: boolean
+          player_id: string
+          round_id: string
+          shifted_count?: number
+          time_taken_ms?: number
+        }
+        Update: {
+          created_at?: string
+          exact_count?: number
+          guess?: string[]
+          guess_number?: number
+          id?: string
+          is_solve?: boolean
+          player_id?: string
+          round_id?: string
+          shifted_count?: number
+          time_taken_ms?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "morphcode_guesses_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "morphcode_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      morphcode_matches: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_round: number
+          id: string
+          invite_code: string | null
+          player_a: string
+          player_b: string | null
+          round_wins_a: number
+          round_wins_b: number
+          rounds_to_win: number
+          status: string
+          timer_mode: string
+          turn_time_seconds: number
+          updated_at: string
+          winner_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_round?: number
+          id?: string
+          invite_code?: string | null
+          player_a: string
+          player_b?: string | null
+          round_wins_a?: number
+          round_wins_b?: number
+          rounds_to_win?: number
+          status?: string
+          timer_mode?: string
+          turn_time_seconds?: number
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_round?: number
+          id?: string
+          invite_code?: string | null
+          player_a?: string
+          player_b?: string | null
+          round_wins_a?: number
+          round_wins_b?: number
+          rounds_to_win?: number
+          status?: string
+          timer_mode?: string
+          turn_time_seconds?: number
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Relationships: []
+      }
+      morphcode_matchmaking: {
+        Row: {
+          id: string
+          joined_at: string
+          timer_mode: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          timer_mode?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          timer_mode?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      morphcode_rounds: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_turn: string | null
+          first_guesser: string
+          guesses_a: number
+          guesses_b: number
+          id: string
+          match_id: string
+          round_number: number
+          sequence_a: string[] | null
+          sequence_a_locked: boolean
+          sequence_b: string[] | null
+          sequence_b_locked: boolean
+          solved_by_a: boolean
+          solved_by_b: boolean
+          status: string
+          symbol_pool: string[]
+          time_used_a_ms: number
+          time_used_b_ms: number
+          turn_started_at: string | null
+          winner_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_turn?: string | null
+          first_guesser: string
+          guesses_a?: number
+          guesses_b?: number
+          id?: string
+          match_id: string
+          round_number?: number
+          sequence_a?: string[] | null
+          sequence_a_locked?: boolean
+          sequence_b?: string[] | null
+          sequence_b_locked?: boolean
+          solved_by_a?: boolean
+          solved_by_b?: boolean
+          status?: string
+          symbol_pool?: string[]
+          time_used_a_ms?: number
+          time_used_b_ms?: number
+          turn_started_at?: string | null
+          winner_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_turn?: string | null
+          first_guesser?: string
+          guesses_a?: number
+          guesses_b?: number
+          id?: string
+          match_id?: string
+          round_number?: number
+          sequence_a?: string[] | null
+          sequence_a_locked?: boolean
+          sequence_b?: string[] | null
+          sequence_b_locked?: boolean
+          solved_by_a?: boolean
+          solved_by_b?: boolean
+          status?: string
+          symbol_pool?: string[]
+          time_used_a_ms?: number
+          time_used_b_ms?: number
+          turn_started_at?: string | null
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "morphcode_rounds_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "morphcode_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       player_sessions: {
         Row: {
           completed: boolean | null

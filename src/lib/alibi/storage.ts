@@ -1,4 +1,5 @@
 import { AlibiGameState, AlibiStats, GridState, GridType, CellState } from './types';
+import { isConsecutiveDay, getEasternDateString } from '@/lib/dateUtils';
 import { PUZZLE_GENERATION_VERSION } from './dailyPuzzle';
 
 const STORAGE_KEYS = {
@@ -123,8 +124,7 @@ export function updateStatsAfterGame(
   consistencyChecks: number,
   dateStr: string
 ): AlibiStats {
-  // Import dynamically to avoid circular deps
-  const { isConsecutiveDay, getEasternDateString } = require('@/lib/dateUtils');
+  // isConsecutiveDay and getEasternDateString imported at top
   
   const stats = loadStats();
   const today = getEasternDateString();
