@@ -212,6 +212,22 @@ morphchaingame.com`;
             Share Results
           </Button>
 
+          {/* Share with friends */}
+          <ShareToFriendsButton
+            game="grid"
+            payload={{
+              won: isWin,
+              moves,
+              wordsCount: submittedWords.length,
+              longestWord,
+              morphCount,
+              purpleCount,
+              dailySeed,
+            }}
+            accentVar="--grid-accent"
+            className="w-full"
+          />
+
           {/* Archive Access */}
           <div className="text-center pt-3 border-t border-[hsl(var(--grid-card-border))]">
             <p className="text-sm text-[hsl(var(--grid-text-muted))] mb-2">Want to play more?</p>
