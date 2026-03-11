@@ -1,9 +1,10 @@
-import { X, User } from "lucide-react";
+import { X, User, Users } from "lucide-react";
 import { GamesNavigation } from "@/components/shared/GamesNavigation";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getFriends } from "@/lib/social/friendsService";
 
 export function SideMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate();
