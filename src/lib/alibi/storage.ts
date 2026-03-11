@@ -1,4 +1,5 @@
 import { AlibiGameState, AlibiStats, GridState, GridType, CellState } from './types';
+import { isConsecutiveDay, getEasternDateString } from '@/lib/dateUtils';
 import { PUZZLE_GENERATION_VERSION } from './dailyPuzzle';
 
 const STORAGE_KEYS = {
