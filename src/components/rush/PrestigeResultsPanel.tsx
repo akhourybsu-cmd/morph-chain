@@ -1,6 +1,7 @@
 import { Share2, Trophy, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { ShareToFriendsButton } from '@/components/social/ShareToFriendsButton';
 
 interface PrestigeResultsPanelProps {
   totalMorphs: number;
