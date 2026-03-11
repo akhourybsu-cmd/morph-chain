@@ -25,6 +25,10 @@ export default function ProfilePage() {
   const [showPwdForm, setShowPwdForm] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<'profile' | 'friends'>(
+    searchParams.get('tab') === 'friends' ? 'friends' : 'profile'
+  );
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
