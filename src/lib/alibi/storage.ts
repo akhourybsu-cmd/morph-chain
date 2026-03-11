@@ -124,7 +124,7 @@ export function updateStatsAfterGame(
   consistencyChecks: number,
   dateStr: string
 ): AlibiStats {
-  const { isConsecutiveDay, getEasternDateString } = await import('@/lib/dateUtils');
+  // isConsecutiveDay and getEasternDateString imported at top
   
   const stats = loadStats();
   const today = getEasternDateString();

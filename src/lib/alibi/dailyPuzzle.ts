@@ -194,7 +194,7 @@ function generateFallbackPuzzle(dateStr: string, seed: number, index: number): A
     ...candidates.crossCategory.slice(0, 1),
   ];
 
-  const { generateFinalQuestionLegacy } = await import('./solutionGenerator');
+  // generateFinalQuestionLegacy imported at top
   const { question, answer } = generateFinalQuestionLegacy(entities, solution, seed);
 
   return {
