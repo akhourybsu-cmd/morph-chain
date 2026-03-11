@@ -179,8 +179,8 @@ function generateFallbackPuzzle(dateStr: string, seed: number, index: number): A
   const entities = generateEntities(seed);
   const solution = generateSolution(entities, seed);
 
-  // Import all generators
-  const { generateAllCandidateClues } = require('./clueTemplates');
+  // Use dynamic import to avoid circular deps
+  const { generateAllCandidateClues } = await import('./clueTemplates');
   const candidates = generateAllCandidateClues({ ...entities, solution }, seed);
 
   // Use a balanced clue set
