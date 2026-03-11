@@ -25,8 +25,8 @@ export const MorphcodeHeader = ({ matchActive, roundInfo }: MorphcodeHeaderProps
         }}
       >
         <div className="px-3 md:px-4 h-full flex items-center">
-          {/* Left column — fixed width */}
-          <div className="flex items-center gap-1 w-20">
+          {/* Left — flex-1 spacer */}
+          <div className="flex-1 flex items-center justify-start gap-1">
             <Button
               variant="ghost"
               size="icon"
@@ -39,7 +39,7 @@ export const MorphcodeHeader = ({ matchActive, roundInfo }: MorphcodeHeaderProps
           </div>
 
           {/* Center: Logo + round info */}
-          <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center">
             <MorphCodeLogo />
             {roundInfo && (
               <span
@@ -51,8 +51,8 @@ export const MorphcodeHeader = ({ matchActive, roundInfo }: MorphcodeHeaderProps
             )}
           </div>
 
-          {/* Right column — same fixed width as left */}
-          <div className="flex items-center justify-end gap-1 w-20">
+          {/* Right — flex-1 spacer */}
+          <div className="flex-1 flex items-center justify-end gap-1">
             <Button
               variant="ghost"
               size="icon"
