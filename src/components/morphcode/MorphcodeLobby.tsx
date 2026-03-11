@@ -84,6 +84,14 @@ export const MorphcodeLobby = ({ onMatchFound, isLoggedIn, onLoginRequired, exis
         </p>
       </div>
 
+      {/* Friends section */}
+      {isLoggedIn && !displayCode && !queuing && (
+        <FriendsList
+          isLoggedIn={isLoggedIn}
+          onChallengeMatch={onMatchFound}
+        />
+      )}
+
       {/* Created match - waiting */}
       {displayCode && (
         <div
