@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { MatchState } from '@/lib/morphcode/types';
+import { getPlayerStats, MorphcodePlayerStats } from '@/lib/morphcode/matchService';
 
 interface MatchScoreBarProps {
   match: MatchState;
@@ -9,16 +11,28 @@ export const MatchScoreBar = ({ match, myId }: MatchScoreBarProps) => {
   const isPlayerA = myId === match.playerA;
   const myWins = isPlayerA ? match.roundWinsA : match.roundWinsB;
   const opponentWins = isPlayerA ? match.roundWinsB : match.roundWinsA;
+  const opponentId = isPlayerA ? match.playerB : match.playerA;
+
+  const [myStats, setMyStats] = useState<MorphcodePlayerStats | null>(null);
+  const [oppStats, setOppStats] = useState<MorphcodePlayerStats | null>(null);
+
+  useEffect(() => {
+    getPlayerStats(myId).then(setMyStats);
+    if (opponentId) getPlayerStats(opponentId).then(setOppStats);
+  }, [myId, opponentId]);
+
+  const formatRecord = (s: MorphcodePlayerStats | null) =>
+    s ? `${s.wins}W–${s.losses}L–${s.draws}D` : '…';
 
   return (
     <div
       className="flex items-center justify-center gap-6 py-2 px-4"
-      style={{ 
+      style={{
         borderBottom: '1px solid hsl(var(--code-divider))',
         background: 'hsl(var(--code-page-bg))',
       }}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col items-center gap-0.5">
         <span className="text-xs font-medium" style={{ color: 'hsl(var(--code-text-muted))' }}>You</span>
         <div className="flex gap-1">
           {Array.from({ length: 2 }).map((_, i) => (
@@ -31,13 +45,17 @@ export const MatchScoreBar = ({ match, myId }: MatchScoreBarProps) => {
             />
           ))}
         </div>
+        <span className="text-[10px] font-mono" style={{ color: 'hsl(var(--code-text-muted))' }}>
+          {formatRecord(myStats)}
+        </span>
       </div>
 
       <span className="text-lg font-mono font-bold" style={{ color: 'hsl(var(--code-text-primary))' }}>
         {myWins} – {opponentWins}
       </span>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col items-center gap-0.5">
+        <span className="text-xs font-medium" style={{ color: 'hsl(var(--code-text-muted))' }}>Opp</span>
         <div className="flex gap-1">
           {Array.from({ length: 2 }).map((_, i) => (
             <div
@@ -49,7 +67,9 @@ export const MatchScoreBar = ({ match, myId }: MatchScoreBarProps) => {
             />
           ))}
         </div>
-        <span className="text-xs font-medium" style={{ color: 'hsl(var(--code-text-muted))' }}>Opp</span>
+        <span className="text-[10px] font-mono" style={{ color: 'hsl(var(--code-text-muted))' }}>
+          {formatRecord(oppStats)}
+        </span>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MorphcodeHeader } from '@/components/morphcode/MorphcodeHeader';
@@ -7,10 +7,21 @@ import { SequenceBuilder } from '@/components/morphcode/SequenceBuilder';
 import { GuessBoard } from '@/components/morphcode/GuessBoard';
 import { MatchScoreBar } from '@/components/morphcode/MatchScoreBar';
 import { RoundResults } from '@/components/morphcode/RoundResults';
-import { getActiveMatch, getCurrentRound, lockSequence, submitGuess, createNextRound } from '@/lib/morphcode/matchService';
+import { VersusScreen } from '@/components/morphcode/VersusScreen';
+import {
+  getActiveMatch, getCurrentRound, lockSequence, submitGuess,
+  createNextRound, cancelMatch, getPlayerStats, getPlayerDisplayName, recordMatchResult,
+} from '@/lib/morphcode/matchService';
 import { updatePresence, setOffline } from '@/lib/morphcode/friendsService';
-import { MatchState, RoundState, GamePhase, Symbol } from '@/lib/morphcode/types';
+import { MatchState, RoundState, Symbol } from '@/lib/morphcode/types';
 import { toast } from 'sonner';
+
+type GamePhase = 'lobby' | 'waiting' | 'versus' | 'setup' | 'playing' | 'round-end' | 'match-end';
+
+interface VersusData {
+  playerA: { displayName: string; record: { wins: number; losses: number; draws: number } };
+  playerB: { displayName: string; record: { wins: number; losses: number; draws: number } };
+}
 
 const MorphCode = () => {
   const navigate = useNavigate();
@@ -19,11 +30,11 @@ const MorphCode = () => {
   const [match, setMatch] = useState<MatchState | null>(null);
   const [round, setRound] = useState<RoundState | null>(null);
   const [loading, setLoading] = useState(true);
+  const [versusData, setVersusData] = useState<VersusData | null>(null);
+  const [hasShownVersus, setHasShownVersus] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUserId(user?.id || null);
-    });
+    supabase.auth.getUser().then(({ data: { user } }) => setUserId(user?.id || null));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUserId(session?.user?.id || null);
     });
@@ -35,18 +46,11 @@ const MorphCode = () => {
     if (!userId) return;
     updatePresence();
     const interval = setInterval(updatePresence, 30000);
-    return () => {
-      clearInterval(interval);
-      setOffline();
-    };
+    return () => { clearInterval(interval); setOffline(); };
   }, [userId]);
 
-  useEffect(() => {
-    if (!userId) { setLoading(false); return; }
-    loadGameState();
-  }, [userId]);
-
-  const loadGameState = async () => {
+  const loadGameState = useCallback(async () => {
+    if (!userId) return;
     setLoading(true);
     const activeMatch = await getActiveMatch();
 
@@ -61,6 +65,30 @@ const MorphCode = () => {
         const currentRound = await getCurrentRound(activeMatch.id);
         setRound(currentRound);
 
+        // Show VS screen on first setup of round 1
+        if (
+          currentRound?.status === 'setup' &&
+          currentRound.roundNumber === 1 &&
+          !hasShownVersus &&
+          activeMatch.playerB
+        ) {
+          // Load VS data
+          const [nameA, nameB, statsA, statsB] = await Promise.all([
+            getPlayerDisplayName(activeMatch.playerA),
+            getPlayerDisplayName(activeMatch.playerB),
+            getPlayerStats(activeMatch.playerA),
+            getPlayerStats(activeMatch.playerB),
+          ]);
+          setVersusData({
+            playerA: { displayName: nameA, record: statsA },
+            playerB: { displayName: nameB, record: statsB },
+          });
+          setPhase('versus');
+          setHasShownVersus(true);
+          setLoading(false);
+          return;
+        }
+
         if (currentRound?.status === 'setup') {
           setPhase(currentRound.mySequenceLocked ? 'waiting' : 'setup');
         } else if (currentRound?.status === 'active') {
@@ -73,8 +101,14 @@ const MorphCode = () => {
       setPhase('lobby');
     }
     setLoading(false);
-  };
+  }, [userId, hasShownVersus]);
 
+  useEffect(() => {
+    if (!userId) { setLoading(false); return; }
+    loadGameState();
+  }, [userId]);
+
+  // Realtime: match updates
   useEffect(() => {
     if (!match?.id) return;
     const channel = supabase
@@ -84,8 +118,9 @@ const MorphCode = () => {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'morphcode_guesses' }, () => loadGameState())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [match?.id]);
+  }, [match?.id, loadGameState]);
 
+  // Realtime: lobby polling
   useEffect(() => {
     if (phase !== 'lobby' && phase !== 'waiting') return;
     if (!userId) return;
@@ -99,33 +134,39 @@ const MorphCode = () => {
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [phase, userId]);
+  }, [phase, userId, loadGameState]);
 
   const handleMatchFound = () => { loadGameState(); };
+
+  const handleCancelMatch = async () => {
+    if (!match) return;
+    await cancelMatch(match.id);
+    setMatch(null);
+    setRound(null);
+    setHasShownVersus(false);
+    setPhase('lobby');
+  };
+
+  const handleVersusComplete = useCallback(() => {
+    if (!round) return;
+    setPhase(round.mySequenceLocked ? 'waiting' : 'setup');
+  }, [round]);
 
   const handleLockSequence = async (sequence: Symbol[]) => {
     if (!round) return;
     const success = await lockSequence(round.id, sequence);
-    if (success) {
-      toast.success('Sequence locked!');
-      loadGameState();
-    } else {
-      toast.error('Failed to lock sequence');
-    }
+    if (success) { toast.success('Sequence locked!'); loadGameState(); }
+    else { toast.error('Failed to lock sequence'); }
   };
 
   const handleSubmitGuess = async (guess: Symbol[]) => {
     if (!round) return;
     const turnStart = round.turnStartedAt ? new Date(round.turnStartedAt).getTime() : Date.now();
     const timeTaken = Date.now() - turnStart;
-
     const result = await submitGuess(round.id, guess, timeTaken);
     if (result) {
-      if (result.isSolve) {
-        toast.success('Solved! 🎉');
-      } else {
-        toast(`${result.exact} exact, ${result.shifted} shifted`);
-      }
+      if (result.isSolve) toast.success('Solved! 🎉');
+      else toast(`${result.exact} exact, ${result.shifted} shifted`);
       loadGameState();
     } else {
       toast.error('Failed to submit guess');
@@ -135,17 +176,21 @@ const MorphCode = () => {
   const handleNextRound = async () => {
     if (!match) return;
     if (match.status === 'completed') {
+      // Record stats
+      if (userId) {
+        if (match.winnerId === userId) await recordMatchResult(userId, 'win');
+        else if (match.winnerId === null) await recordMatchResult(userId, 'draw');
+        else await recordMatchResult(userId, 'loss');
+      }
       setMatch(null);
       setRound(null);
+      setHasShownVersus(false);
       setPhase('lobby');
       return;
     }
     const success = await createNextRound(match.id);
-    if (success) {
-      loadGameState();
-    } else {
-      toast.error('Failed to start next round');
-    }
+    if (success) loadGameState();
+    else toast.error('Failed to start next round');
   };
 
   const getRoundInfo = () => {
@@ -169,12 +214,21 @@ const MorphCode = () => {
     <div className="min-h-screen flex flex-col" style={{ background: 'hsl(var(--code-page-bg))' }}>
       <MorphcodeHeader matchActive={!!match} roundInfo={getRoundInfo()} />
 
+      {/* VS Screen overlay */}
+      {phase === 'versus' && versusData && (
+        <VersusScreen
+          playerA={versusData.playerA}
+          playerB={versusData.playerB}
+          onComplete={handleVersusComplete}
+        />
+      )}
+
       {match && userId && (phase === 'setup' || phase === 'playing' || phase === 'waiting') && match.status !== 'waiting' && (
         <MatchScoreBar match={match} myId={userId} />
       )}
 
       <main className="flex-1 overflow-y-auto">
-        {(phase === 'lobby') && (
+        {phase === 'lobby' && (
           <MorphcodeLobby
             onMatchFound={handleMatchFound}
             isLoggedIn={!!userId}
@@ -188,6 +242,8 @@ const MorphCode = () => {
             isLoggedIn={!!userId}
             onLoginRequired={() => navigate('/login')}
             existingInviteCode={match.inviteCode}
+            existingMatchId={match.id}
+            onMatchCancelled={handleCancelMatch}
           />
         )}
 
