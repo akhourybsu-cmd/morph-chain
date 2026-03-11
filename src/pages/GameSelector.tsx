@@ -207,6 +207,9 @@ const GameSelector = () => {
         {/* Daily Progress Tracker */}
         <DailyProgressTracker />
 
+        {/* Friend Activity Feed */}
+        {isLoggedIn && <FriendActivityFeed />}
+
         {/* Share Footer */}
         <ShareFooter />
       </main>
