@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Share, Copy, Archive } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ShareToFriendsButton } from "@/components/social/ShareToFriendsButton";
 
 interface ChainResultsPanelProps {
   won: boolean;
@@ -140,6 +141,13 @@ export const ChainResultsPanel = ({
             Copy
           </button>
         </div>
+
+        {/* Share with friends */}
+        <ShareToFriendsButton
+          game="chain"
+          payload={{ won, movesUsed, minDistance, streak }}
+          accentVar="--chain-accent"
+        />
 
         {/* Archive Access */}
         <div className="pt-2 border-t border-[hsl(var(--chain-divider))]">

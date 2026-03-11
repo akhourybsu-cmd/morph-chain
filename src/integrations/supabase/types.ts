@@ -299,6 +299,33 @@ export type Database = {
         }
         Relationships: []
       }
+      app_activity: {
+        Row: {
+          activity_type: string
+          created_at: string
+          game: string
+          id: string
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          activity_type?: string
+          created_at?: string
+          game: string
+          id?: string
+          payload?: Json
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          game?: string
+          id?: string
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       arcade_completions: {
         Row: {
           completed_at: string

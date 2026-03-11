@@ -10,6 +10,7 @@ import { GridLeaderboard } from './GridLeaderboard';
 import { checkGridSubmissionExists } from '@/integrations/supabase/gridLeaderboard';
 import { supabase } from '@/integrations/supabase/client';
 import { getMedalForMoves, MEDAL_CONFIGS } from '@/lib/gridAchievements';
+import { ShareToFriendsButton } from '@/components/social/ShareToFriendsButton';
 
 const MAX_MOVES = 20;
 
@@ -211,6 +212,22 @@ morphchaingame.com`;
             <Share2 className="w-4 h-4 mr-2" />
             Share Results
           </Button>
+
+          {/* Share with friends */}
+          <ShareToFriendsButton
+            game="grid"
+            payload={{
+              won: isWin,
+              moves,
+              wordsCount: submittedWords.length,
+              longestWord,
+              morphCount,
+              purpleCount,
+              dailySeed,
+            }}
+            accentVar="--grid-accent"
+            className="w-full"
+          />
 
           {/* Archive Access */}
           <div className="text-center pt-3 border-t border-[hsl(var(--grid-card-border))]">
