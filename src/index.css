@@ -248,6 +248,22 @@ All colors MUST be HSL.
     --measured-band-warm: 25 90% 50%;     /* Orange - Warm */
     --measured-band-wide: 0 65% 50%;      /* Red - Wide */
     --accent-measured: 220 70% 50%;       /* Blue accent */
+    
+    /* Morph Code Prestige Theme (Violet accent) */
+    --code-page-bg: 39 32% 96%;           /* #F9F5ED paper background */
+    --code-card-bg: 0 0% 100%;            /* #FFFFFF card background */
+    --code-card-border: 37 20% 86%;       /* #E0D9CC card border */
+    --code-divider: 37 14% 90%;           /* #E5E0D7 dividers */
+    --code-text-primary: 0 0% 13%;        /* #222222 primary text */
+    --code-text-secondary: 0 0% 40%;      /* #666666 secondary text */
+    --code-text-muted: 33 6% 57%;         /* #9A9388 muted text */
+    --code-pill-bg: 36 27% 92%;           /* #F1ECE3 pill background */
+    --code-accent: 280 70% 55%;           /* Violet accent */
+    --code-success: 145 50% 37%;          /* #2F8F5B green */
+    --code-error: 3 52% 54%;              /* #C6534C red */
+    --code-exact: 145 70% 45%;            /* Green - exact match */
+    --code-shifted: 45 90% 50%;           /* Gold - shifted */
+    --accent-code: 280 70% 55%;           /* Violet accent for home */
   }
 
   /* NYT Prestige Dark Mode - Grid Page Colors */
