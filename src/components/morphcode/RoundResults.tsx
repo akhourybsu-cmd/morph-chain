@@ -1,4 +1,4 @@
-import { Symbol, SYMBOL_DISPLAY } from '@/lib/morphcode/types';
+import { Symbol } from '@/lib/morphcode/types';
 import { SymbolSlot } from './SymbolSlot';
 import { Button } from '@/components/ui/button';
 import { Trophy, Minus, ArrowRight } from 'lucide-react';
@@ -37,22 +37,22 @@ export const RoundResults = ({
     <div className="flex flex-col items-center gap-6 px-4 py-8 max-w-sm mx-auto text-center">
       {/* Round result */}
       <div>
-        <p className="text-xs uppercase tracking-wider mb-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
+        <p className="text-xs uppercase tracking-wider mb-2 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
           Round {roundNumber}
         </p>
         {isDraw ? (
           <div className="flex items-center gap-2">
-            <Minus className="w-6 h-6" style={{ color: 'hsl(var(--muted-foreground))' }} />
-            <span className="font-serif text-2xl font-bold" style={{ color: 'hsl(var(--muted-foreground))' }}>
+            <Minus className="w-6 h-6" style={{ color: 'hsl(var(--code-text-muted))' }} />
+            <span className="font-playfair text-2xl font-bold" style={{ color: 'hsl(var(--code-text-muted))' }}>
               Draw
             </span>
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <Trophy className="w-6 h-6" style={{ color: iWon ? 'hsl(45, 90%, 50%)' : 'hsl(var(--muted-foreground))' }} />
-            <span 
-              className="font-serif text-2xl font-bold"
-              style={{ color: iWon ? 'hsl(145, 70%, 45%)' : 'hsl(0, 70%, 55%)' }}
+            <Trophy className="w-6 h-6" style={{ color: iWon ? 'hsl(var(--code-shifted))' : 'hsl(var(--code-text-muted))' }} />
+            <span
+              className="font-playfair text-2xl font-bold"
+              style={{ color: iWon ? 'hsl(var(--code-success))' : 'hsl(var(--code-error))' }}
             >
               {iWon ? 'You Win!' : 'You Lose'}
             </span>
@@ -61,25 +61,29 @@ export const RoundResults = ({
       </div>
 
       {/* Stats */}
-      <div 
+      <div
         className="w-full grid grid-cols-2 gap-4 p-4 rounded-xl"
-        style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+        style={{
+          background: 'hsl(var(--code-card-bg))',
+          border: '1px solid hsl(var(--code-card-border))',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+        }}
       >
         <div>
-          <p className="text-xs mb-1" style={{ color: 'hsl(var(--muted-foreground))' }}>You</p>
-          <p className="text-2xl font-bold" style={{ color: 'hsl(var(--foreground))' }}>
+          <p className="text-xs mb-1 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>You</p>
+          <p className="text-2xl font-bold font-mono" style={{ color: 'hsl(var(--code-text-primary))' }}>
             {mySolved ? myGuessCount : '—'}
           </p>
-          <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <p className="text-xs font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
             {mySolved ? 'guesses' : 'failed'}
           </p>
         </div>
         <div>
-          <p className="text-xs mb-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Opponent</p>
-          <p className="text-2xl font-bold" style={{ color: 'hsl(var(--foreground))' }}>
+          <p className="text-xs mb-1 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>Opponent</p>
+          <p className="text-2xl font-bold font-mono" style={{ color: 'hsl(var(--code-text-primary))' }}>
             {opponentSolved ? opponentGuessCount : '—'}
           </p>
-          <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <p className="text-xs font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
             {opponentSolved ? 'guesses' : 'failed'}
           </p>
         </div>
@@ -88,7 +92,7 @@ export const RoundResults = ({
       {/* Opponent's sequence reveal */}
       {opponentSequence && (
         <div>
-          <p className="text-xs mb-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <p className="text-xs mb-2 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
             Opponent's sequence:
           </p>
           <div className="flex gap-2 justify-center">
@@ -102,18 +106,27 @@ export const RoundResults = ({
       {/* Match over or next round */}
       {matchOver ? (
         <div className="space-y-3">
-          <p 
-            className="font-serif text-xl font-bold"
-            style={{ color: matchWinnerId === myId ? 'hsl(145, 70%, 45%)' : 'hsl(0, 70%, 55%)' }}
+          <p
+            className="font-playfair text-xl font-bold"
+            style={{ color: matchWinnerId === myId ? 'hsl(var(--code-success))' : 'hsl(var(--code-error))' }}
           >
             {matchWinnerId === myId ? 'Match Won! 🎉' : 'Match Lost'}
           </p>
-          <Button onClick={onNextRound} size="lg">
+          <Button
+            onClick={onNextRound}
+            size="lg"
+            style={{ background: 'hsl(var(--code-accent))', color: '#fff' }}
+          >
             Back to Lobby
           </Button>
         </div>
       ) : (
-        <Button onClick={onNextRound} size="lg" className="gap-2">
+        <Button
+          onClick={onNextRound}
+          size="lg"
+          className="gap-2"
+          style={{ background: 'hsl(var(--code-accent))', color: '#fff' }}
+        >
           Next Round
           <ArrowRight className="w-4 h-4" />
         </Button>

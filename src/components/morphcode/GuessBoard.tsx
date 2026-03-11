@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Symbol, SLOTS, GuessEntry, MAX_GUESSES, SYMBOL_DISPLAY } from '@/lib/morphcode/types';
+import { Symbol, SLOTS, GuessEntry, MAX_GUESSES } from '@/lib/morphcode/types';
 import { SymbolSlot } from './SymbolSlot';
 import { Button } from '@/components/ui/button';
 import { Send, RotateCcw } from 'lucide-react';
@@ -33,16 +33,13 @@ export const GuessBoard = ({
   const usedInDraft = new Set(draft.filter(Boolean) as Symbol[]);
   const isFull = draft.every(s => s !== null);
 
-  // Timer
   useEffect(() => {
     if (!isMyTurn || !turnStartedAt) return;
-    
     const interval = setInterval(() => {
       const elapsed = (Date.now() - new Date(turnStartedAt).getTime()) / 1000;
       const remaining = Math.max(0, turnTimeSeconds - elapsed);
       setTimeLeft(Math.ceil(remaining));
     }, 100);
-
     return () => clearInterval(interval);
   }, [isMyTurn, turnStartedAt, turnTimeSeconds]);
 
@@ -73,18 +70,19 @@ export const GuessBoard = ({
     <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
       {/* Turn indicator + timer */}
       <div className="flex items-center justify-between px-2">
-        <span 
-          className="text-sm font-medium"
-          style={{ color: isMyTurn ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }}
+        <span
+          className="text-sm font-medium font-inter"
+          style={{ color: isMyTurn ? 'hsl(var(--code-accent))' : 'hsl(var(--code-text-muted))' }}
         >
           {mySolved ? '✓ Solved!' : isMyTurn ? 'Your turn' : "Opponent's turn"}
         </span>
         {isMyTurn && (
-          <span 
+          <span
             className="text-sm font-mono font-bold px-3 py-1 rounded-full"
-            style={{ 
-              background: timeLeft <= 10 ? 'hsl(0, 80%, 50%)' : 'hsl(var(--muted))',
-              color: timeLeft <= 10 ? '#fff' : 'hsl(var(--foreground))',
+            style={{
+              background: timeLeft <= 10 ? 'hsl(var(--code-error))' : 'hsl(var(--code-pill-bg))',
+              color: timeLeft <= 10 ? '#fff' : 'hsl(var(--code-text-primary))',
+              border: timeLeft > 10 ? '1px solid hsl(var(--code-card-border))' : 'none',
             }}
           >
             {timeLeft}s
@@ -96,7 +94,7 @@ export const GuessBoard = ({
       <div className="space-y-2">
         {myGuesses.map((entry, i) => (
           <div key={entry.id} className="flex items-center gap-3">
-            <span className="w-5 text-right text-xs font-mono" style={{ color: 'hsl(var(--muted-foreground))' }}>
+            <span className="w-5 text-right text-xs font-mono" style={{ color: 'hsl(var(--code-text-muted))' }}>
               {i + 1}.
             </span>
             <div className="flex gap-1">
@@ -104,11 +102,11 @@ export const GuessBoard = ({
                 <SymbolSlot key={j} symbol={symbol} size="sm" disabled />
               ))}
             </div>
-            <div className="flex gap-2 text-xs font-bold">
-              <span style={{ color: 'hsl(145, 70%, 45%)' }}>
+            <div className="flex gap-2 text-xs font-bold font-inter">
+              <span style={{ color: 'hsl(var(--code-exact))' }}>
                 {entry.exact}⬤
               </span>
-              <span style={{ color: 'hsl(45, 90%, 50%)' }}>
+              <span style={{ color: 'hsl(var(--code-shifted))' }}>
                 {entry.shifted}◐
               </span>
             </div>
@@ -149,6 +147,7 @@ export const GuessBoard = ({
               size="sm"
               onClick={() => setDraft(Array(SLOTS).fill(null))}
               disabled={draft.every(s => s === null)}
+              className="border-[hsl(var(--code-card-border))] text-[hsl(var(--code-text-secondary))]"
             >
               <RotateCcw className="w-4 h-4 mr-1" />
               Clear
@@ -158,6 +157,7 @@ export const GuessBoard = ({
               onClick={handleSubmit}
               disabled={!isFull}
               className="gap-1"
+              style={{ background: 'hsl(var(--code-accent))', color: '#fff' }}
             >
               <Send className="w-4 h-4" />
               Submit Guess
@@ -166,22 +166,22 @@ export const GuessBoard = ({
         </>
       )}
 
-      {/* Opponent progress (compact) */}
+      {/* Opponent progress */}
       {opponentGuesses.length > 0 && (
-        <div 
+        <div
           className="mt-4 p-3 rounded-xl"
-          style={{ 
-            background: 'hsl(var(--muted) / 0.3)',
-            border: '1px solid hsl(var(--border))',
+          style={{
+            background: 'hsl(var(--code-pill-bg))',
+            border: '1px solid hsl(var(--code-card-border))',
           }}
         >
-          <p className="text-xs font-medium mb-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <p className="text-xs font-medium mb-2 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
             Opponent's guesses against your sequence:
           </p>
           <div className="space-y-1">
             {opponentGuesses.map((entry, i) => (
               <div key={entry.id} className="flex items-center gap-2">
-                <span className="w-4 text-right text-[10px] font-mono" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                <span className="w-4 text-right text-[10px] font-mono" style={{ color: 'hsl(var(--code-text-muted))' }}>
                   {i + 1}.
                 </span>
                 <div className="flex gap-0.5">
@@ -189,10 +189,10 @@ export const GuessBoard = ({
                     <SymbolSlot key={j} symbol={symbol} size="sm" disabled />
                   ))}
                 </div>
-                <span className="text-[10px]" style={{ color: 'hsl(145, 70%, 45%)' }}>
+                <span className="text-[10px] font-bold" style={{ color: 'hsl(var(--code-exact))' }}>
                   {entry.exact}⬤
                 </span>
-                <span className="text-[10px]" style={{ color: 'hsl(45, 90%, 50%)' }}>
+                <span className="text-[10px] font-bold" style={{ color: 'hsl(var(--code-shifted))' }}>
                   {entry.shifted}◐
                 </span>
               </div>

@@ -345,6 +345,22 @@ All colors MUST be HSL.
     --measured-band-warm: 25 80% 55%;       /* Orange - Warm */
     --measured-band-wide: 0 55% 55%;        /* Red - Wide */
     --accent-measured: 220 60% 60%;         /* Blue accent */
+    
+    /* Morph Code Prestige Dark Mode */
+    --code-page-bg: 216 22% 7%;            /* #0F1216 dark background */
+    --code-card-bg: 216 17% 11%;           /* #171B20 card background */
+    --code-card-border: 216 14% 17%;       /* #262B33 card border */
+    --code-divider: 213 16% 20%;           /* #2C333C dividers */
+    --code-text-primary: 36 36% 92%;       /* #F3ECE0 primary text */
+    --code-text-secondary: 33 9% 75%;      /* #C5BFB4 secondary text */
+    --code-text-muted: 33 7% 52%;          /* #8D877C muted text */
+    --code-pill-bg: 216 15% 15%;           /* #20252C pill background */
+    --code-accent: 280 55% 65%;            /* Brighter violet for dark */
+    --code-success: 145 35% 57%;           /* #6EB58C green */
+    --code-error: 5 63% 67%;              /* #E07A71 red */
+    --code-exact: 145 50% 50%;             /* Green - exact match */
+    --code-shifted: 45 70% 55%;            /* Gold - shifted */
+    --accent-code: 280 55% 65%;            /* Violet accent */
   }
   
   .light {

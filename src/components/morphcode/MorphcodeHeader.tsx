@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, HelpCircle } from 'lucide-react';
-import { PrestigeThemeToggle } from '@/components/shared/PrestigeThemeToggle';
+import { Menu, HelpCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { MorphCodeLogo } from './MorphCodeLogo';
+import { MorphCodeMenuSheet } from './MorphCodeMenuSheet';
 import { MorphcodeHowToPlay } from './MorphcodeHowToPlay';
+import { PrestigeThemeToggle } from '@/components/shared/PrestigeThemeToggle';
 
 interface MorphcodeHeaderProps {
   matchActive?: boolean;
@@ -10,49 +12,64 @@ interface MorphcodeHeaderProps {
 }
 
 export const MorphcodeHeader = ({ matchActive, roundInfo }: MorphcodeHeaderProps) => {
-  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
   const [howToPlayOpen, setHowToPlayOpen] = useState(false);
 
   return (
     <>
       <header
-        className="flex items-center justify-between px-4 py-3"
-        style={{ borderBottom: '1px solid hsl(var(--border))' }}
+        className="h-14 md:h-16 border-b flex-shrink-0"
+        style={{
+          borderColor: 'hsl(var(--code-card-border))',
+          background: 'hsl(var(--code-page-bg))',
+        }}
       >
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => navigate('/')}
-            className="p-1.5 rounded-lg transition-colors"
-            style={{ color: 'hsl(var(--muted-foreground))' }}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <PrestigeThemeToggle colorVar="--muted-foreground" />
-        </div>
+        <div className="px-3 md:px-4 h-full flex items-center">
+          {/* Left: Menu + Theme Toggle */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMenuOpen(true)}
+              className="h-9 w-9 md:h-10 md:w-10 text-[hsl(var(--code-text-secondary))] hover:text-[hsl(var(--code-text-primary))] hover:bg-[hsl(var(--code-pill-bg))]"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+            <PrestigeThemeToggle colorVar="--code-text-secondary" />
+          </div>
 
-        <div className="flex flex-col items-center">
-          <h1
-            className="font-serif text-lg font-bold tracking-wide"
-            style={{ color: 'hsl(var(--foreground))' }}
-          >
-            MORPH CODE
-          </h1>
-          {roundInfo && (
-            <span className="text-[10px] uppercase tracking-wider" style={{ color: 'hsl(var(--muted-foreground))' }}>
-              {roundInfo}
-            </span>
-          )}
-        </div>
+          {/* Center spacer */}
+          <div className="flex-1" />
 
-        <button
-          onClick={() => setHowToPlayOpen(true)}
-          className="p-1.5 rounded-lg transition-colors"
-          style={{ color: 'hsl(var(--muted-foreground))' }}
-        >
-          <HelpCircle className="w-4 h-4" />
-        </button>
+          {/* Center: Logo + round info */}
+          <div className="flex flex-col items-center">
+            <MorphCodeLogo />
+            {roundInfo && (
+              <span
+                className="text-[10px] uppercase tracking-wider"
+                style={{ color: 'hsl(var(--code-text-muted))' }}
+              >
+                {roundInfo}
+              </span>
+            )}
+          </div>
+
+          {/* Center spacer */}
+          <div className="flex-1" />
+
+          {/* Right: Help */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setHowToPlayOpen(true)}
+            className="h-9 w-9 md:h-10 md:w-10 text-[hsl(var(--code-text-secondary))] hover:text-[hsl(var(--code-text-primary))] hover:bg-[hsl(var(--code-pill-bg))]"
+          >
+            <HelpCircle className="w-4 h-4 md:w-5 md:h-5" />
+          </Button>
+        </div>
       </header>
 
+      <MorphCodeMenuSheet open={menuOpen} onOpenChange={setMenuOpen} />
       <MorphcodeHowToPlay open={howToPlayOpen} onOpenChange={setHowToPlayOpen} />
     </>
   );
