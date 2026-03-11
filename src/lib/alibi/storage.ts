@@ -123,8 +123,7 @@ export function updateStatsAfterGame(
   consistencyChecks: number,
   dateStr: string
 ): AlibiStats {
-  // Import dynamically to avoid circular deps
-  const { isConsecutiveDay, getEasternDateString } = require('@/lib/dateUtils');
+  const { isConsecutiveDay, getEasternDateString } = await import('@/lib/dateUtils');
   
   const stats = loadStats();
   const today = getEasternDateString();

@@ -192,7 +192,7 @@ function generateFallbackPuzzle(dateStr: string, seed: number, index: number): A
     ...candidates.crossCategory.slice(0, 1),
   ];
 
-  const { generateFinalQuestionLegacy } = require('./solutionGenerator');
+  const { generateFinalQuestionLegacy } = await import('./solutionGenerator');
   const { question, answer } = generateFinalQuestionLegacy(entities, solution, seed);
 
   return {
