@@ -70,4 +70,4 @@ export interface MatchState {
   turnTimeSeconds: number;
 }
 
-export type GamePhase = 'lobby' | 'waiting' | 'setup' | 'playing' | 'round-end' | 'match-end';
+export type GamePhase = 'lobby' | 'waiting' | 'versus' | 'setup' | 'playing' | 'round-end' | 'match-end';
