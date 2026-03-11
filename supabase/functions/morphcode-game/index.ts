@@ -84,10 +84,22 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: guessError }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
+      // Rate limiting: max 2 guesses per 5 seconds
+      const { data: recentGuesses } = await adminClient
+        .from('morphcode_guesses')
+        .select('created_at')
+        .eq('player_id', user.id)
+        .gte('created_at', new Date(Date.now() - 5000).toISOString())
+        .order('created_at', { ascending: false });
+
+      if (recentGuesses && recentGuesses.length >= 2) {
+        return new Response(JSON.stringify({ error: 'Too many guesses too fast' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
       // Get round with admin client (can see sequences)
       const { data: round, error: roundErr } = await adminClient
         .from('morphcode_rounds')
-        .select('*, morphcode_matches!inner(player_a, player_b, status)')
+        .select('*, morphcode_matches!inner(player_a, player_b, status, turn_time_seconds)')
         .eq('id', round_id)
         .single();
 
@@ -110,6 +122,15 @@ Deno.serve(async (req) => {
       // Verify round is active
       if (round.status !== 'active') {
         return new Response(JSON.stringify({ error: 'Round not active' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Turn timeout enforcement: reject if turn_started_at + turn_time + 5s grace < now
+      if (round.turn_started_at) {
+        const turnStart = new Date(round.turn_started_at).getTime();
+        const turnLimit = (match.turn_time_seconds || 90) + 5; // 5s grace
+        if (Date.now() - turnStart > turnLimit * 1000) {
+          return new Response(JSON.stringify({ error: 'Turn time expired' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
       }
 
       const isPlayerA = user.id === match.player_a;

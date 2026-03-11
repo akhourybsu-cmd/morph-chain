@@ -8,6 +8,7 @@ import { GuessBoard } from '@/components/morphcode/GuessBoard';
 import { MatchScoreBar } from '@/components/morphcode/MatchScoreBar';
 import { RoundResults } from '@/components/morphcode/RoundResults';
 import { getActiveMatch, getCurrentRound, lockSequence, submitGuess, createNextRound } from '@/lib/morphcode/matchService';
+import { updatePresence, setOffline } from '@/lib/morphcode/friendsService';
 import { MatchState, RoundState, GamePhase, Symbol } from '@/lib/morphcode/types';
 import { toast } from 'sonner';
 
@@ -19,7 +20,6 @@ const MorphCode = () => {
   const [round, setRound] = useState<RoundState | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Auth check
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUserId(user?.id || null);
@@ -30,7 +30,17 @@ const MorphCode = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load active match on mount
+  // Presence heartbeat
+  useEffect(() => {
+    if (!userId) return;
+    updatePresence();
+    const interval = setInterval(updatePresence, 30000);
+    return () => {
+      clearInterval(interval);
+      setOffline();
+    };
+  }, [userId]);
+
   useEffect(() => {
     if (!userId) { setLoading(false); return; }
     loadGameState();
@@ -39,10 +49,10 @@ const MorphCode = () => {
   const loadGameState = async () => {
     setLoading(true);
     const activeMatch = await getActiveMatch();
-    
+
     if (activeMatch) {
       setMatch(activeMatch);
-      
+
       if (activeMatch.status === 'waiting') {
         setPhase('waiting');
       } else if (activeMatch.status === 'completed') {
@@ -50,7 +60,7 @@ const MorphCode = () => {
       } else {
         const currentRound = await getCurrentRound(activeMatch.id);
         setRound(currentRound);
-        
+
         if (currentRound?.status === 'setup') {
           setPhase(currentRound.mySequenceLocked ? 'waiting' : 'setup');
         } else if (currentRound?.status === 'active') {
@@ -65,53 +75,29 @@ const MorphCode = () => {
     setLoading(false);
   };
 
-  // Realtime subscriptions for match updates
   useEffect(() => {
     if (!match?.id) return;
-
     const channel = supabase
       .channel(`morphcode-match-${match.id}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'morphcode_matches',
-        filter: `id=eq.${match.id}`,
-      }, () => { loadGameState(); })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'morphcode_rounds',
-        filter: `match_id=eq.${match.id}`,
-      }, () => { loadGameState(); })
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'morphcode_guesses',
-      }, () => { loadGameState(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'morphcode_matches', filter: `id=eq.${match.id}` }, () => loadGameState())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'morphcode_rounds', filter: `match_id=eq.${match.id}` }, () => loadGameState())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'morphcode_guesses' }, () => loadGameState())
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [match?.id]);
 
-  // Realtime for matchmaking
   useEffect(() => {
     if (phase !== 'lobby' && phase !== 'waiting') return;
     if (!userId) return;
-
     const channel = supabase
       .channel('morphcode-lobby')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'morphcode_matches',
-      }, async (payload) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'morphcode_matches' }, async (payload) => {
         const row = payload.new as any;
         if (row && (row.player_a === userId || row.player_b === userId)) {
           loadGameState();
         }
       })
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [phase, userId]);
 
@@ -132,7 +118,7 @@ const MorphCode = () => {
     if (!round) return;
     const turnStart = round.turnStartedAt ? new Date(round.turnStartedAt).getTime() : Date.now();
     const timeTaken = Date.now() - turnStart;
-    
+
     const result = await submitGuess(round.id, guess, timeTaken);
     if (result) {
       if (result.isSolve) {
@@ -148,16 +134,12 @@ const MorphCode = () => {
 
   const handleNextRound = async () => {
     if (!match) return;
-    
     if (match.status === 'completed') {
-      // Match over — return to lobby
       setMatch(null);
       setRound(null);
       setPhase('lobby');
       return;
     }
-
-    // Create next round via edge function
     const success = await createNextRound(match.id);
     if (success) {
       loadGameState();
@@ -173,21 +155,20 @@ const MorphCode = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: 'hsl(var(--background))' }}>
+      <div className="min-h-screen flex flex-col" style={{ background: 'hsl(var(--code-page-bg))' }}>
         <MorphcodeHeader />
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" 
-               style={{ borderColor: 'hsl(var(--primary))', borderTopColor: 'transparent' }} />
+          <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
+               style={{ borderColor: 'hsl(var(--code-accent))', borderTopColor: 'transparent' }} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'hsl(var(--background))' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: 'hsl(var(--code-page-bg))' }}>
       <MorphcodeHeader matchActive={!!match} roundInfo={getRoundInfo()} />
-      
-      {/* Score bar during active match */}
+
       {match && userId && (phase === 'setup' || phase === 'playing' || phase === 'waiting') && match.status !== 'waiting' && (
         <MatchScoreBar match={match} myId={userId} />
       )}
@@ -206,6 +187,7 @@ const MorphCode = () => {
             onMatchFound={handleMatchFound}
             isLoggedIn={!!userId}
             onLoginRequired={() => navigate('/login')}
+            existingInviteCode={match.inviteCode}
           />
         )}
 
@@ -222,8 +204,8 @@ const MorphCode = () => {
         {phase === 'waiting' && match?.status !== 'waiting' && round?.mySequenceLocked && (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 py-12">
             <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
-                 style={{ borderColor: 'hsl(var(--primary))', borderTopColor: 'transparent' }} />
-            <p style={{ color: 'hsl(var(--muted-foreground))' }}>
+                 style={{ borderColor: 'hsl(var(--code-accent))', borderTopColor: 'transparent' }} />
+            <p className="font-inter" style={{ color: 'hsl(var(--code-text-secondary))' }}>
               Waiting for opponent to lock their sequence...
             </p>
           </div>

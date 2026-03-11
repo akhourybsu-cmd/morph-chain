@@ -811,6 +811,30 @@ export type Database = {
         }
         Relationships: []
       }
+      morphcode_friends: {
+        Row: {
+          created_at: string
+          friend_id: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          friend_id: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          friend_id?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       morphcode_guesses: {
         Row: {
           created_at: string
@@ -929,6 +953,24 @@ export type Database = {
           id?: string
           joined_at?: string
           timer_mode?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      morphcode_presence: {
+        Row: {
+          is_online: boolean
+          last_seen_at: string
+          user_id: string
+        }
+        Insert: {
+          is_online?: boolean
+          last_seen_at?: string
+          user_id: string
+        }
+        Update: {
+          is_online?: boolean
+          last_seen_at?: string
           user_id?: string
         }
         Relationships: []
@@ -1234,6 +1276,7 @@ export type Database = {
           avatar_path: string | null
           default_initials: string | null
           display_name: string | null
+          friend_code: string | null
           updated_at: string | null
           user_id: string
         }
@@ -1241,6 +1284,7 @@ export type Database = {
           avatar_path?: string | null
           default_initials?: string | null
           display_name?: string | null
+          friend_code?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -1248,6 +1292,7 @@ export type Database = {
           avatar_path?: string | null
           default_initials?: string | null
           display_name?: string | null
+          friend_code?: string | null
           updated_at?: string | null
           user_id?: string
         }
