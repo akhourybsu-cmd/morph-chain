@@ -8,6 +8,7 @@ import { GuessBoard } from '@/components/morphcode/GuessBoard';
 import { MatchScoreBar } from '@/components/morphcode/MatchScoreBar';
 import { RoundResults } from '@/components/morphcode/RoundResults';
 import { getActiveMatch, getCurrentRound, lockSequence, submitGuess, createNextRound } from '@/lib/morphcode/matchService';
+import { updatePresence, setOffline } from '@/lib/morphcode/friendsService';
 import { MatchState, RoundState, GamePhase, Symbol } from '@/lib/morphcode/types';
 import { toast } from 'sonner';
 
