@@ -34,7 +34,7 @@ export const SymbolSlot = ({ symbol, onClick, selected, disabled, size = 'md', s
           : 'hsl(var(--muted) / 0.3)',
         borderColor: symbol ? 'transparent' : 'hsl(var(--muted-foreground) / 0.3)',
         color: symbol ? '#fff' : 'hsl(var(--muted-foreground))',
-        ringColor: selected ? 'hsl(var(--primary))' : undefined,
+        ...(selected ? { '--tw-ring-color': 'hsl(var(--primary))' } as React.CSSProperties : {}),
       }}
     >
       <span>{symbol ? SYMBOL_DISPLAY[symbol].emoji : '?'}</span>
