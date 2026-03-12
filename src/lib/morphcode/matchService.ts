@@ -255,26 +255,60 @@ export interface MorphcodePlayerStats {
   wins: number;
   losses: number;
   draws: number;
+  xp: number;
+  level: number;
+  current_streak: number;
 }
 
 export async function getPlayerStats(userId: string): Promise<MorphcodePlayerStats> {
   const { data } = await supabase
     .from('morphcode_stats')
-    .select('wins, losses, draws')
+    .select('wins, losses, draws, xp, level, current_streak')
     .eq('user_id', userId)
     .single();
-  return data || { wins: 0, losses: 0, draws: 0 };
+  return data || { wins: 0, losses: 0, draws: 0, xp: 0, level: 1, current_streak: 0 };
 }
 
 export async function recordMatchResult(userId: string, result: 'win' | 'loss' | 'draw'): Promise<void> {
+  const { XP_WIN, XP_LOSS, XP_SOLVE, getStreakMultiplier, getLevelFromXP } = await import('./types');
   const current = await getPlayerStats(userId);
+  
+  const newStreak = result === 'win' ? current.current_streak + 1 : 0;
+  const baseXP = result === 'win' ? XP_WIN : result === 'loss' ? XP_LOSS : XP_SOLVE;
+  const multiplier = result === 'win' ? getStreakMultiplier(newStreak) : 1;
+  const xpGain = baseXP * multiplier;
+  const newXP = current.xp + xpGain;
+  const newLevel = getLevelFromXP(newXP);
+
   const updated = {
     wins: current.wins + (result === 'win' ? 1 : 0),
     losses: current.losses + (result === 'loss' ? 1 : 0),
     draws: current.draws + (result === 'draw' ? 1 : 0),
+    xp: newXP,
+    level: newLevel,
+    current_streak: newStreak,
     updated_at: new Date().toISOString(),
   };
   await supabase.from('morphcode_stats').upsert({ user_id: userId, ...updated });
+}
+
+// --- Rematch ---
+
+export async function createRematch(opponentId: string): Promise<{ matchId: string; inviteCode: string } | null> {
+  const result = await createMatch();
+  if (!result) return null;
+
+  // Post challenge activity to opponent
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    await supabase.from('app_activity').insert({
+      user_id: user.id,
+      game: 'morphcode',
+      activity_type: 'challenge',
+      payload: { match_id: result.matchId, target_user_id: opponentId },
+    });
+  }
+  return result;
 }
 
 // --- Player display name ---

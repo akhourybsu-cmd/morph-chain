@@ -71,3 +71,41 @@ export interface MatchState {
 }
 
 export type GamePhase = 'lobby' | 'waiting' | 'versus' | 'setup' | 'playing' | 'round-end' | 'match-end';
+
+// --- XP & Progression ---
+
+export const XP_PER_LEVEL = 200;
+export const XP_WIN = 100;
+export const XP_LOSS = 25;
+export const XP_SOLVE = 50;
+
+export function getXPForLevel(level: number): number {
+  return (level - 1) * XP_PER_LEVEL;
+}
+
+export function getLevelFromXP(xp: number): number {
+  return Math.floor(xp / XP_PER_LEVEL) + 1;
+}
+
+export function getStreakMultiplier(streak: number): number {
+  if (streak >= 5) return 3;
+  if (streak >= 3) return 2;
+  return 1;
+}
+
+// --- Rank Titles ---
+
+const RANK_TIERS = [
+  { threshold: 50, title: 'Grandmaster' },
+  { threshold: 30, title: 'Cryptographer' },
+  { threshold: 15, title: 'Cipher' },
+  { threshold: 5, title: 'Decoder' },
+  { threshold: 0, title: 'Novice' },
+] as const;
+
+export function getRankTitle(wins: number): string {
+  for (const tier of RANK_TIERS) {
+    if (wins >= tier.threshold) return tier.title;
+  }
+  return 'Novice';
+}

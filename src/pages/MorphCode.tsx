@@ -8,10 +8,11 @@ import { GuessBoard } from '@/components/morphcode/GuessBoard';
 import { MatchScoreBar } from '@/components/morphcode/MatchScoreBar';
 import { RoundResults } from '@/components/morphcode/RoundResults';
 import { VersusScreen } from '@/components/morphcode/VersusScreen';
+import { XPBar } from '@/components/morphcode/XPBar';
 import {
   getActiveMatch, getCurrentRound, lockSequence, submitGuess,
   createNextRound, cancelMatch, getPlayerStats, getPlayerDisplayName, recordMatchResult,
-  getOpponentSequence,
+  getOpponentSequence, createRematch, MorphcodePlayerStats,
 } from '@/lib/morphcode/matchService';
 import { updatePresence, setOffline } from '@/lib/social/friendsService';
 import { MatchState, RoundState, Symbol } from '@/lib/morphcode/types';
@@ -38,12 +39,17 @@ const MorphCode = () => {
   const statsRecordedRef = useRef<string | null>(null);
   const loadingRef = useRef(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [myStats, setMyStats] = useState<MorphcodePlayerStats | null>(null);
 
   useEffect(() => {
     initMorphcodeAudio();
-    supabase.auth.getUser().then(({ data: { user } }) => setUserId(user?.id || null));
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUserId(user?.id || null);
+      if (user?.id) getPlayerStats(user.id).then(setMyStats);
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUserId(session?.user?.id || null);
+      if (session?.user?.id) getPlayerStats(session.user.id).then(setMyStats);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -67,9 +73,9 @@ const MorphCode = () => {
 
       if (activeMatch.status === 'completed' && statsRecordedRef.current !== activeMatch.id) {
         statsRecordedRef.current = activeMatch.id;
-        if (activeMatch.winnerId === userId) recordMatchResult(userId, 'win');
-        else if (activeMatch.winnerId === null) recordMatchResult(userId, 'draw');
-        else recordMatchResult(userId, 'loss');
+        const result = activeMatch.winnerId === userId ? 'win' : activeMatch.winnerId === null ? 'draw' : 'loss';
+        await recordMatchResult(userId, result as 'win' | 'loss' | 'draw');
+        getPlayerStats(userId).then(setMyStats);
       }
 
       if (activeMatch.status === 'waiting') {
@@ -218,6 +224,23 @@ const MorphCode = () => {
     else toast.error('Failed to start next round');
   };
 
+  const handleRematch = async () => {
+    if (!match || !userId) return;
+    const opponentId = match.playerA === userId ? match.playerB : match.playerA;
+    if (!opponentId) return;
+    const result = await createRematch(opponentId);
+    if (result) {
+      setMatch(null);
+      setRound(null);
+      hasShownVersusRef.current = false;
+      statsRecordedRef.current = null;
+      setOppSequence(null);
+      loadGameState();
+    } else {
+      toast.error('Failed to create rematch');
+    }
+  };
+
   const getRoundInfo = () => {
     if (!match || !round) return undefined;
     return `Round ${round.roundNumber} • ${match.roundWinsA}–${match.roundWinsB}`;
@@ -253,11 +276,18 @@ const MorphCode = () => {
 
       <main className="flex-1 overflow-y-auto">
         {phase === 'lobby' && (
-          <MorphcodeLobby
-            onMatchFound={handleMatchFound}
-            isLoggedIn={!!userId}
-            onLoginRequired={() => navigate('/login')}
-          />
+          <>
+            {myStats && userId && (
+              <div className="px-4 pt-4 max-w-sm mx-auto">
+                <XPBar xp={myStats.xp} level={myStats.level} wins={myStats.wins} streak={myStats.current_streak} />
+              </div>
+            )}
+            <MorphcodeLobby
+              onMatchFound={handleMatchFound}
+              isLoggedIn={!!userId}
+              onLoginRequired={() => navigate('/login')}
+            />
+          </>
         )}
 
         {phase === 'waiting' && match?.status === 'waiting' && (
@@ -320,6 +350,9 @@ const MorphCode = () => {
             onNextRound={handleNextRound}
             matchOver={match.status === 'completed'}
             matchWinnerId={match.winnerId}
+            onRematch={match.status === 'completed' ? handleRematch : undefined}
+            myWins={myStats?.wins || 0}
+            myStreak={myStats?.current_streak || 0}
           />
         )}
 
@@ -335,6 +368,9 @@ const MorphCode = () => {
             onNextRound={handleNextRound}
             matchOver={true}
             matchWinnerId={match.winnerId}
+            onRematch={handleRematch}
+            myWins={myStats?.wins || 0}
+            myStreak={myStats?.current_streak || 0}
           />
         )}
       </main>

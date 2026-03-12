@@ -1084,25 +1084,34 @@ export type Database = {
       }
       morphcode_stats: {
         Row: {
+          current_streak: number
           draws: number
+          level: number
           losses: number
           updated_at: string
           user_id: string
           wins: number
+          xp: number
         }
         Insert: {
+          current_streak?: number
           draws?: number
+          level?: number
           losses?: number
           updated_at?: string
           user_id: string
           wins?: number
+          xp?: number
         }
         Update: {
+          current_streak?: number
           draws?: number
+          level?: number
           losses?: number
           updated_at?: string
           user_id?: string
           wins?: number
+          xp?: number
         }
         Relationships: []
       }
