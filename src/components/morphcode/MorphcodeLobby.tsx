@@ -15,6 +15,19 @@ export const MorphcodeLobby = ({
   onMatchFound, isLoggedIn, onLoginRequired,
 }: MorphcodeLobbyProps) => {
   const [queuing, setQueuing] = useState(false);
+  const [creatingBot, setCreatingBot] = useState(false);
+
+  const handlePlayBot = async () => {
+    if (!isLoggedIn) { onLoginRequired(); return; }
+    setCreatingBot(true);
+    const matchId = await createBotMatch();
+    setCreatingBot(false);
+    if (matchId) {
+      onMatchFound(matchId);
+    } else {
+      toast.error('Failed to create bot match');
+    }
+  };
 
   const handleQueue = async () => {
     if (!isLoggedIn) { onLoginRequired(); return; }
