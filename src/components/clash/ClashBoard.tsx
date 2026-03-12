@@ -61,29 +61,6 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
 
   const selectedWord = selected.map(s => grid[s.row][s.col].char).join('');
 
-  const handleShare = async () => {
-    if (!match.invite_code) return;
-    const url = `https://morph-games.lovable.app/clash?join=${match.invite_code}`;
-    const shareData = {
-      title: 'Morph Clash Challenge',
-      text: `I challenge you to a game of Morph Clash! Join with code: ${match.invite_code}`,
-      url,
-    };
-    if (navigator.share) {
-      try { await navigator.share(shareData); } catch { /* cancelled */ }
-    } else {
-      await navigator.clipboard.writeText(url);
-      toast.success('Link copied!');
-    }
-  };
-
-  const copyCode = () => {
-    if (match.invite_code) {
-      navigator.clipboard.writeText(match.invite_code);
-      toast.success('Code copied!');
-    }
-  };
-
   const showNotYourTurn = match.status === 'active' && !isMyTurn && !isWaiting;
 
   return (
