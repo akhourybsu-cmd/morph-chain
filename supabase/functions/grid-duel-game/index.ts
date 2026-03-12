@@ -709,8 +709,6 @@ Deno.serve(async (req) => {
 async function executeBotMove(
   adminClient: any,
   matchId: string,
-  supabaseUrl: string,
-  supabaseServiceKey: string
 ): Promise<{ success: boolean; word?: string; skipped?: boolean; match_ended?: boolean }> {
   const { data: match } = await adminClient
     .from('clash_matches')
