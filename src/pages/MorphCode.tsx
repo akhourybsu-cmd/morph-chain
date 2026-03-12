@@ -174,7 +174,7 @@ const MorphCode = () => {
     const timeTaken = Date.now() - turnStart;
     const result = await submitGuess(round.id, guess, timeTaken);
     if (result) {
-      if (result.isSolve) toast.success('Solved! 🎉');
+      if (result.isSolve) { playCodeSolved(); toast.success('Solved! 🎉'); }
       else toast(`${result.exact} exact, ${result.shifted} shifted`);
       loadGameState();
     } else {

@@ -3,6 +3,7 @@ import { Symbol, SLOTS } from '@/lib/morphcode/types';
 import { SymbolSlot } from './SymbolSlot';
 import { Button } from '@/components/ui/button';
 import { Lock, RotateCcw } from 'lucide-react';
+import { playSymbolPlace, playSymbolRemove, playSequenceLocked } from '@/lib/morphcode/audioManager';
 
 interface SequenceBuilderProps {
   symbolPool: Symbol[];
@@ -23,28 +24,32 @@ export const SequenceBuilder = ({ symbolPool, onLock, locked }: SequenceBuilderP
       const newSlots = [...slots];
       newSlots[emptyIdx] = symbol;
       setSlots(newSlots);
+      playSymbolPlace();
     }
   };
 
   const handleSlotClick = (index: number) => {
-    if (locked) return;
+    if (locked || !slots[index]) return;
     const newSlots = [...slots];
     newSlots[index] = null;
     setSlots(newSlots);
+    playSymbolRemove();
   };
 
   const handleReset = () => {
     if (locked) return;
     setSlots(Array(SLOTS).fill(null));
+    playSymbolRemove();
   };
 
   const handleLock = () => {
     if (!isFull || locked) return;
+    playSequenceLocked();
     onLock(slots as Symbol[]);
   };
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center gap-5 md:gap-6 px-3">
       <div className="text-center">
         <h3
           className="font-playfair text-lg font-semibold mb-1"
@@ -75,7 +80,7 @@ export const SequenceBuilder = ({ symbolPool, onLock, locked }: SequenceBuilderP
 
       {/* Symbol pool */}
       {!locked && (
-        <div className="flex flex-wrap gap-2 justify-center max-w-xs">
+        <div className="flex flex-wrap gap-2 justify-center w-full max-w-[90vw] md:max-w-xs">
           {symbolPool.map((symbol) => (
             <SymbolSlot
               key={symbol}
@@ -117,7 +122,7 @@ export const SequenceBuilder = ({ symbolPool, onLock, locked }: SequenceBuilderP
 
       {locked && (
         <div
-          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-inter"
+          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-inter animate-fade-in"
           style={{
             background: 'hsl(var(--code-accent) / 0.1)',
             color: 'hsl(var(--code-accent))',

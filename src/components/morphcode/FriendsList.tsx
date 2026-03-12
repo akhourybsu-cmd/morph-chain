@@ -233,9 +233,9 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
                       {f.displayName || f.friendCode || 'Player'}
                     </span>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => handleChallenge(f.friendUserId)} className="h-7 text-xs gap-1 text-[hsl(var(--code-accent))]">
+                  <Button variant="ghost" size="sm" onClick={() => handleChallenge(f.friendUserId)} className="h-7 text-xs gap-1 px-2 md:px-3 text-[hsl(var(--code-accent))]">
                     <Swords className="w-3 h-3" />
-                    Challenge
+                    <span className="hidden md:inline">Challenge</span>
                   </Button>
                 </div>
               ))}
