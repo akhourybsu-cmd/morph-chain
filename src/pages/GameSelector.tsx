@@ -31,6 +31,7 @@ const christmasAccents = {
   alibi: "142 70% 45%",
   measured: "220 70% 50%",
   morphcode: "280 70% 55%",
+  clash: "168 50% 55%",
 };
 
 const GameSelector = () => {
