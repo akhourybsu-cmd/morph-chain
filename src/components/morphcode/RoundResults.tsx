@@ -3,7 +3,8 @@ import { Symbol } from '@/lib/morphcode/types';
 import { SymbolSlot } from './SymbolSlot';
 import { CodeCelebration } from './CodeCelebration';
 import { Button } from '@/components/ui/button';
-import { Trophy, Minus, ArrowRight, RotateCcw, Zap } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Trophy, Minus, ArrowRight, RotateCcw, Zap, ChevronDown, Eye } from 'lucide-react';
 import { playMatchWin, playMatchLoss, playCodeSolved } from '@/lib/morphcode/audioManager';
 import { getRankTitle, XP_WIN, XP_LOSS, XP_SOLVE, getStreakMultiplier } from '@/lib/morphcode/types';
 
@@ -16,6 +17,7 @@ interface RoundResultsProps {
   mySolved: boolean;
   opponentSolved: boolean;
   opponentSequence?: Symbol[];
+  mySequence?: Symbol[];
   onNextRound: () => void;
   matchOver: boolean;
   matchWinnerId: string | null;
@@ -26,7 +28,7 @@ interface RoundResultsProps {
 
 export const RoundResults = ({
   roundNumber, winnerId, myId, myGuessCount, opponentGuessCount,
-  mySolved, opponentSolved, opponentSequence, onNextRound,
+  mySolved, opponentSolved, opponentSequence, mySequence, onNextRound,
   matchOver, matchWinnerId, onRematch, myWins = 0, myStreak = 0,
 }: RoundResultsProps) => {
   const iWon = winnerId === myId;
@@ -34,6 +36,8 @@ export const RoundResults = ({
   const matchWon = matchWinnerId === myId;
   const soundPlayed = useRef(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [mySeqOpen, setMySeqOpen] = useState(true);
+  const [revealedSymbols, setRevealedSymbols] = useState<number>(0);
 
   useEffect(() => {
     if (soundPlayed.current) return;
@@ -51,44 +55,56 @@ export const RoundResults = ({
     }
   }, [matchOver, matchWinnerId, myId, iWon, isDraw]);
 
+  // Staggered reveal for opponent sequence
+  useEffect(() => {
+    if (!opponentSequence) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    opponentSequence.forEach((_, i) => {
+      timers.push(setTimeout(() => setRevealedSymbols(i + 1), 400 + i * 200));
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [opponentSequence]);
+
   const xpGained = iWon ? XP_WIN * getStreakMultiplier(myStreak) : isDraw ? XP_SOLVE : XP_LOSS;
 
   return (
-    <div className="flex flex-col items-center gap-5 md:gap-6 px-4 py-6 md:py-8 max-w-sm mx-auto text-center">
+    <div className="flex flex-col items-center gap-4 md:gap-5 px-4 py-6 md:py-8 max-w-sm mx-auto text-center">
       {showCelebration && <CodeCelebration symbols={opponentSequence} />}
 
-      {/* Round result */}
+      {/* Round result headline */}
       <div className="animate-scale-in">
-        <p className="text-xs uppercase tracking-wider mb-2 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
-          Round {roundNumber}
+        <p className="text-[10px] uppercase tracking-[0.2em] mb-2 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
+          {matchOver ? 'Match Complete' : `Round ${roundNumber}`}
         </p>
         {isDraw ? (
-          <div className="flex items-center gap-2">
-            <Minus className="w-6 h-6" style={{ color: 'hsl(var(--code-text-muted))' }} />
+          <div className="flex items-center justify-center gap-2">
+            <Minus className="w-5 h-5" style={{ color: 'hsl(var(--code-text-muted))' }} />
             <span className="font-playfair text-2xl font-bold" style={{ color: 'hsl(var(--code-text-muted))' }}>
               Draw
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <Trophy className="w-6 h-6" style={{ color: iWon ? 'hsl(var(--code-shifted))' : 'hsl(var(--code-text-muted))' }} />
+          <div className="flex items-center justify-center gap-2">
+            <Trophy className="w-5 h-5" style={{ color: iWon ? 'hsl(var(--code-shifted))' : 'hsl(var(--code-text-muted))' }} />
             <span
               className="font-playfair text-2xl font-bold"
               style={{ color: iWon ? 'hsl(var(--code-success))' : 'hsl(var(--code-error))' }}
             >
-              {iWon ? 'You Win!' : 'You Lose'}
+              {matchOver
+                ? (matchWon ? 'Match Won! 🎉' : 'Match Lost')
+                : (iWon ? 'You Win!' : 'You Lose')}
             </span>
           </div>
         )}
       </div>
 
-      {/* XP gain badge */}
+      {/* XP badge */}
       <div
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full animate-fade-in"
         style={{
           background: 'hsl(var(--code-accent) / 0.12)',
           color: 'hsl(var(--code-accent))',
-          animationDelay: '100ms',
+          animationDelay: '150ms',
           animationFillMode: 'both',
         }}
       >
@@ -99,66 +115,118 @@ export const RoundResults = ({
         )}
       </div>
 
-      {/* Stats */}
+      {/* Stats card */}
       <div
         className="w-full grid grid-cols-2 gap-4 p-4 rounded-xl animate-fade-in"
         style={{
           background: 'hsl(var(--code-card-bg))',
           border: '1px solid hsl(var(--code-card-border))',
           boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
-          animationDelay: '150ms',
+          animationDelay: '200ms',
           animationFillMode: 'both',
         }}
       >
         <div>
-          <p className="text-xs mb-1 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>You</p>
+          <p className="text-[10px] uppercase tracking-wider mb-1 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>You</p>
           <p className="text-2xl font-bold font-mono" style={{ color: 'hsl(var(--code-text-primary))' }}>
             {mySolved ? myGuessCount : '—'}
           </p>
-          <p className="text-xs font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
-            {mySolved ? 'guesses' : 'failed'}
+          <p className="text-[10px] font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
+            {mySolved ? 'guesses' : 'unsolved'}
           </p>
         </div>
         <div>
-          <p className="text-xs mb-1 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>Opponent</p>
+          <p className="text-[10px] uppercase tracking-wider mb-1 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>Opponent</p>
           <p className="text-2xl font-bold font-mono" style={{ color: 'hsl(var(--code-text-primary))' }}>
             {opponentSolved ? opponentGuessCount : '—'}
           </p>
-          <p className="text-xs font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
-            {opponentSolved ? 'guesses' : 'failed'}
+          <p className="text-[10px] font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
+            {opponentSolved ? 'guesses' : 'unsolved'}
           </p>
         </div>
       </div>
 
-      {/* Opponent's sequence reveal */}
+      {/* Opponent's sequence — staggered reveal */}
       {opponentSequence && (
-        <div className="animate-fade-in" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
-          <p className="text-xs mb-2 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
-            Opponent's sequence:
+        <div
+          className="w-full rounded-xl p-4 animate-fade-in"
+          style={{
+            background: 'hsl(var(--code-card-bg))',
+            border: '1px solid hsl(var(--code-card-border))',
+            animationDelay: '350ms',
+            animationFillMode: 'both',
+          }}
+        >
+          <p className="text-[10px] uppercase tracking-[0.15em] mb-3 font-inter font-medium" style={{ color: 'hsl(var(--code-text-muted))' }}>
+            Opponent's Code
           </p>
           <div className="flex gap-2 justify-center">
             {opponentSequence.map((s, i) => (
-              <SymbolSlot key={i} symbol={s} size="md" disabled />
+              <div
+                key={i}
+                className="transition-all duration-300"
+                style={{
+                  opacity: i < revealedSymbols ? 1 : 0,
+                  transform: i < revealedSymbols ? 'scale(1) rotateY(0deg)' : 'scale(0.5) rotateY(90deg)',
+                  transitionDelay: `${i * 100}ms`,
+                }}
+              >
+                <SymbolSlot symbol={s} size="lg" disabled />
+              </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Match over or next round */}
-      {matchOver ? (
-        <div className="space-y-3 animate-fade-in" style={{ animationDelay: '450ms', animationFillMode: 'both' }}>
-          <p
-            className="font-playfair text-xl font-bold"
-            style={{ color: matchWon ? 'hsl(var(--code-success))' : 'hsl(var(--code-error))' }}
-          >
-            {matchWon ? 'Match Won! 🎉' : 'Match Lost'}
-          </p>
-          {myWins > 0 && (
-            <p className="text-xs font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
-              Rank: {getRankTitle(myWins)}
-            </p>
-          )}
-          <div className="flex gap-2 justify-center">
+      {/* My sequence — collapsible */}
+      {mySequence && (
+        <Collapsible open={mySeqOpen} onOpenChange={setMySeqOpen} className="w-full animate-fade-in" style={{ animationDelay: '500ms', animationFillMode: 'both' }}>
+          <CollapsibleTrigger asChild>
+            <button
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors"
+              style={{
+                background: 'hsl(var(--code-pill-bg))',
+                border: '1px solid hsl(var(--code-card-border))',
+                color: 'hsl(var(--code-text-secondary))',
+              }}
+            >
+              <span className="flex items-center gap-2 text-xs font-inter font-medium uppercase tracking-wider">
+                <Eye className="w-3.5 h-3.5" />
+                Your Code
+              </span>
+              <ChevronDown
+                className="w-4 h-4 transition-transform duration-200"
+                style={{ transform: mySeqOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              />
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-3">
+            <div className="flex gap-2 justify-center">
+              {mySequence.map((s, i) => (
+                <SymbolSlot key={i} symbol={s} size="md" disabled />
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+
+      {/* Rank */}
+      {matchOver && myWins > 0 && (
+        <p
+          className="text-xs font-inter animate-fade-in"
+          style={{ color: 'hsl(var(--code-text-muted))', animationDelay: '600ms', animationFillMode: 'both' }}
+        >
+          Rank: {getRankTitle(myWins)}
+        </p>
+      )}
+
+      {/* Actions */}
+      <div
+        className="flex gap-2 justify-center animate-fade-in"
+        style={{ animationDelay: matchOver ? '650ms' : '550ms', animationFillMode: 'both' }}
+      >
+        {matchOver ? (
+          <>
             <Button
               onClick={onNextRound}
               size="lg"
@@ -179,19 +247,19 @@ export const RoundResults = ({
                 Rematch
               </Button>
             )}
-          </div>
-        </div>
-      ) : (
-        <Button
-          onClick={onNextRound}
-          size="lg"
-          className="gap-2 animate-fade-in"
-          style={{ background: 'hsl(var(--code-accent))', color: '#fff', animationDelay: '400ms', animationFillMode: 'both' }}
-        >
-          Next Round
-          <ArrowRight className="w-4 h-4" />
-        </Button>
-      )}
+          </>
+        ) : (
+          <Button
+            onClick={onNextRound}
+            size="lg"
+            className="gap-2"
+            style={{ background: 'hsl(var(--code-accent))', color: '#fff' }}
+          >
+            Next Round
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 };

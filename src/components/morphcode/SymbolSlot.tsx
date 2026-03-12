@@ -8,19 +8,18 @@ interface SymbolSlotProps {
   selected?: boolean;
   disabled?: boolean;
   size?: 'sm' | 'md' | 'lg';
-  showLabel?: boolean;
 }
 
 const SYMBOL_BG: Record<Symbol, string> = {
-  circle:   'hsla(210, 80%, 60%, 0.12)',
-  triangle: 'hsla(45, 90%, 55%, 0.12)',
-  wave:     'hsla(180, 70%, 50%, 0.12)',
-  flame:    'hsla(15, 90%, 55%, 0.12)',
-  eye:      'hsla(270, 60%, 60%, 0.12)',
-  shard:    'hsla(330, 70%, 55%, 0.12)',
+  circle:   'hsla(210, 80%, 60%, 0.18)',
+  triangle: 'hsla(45, 90%, 55%, 0.18)',
+  wave:     'hsla(180, 70%, 50%, 0.18)',
+  flame:    'hsla(15, 90%, 55%, 0.18)',
+  eye:      'hsla(270, 60%, 60%, 0.18)',
+  shard:    'hsla(330, 70%, 55%, 0.18)',
 };
 
-export const SymbolSlot = ({ symbol, onClick, selected, disabled, size = 'md', showLabel }: SymbolSlotProps) => {
+export const SymbolSlot = ({ symbol, onClick, selected, disabled, size = 'md' }: SymbolSlotProps) => {
   const [bounce, setBounce] = useState(false);
 
   useEffect(() => {
@@ -32,9 +31,9 @@ export const SymbolSlot = ({ symbol, onClick, selected, disabled, size = 'md', s
   }, [symbol]);
 
   const sizeClasses = {
-    sm: 'w-9 h-9 text-base md:w-10 md:h-10 md:text-lg',
-    md: 'w-12 h-12 text-xl md:w-14 md:h-14 md:text-2xl',
-    lg: 'w-14 h-14 text-2xl md:w-16 md:h-16 md:text-3xl',
+    sm: 'w-10 h-10 text-lg md:w-11 md:h-11 md:text-xl',
+    md: 'w-13 h-13 text-2xl md:w-14 md:h-14 md:text-3xl',
+    lg: 'w-14 h-14 text-3xl md:w-16 md:h-16 md:text-4xl',
   };
 
   const display = symbol ? SYMBOL_DISPLAY[symbol] : null;
@@ -44,7 +43,7 @@ export const SymbolSlot = ({ symbol, onClick, selected, disabled, size = 'md', s
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'rounded-xl flex flex-col items-center justify-center transition-all duration-200 font-bold select-none border',
+        'rounded-xl flex items-center justify-center transition-all duration-200 font-bold select-none border',
         sizeClasses[size],
         selected && 'ring-2 ring-[hsl(var(--code-accent))] ring-offset-2 ring-offset-[hsl(var(--code-page-bg))]',
         disabled ? 'opacity-60 cursor-default' : 'cursor-pointer active:scale-90 hover:scale-105',
@@ -65,14 +64,6 @@ export const SymbolSlot = ({ symbol, onClick, selected, disabled, size = 'md', s
       }}
     >
       <span>{display ? display.emoji : '?'}</span>
-      {showLabel && symbol && display && (
-        <span
-          className="text-[7px] uppercase tracking-wider mt-0.5 font-medium"
-          style={{ color: 'hsl(var(--code-text-muted))' }}
-        >
-          {display.label}
-        </span>
-      )}
     </button>
   );
 };
