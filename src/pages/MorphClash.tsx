@@ -23,14 +23,6 @@ const MorphClash = () => {
   const [completedMatches, setCompletedMatches] = useState<ClashMatchSummary[]>([]);
   const { match, userId, loading, setUserId, loadMatch, subscribeToMatch, clearMatch } = useClashStore();
 
-  const joinCode = searchParams.get('join');
-
-  // Clear join param after consuming
-  useEffect(() => {
-    if (joinCode && match) {
-      setSearchParams({}, { replace: true });
-    }
-  }, [joinCode, match, setSearchParams]);
 
   // Auth listener
   useEffect(() => {
