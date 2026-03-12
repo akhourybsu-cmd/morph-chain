@@ -62,6 +62,8 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
 
   const selectedWord = selected.map(s => grid[s.row][s.col].char).join('');
 
+  const opponentId = isPlayerA ? match.player_b : match.player_a;
+  const isBotOpponent = isClashBotPlayer(opponentId ?? null);
   const showNotYourTurn = match.status === 'active' && !isMyTurn && !isWaiting;
 
   return (
