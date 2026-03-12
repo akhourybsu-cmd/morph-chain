@@ -10,7 +10,29 @@ export async function createClashMatch(): Promise<{ matchId: string; inviteCode:
   return { matchId: data.matchId, inviteCode: data.inviteCode };
 }
 
+export async function joinClashMatchById(matchId: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc('join_clash_match', { p_match_id: matchId });
+  if (error) return null;
+  return data as string;
+}
+
 export async function joinClashByCode(code: string): Promise<string | null> {
+  const { data: match } = await supabase
+    .from('clash_matches')
+    .select('id')
+    .eq('invite_code', code.toUpperCase())
+    .eq('status', 'waiting')
+    .single();
+
+  if (!match) return null;
+
+  const { data, error } = await supabase.rpc('join_clash_match', {
+    p_match_id: match.id,
+  });
+
+  if (error) return null;
+  return data as string;
+}
   const { data: match } = await supabase
     .from('clash_matches')
     .select('id')
