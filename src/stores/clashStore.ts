@@ -192,6 +192,15 @@ export const useClashStore = create<ClashState>((set, get) => ({
       await get().refreshMatch(match.id);
     }
 
+    // Auto-trigger bot move if it's the bot's turn
+    const currentMatch = get().match;
+    if (currentMatch && currentMatch.is_bot_match && currentMatch.current_turn === CLASH_BOT_UUID && currentMatch.status === 'active') {
+      setTimeout(async () => {
+        await triggerClashBotMove(currentMatch.id);
+        get().refreshMatch(currentMatch.id);
+      }, 1500);
+    }
+
     return { success: true, word: data.word || word };
   },
 
