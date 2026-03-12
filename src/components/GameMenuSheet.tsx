@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { AddToHomeScreen } from "@/components/AddToHomeScreen";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Trophy, Settings, User, Calendar, BarChart3 } from "lucide-react";
+import { ChevronDown, Trophy, Settings, User, Calendar, BarChart3, HelpCircle, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { GamesNavigation } from "@/components/shared/GamesNavigation";
 import { useNavigate } from "react-router-dom";
