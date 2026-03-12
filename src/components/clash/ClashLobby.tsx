@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Loader2, LogIn, Swords, Users, Bot } from 'lucide-react';
+import { Loader2, LogIn, Swords, Users, Bot, UserPlus } from 'lucide-react';
 import { challengeFriend, getPendingChallenges, joinClashMatchById, cancelClashMatch, createClashBotMatch } from '@/lib/clash/matchService';
 import { getFriends, type Friend } from '@/lib/social/friendsService';
 import { toast } from 'sonner';
