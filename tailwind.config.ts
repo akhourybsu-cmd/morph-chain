@@ -288,6 +288,14 @@ export default {
           "0%": { opacity: "0", transform: "translateY(8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "page-enter-right": {
+          "0%": { opacity: "0", transform: "translateX(24px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
+        "play-slide-in": {
+          "0%": { opacity: "0", transform: "translateX(16px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
         "orb-travel": {
           "0%": { 
             transform: "translate(0, 0) scale(1)",
@@ -338,6 +346,8 @@ export default {
         "badge-pulse": "badge-pulse 0.5s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
         "orb-travel": "orb-travel 0.45s ease-in forwards",
+        "page-enter": "page-enter-right 0.3s cubic-bezier(0.22,1,0.36,1) both",
+        "play-slide-in": "play-slide-in 0.2s ease-out both",
       },
     },
   },

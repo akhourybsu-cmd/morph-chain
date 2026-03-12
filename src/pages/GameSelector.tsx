@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
-import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Grid3X3, Menu, ChevronRight, User, Snowflake, Gift, Swords, Shield } from "lucide-react";
+import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Grid3X3, Menu, ChevronRight, User, Snowflake, Gift, Swords, Shield, Play } from "lucide-react";
 import { toast } from "sonner";
 import { SideMenu } from "@/components/layout/SideMenu";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { PrestigeThemeToggle } from "@/components/shared/PrestigeThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { isChristmas } from "@/lib/seasonal/christmas";
@@ -35,16 +35,27 @@ const christmasAccents = {
   clash: "168 50% 55%",
 };
 
+type GameId = 'chain' | 'grid' | 'morphcode' | 'clash';
+
+const gameRoutes: Record<GameId, string> = {
+  chain: '/chain',
+  grid: '/grid',
+  morphcode: '/morphcode',
+  clash: '/clash',
+};
+
 const GameSelector = () => {
   const navigate = useNavigate();
   const puzzle = getDailyPuzzle(4);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<GameId | null>(null);
+  const [exiting, setExiting] = useState(false);
   const christmas = isChristmas();
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // Use Christmas colors on Dec 25
   const accents = christmas ? christmasAccents : gameAccents;
-  
   
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -57,13 +68,36 @@ const GameSelector = () => {
     
     return () => subscription.unsubscribe();
   }, []);
+
+  // Click outside to deselect
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setSelectedGame(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleCardClick = useCallback((id: GameId) => {
+    if (selectedGame === id) return; // already selected, let Play button handle it
+    setSelectedGame(id);
+  }, [selectedGame]);
+
+  const handlePlay = useCallback((id: GameId) => {
+    setExiting(true);
+    setTimeout(() => {
+      navigate(gameRoutes[id]);
+    }, 220);
+  }, [navigate]);
   
   const timezone = "America/New_York";
   const formattedDate = formatInTimeZone(new Date(), timezone, 'MMMM d, yyyy');
   
   return (
     <div 
-      className="min-h-screen flex flex-col"
+      className={`min-h-screen flex flex-col transition-all duration-200 ${exiting ? 'opacity-0 -translate-x-6' : 'opacity-100 translate-x-0'}`}
       style={{ background: 'hsl(var(--home-page-bg))' }}
     >
       {/* Header Bar */}
@@ -178,43 +212,53 @@ const GameSelector = () => {
         </h2>
 
         {/* Games List */}
-        <div className="space-y-3 max-w-[640px] mx-auto">
+        <div className="space-y-3 max-w-[640px] mx-auto" ref={containerRef}>
           <GameCard
+            id="chain"
             icon={Link2}
             name="Morph Chain"
             description="Transform words one letter at a time"
             accent={accents.chain}
-            onClick={() => navigate('/chain')}
+            selected={selectedGame === 'chain'}
+            onSelect={handleCardClick}
+            onPlay={handlePlay}
             christmas={christmas}
           />
           
           <GameCard
+            id="grid"
             icon={Grid3X3}
             name="Morph Grid"
             description="Color-changing daily 5×5 word puzzle"
             accent={accents.grid}
-            onClick={() => navigate('/grid')}
+            selected={selectedGame === 'grid'}
+            onSelect={handleCardClick}
+            onPlay={handlePlay}
             christmas={christmas}
           />
           
-          {/* Morphcode - PvP */}
           <GameCard
+            id="morphcode"
             icon={Swords}
             name="Morph Code"
             description="Head-to-head deduction duel"
             accent={accents.morphcode}
-            onClick={() => navigate('/morphcode')}
+            selected={selectedGame === 'morphcode'}
+            onSelect={handleCardClick}
+            onPlay={handlePlay}
             badge="Beta"
             christmas={christmas}
           />
 
-          {/* Morph Clash - Territory */}
           <GameCard
+            id="clash"
             icon={Shield}
             name="Morph Clash"
             description="Async territory control word battle"
             accent={accents.clash}
-            onClick={() => navigate('/clash')}
+            selected={selectedGame === 'clash'}
+            onSelect={handleCardClick}
+            onPlay={handlePlay}
             badge="New"
             christmas={christmas}
           />
@@ -270,51 +314,65 @@ const GameSelector = () => {
 };
 
 interface GameCardProps {
+  id: GameId;
   icon: React.ElementType;
   name: string;
   description: string;
   accent: string;
-  onClick: () => void;
+  selected: boolean;
+  onSelect: (id: GameId) => void;
+  onPlay: (id: GameId) => void;
   badge?: string;
   christmas?: boolean;
 }
 
-const GameCard = ({ icon: Icon, name, description, accent, onClick, badge, christmas }: GameCardProps) => {
-  // Extract the game word (e.g., "Chain" from "Morph Chain")
+const GameCard = ({ id, icon: Icon, name, description, accent, selected, onSelect, onPlay, badge, christmas }: GameCardProps) => {
   const gameWord = name.replace('Morph ', '');
   
   return (
     <button
-      onClick={onClick}
+      onClick={() => onSelect(id)}
       className={`w-full rounded-xl text-left transition-all duration-200 group overflow-hidden relative ${christmas ? 'animate-christmas-card-glow' : ''}`}
       style={{ 
         background: 'hsl(var(--home-card-bg))',
-        border: christmas ? '1px solid hsl(0 75% 50% / 0.4)' : '1px solid hsl(var(--home-card-border))',
-        boxShadow: christmas 
-          ? '0 4px 12px rgba(0, 0, 0, 0.04), 0 0 20px hsl(0 75% 50% / 0.1)'
-          : '0 4px 12px rgba(0, 0, 0, 0.04)'
+        border: selected 
+          ? `1.5px solid hsl(${accent})`
+          : christmas 
+            ? '1px solid hsl(0 75% 50% / 0.4)' 
+            : '1px solid hsl(var(--home-card-border))',
+        boxShadow: selected
+          ? `0 6px 20px rgba(0, 0, 0, 0.08), 0 0 20px hsl(${accent} / 0.15)`
+          : christmas 
+            ? '0 4px 12px rgba(0, 0, 0, 0.04), 0 0 20px hsl(0 75% 50% / 0.1)'
+            : '0 4px 12px rgba(0, 0, 0, 0.04)',
+        transform: selected ? 'scale(1.015)' : 'scale(1)',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = `hsl(${accent})`;
-        e.currentTarget.style.boxShadow = christmas 
-          ? `0 6px 16px rgba(0, 0, 0, 0.08), 0 0 24px hsl(${accent} / 0.3)`
-          : '0 6px 16px rgba(0, 0, 0, 0.08)';
+        if (!selected) {
+          e.currentTarget.style.borderColor = `hsl(${accent} / 0.5)`;
+          e.currentTarget.style.boxShadow = christmas 
+            ? `0 6px 16px rgba(0, 0, 0, 0.08), 0 0 24px hsl(${accent} / 0.3)`
+            : '0 6px 16px rgba(0, 0, 0, 0.08)';
+        }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = christmas ? 'hsl(0 75% 50% / 0.4)' : 'hsl(var(--home-card-border))';
-        e.currentTarget.style.boxShadow = christmas 
-          ? '0 4px 12px rgba(0, 0, 0, 0.04), 0 0 20px hsl(0 75% 50% / 0.1)'
-          : '0 4px 12px rgba(0, 0, 0, 0.04)';
+        if (!selected) {
+          e.currentTarget.style.borderColor = christmas ? 'hsl(0 75% 50% / 0.4)' : 'hsl(var(--home-card-border))';
+          e.currentTarget.style.boxShadow = christmas 
+            ? '0 4px 12px rgba(0, 0, 0, 0.04), 0 0 20px hsl(0 75% 50% / 0.1)'
+            : '0 4px 12px rgba(0, 0, 0, 0.04)';
+        }
       }}
     >
-      {/* Left accent strip - alternating red/green for Christmas */}
+      {/* Left accent strip */}
       <div 
-        className="absolute left-0 top-0 bottom-0 w-1"
+        className="absolute left-0 top-0 bottom-0 transition-all duration-200"
         style={{ 
+          width: selected ? '3px' : '2px',
           background: christmas 
             ? 'linear-gradient(to bottom, hsl(0, 75%, 50%), hsl(142, 70%, 45%))'
             : `hsl(${accent})`,
-          opacity: christmas ? 1 : 'var(--accent-strip-opacity, 0.15)'
+          opacity: selected ? 1 : christmas ? 1 : 0.15,
         }}
       />
       
@@ -362,11 +420,30 @@ const GameCard = ({ icon: Icon, name, description, accent, onClick, badge, chris
           />
         </div>
         
-        {/* Chevron */}
-        <ChevronRight 
-          className="w-4 h-4 flex-shrink-0 opacity-40 group-hover:opacity-70 transition-opacity" 
-          style={{ color: 'hsl(var(--home-text-muted))' }}
-        />
+        {/* Chevron → Play button transition */}
+        <div className="w-16 flex items-center justify-end flex-shrink-0 overflow-hidden">
+          {selected ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onPlay(id);
+              }}
+              className="animate-play-slide-in flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-150 hover:brightness-110 active:scale-95"
+              style={{
+                background: `hsl(${accent})`,
+                color: 'hsl(0 0% 100%)',
+              }}
+            >
+              Play
+              <Play className="w-3 h-3 fill-current" />
+            </button>
+          ) : (
+            <ChevronRight 
+              className="w-4 h-4 flex-shrink-0 opacity-40 group-hover:opacity-70 transition-opacity" 
+              style={{ color: 'hsl(var(--home-text-muted))' }}
+            />
+          )}
+        </div>
       </div>
     </button>
   );
