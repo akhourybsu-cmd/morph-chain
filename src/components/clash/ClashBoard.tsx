@@ -1,6 +1,7 @@
 import { useClashStore, type Ownership } from '@/stores/clashStore';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
+import { isClashBotPlayer } from '@/lib/clash/matchService';
 
 interface ClashBoardProps {
   isMyTurn: boolean;
@@ -61,6 +62,8 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
 
   const selectedWord = selected.map(s => grid[s.row][s.col].char).join('');
 
+  const opponentId = isPlayerA ? match.player_b : match.player_a;
+  const isBotOpponent = isClashBotPlayer(opponentId ?? null);
   const showNotYourTurn = match.status === 'active' && !isMyTurn && !isWaiting;
 
   return (
@@ -97,7 +100,7 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
             className="text-xs font-inter uppercase tracking-widest"
             style={{ color: 'hsl(var(--clash-text-muted))' }}
           >
-            Waiting for opponent's move…
+            {isBotOpponent ? 'Bot is thinking…' : "Waiting for opponent's move…"}
           </span>
         ) : null}
       </div>

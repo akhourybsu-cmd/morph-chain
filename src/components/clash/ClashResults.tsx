@@ -1,6 +1,7 @@
 import { useClashStore } from '@/stores/clashStore';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { isClashBotPlayer } from '@/lib/clash/matchService';
 
 export const ClashResults = () => {
   const { match, userId, clearMatch } = useClashStore();
@@ -41,7 +42,9 @@ export const ClashResults = () => {
           <div className="text-3xl font-mono font-bold" style={{ color: 'hsl(var(--clash-player-opponent))' }}>
             {oppTiles}
           </div>
-          <div className="text-xs mt-1" style={{ color: 'hsl(var(--clash-text-muted))' }}>Opponent</div>
+          <div className="text-xs mt-1" style={{ color: 'hsl(var(--clash-text-muted))' }}>
+            {isClashBotPlayer(isPlayerA ? match.player_b : match.player_a) ? 'Bot' : 'Opponent'}
+          </div>
         </div>
       </div>
 

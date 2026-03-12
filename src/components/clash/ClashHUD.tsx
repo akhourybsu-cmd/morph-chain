@@ -1,5 +1,6 @@
 import { useClashStore } from '@/stores/clashStore';
 import { useEffect, useState } from 'react';
+import { isClashBotPlayer } from '@/lib/clash/matchService';
 
 export const ClashHUD = () => {
   const { match, userId } = useClashStore();
@@ -7,6 +8,9 @@ export const ClashHUD = () => {
 
   const isPlayerA = userId === match?.player_a;
   const isWaiting = match?.status === 'waiting';
+  const opponentId = isPlayerA ? match?.player_b : match?.player_a;
+  const isBotMatch = isClashBotPlayer(opponentId ?? null);
+  const oppLabel = isBotMatch ? 'Bot' : 'Opp';
   const myTiles = isPlayerA ? match?.tiles_a ?? 0 : match?.tiles_b ?? 0;
   const oppTiles = isWaiting ? 0 : (isPlayerA ? match?.tiles_b ?? 0 : match?.tiles_a ?? 0);
   const myMoves = isPlayerA ? match?.moves_a ?? 0 : match?.moves_b ?? 0;
@@ -71,7 +75,7 @@ export const ClashHUD = () => {
 
         <div className="flex items-center gap-2">
           <span className="text-[10px] uppercase" style={{ color: 'hsl(var(--clash-text-muted))' }}>
-            {isWaiting ? '…' : 'Opp'}
+            {isWaiting ? '…' : oppLabel}
           </span>
           <span className="text-sm font-semibold font-mono" style={{ color: 'hsl(var(--clash-text-primary))' }}>
             {isWaiting ? '—' : oppTiles}
@@ -82,7 +86,7 @@ export const ClashHUD = () => {
 
       {/* Moves + Timer */}
       <div className="flex items-center justify-between text-xs" style={{ color: 'hsl(var(--clash-text-muted))' }}>
-        <span>Moves: {myMoves}/12{!isWaiting && ` · Opp: ${oppMoves}/12`}</span>
+        <span>Moves: {myMoves}/12{!isWaiting && ` · ${oppLabel}: ${oppMoves}/12`}</span>
         {isMyTurn && timeLeft && (
           <span className="font-mono">⏱ {timeLeft}</span>
         )}
@@ -96,7 +100,7 @@ export const ClashHUD = () => {
           {match.status === 'completed'
             ? match.winner_id === userId ? '🏆 You Won!' : match.winner_id ? 'You Lost' : 'Draw'
             : isWaiting ? 'Waiting for opponent'
-            : isMyTurn ? 'Your Turn' : "Opponent's Turn"
+            : isMyTurn ? 'Your Turn' : isBotMatch ? "Bot's Turn" : "Opponent's Turn"
           }
         </span>
       </div>
