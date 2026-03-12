@@ -269,28 +269,8 @@ export async function getPlayerStats(userId: string): Promise<MorphcodePlayerSta
   return data || { wins: 0, losses: 0, draws: 0, xp: 0, level: 1, current_streak: 0 };
 }
 
-export async function recordMatchResult(userId: string, result: 'win' | 'loss' | 'draw'): Promise<void> {
-  const { XP_WIN, XP_LOSS, XP_SOLVE, getStreakMultiplier, getLevelFromXP } = await import('./types');
-  const current = await getPlayerStats(userId);
-  
-  const newStreak = result === 'win' ? current.current_streak + 1 : 0;
-  const baseXP = result === 'win' ? XP_WIN : result === 'loss' ? XP_LOSS : XP_SOLVE;
-  const multiplier = result === 'win' ? getStreakMultiplier(newStreak) : 1;
-  const xpGain = baseXP * multiplier;
-  const newXP = current.xp + xpGain;
-  const newLevel = getLevelFromXP(newXP);
-
-  const updated = {
-    wins: current.wins + (result === 'win' ? 1 : 0),
-    losses: current.losses + (result === 'loss' ? 1 : 0),
-    draws: current.draws + (result === 'draw' ? 1 : 0),
-    xp: newXP,
-    level: newLevel,
-    current_streak: newStreak,
-    updated_at: new Date().toISOString(),
-  };
-  await supabase.from('morphcode_stats').upsert({ user_id: userId, ...updated });
-}
+// Stats are now recorded server-side in the edge function.
+// Client only reads stats via getPlayerStats().
 
 // --- Rematch ---
 
