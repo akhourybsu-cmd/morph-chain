@@ -33,6 +33,7 @@ export interface ClashMatch {
   used_words: string[];
   created_at: string;
   completed_at: string | null;
+  is_bot_match: boolean;
 }
 
 interface SubmitResult {
