@@ -5,6 +5,7 @@ import { UserPlus, Check, X, Swords, Copy, Loader2, ChevronDown, ChevronUp } fro
 import { Friend, getFriends, sendFriendRequest, acceptFriendRequest, removeFriend, getMyFriendCode, updatePresence } from '@/lib/morphcode/friendsService';
 import { challengeFriend, joinMatchById, getIncomingChallenges, declineChallenge, IncomingChallenge } from '@/lib/morphcode/matchService';
 import { toast } from 'sonner';
+import { playChallengeReceived } from '@/lib/morphcode/audioManager';
 
 interface FriendsListProps {
   isLoggedIn: boolean;
