@@ -754,7 +754,7 @@ async function executeBotMove(
   }
 
   // Find all possible words via DFS
-  const candidates = findBotWords(gridTiles, match.ownership as Record<string, Ownership>, usedWords);
+  const candidates = await findBotWords(gridTiles, match.ownership as Record<string, Ownership>, usedWords);
 
   // Validate top candidates against dictionary (batch check top 30 by score)
   candidates.sort((a, b) => b.score - a.score);
