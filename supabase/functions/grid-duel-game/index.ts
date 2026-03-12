@@ -21,8 +21,9 @@ async function loadTWL06(): Promise<Set<string>> {
 
   twl06Loading = (async () => {
     try {
-      const fileUrl = new URL('./twl06.txt', import.meta.url);
-      const content = await Deno.readTextFile(fileUrl);
+      const res = await fetch('https://morph-games.lovable.app/dict/twl06.txt');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const content = await res.text();
       twl06Set = new Set<string>();
       const lines = content.split('\n');
       for (let i = 0; i < lines.length; i++) {
@@ -31,10 +32,10 @@ async function loadTWL06(): Promise<Set<string>> {
         if (!word || !/^[A-Z]+$/.test(word)) continue;
         twl06Set.add(word);
       }
-      console.log(`TWL06 loaded: ${twl06Set.size} words`);
+      console.log(`TWL06 loaded via fetch: ${twl06Set.size} words`);
       return twl06Set;
     } catch (err) {
-      console.error('Failed to load TWL06:', err);
+      console.error('Failed to fetch TWL06:', err);
       twl06Set = new Set();
       return twl06Set;
     }
