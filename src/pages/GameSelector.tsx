@@ -20,6 +20,7 @@ const gameAccents = {
   alibi: "40 75% 50%",
   measured: "220 70% 50%",
   morphcode: "280 70% 55%",
+  clash: "168 65% 40%",
 };
 
 // Christmas accent colors
