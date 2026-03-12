@@ -27,6 +27,7 @@ export const ClashLobby = ({
   onMatchFound, isLoggedIn, onLoginRequired,
   onMatchCancelled, onMatchCreated,
 }: ClashLobbyProps) => {
+  const navigate = useNavigate();
   const [joining, setJoining] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [challenges, setChallenges] = useState<PendingChallenge[]>([]);
