@@ -52,7 +52,7 @@ export const ClashLobby = ({
 
   const handleAcceptChallenge = async (challenge: PendingChallenge) => {
     setJoining(true);
-    const matchId = await joinClashByCode(challenge.inviteCode);
+    const matchId = await joinClashMatchById(challenge.matchId);
     setJoining(false);
     if (matchId) {
       onMatchFound(matchId);
