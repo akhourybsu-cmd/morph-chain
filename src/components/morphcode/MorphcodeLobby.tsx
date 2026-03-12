@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Swords, LogIn } from 'lucide-react';
-import { joinQueue, leaveQueue } from '@/lib/morphcode/matchService';
+import { Loader2, Swords, LogIn, Bot } from 'lucide-react';
+import { joinQueue, leaveQueue, createBotMatch } from '@/lib/morphcode/matchService';
 import { FriendsList } from './FriendsList';
+import { toast } from 'sonner';
 
 interface MorphcodeLobbyProps {
   onMatchFound: (matchId?: string) => void;
