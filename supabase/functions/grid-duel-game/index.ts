@@ -740,7 +740,7 @@ async function executeBotMove(
   let bestMove: { path: {row:number,col:number}[]; word: string } | null = null;
 
   for (const cand of topCandidates) {
-    const isValid = await validateWord(cand.word, supabaseUrl, supabaseServiceKey);
+    const isValid = await validateWord(cand.word, adminClient);
     if (isValid) {
       bestMove = cand;
       break;
