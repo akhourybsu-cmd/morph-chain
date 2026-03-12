@@ -13,27 +13,34 @@ const BOT_UUID = '00000000-0000-0000-0000-b07b07b07b07';
 
 // ─── TWL06 Dictionary ───
 let twl06Set: Set<string> | null = null;
+let twl06Loading: Promise<Set<string>> | null = null;
 
-function loadTWL06(): Set<string> {
+async function loadTWL06(): Promise<Set<string>> {
   if (twl06Set) return twl06Set;
-  try {
-    const filePath = new URL('./twl06.txt', import.meta.url).pathname;
-    const content = Deno.readTextFileSync(filePath);
-    twl06Set = new Set<string>();
-    const lines = content.split('\n');
-    for (let i = 0; i < lines.length; i++) {
-      const word = lines[i].trim().toUpperCase();
-      if (i === 0 && word.includes('TWL06')) continue;
-      if (!word || !/^[A-Z]+$/.test(word)) continue;
-      twl06Set.add(word);
+  if (twl06Loading) return twl06Loading;
+
+  twl06Loading = (async () => {
+    try {
+      const fileUrl = new URL('./twl06.txt', import.meta.url);
+      const content = await Deno.readTextFile(fileUrl);
+      twl06Set = new Set<string>();
+      const lines = content.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const word = lines[i].trim().toUpperCase();
+        if (i === 0 && word.includes('TWL06')) continue;
+        if (!word || !/^[A-Z]+$/.test(word)) continue;
+        twl06Set.add(word);
+      }
+      console.log(`TWL06 loaded: ${twl06Set.size} words`);
+      return twl06Set;
+    } catch (err) {
+      console.error('Failed to load TWL06:', err);
+      twl06Set = new Set();
+      return twl06Set;
     }
-    console.log(`TWL06 loaded: ${twl06Set.size} words`);
-    return twl06Set;
-  } catch (err) {
-    console.error('Failed to load TWL06:', err);
-    twl06Set = new Set();
-    return twl06Set;
-  }
+  })();
+
+  return twl06Loading;
 }
 
 // Seeded RNG (matches client)
