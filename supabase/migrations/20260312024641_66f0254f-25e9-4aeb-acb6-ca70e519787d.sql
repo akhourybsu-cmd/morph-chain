@@ -1,0 +1,4 @@
+ALTER TABLE public.morphcode_stats 
+  ADD COLUMN IF NOT EXISTS xp integer NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS level integer NOT NULL DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS current_streak integer NOT NULL DEFAULT 0;
