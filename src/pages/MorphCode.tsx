@@ -14,6 +14,7 @@ import {
   getActiveMatch, getCurrentRound, lockSequence, submitGuess,
   createNextRound, cancelMatch, getPlayerStats, getPlayerDisplayName,
   getOpponentSequence, createRematch, MorphcodePlayerStats,
+  triggerBotGuess, isBotPlayer, BOT_UUID,
 } from '@/lib/morphcode/matchService';
 import { updatePresence, setOffline } from '@/lib/social/friendsService';
 import { MatchState, RoundState, Symbol } from '@/lib/morphcode/types';
