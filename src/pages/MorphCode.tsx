@@ -211,7 +211,18 @@ const MorphCode = () => {
     if (result) {
       if (result.isSolve) { playCodeSolved(); toast.success('Solved! 🎉'); }
       else toast(`${result.exact} exact, ${result.shifted} shifted`);
-      loadGameState();
+      await loadGameState();
+
+      // Auto-trigger bot guess after a short delay if it's the bot's turn
+      if (match && isBotPlayer(match.playerB)) {
+        const updatedRound = await getCurrentRound(match.id);
+        if (updatedRound && isBotPlayer(updatedRound.currentTurn) && updatedRound.status === 'active') {
+          setTimeout(async () => {
+            await triggerBotGuess(updatedRound.id);
+            loadGameState();
+          }, 1500);
+        }
+      }
     } else {
       toast.error('Failed to submit guess');
     }
