@@ -21,8 +21,6 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
         return isPlayerA ? 'hsl(var(--clash-player-mine))' : 'hsl(var(--clash-player-opponent))';
       case 'b':
         return isPlayerA ? 'hsl(var(--clash-player-opponent))' : 'hsl(var(--clash-player-mine))';
-      case 'contested':
-        return 'hsl(var(--clash-contested))';
       default:
         return 'hsl(var(--clash-neutral))';
     }
