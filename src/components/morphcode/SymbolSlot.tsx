@@ -11,10 +11,18 @@ interface SymbolSlotProps {
   showLabel?: boolean;
 }
 
+const SYMBOL_BG: Record<Symbol, string> = {
+  circle:   'hsla(210, 80%, 60%, 0.12)',
+  triangle: 'hsla(45, 90%, 55%, 0.12)',
+  wave:     'hsla(180, 70%, 50%, 0.12)',
+  flame:    'hsla(15, 90%, 55%, 0.12)',
+  eye:      'hsla(270, 60%, 60%, 0.12)',
+  shard:    'hsla(330, 70%, 55%, 0.12)',
+};
+
 export const SymbolSlot = ({ symbol, onClick, selected, disabled, size = 'md', showLabel }: SymbolSlotProps) => {
   const [bounce, setBounce] = useState(false);
 
-  // Trigger bounce animation when symbol is placed
   useEffect(() => {
     if (symbol) {
       setBounce(true);
@@ -29,6 +37,8 @@ export const SymbolSlot = ({ symbol, onClick, selected, disabled, size = 'md', s
     lg: 'w-14 h-14 text-2xl md:w-16 md:h-16 md:text-3xl',
   };
 
+  const display = symbol ? SYMBOL_DISPLAY[symbol] : null;
+
   return (
     <button
       onClick={onClick}
@@ -42,25 +52,25 @@ export const SymbolSlot = ({ symbol, onClick, selected, disabled, size = 'md', s
       )}
       style={{
         background: symbol
-          ? `hsl(var(--code-card-bg))`
+          ? SYMBOL_BG[symbol]
           : 'hsl(var(--code-pill-bg))',
         borderColor: symbol
           ? 'hsl(var(--code-card-border))'
           : 'hsl(var(--code-divider))',
-        color: symbol
-          ? 'hsl(var(--code-text-primary))'
+        color: display
+          ? display.color
           : 'hsl(var(--code-text-muted))',
         boxShadow: symbol ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
         transition: 'all 0.15s ease-out',
       }}
     >
-      <span>{symbol ? SYMBOL_DISPLAY[symbol].emoji : '?'}</span>
-      {showLabel && symbol && (
+      <span>{display ? display.emoji : '?'}</span>
+      {showLabel && symbol && display && (
         <span
           className="text-[7px] uppercase tracking-wider mt-0.5 font-medium"
           style={{ color: 'hsl(var(--code-text-muted))' }}
         >
-          {SYMBOL_DISPLAY[symbol].label}
+          {display.label}
         </span>
       )}
     </button>

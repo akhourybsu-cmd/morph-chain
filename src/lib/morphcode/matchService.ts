@@ -392,3 +392,26 @@ export async function getCurrentRound(matchId: string): Promise<RoundState | nul
     turnStartedAt: round.turn_started_at,
   };
 }
+
+export async function getOpponentSequence(roundId: string): Promise<Symbol[] | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: round } = await supabase
+    .from('morphcode_rounds')
+    .select('sequence_a, sequence_b, match_id')
+    .eq('id', roundId)
+    .single();
+  if (!round) return null;
+
+  const { data: match } = await supabase
+    .from('morphcode_matches')
+    .select('player_a')
+    .eq('id', round.match_id)
+    .single();
+  if (!match) return null;
+
+  const isPlayerA = user.id === match.player_a;
+  const seq = isPlayerA ? round.sequence_b : round.sequence_a;
+  return (seq as Symbol[] | null) || null;
+}

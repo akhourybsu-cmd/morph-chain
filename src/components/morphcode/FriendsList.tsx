@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { UserPlus, Check, X, Swords, Copy, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
@@ -6,6 +6,7 @@ import { Friend, getFriends, sendFriendRequest, acceptFriendRequest, removeFrien
 import { challengeFriend, joinMatchById, getIncomingChallenges, declineChallenge, IncomingChallenge } from '@/lib/morphcode/matchService';
 import { toast } from 'sonner';
 import { playChallengeReceived } from '@/lib/morphcode/audioManager';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FriendsListProps {
   isLoggedIn: boolean;
@@ -21,6 +22,7 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const challengeCountRef = useRef(0);
 
   const loadData = useCallback(async () => {
     if (!isLoggedIn) return;
@@ -31,10 +33,10 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
     ]);
     setFriends(friendsList);
     setMyCode(code);
-    // Play sound if new challenges appeared
-    if (incomingChallenges.length > challenges.length) {
+    if (incomingChallenges.length > challengeCountRef.current) {
       playChallengeReceived();
     }
+    challengeCountRef.current = incomingChallenges.length;
     setChallenges(incomingChallenges);
     setLoading(false);
   }, [isLoggedIn]);
@@ -48,10 +50,32 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
     }
   }, [isLoggedIn, loadData]);
 
+  // Realtime subscription for challenge notifications instead of 10s polling
   useEffect(() => {
     if (!isLoggedIn) return;
-    const interval = setInterval(loadData, 10000);
-    return () => clearInterval(interval);
+    // Poll friends list on a longer interval (30s)
+    const friendsPoll = setInterval(loadData, 30000);
+
+    // Realtime subscription for new challenge activities
+    const channel = supabase
+      .channel('friends-challenges')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'app_activity',
+      }, (payload) => {
+        const row = payload.new as any;
+        if (row?.activity_type === 'challenge') {
+          // Reload to check if it's targeted at us
+          loadData();
+        }
+      })
+      .subscribe();
+
+    return () => {
+      clearInterval(friendsPoll);
+      supabase.removeChannel(channel);
+    };
   }, [isLoggedIn, loadData]);
 
   const handleSendRequest = async () => {

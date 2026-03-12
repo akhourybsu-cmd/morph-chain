@@ -36,7 +36,6 @@ export const GuessBoard = ({
       const rounded = Math.ceil(remaining);
       setTimeLeft(rounded);
 
-      // Play tick at 30, 10, and every second under 10
       if (rounded !== lastTickRef.current && (rounded === 30 || rounded <= 10) && rounded > 0) {
         playTimerTick(rounded);
         lastTickRef.current = rounded;
@@ -73,14 +72,22 @@ export const GuessBoard = ({
 
   return (
     <div className="flex flex-col gap-3 md:gap-4 w-full max-w-md mx-auto">
-      {/* Turn indicator + timer */}
+      {/* Turn indicator + timer + guess counter */}
       <div className="flex items-center justify-between px-1">
-        <span
-          className="text-xs md:text-sm font-medium font-inter"
-          style={{ color: isMyTurn ? 'hsl(var(--code-accent))' : 'hsl(var(--code-text-muted))' }}
-        >
-          {mySolved ? '✓ Solved!' : isMyTurn ? 'Your turn' : "Opponent's turn"}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className="text-xs md:text-sm font-medium font-inter"
+            style={{ color: isMyTurn ? 'hsl(var(--code-accent))' : 'hsl(var(--code-text-muted))' }}
+          >
+            {mySolved ? '✓ Solved!' : isMyTurn ? 'Your turn' : "Opponent's turn"}
+          </span>
+          <span
+            className="text-[10px] md:text-xs font-mono px-1.5 py-0.5 rounded"
+            style={{ background: 'hsl(var(--code-pill-bg))', color: 'hsl(var(--code-text-muted))' }}
+          >
+            {myGuesses.length}/{MAX_GUESSES}
+          </span>
+        </div>
         {isMyTurn && (
           <span
             className={`text-xs md:text-sm font-mono font-bold px-2.5 py-0.5 rounded-full ${timeLeft <= 10 ? 'animate-pulse' : ''}`}
@@ -95,10 +102,42 @@ export const GuessBoard = ({
         )}
       </div>
 
+      {/* Opponent thinking indicator */}
+      {!isMyTurn && !mySolved && (
+        <div
+          className="flex items-center justify-center gap-2 py-2 rounded-lg"
+          style={{ background: 'hsl(var(--code-pill-bg))' }}
+        >
+          <div className="flex gap-1">
+            {[0, 1, 2].map(i => (
+              <span
+                key={i}
+                className="w-1.5 h-1.5 rounded-full animate-pulse"
+                style={{
+                  background: 'hsl(var(--code-accent))',
+                  animationDelay: `${i * 300}ms`,
+                }}
+              />
+            ))}
+          </div>
+          <span className="text-xs font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
+            Opponent is thinking…
+          </span>
+          {opponentGuesses.length > 0 && (
+            <span className="text-[10px] font-mono" style={{ color: 'hsl(var(--code-text-muted))' }}>
+              ({opponentGuesses.length} guesses)
+            </span>
+          )}
+        </div>
+      )}
+
       {/* My guess history */}
       <div className="space-y-1.5 md:space-y-2">
         {myGuesses.map((entry, i) => (
-          <div key={entry.id} className="flex items-center gap-2 md:gap-3 animate-fade-in">
+          <div
+            key={entry.id}
+            className={`flex items-center gap-2 md:gap-3 animate-fade-in ${entry.isSolve ? 'ring-1 ring-[hsl(var(--code-success))] rounded-lg p-1' : ''}`}
+          >
             <span className="w-4 md:w-5 text-right text-[10px] md:text-xs font-mono" style={{ color: 'hsl(var(--code-text-muted))' }}>
               {i + 1}.
             </span>

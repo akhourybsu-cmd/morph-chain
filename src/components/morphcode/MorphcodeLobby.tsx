@@ -90,17 +90,22 @@ export const MorphcodeLobby = ({
     }
   };
 
+  // Centered waiting/queuing states
+  const isWaitingState = !!displayCode || queuing;
+
   return (
-    <div className="flex flex-col items-center gap-6 px-4 py-8 max-w-sm mx-auto">
+    <div className={`flex flex-col items-center gap-6 px-4 max-w-sm mx-auto ${isWaitingState ? 'min-h-[calc(100vh-3.5rem)] justify-center' : 'py-8'}`}>
       {/* Prestige Masthead */}
-      <div className="text-center space-y-2 mb-2">
-        <p
-          className="font-playfair italic text-base tracking-wide"
-          style={{ color: 'hsl(var(--code-text-secondary))' }}
-        >
-          Crack the code. Outsmart your rival.
-        </p>
-      </div>
+      {!isWaitingState && (
+        <div className="text-center space-y-2 mb-2">
+          <p
+            className="font-playfair italic text-base tracking-wide"
+            style={{ color: 'hsl(var(--code-text-secondary))' }}
+          >
+            Crack the code. Outsmart your rival.
+          </p>
+        </div>
+      )}
 
       {/* Sign-in prompt for logged-out users */}
       {!isLoggedIn && (
@@ -185,7 +190,7 @@ export const MorphcodeLobby = ({
 
       {!displayCode && !queuing && isLoggedIn && (
         <>
-          {/* Create Private Match — prestige card */}
+          {/* Create Private Match */}
           <button
             onClick={handleCreate}
             disabled={creating}
@@ -217,7 +222,7 @@ export const MorphcodeLobby = ({
             </div>
           </button>
 
-          {/* Join by code — prestige card */}
+          {/* Join by code */}
           <div
             className="w-full rounded-xl p-5 space-y-3"
             style={{
@@ -267,7 +272,7 @@ export const MorphcodeLobby = ({
             <div className="flex-1 h-px" style={{ background: 'hsl(var(--code-divider))' }} />
           </div>
 
-          {/* Random match — secondary card */}
+          {/* Random match */}
           <button
             onClick={handleQueue}
             className="w-full rounded-xl p-5 text-left transition-all hover:shadow-md active:scale-[0.98]"

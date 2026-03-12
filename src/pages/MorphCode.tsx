@@ -11,6 +11,7 @@ import { VersusScreen } from '@/components/morphcode/VersusScreen';
 import {
   getActiveMatch, getCurrentRound, lockSequence, submitGuess,
   createNextRound, cancelMatch, getPlayerStats, getPlayerDisplayName, recordMatchResult,
+  getOpponentSequence,
 } from '@/lib/morphcode/matchService';
 import { updatePresence, setOffline } from '@/lib/social/friendsService';
 import { MatchState, RoundState, Symbol } from '@/lib/morphcode/types';
@@ -32,8 +33,11 @@ const MorphCode = () => {
   const [round, setRound] = useState<RoundState | null>(null);
   const [loading, setLoading] = useState(true);
   const [versusData, setVersusData] = useState<VersusData | null>(null);
-  const [hasShownVersus, setHasShownVersus] = useState(false);
-  const statsRecordedRef = useRef<string | null>(null); // track which match ID we've recorded stats for
+  const [oppSequence, setOppSequence] = useState<Symbol[] | null>(null);
+  const hasShownVersusRef = useRef(false);
+  const statsRecordedRef = useRef<string | null>(null);
+  const loadingRef = useRef(false);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     initMorphcodeAudio();
@@ -53,14 +57,14 @@ const MorphCode = () => {
   }, [userId]);
 
   const loadGameState = useCallback(async () => {
-    if (!userId) return;
+    if (!userId || loadingRef.current) return;
+    loadingRef.current = true;
     setLoading(true);
     const activeMatch = await getActiveMatch();
 
     if (activeMatch) {
       setMatch(activeMatch);
 
-      // Record stats immediately when we detect completion (not on button click)
       if (activeMatch.status === 'completed' && statsRecordedRef.current !== activeMatch.id) {
         statsRecordedRef.current = activeMatch.id;
         if (activeMatch.winnerId === userId) recordMatchResult(userId, 'win');
@@ -76,11 +80,10 @@ const MorphCode = () => {
         const currentRound = await getCurrentRound(activeMatch.id);
         setRound(currentRound);
 
-        // Show VS screen on first setup of round 1
         if (
           currentRound?.status === 'setup' &&
           currentRound.roundNumber === 1 &&
-          !hasShownVersus &&
+          !hasShownVersusRef.current &&
           activeMatch.playerB
         ) {
           const [nameA, nameB, statsA, statsB] = await Promise.all([
@@ -94,8 +97,9 @@ const MorphCode = () => {
             playerB: { displayName: nameB, record: statsB },
           });
           setPhase('versus');
-          setHasShownVersus(true);
+          hasShownVersusRef.current = true;
           setLoading(false);
+          loadingRef.current = false;
           return;
         }
 
@@ -104,6 +108,11 @@ const MorphCode = () => {
         } else if (currentRound?.status === 'active') {
           setPhase('playing');
         } else if (currentRound?.status === 'completed') {
+          // Fetch opponent sequence for reveal
+          if (currentRound.id) {
+            const seq = await getOpponentSequence(currentRound.id);
+            setOppSequence(seq);
+          }
           setPhase('round-end');
         }
       }
@@ -111,24 +120,33 @@ const MorphCode = () => {
       setPhase('lobby');
     }
     setLoading(false);
-  }, [userId, hasShownVersus]);
+    loadingRef.current = false;
+  }, [userId]);
+
+  // Debounced version for realtime events
+  const debouncedLoadGameState = useCallback(() => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      loadGameState();
+    }, 300);
+  }, [loadGameState]);
 
   useEffect(() => {
     if (!userId) { setLoading(false); return; }
     loadGameState();
   }, [userId]);
 
-  // Realtime: match updates
+  // Realtime: match updates — stable subscription keyed only on match.id
   useEffect(() => {
     if (!match?.id) return;
     const channel = supabase
       .channel(`morphcode-match-${match.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'morphcode_matches', filter: `id=eq.${match.id}` }, () => loadGameState())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'morphcode_rounds', filter: `match_id=eq.${match.id}` }, () => loadGameState())
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'morphcode_guesses' }, () => loadGameState())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'morphcode_matches', filter: `id=eq.${match.id}` }, () => debouncedLoadGameState())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'morphcode_rounds', filter: `match_id=eq.${match.id}` }, () => debouncedLoadGameState())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'morphcode_guesses' }, () => debouncedLoadGameState())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [match?.id, loadGameState]);
+  }, [match?.id, debouncedLoadGameState]);
 
   // Realtime: lobby polling
   useEffect(() => {
@@ -139,12 +157,12 @@ const MorphCode = () => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'morphcode_matches' }, async (payload) => {
         const row = payload.new as any;
         if (row && (row.player_a === userId || row.player_b === userId)) {
-          loadGameState();
+          debouncedLoadGameState();
         }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [phase, userId, loadGameState]);
+  }, [phase, userId, debouncedLoadGameState]);
 
   const handleMatchFound = () => { loadGameState(); };
 
@@ -153,7 +171,7 @@ const MorphCode = () => {
     await cancelMatch(match.id);
     setMatch(null);
     setRound(null);
-    setHasShownVersus(false);
+    hasShownVersusRef.current = false;
     setPhase('lobby');
   };
 
@@ -186,14 +204,15 @@ const MorphCode = () => {
   const handleNextRound = async () => {
     if (!match) return;
     if (match.status === 'completed') {
-      // Stats already recorded in loadGameState, just go back to lobby
       setMatch(null);
       setRound(null);
-      setHasShownVersus(false);
+      hasShownVersusRef.current = false;
       statsRecordedRef.current = null;
+      setOppSequence(null);
       setPhase('lobby');
       return;
     }
+    setOppSequence(null);
     const success = await createNextRound(match.id);
     if (success) loadGameState();
     else toast.error('Failed to start next round');
@@ -220,7 +239,6 @@ const MorphCode = () => {
     <div className="min-h-screen flex flex-col" style={{ background: 'hsl(var(--code-page-bg))' }}>
       <MorphcodeHeader matchActive={!!match} roundInfo={getRoundInfo()} />
 
-      {/* VS Screen overlay */}
       {phase === 'versus' && versusData && (
         <VersusScreen
           playerA={versusData.playerA}
@@ -298,6 +316,7 @@ const MorphCode = () => {
             opponentGuessCount={round.opponentGuessCount}
             mySolved={round.mySolved}
             opponentSolved={round.opponentSolved}
+            opponentSequence={oppSequence || undefined}
             onNextRound={handleNextRound}
             matchOver={match.status === 'completed'}
             matchWinnerId={match.winnerId}
