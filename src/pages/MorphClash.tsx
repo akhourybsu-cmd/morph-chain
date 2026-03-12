@@ -79,8 +79,7 @@ const MorphClash = () => {
   };
 
   const isMyTurn = match?.current_turn === userId;
-  const showBoard = match && (match.status === 'active' || match.status === 'completed');
-  const showWaiting = match?.status === 'waiting';
+  const showBoard = match && ['active', 'completed', 'waiting'].includes(match.status);
   const showLobby = !match || match.status === 'expired';
 
   // Tile size
