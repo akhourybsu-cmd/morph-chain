@@ -58,7 +58,7 @@ export const RoundResults = ({
   // Staggered reveal for opponent sequence
   useEffect(() => {
     if (!opponentSequence) return;
-    const timers: NodeJS.Timeout[] = [];
+    const timers: ReturnType<typeof setTimeout>[] = [];
     opponentSequence.forEach((_, i) => {
       timers.push(setTimeout(() => setRevealedSymbols(i + 1), 400 + i * 200));
     });
