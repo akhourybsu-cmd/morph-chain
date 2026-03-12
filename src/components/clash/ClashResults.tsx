@@ -41,7 +41,9 @@ export const ClashResults = () => {
           <div className="text-3xl font-mono font-bold" style={{ color: 'hsl(var(--clash-player-opponent))' }}>
             {oppTiles}
           </div>
-          <div className="text-xs mt-1" style={{ color: 'hsl(var(--clash-text-muted))' }}>Opponent</div>
+          <div className="text-xs mt-1" style={{ color: 'hsl(var(--clash-text-muted))' }}>
+            {isClashBotPlayer(isPlayerA ? match.player_b : match.player_a) ? 'Bot' : 'Opponent'}
+          </div>
         </div>
       </div>
 
