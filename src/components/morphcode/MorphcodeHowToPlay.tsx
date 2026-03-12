@@ -75,13 +75,29 @@ export const MorphcodeHowToPlay = ({ open, onOpenChange }: MorphcodeHowToPlayPro
               className="space-y-2 p-3 rounded-lg bg-[hsl(var(--code-pill-bg))] border border-[hsl(var(--code-card-border))]"
             >
               <div className="flex items-center gap-3">
-                <span className="text-lg" style={{ color: 'hsl(var(--code-exact))' }}>⬤</span>
+                <span
+                  className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-bold font-mono"
+                  style={{
+                    background: 'hsl(var(--code-exact) / 0.15)',
+                    color: 'hsl(var(--code-exact))',
+                  }}
+                >
+                  2 ✓
+                </span>
                 <span className="text-[hsl(var(--code-text-secondary))]">
                   <strong>Exact</strong> — Right symbol, right slot
                 </span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-lg" style={{ color: 'hsl(var(--code-shifted))' }}>◐</span>
+                <span
+                  className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-bold font-mono"
+                  style={{
+                    background: 'hsl(var(--code-shifted) / 0.15)',
+                    color: 'hsl(var(--code-shifted))',
+                  }}
+                >
+                  1 ~
+                </span>
                 <span className="text-[hsl(var(--code-text-secondary))]">
                   <strong>Shifted</strong> — Right symbol, wrong slot
                 </span>

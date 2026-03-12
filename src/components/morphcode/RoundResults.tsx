@@ -49,11 +49,14 @@ export const RoundResults = ({
       if (iWon) { playCodeSolved(); setShowCelebration(true); }
       else if (!isDraw) playMatchLoss();
     }
-    if (showCelebration) {
-      const t = setTimeout(() => setShowCelebration(false), 1500);
-      return () => clearTimeout(t);
-    }
-  }, [matchOver, matchWinnerId, myId, iWon, isDraw]);
+  }, [matchOver, matchWon, iWon, isDraw]);
+
+  // Separate effect to auto-dismiss celebration
+  useEffect(() => {
+    if (!showCelebration) return;
+    const t = setTimeout(() => setShowCelebration(false), 1500);
+    return () => clearTimeout(t);
+  }, [showCelebration]);
 
   // Staggered reveal for opponent sequence
   useEffect(() => {

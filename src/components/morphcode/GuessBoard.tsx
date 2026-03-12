@@ -95,6 +95,22 @@ export const GuessBoard = ({
         )}
       </div>
 
+      {/* Solved banner */}
+      {mySolved && !isMyTurn && (
+        <div
+          className="flex items-center justify-center gap-2 py-3 rounded-lg"
+          style={{
+            background: 'hsl(var(--code-exact) / 0.1)',
+            border: '1px solid hsl(var(--code-exact) / 0.25)',
+          }}
+        >
+          <span className="text-base">✓</span>
+          <span className="text-sm font-semibold font-inter" style={{ color: 'hsl(var(--code-exact))' }}>
+            Code Cracked — waiting for opponent
+          </span>
+        </div>
+      )}
+
       {/* Opponent thinking indicator */}
       {!isMyTurn && !mySolved && (
         <div
