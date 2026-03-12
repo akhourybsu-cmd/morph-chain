@@ -91,6 +91,24 @@ export async function getMyRecentCompletedMatch(): Promise<string | null> {
   return data?.id || null;
 }
 
+export async function getMyRecentCompletedMatches(): Promise<ClashMatchSummary[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
+  const { data } = await supabase
+    .from('clash_matches')
+    .select('id, status, player_a, player_b, current_turn, tiles_a, tiles_b, moves_a, moves_b, invite_code, turn_deadline, created_at, updated_at')
+    .or(`player_a.eq.${user.id},player_b.eq.${user.id}`)
+    .eq('status', 'completed')
+    .gte('updated_at', oneHourAgo)
+    .order('updated_at', { ascending: false })
+    .limit(5);
+
+  return (data as ClashMatchSummary[]) || [];
+}
+
 /**
  * Challenge a friend directly — creates a match and posts a challenge activity
  */
