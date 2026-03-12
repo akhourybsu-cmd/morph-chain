@@ -49,6 +49,11 @@ function formatActivity(item: ActivityItem): string {
       return p.result === 'win'
         ? `${name} won a Code match`
         : `${name} played a Code match`;
+    case 'clash':
+      if (item.activityType === 'challenge') return `${name} sent a Clash challenge`;
+      return p.result === 'win'
+        ? `${name} won a Clash match`
+        : `${name} played a Clash match`;
     default:
       return `${name} played ${gameLabels[item.game] || item.game}`;
   }
