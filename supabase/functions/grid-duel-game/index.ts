@@ -167,7 +167,7 @@ async function validateWord(word: string, adminClient: any): Promise<boolean> {
     const upper = word.toUpperCase();
     
     // Check against TWL06 dictionary
-    const dictionary = loadTWL06();
+    const dictionary = await loadTWL06();
     if (!dictionary.has(upper)) return false;
 
     // Check banned in admin_dictionary
