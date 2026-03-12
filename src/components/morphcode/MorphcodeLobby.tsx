@@ -88,7 +88,17 @@ export const MorphcodeLobby = ({
 
       {/* Friends section */}
       {isLoggedIn && !queuing && (
-        <FriendsList isLoggedIn={isLoggedIn} onChallengeMatch={onMatchFound} />
+        <>
+          <FriendsList isLoggedIn={isLoggedIn} onChallengeMatch={onMatchFound} />
+          <button
+            onClick={() => navigate('/profile?tab=friends')}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-inter transition-colors"
+            style={{ color: 'hsl(var(--code-accent))', background: 'hsl(var(--code-accent) / 0.08)' }}
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            Manage Friends
+          </button>
+        </>
       )}
 
       {!queuing && isLoggedIn && (

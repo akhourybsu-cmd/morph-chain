@@ -314,7 +314,7 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
 
           {!loading && friends.length === 0 && challenges.length === 0 && (
             <p className="text-xs text-center py-2 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
-              Share your code to add friends
+              Share your code or <button onClick={() => useNavigate()('/profile?tab=friends')} className="underline" style={{ color: 'hsl(var(--code-accent))' }}>manage friends</button> from your profile
             </p>
           )}
         </div>
