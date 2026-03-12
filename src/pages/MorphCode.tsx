@@ -11,7 +11,7 @@ import { VersusScreen } from '@/components/morphcode/VersusScreen';
 import {
   getActiveMatch, getCurrentRound, lockSequence, submitGuess,
   createNextRound, cancelMatch, getPlayerStats, getPlayerDisplayName, recordMatchResult,
-  getOpponentSequence,
+  getOpponentSequence, createRematch, MorphcodePlayerStats,
 } from '@/lib/morphcode/matchService';
 import { updatePresence, setOffline } from '@/lib/social/friendsService';
 import { MatchState, RoundState, Symbol } from '@/lib/morphcode/types';
