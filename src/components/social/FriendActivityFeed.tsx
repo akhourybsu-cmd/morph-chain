@@ -8,6 +8,7 @@ const gameRoutes: Record<string, string> = {
   grid: '/grid',
   rush: '/rush',
   morphcode: '/morphcode',
+  clash: '/clash',
 };
 
 const gameLabels: Record<string, string> = {
@@ -15,6 +16,7 @@ const gameLabels: Record<string, string> = {
   grid: 'Grid',
   rush: 'Rush',
   morphcode: 'Code',
+  clash: 'Clash',
 };
 
 function timeAgo(dateStr: string): string {
