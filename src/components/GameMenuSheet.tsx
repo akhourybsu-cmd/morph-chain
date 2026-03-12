@@ -327,6 +327,40 @@ export const GameMenuSheet = ({
               </div>
             </CollapsibleContent>
           </Collapsible>
+
+          <Separator style={{ background: 'hsl(var(--chain-divider))' }} />
+
+          {/* Info Section */}
+          <div>
+            <h3 
+              className="text-xs font-semibold uppercase tracking-wider mb-3 px-2"
+              style={{ color: 'hsl(var(--chain-text-muted))' }}
+            >
+              Info
+            </h3>
+            <div className="space-y-1">
+              <button
+                onClick={() => { navigate('/rules'); onOpenChange(false); }}
+                className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+                style={{ color: 'hsl(var(--chain-text-primary))' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--chain-divider))'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <HelpCircle className="w-4 h-4" style={{ color: 'hsl(var(--chain-accent))' }} />
+                <span className="text-sm">Rules</span>
+              </button>
+              <button
+                onClick={() => { navigate('/whats-new'); onOpenChange(false); }}
+                className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+                style={{ color: 'hsl(var(--chain-text-primary))' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--chain-divider))'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <Sparkles className="w-4 h-4" style={{ color: 'hsl(var(--chain-accent))' }} />
+                <span className="text-sm">What's New</span>
+              </button>
+            </div>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
