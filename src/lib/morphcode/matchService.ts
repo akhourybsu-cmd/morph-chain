@@ -249,6 +249,24 @@ export async function createNextRound(matchId: string): Promise<boolean> {
   return !error;
 }
 
+// --- Bot Match ---
+
+export const BOT_UUID = '00000000-0000-0000-0000-b07b07b07b07';
+
+export async function createBotMatch(): Promise<string | null> {
+  const { data, error } = await callGameFunction('create_bot_match', {});
+  if (error || !data?.matchId) return null;
+  return data.matchId;
+}
+
+export async function triggerBotGuess(roundId: string): Promise<void> {
+  await callGameFunction('bot_guess', { round_id: roundId });
+}
+
+export function isBotPlayer(playerId: string | null): boolean {
+  return playerId === BOT_UUID;
+}
+
 // --- Stats ---
 
 export interface MorphcodePlayerStats {

@@ -206,7 +206,38 @@ export async function getPendingChallenges(): Promise<Array<{
 /**
  * Skip the current turn (costs 1 move)
  */
+// --- Bot Match ---
+
+export const CLASH_BOT_UUID = '00000000-0000-0000-0000-b07b07b07b07';
+
+export async function createClashBotMatch(): Promise<string | null> {
+  const { data, error } = await supabase.functions.invoke('grid-duel-game', {
+    body: { action: 'create_bot_match' },
+  });
+  if (error || data?.error) return null;
+  return data.matchId;
+}
+
+export async function triggerClashBotMove(matchId: string): Promise<void> {
+  await supabase.functions.invoke('grid-duel-game', {
+    body: { action: 'bot_move', match_id: matchId },
+  });
+}
+
+export function isClashBotPlayer(playerId: string | null): boolean {
+  return playerId === CLASH_BOT_UUID;
+}
+
+/**
+ * Skip the current turn (costs 1 move)
+ */
 export async function skipClashTurn(matchId: string): Promise<boolean> {
+  const { data, error } = await supabase.functions.invoke('grid-duel-game', {
+    body: { action: 'skip_turn', match_id: matchId },
+  });
+
+  return !error && data?.success;
+}
   const { data, error } = await supabase.functions.invoke('grid-duel-game', {
     body: { action: 'skip_turn', match_id: matchId },
   });

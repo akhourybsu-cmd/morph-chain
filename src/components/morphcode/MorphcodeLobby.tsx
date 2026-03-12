@@ -91,6 +91,38 @@ export const MorphcodeLobby = ({
 
       {!queuing && isLoggedIn && (
         <>
+          {/* Play vs Bot */}
+          <button
+            onClick={handlePlayBot}
+            disabled={creatingBot}
+            className="w-full rounded-xl p-5 text-left transition-all hover:shadow-md active:scale-[0.98]"
+            style={{
+              background: 'hsl(var(--code-card-bg))',
+              border: '1px solid hsl(var(--code-accent) / 0.3)',
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: 'hsl(var(--code-accent) / 0.12)' }}
+              >
+                {creatingBot ? (
+                  <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'hsl(var(--code-accent))' }} />
+                ) : (
+                  <Bot className="w-5 h-5" style={{ color: 'hsl(var(--code-accent))' }} />
+                )}
+              </div>
+              <div>
+                <p className="font-playfair font-semibold text-[15px]" style={{ color: 'hsl(var(--code-text-primary))' }}>
+                  Play vs Bot
+                </p>
+                <p className="text-xs font-inter mt-0.5" style={{ color: 'hsl(var(--code-text-muted))' }}>
+                  Practice against an AI opponent
+                </p>
+              </div>
+            </div>
+          </button>
+
           {/* Divider */}
           <div className="flex items-center gap-4 w-full">
             <div className="flex-1 h-px" style={{ background: 'hsl(var(--code-divider))' }} />

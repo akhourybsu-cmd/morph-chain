@@ -239,6 +239,59 @@ export const ClashLobby = ({
           </p>
         </div>
       )}
+
+      {/* Play vs Bot */}
+      {isLoggedIn && (
+        <PlayBotButton onMatchFound={onMatchFound} />
+      )}
     </div>
   );
 };
+
+function PlayBotButton({ onMatchFound }: { onMatchFound: (matchId: string) => void }) {
+  const [creating, setCreating] = useState(false);
+
+  const handlePlayBot = async () => {
+    setCreating(true);
+    const matchId = await createClashBotMatch();
+    setCreating(false);
+    if (matchId) {
+      onMatchFound(matchId);
+    } else {
+      toast('Failed to create bot match');
+    }
+  };
+
+  return (
+    <button
+      onClick={handlePlayBot}
+      disabled={creating}
+      className="w-full rounded-xl p-5 text-left transition-all hover:shadow-md active:scale-[0.98]"
+      style={{
+        background: 'hsl(var(--clash-card-bg))',
+        border: '1px solid hsl(var(--clash-accent) / 0.3)',
+      }}
+    >
+      <div className="flex items-center gap-4">
+        <div
+          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ background: 'hsl(var(--clash-accent) / 0.12)' }}
+        >
+          {creating ? (
+            <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'hsl(var(--clash-accent))' }} />
+          ) : (
+            <Bot className="w-5 h-5" style={{ color: 'hsl(var(--clash-accent))' }} />
+          )}
+        </div>
+        <div>
+          <p className="font-playfair font-semibold text-[15px]" style={{ color: 'hsl(var(--clash-text-primary))' }}>
+            Play vs Bot
+          </p>
+          <p className="text-xs font-inter mt-0.5" style={{ color: 'hsl(var(--clash-text-muted))' }}>
+            Practice against an AI opponent
+          </p>
+        </div>
+      </div>
+    </button>
+  );
+}
