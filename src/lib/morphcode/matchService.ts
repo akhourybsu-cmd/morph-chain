@@ -19,6 +19,13 @@ export async function createMatch(): Promise<{ matchId: string; inviteCode: stri
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
+  // Expire any stale waiting matches created by this user
+  await supabase
+    .from('morphcode_matches')
+    .update({ status: 'expired' })
+    .eq('player_a', user.id)
+    .eq('status', 'waiting');
+
   const inviteCode = generateInviteCode();
 
   const { data, error } = await supabase
@@ -45,19 +52,40 @@ export async function joinMatchByCode(code: string): Promise<string | null> {
   if (findErr || !match) return null;
   if (match.player_a === user.id) return null;
 
+  return await finalizeJoin(match.id, match.player_a, user.id);
+}
+
+export async function joinMatchById(matchId: string): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: match, error: findErr } = await supabase
+    .from('morphcode_matches')
+    .select('id, player_a')
+    .eq('id', matchId)
+    .eq('status', 'waiting')
+    .single();
+
+  if (findErr || !match) return null;
+  if (match.player_a === user.id) return null;
+
+  return await finalizeJoin(match.id, match.player_a, user.id);
+}
+
+async function finalizeJoin(matchId: string, playerA: string, playerB: string): Promise<string | null> {
   const { error: updateErr } = await supabase
     .from('morphcode_matches')
-    .update({ player_b: user.id, status: 'setup', current_round: 1 })
-    .eq('id', match.id);
+    .update({ player_b: playerB, status: 'setup', current_round: 1 })
+    .eq('id', matchId);
 
   if (updateErr) return null;
 
-  const firstGuesser = Math.random() < 0.5 ? match.player_a : user.id;
+  const firstGuesser = Math.random() < 0.5 ? playerA : playerB;
   await supabase.from('morphcode_rounds').insert({
-    match_id: match.id, round_number: 1, first_guesser: firstGuesser, status: 'setup',
+    match_id: matchId, round_number: 1, first_guesser: firstGuesser, status: 'setup',
   });
 
-  return match.id;
+  return matchId;
 }
 
 export async function cancelMatch(matchId: string): Promise<boolean> {
@@ -73,7 +101,6 @@ export async function cancelMatch(matchId: string): Promise<boolean> {
   if (!match) return false;
 
   if (match.status === 'waiting') {
-    // Creator can cancel a waiting match by setting it to expired
     const { error } = await supabase
       .from('morphcode_matches')
       .update({ status: 'expired' })
@@ -81,10 +108,101 @@ export async function cancelMatch(matchId: string): Promise<boolean> {
     return !error;
   }
 
-  // For active matches, forfeit
   const { error } = await supabase
     .from('morphcode_matches')
     .update({ status: 'forfeited', completed_at: new Date().toISOString() })
+    .eq('id', matchId);
+  return !error;
+}
+
+// --- Challenge a friend directly ---
+
+export async function challengeFriend(friendUserId: string): Promise<{ matchId: string } | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const result = await createMatch();
+  if (!result) return null;
+
+  // Post a challenge activity visible to the friend
+  await supabase.from('app_activity').insert({
+    user_id: user.id,
+    game: 'morphcode',
+    activity_type: 'challenge',
+    payload: { match_id: result.matchId, target_user_id: friendUserId },
+  });
+
+  return { matchId: result.matchId };
+}
+
+export interface IncomingChallenge {
+  activityId: string;
+  matchId: string;
+  challengerName: string;
+  challengerUserId: string;
+  createdAt: string;
+}
+
+export async function getIncomingChallenges(): Promise<IncomingChallenge[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  // Get challenge activities from friends
+  const { data: activities } = await supabase
+    .from('app_activity')
+    .select('id, user_id, payload, created_at')
+    .eq('game', 'morphcode')
+    .eq('activity_type', 'challenge')
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (!activities || activities.length === 0) return [];
+
+  // Filter to challenges targeted at me
+  const myActivities = activities.filter(a => {
+    const p = a.payload as Record<string, any>;
+    return p?.target_user_id === user.id;
+  });
+
+  if (myActivities.length === 0) return [];
+
+  // Check which matches are still waiting
+  const matchIds = myActivities.map(a => (a.payload as Record<string, any>).match_id).filter(Boolean);
+  if (matchIds.length === 0) return [];
+
+  const { data: matches } = await supabase
+    .from('morphcode_matches')
+    .select('id, status')
+    .in('id', matchIds)
+    .eq('status', 'waiting');
+
+  const waitingIds = new Set((matches || []).map(m => m.id));
+
+  // Get challenger display names
+  const challengerIds = [...new Set(myActivities.map(a => a.user_id))];
+  const { data: profiles } = await supabase
+    .from('user_profiles')
+    .select('user_id, display_name, default_initials')
+    .in('user_id', challengerIds);
+
+  const nameMap = new Map((profiles || []).map(p => [p.user_id, p.display_name || p.default_initials || 'Player']));
+
+  return myActivities
+    .filter(a => waitingIds.has((a.payload as Record<string, any>).match_id))
+    .map(a => ({
+      activityId: a.id,
+      matchId: (a.payload as Record<string, any>).match_id,
+      challengerName: nameMap.get(a.user_id) || 'Player',
+      challengerUserId: a.user_id,
+      createdAt: a.created_at,
+    }));
+}
+
+export async function declineChallenge(matchId: string): Promise<boolean> {
+  // Just expire the match — the activity will stop showing since match is no longer 'waiting'
+  const { error } = await supabase
+    .from('morphcode_matches')
+    .update({ status: 'expired' })
     .eq('id', matchId);
   return !error;
 }

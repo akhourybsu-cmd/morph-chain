@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Check, X, Swords, Copy, Loader2, Circle, ChevronDown, ChevronUp } from 'lucide-react';
+import { UserPlus, Check, X, Swords, Copy, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Friend, getFriends, sendFriendRequest, acceptFriendRequest, removeFriend, getMyFriendCode, updatePresence } from '@/lib/morphcode/friendsService';
-import { createMatch } from '@/lib/morphcode/matchService';
+import { challengeFriend, joinMatchById, getIncomingChallenges, declineChallenge, IncomingChallenge } from '@/lib/morphcode/matchService';
 import { toast } from 'sonner';
 
 interface FriendsListProps {
@@ -13,34 +13,41 @@ interface FriendsListProps {
 
 export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) => {
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [challenges, setChallenges] = useState<IncomingChallenge[]>([]);
   const [myCode, setMyCode] = useState<string | null>(null);
   const [addCode, setAddCode] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
 
-  const loadFriends = useCallback(async () => {
+  const loadData = useCallback(async () => {
     if (!isLoggedIn) return;
-    const [friendsList, code] = await Promise.all([getFriends(), getMyFriendCode()]);
+    const [friendsList, code, incomingChallenges] = await Promise.all([
+      getFriends(),
+      getMyFriendCode(),
+      getIncomingChallenges(),
+    ]);
     setFriends(friendsList);
     setMyCode(code);
+    setChallenges(incomingChallenges);
     setLoading(false);
   }, [isLoggedIn]);
 
   useEffect(() => {
-    loadFriends();
+    loadData();
     if (isLoggedIn) {
       updatePresence();
       const interval = setInterval(updatePresence, 30000);
       return () => clearInterval(interval);
     }
-  }, [isLoggedIn, loadFriends]);
+  }, [isLoggedIn, loadData]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
-    const interval = setInterval(loadFriends, 15000);
+    const interval = setInterval(loadData, 10000);
     return () => clearInterval(interval);
-  }, [isLoggedIn, loadFriends]);
+  }, [isLoggedIn, loadData]);
 
   const handleSendRequest = async () => {
     if (!addCode.trim()) return;
@@ -50,7 +57,7 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
     if (result.success) {
       toast.success('Friend request sent!');
       setAddCode('');
-      loadFriends();
+      loadData();
     } else {
       toast.error(result.error || 'Failed');
     }
@@ -59,20 +66,41 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
   const handleAccept = async (id: string) => {
     await acceptFriendRequest(id);
     toast.success('Friend accepted!');
-    loadFriends();
+    loadData();
   };
 
   const handleRemove = async (id: string) => {
     await removeFriend(id);
-    loadFriends();
+    loadData();
   };
 
   const handleChallenge = async (friendUserId: string) => {
-    const result = await createMatch();
+    const result = await challengeFriend(friendUserId);
     if (result) {
-      toast.success('Match created! Share the code with your friend.');
+      toast.success('Challenge sent!');
       onChallengeMatch(result.matchId);
+    } else {
+      toast.error('Failed to create challenge');
     }
+  };
+
+  const handleAcceptChallenge = async (challenge: IncomingChallenge) => {
+    setAcceptingId(challenge.matchId);
+    const matchId = await joinMatchById(challenge.matchId);
+    setAcceptingId(null);
+    if (matchId) {
+      toast.success('Challenge accepted!');
+      onChallengeMatch(matchId);
+    } else {
+      toast.error('Challenge expired or already accepted');
+      loadData();
+    }
+  };
+
+  const handleDeclineChallenge = async (challenge: IncomingChallenge) => {
+    await declineChallenge(challenge.matchId);
+    toast('Challenge declined');
+    loadData();
   };
 
   const copyMyCode = () => {
@@ -90,11 +118,7 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
   const onlineFriends = accepted.filter(f => f.isOnline);
   const offlineFriends = accepted.filter(f => !f.isOnline);
 
-  const hasContent = friends.length > 0 || !loading;
-  const hasOnline = onlineFriends.length > 0;
-
-  // Auto-expand if there are online friends or pending requests
-  const shouldAutoExpand = hasOnline || pendingReceived.length > 0;
+  const shouldAutoExpand = onlineFriends.length > 0 || pendingReceived.length > 0 || challenges.length > 0;
 
   return (
     <div
@@ -108,47 +132,25 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
       {/* My friend code — always visible */}
       <div className="p-4 flex items-center justify-between">
         <div>
-          <p
-            className="text-[10px] font-inter uppercase tracking-widest"
-            style={{ color: 'hsl(var(--code-text-muted))' }}
-          >
+          <p className="text-[10px] font-inter uppercase tracking-widest" style={{ color: 'hsl(var(--code-text-muted))' }}>
             Your friend code
           </p>
-          <p
-            className="font-mono font-bold text-xl tracking-[0.2em] mt-0.5"
-            style={{ color: 'hsl(var(--code-accent))' }}
-          >
+          <p className="font-mono font-bold text-xl tracking-[0.2em] mt-0.5" style={{ color: 'hsl(var(--code-accent))' }}>
             {myCode || '···'}
           </p>
         </div>
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={copyMyCode}
-            className="h-8 w-8 p-0 text-[hsl(var(--code-text-muted))] hover:text-[hsl(var(--code-accent))]"
-          >
+          <Button variant="ghost" size="sm" onClick={copyMyCode} className="h-8 w-8 p-0 text-[hsl(var(--code-text-muted))] hover:text-[hsl(var(--code-accent))]">
             <Copy className="w-4 h-4" />
           </Button>
-          {hasContent && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setExpanded(!expanded)}
-              className="h-8 w-8 p-0 text-[hsl(var(--code-text-muted))]"
-            >
-              {(expanded || shouldAutoExpand) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </Button>
-          )}
+          <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)} className="h-8 w-8 p-0 text-[hsl(var(--code-text-muted))]">
+            {(expanded || shouldAutoExpand) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </Button>
         </div>
       </div>
 
-      {/* Expandable content */}
       {(expanded || shouldAutoExpand) && (
-        <div
-          className="px-4 pb-4 space-y-4"
-          style={{ borderTop: '1px solid hsl(var(--code-divider))' }}
-        >
+        <div className="px-4 pb-4 space-y-4" style={{ borderTop: '1px solid hsl(var(--code-divider))' }}>
           {/* Add friend */}
           <div className="flex gap-2 pt-3">
             <Input
@@ -158,16 +160,41 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
               className="font-mono text-center tracking-widest uppercase bg-[hsl(var(--code-page-bg))] border-[hsl(var(--code-card-border))] text-[hsl(var(--code-text-primary))] placeholder:text-[hsl(var(--code-text-muted))]"
               maxLength={6}
             />
-            <Button
-              onClick={handleSendRequest}
-              disabled={sending || !addCode.trim()}
-              size="sm"
-              className="px-3"
-              style={{ background: 'hsl(var(--code-accent))', color: '#fff' }}
-            >
+            <Button onClick={handleSendRequest} disabled={sending || !addCode.trim()} size="sm" className="px-3" style={{ background: 'hsl(var(--code-accent))', color: '#fff' }}>
               {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
             </Button>
           </div>
+
+          {/* Incoming challenges */}
+          {challenges.length > 0 && (
+            <FriendsSection label="⚔ Challenges">
+              {challenges.map(c => (
+                <div key={c.activityId} className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ background: 'hsl(var(--code-accent) / 0.08)', border: '1px solid hsl(var(--code-accent) / 0.2)' }}>
+                  <div className="flex items-center gap-2">
+                    <Swords className="w-4 h-4" style={{ color: 'hsl(var(--code-accent))' }} />
+                    <span className="text-sm font-inter font-medium" style={{ color: 'hsl(var(--code-text-primary))' }}>
+                      {c.challengerName}
+                    </span>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleAcceptChallenge(c)}
+                      disabled={acceptingId === c.matchId}
+                      className="h-7 px-3 text-xs font-semibold"
+                      style={{ background: 'hsl(var(--code-accent))', color: '#fff' }}
+                    >
+                      {acceptingId === c.matchId ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Accept'}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDeclineChallenge(c)} className="h-7 w-7 p-0 text-[hsl(var(--code-error))]">
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </FriendsSection>
+          )}
 
           {/* Pending received */}
           {pendingReceived.length > 0 && (
@@ -196,20 +223,12 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
               {onlineFriends.map(f => (
                 <div key={f.id} className="flex items-center justify-between py-1.5">
                   <div className="flex items-center gap-2">
-                    <span
-                      className="w-2 h-2 rounded-full animate-pulse"
-                      style={{ background: 'hsl(var(--code-success))' }}
-                    />
+                    <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'hsl(var(--code-success))' }} />
                     <span className="text-sm font-inter" style={{ color: 'hsl(var(--code-text-primary))' }}>
                       {f.displayName || f.friendCode || 'Player'}
                     </span>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleChallenge(f.friendUserId)}
-                    className="h-7 text-xs gap-1 text-[hsl(var(--code-accent))]"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => handleChallenge(f.friendUserId)} className="h-7 text-xs gap-1 text-[hsl(var(--code-accent))]">
                     <Swords className="w-3 h-3" />
                     Challenge
                   </Button>
@@ -224,20 +243,12 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
               {offlineFriends.map(f => (
                 <div key={f.id} className="flex items-center justify-between py-1.5">
                   <div className="flex items-center gap-2">
-                    <span
-                      className="w-2 h-2 rounded-full"
-                      style={{ background: 'hsl(var(--code-divider))' }}
-                    />
+                    <span className="w-2 h-2 rounded-full" style={{ background: 'hsl(var(--code-divider))' }} />
                     <span className="text-sm font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
                       {f.displayName || f.friendCode || 'Player'}
                     </span>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemove(f.id)}
-                    className="h-7 w-7 p-0 text-[hsl(var(--code-text-muted))]"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => handleRemove(f.id)} className="h-7 w-7 p-0 text-[hsl(var(--code-text-muted))]">
                     <X className="w-3 h-3" />
                   </Button>
                 </div>
@@ -265,7 +276,7 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
             </div>
           )}
 
-          {!loading && friends.length === 0 && (
+          {!loading && friends.length === 0 && challenges.length === 0 && (
             <p className="text-xs text-center py-2 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
               Share your code to add friends
             </p>
@@ -278,10 +289,7 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
 
 const FriendsSection = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
-    <p
-      className="text-[10px] font-inter font-semibold uppercase tracking-widest mb-2"
-      style={{ color: 'hsl(var(--code-text-muted))' }}
-    >
+    <p className="text-[10px] font-inter font-semibold uppercase tracking-widest mb-2" style={{ color: 'hsl(var(--code-text-muted))' }}>
       {label}
     </p>
     {children}
