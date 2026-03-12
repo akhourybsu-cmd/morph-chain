@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Symbol, SLOTS, GuessEntry, MAX_GUESSES } from '@/lib/morphcode/types';
 import { SymbolSlot } from './SymbolSlot';
+import { FeedbackPips } from './FeedbackPips';
+import { TurnTimer } from './TurnTimer';
 import { Button } from '@/components/ui/button';
 import { Send, RotateCcw } from 'lucide-react';
 import { playSymbolPlace, playSymbolRemove, playGuessSubmit, playTimerTick } from '@/lib/morphcode/audioManager';
@@ -89,16 +91,7 @@ export const GuessBoard = ({
           </span>
         </div>
         {isMyTurn && (
-          <span
-            className={`text-xs md:text-sm font-mono font-bold px-2.5 py-0.5 rounded-full ${timeLeft <= 10 ? 'animate-pulse' : ''}`}
-            style={{
-              background: timeLeft <= 10 ? 'hsl(var(--code-error))' : 'hsl(var(--code-pill-bg))',
-              color: timeLeft <= 10 ? '#fff' : 'hsl(var(--code-text-primary))',
-              border: timeLeft > 10 ? '1px solid hsl(var(--code-card-border))' : 'none',
-            }}
-          >
-            {timeLeft}s
-          </span>
+          <TurnTimer timeLeft={timeLeft} total={turnTimeSeconds} />
         )}
       </div>
 
@@ -146,14 +139,7 @@ export const GuessBoard = ({
                 <SymbolSlot key={j} symbol={symbol} size="sm" disabled />
               ))}
             </div>
-            <div className="flex gap-1.5 md:gap-2 text-[10px] md:text-xs font-bold font-inter">
-              <span style={{ color: 'hsl(var(--code-exact))' }}>
-                {entry.exact}⬤
-              </span>
-              <span style={{ color: 'hsl(var(--code-shifted))' }}>
-                {entry.shifted}◐
-              </span>
-            </div>
+            <FeedbackPips exact={entry.exact} shifted={entry.shifted} animate={i === myGuesses.length - 1} />
           </div>
         ))}
       </div>
@@ -233,12 +219,7 @@ export const GuessBoard = ({
                     <SymbolSlot key={j} symbol={symbol} size="sm" disabled />
                   ))}
                 </div>
-                <span className="text-[9px] md:text-[10px] font-bold" style={{ color: 'hsl(var(--code-exact))' }}>
-                  {entry.exact}⬤
-                </span>
-                <span className="text-[9px] md:text-[10px] font-bold" style={{ color: 'hsl(var(--code-shifted))' }}>
-                  {entry.shifted}◐
-                </span>
+                <FeedbackPips exact={entry.exact} shifted={entry.shifted} />
               </div>
             ))}
           </div>

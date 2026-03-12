@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { MatchState } from '@/lib/morphcode/types';
+import { getRankTitle } from '@/lib/morphcode/types';
 import { getPlayerStats, getPlayerDisplayName, MorphcodePlayerStats } from '@/lib/morphcode/matchService';
+import { Flame } from 'lucide-react';
 
 interface MatchScoreBarProps {
   match: MatchState;
@@ -25,8 +27,33 @@ export const MatchScoreBar = ({ match, myId }: MatchScoreBarProps) => {
     }
   }, [myId, opponentId]);
 
-  const formatRecord = (s: MorphcodePlayerStats | null) =>
-    s ? `${s.wins}W–${s.losses}L–${s.draws}D` : '…';
+  const renderSide = (label: string, stats: MorphcodePlayerStats | null, wins: number) => (
+    <div className="flex flex-col items-center gap-0.5">
+      <div className="flex items-center gap-1">
+        <span className="text-xs font-medium truncate max-w-[5rem]" style={{ color: 'hsl(var(--code-text-muted))' }}>{label}</span>
+        {(stats?.current_streak || 0) >= 2 && (
+          <span className="flex items-center gap-0.5">
+            <Flame className="w-3 h-3" style={{ color: 'hsl(15, 90%, 55%)' }} />
+            <span className="text-[9px] font-bold" style={{ color: 'hsl(15, 90%, 55%)' }}>{stats!.current_streak}</span>
+          </span>
+        )}
+      </div>
+      <div className="flex gap-1">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div
+            key={i}
+            className="w-3 h-3 rounded-full transition-all"
+            style={{
+              background: i < wins ? (label === 'You' ? 'hsl(var(--code-success))' : 'hsl(var(--code-error))') : 'hsl(var(--code-divider))',
+            }}
+          />
+        ))}
+      </div>
+      <span className="text-[9px] font-inter" style={{ color: 'hsl(var(--code-accent))' }}>
+        {stats ? getRankTitle(stats.wins) : '…'}
+      </span>
+    </div>
+  );
 
   return (
     <div
@@ -36,47 +63,13 @@ export const MatchScoreBar = ({ match, myId }: MatchScoreBarProps) => {
         background: 'hsl(var(--code-page-bg))',
       }}
     >
-      <div className="flex flex-col items-center gap-0.5">
-        <span className="text-xs font-medium" style={{ color: 'hsl(var(--code-text-muted))' }}>You</span>
-        <div className="flex gap-1">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div
-              key={i}
-              className="w-3 h-3 rounded-full transition-all"
-              style={{
-                background: i < myWins ? 'hsl(var(--code-success))' : 'hsl(var(--code-divider))',
-              }}
-            />
-          ))}
-        </div>
-        <span className="text-[10px] font-mono" style={{ color: 'hsl(var(--code-text-muted))' }}>
-          {formatRecord(myStats)}
-        </span>
-      </div>
+      {renderSide('You', myStats, myWins)}
 
       <span className="text-lg font-mono font-bold" style={{ color: 'hsl(var(--code-text-primary))' }}>
         {myWins} – {opponentWins}
       </span>
 
-      <div className="flex flex-col items-center gap-0.5">
-        <span className="text-xs font-medium truncate max-w-[5rem]" style={{ color: 'hsl(var(--code-text-muted))' }}>
-          {oppName}
-        </span>
-        <div className="flex gap-1">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div
-              key={i}
-              className="w-3 h-3 rounded-full transition-all"
-              style={{
-                background: i < opponentWins ? 'hsl(var(--code-error))' : 'hsl(var(--code-divider))',
-              }}
-            />
-          ))}
-        </div>
-        <span className="text-[10px] font-mono" style={{ color: 'hsl(var(--code-text-muted))' }}>
-          {formatRecord(oppStats)}
-        </span>
-      </div>
+      {renderSide(oppName, oppStats, opponentWins)}
     </div>
   );
 };
