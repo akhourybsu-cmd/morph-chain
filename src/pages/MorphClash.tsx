@@ -156,6 +156,7 @@ const MorphClash = () => {
                   matches={activeMatches}
                   completedMatches={completedMatches}
                   userId={userId}
+                  opponentNames={opponentNames}
                   onSelectMatch={handleSelectMatch}
                   onMatchCancelled={refreshMatchList}
                 />
