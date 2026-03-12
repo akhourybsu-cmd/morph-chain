@@ -8,6 +8,7 @@ import { GuessBoard } from '@/components/morphcode/GuessBoard';
 import { MatchScoreBar } from '@/components/morphcode/MatchScoreBar';
 import { RoundResults } from '@/components/morphcode/RoundResults';
 import { VersusScreen } from '@/components/morphcode/VersusScreen';
+import { XPBar } from '@/components/morphcode/XPBar';
 import {
   getActiveMatch, getCurrentRound, lockSequence, submitGuess,
   createNextRound, cancelMatch, getPlayerStats, getPlayerDisplayName, recordMatchResult,
