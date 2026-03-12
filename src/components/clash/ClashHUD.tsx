@@ -100,7 +100,7 @@ export const ClashHUD = () => {
           {match.status === 'completed'
             ? match.winner_id === userId ? '🏆 You Won!' : match.winner_id ? 'You Lost' : 'Draw'
             : isWaiting ? 'Waiting for opponent'
-            : isMyTurn ? 'Your Turn' : "Opponent's Turn"
+            : isMyTurn ? 'Your Turn' : isBotMatch ? "Bot's Turn" : "Opponent's Turn"
           }
         </span>
       </div>
