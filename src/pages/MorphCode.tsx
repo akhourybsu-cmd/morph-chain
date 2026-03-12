@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MorphcodeHeader } from '@/components/morphcode/MorphcodeHeader';
@@ -299,14 +300,21 @@ const MorphCode = () => {
         )}
 
         {phase === 'waiting' && match?.status === 'waiting' && (
-          <MorphcodeLobby
-            onMatchFound={handleMatchFound}
-            isLoggedIn={!!userId}
-            onLoginRequired={() => navigate('/login')}
-            existingInviteCode={match.inviteCode}
-            existingMatchId={match.id}
-            onMatchCancelled={handleCancelMatch}
-          />
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 py-12">
+            <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
+                 style={{ borderColor: 'hsl(var(--code-accent))', borderTopColor: 'transparent' }} />
+            <p className="font-inter text-sm" style={{ color: 'hsl(var(--code-text-secondary))' }}>
+              Waiting for opponent to accept…
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancelMatch}
+              className="text-[hsl(var(--code-text-muted))] hover:text-[hsl(var(--code-error))]"
+            >
+              Cancel
+            </Button>
+          </div>
         )}
 
         {phase === 'setup' && round && (

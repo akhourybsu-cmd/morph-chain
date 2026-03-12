@@ -1,8 +1,5 @@
 import { useClashStore, type Ownership } from '@/stores/clashStore';
 import { cn } from '@/lib/utils';
-import { Share2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
 
 interface ClashBoardProps {
@@ -64,37 +61,14 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
 
   const selectedWord = selected.map(s => grid[s.row][s.col].char).join('');
 
-  const handleShare = async () => {
-    if (!match.invite_code) return;
-    const url = `https://morph-games.lovable.app/clash?join=${match.invite_code}`;
-    const shareData = {
-      title: 'Morph Clash Challenge',
-      text: `I challenge you to a game of Morph Clash! Join with code: ${match.invite_code}`,
-      url,
-    };
-    if (navigator.share) {
-      try { await navigator.share(shareData); } catch { /* cancelled */ }
-    } else {
-      await navigator.clipboard.writeText(url);
-      toast.success('Link copied!');
-    }
-  };
-
-  const copyCode = () => {
-    if (match.invite_code) {
-      navigator.clipboard.writeText(match.invite_code);
-      toast.success('Code copied!');
-    }
-  };
-
   const showNotYourTurn = match.status === 'active' && !isMyTurn && !isWaiting;
 
   return (
     <div className="flex flex-col items-center gap-4">
       {/* Waiting banner */}
-      {isWaiting && match.invite_code && (
+      {isWaiting && (
         <div
-          className="w-full rounded-xl p-4 text-center space-y-3 animate-in fade-in-0"
+          className="w-full rounded-xl p-4 text-center space-y-2 animate-in fade-in-0"
           style={{
             background: 'hsl(var(--clash-card-bg))',
             border: '1px solid hsl(var(--clash-accent) / 0.3)',
@@ -103,26 +77,9 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
           <div className="flex items-center justify-center gap-2">
             <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'hsl(var(--clash-accent))' }} />
             <span className="text-xs font-inter" style={{ color: 'hsl(var(--clash-text-secondary))' }}>
-              Waiting for opponent…
+              Waiting for opponent to accept…
             </span>
           </div>
-          <button
-            onClick={copyCode}
-            className="text-2xl font-mono font-bold tracking-[0.3em] transition-transform active:scale-95"
-            style={{ color: 'hsl(var(--clash-accent))' }}
-          >
-            {match.invite_code}
-          </button>
-          <p className="text-[10px]" style={{ color: 'hsl(var(--clash-text-muted))' }}>Tap code to copy</p>
-          <Button
-            onClick={handleShare}
-            size="sm"
-            className="gap-2 font-inter"
-            style={{ background: 'hsl(var(--clash-accent))', color: '#fff' }}
-          >
-            <Share2 className="w-4 h-4" />
-            Share Invite
-          </Button>
         </div>
       )}
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Menu, User, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useClashStore } from '@/stores/clashStore';
@@ -16,21 +16,12 @@ import { PrestigeThemeToggle } from '@/components/shared/PrestigeThemeToggle';
 
 const MorphClash = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeMatches, setActiveMatches] = useState<ClashMatchSummary[]>([]);
   const [completedMatches, setCompletedMatches] = useState<ClashMatchSummary[]>([]);
   const { match, userId, loading, setUserId, loadMatch, subscribeToMatch, clearMatch } = useClashStore();
 
-  const joinCode = searchParams.get('join');
-
-  // Clear join param after consuming
-  useEffect(() => {
-    if (joinCode && match) {
-      setSearchParams({}, { replace: true });
-    }
-  }, [joinCode, match, setSearchParams]);
 
   // Auth listener
   useEffect(() => {
@@ -65,7 +56,6 @@ const MorphClash = () => {
   const handleMatchFound = (matchId: string) => {
     loadMatch(matchId);
     subscribeToMatch(matchId);
-    if (joinCode) setSearchParams({}, { replace: true });
   };
 
   const handleSelectMatch = (matchId: string) => {
@@ -153,7 +143,6 @@ const MorphClash = () => {
               isLoggedIn={isLoggedIn}
               onLoginRequired={() => navigate('/login')}
               onMatchCancelled={() => { clearMatch(); refreshMatchList(); }}
-              initialJoinCode={joinCode}
               onMatchCreated={(matchId) => {
                 handleSelectMatch(matchId);
               }}
