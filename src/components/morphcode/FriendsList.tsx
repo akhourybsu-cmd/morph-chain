@@ -31,6 +31,10 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
     ]);
     setFriends(friendsList);
     setMyCode(code);
+    // Play sound if new challenges appeared
+    if (incomingChallenges.length > challenges.length) {
+      playChallengeReceived();
+    }
     setChallenges(incomingChallenges);
     setLoading(false);
   }, [isLoggedIn]);
