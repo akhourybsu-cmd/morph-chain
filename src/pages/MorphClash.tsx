@@ -57,7 +57,6 @@ const MorphClash = () => {
   const handleMatchFound = (matchId: string) => {
     loadMatch(matchId);
     subscribeToMatch(matchId);
-    if (joinCode) setSearchParams({}, { replace: true });
   };
 
   const handleSelectMatch = (matchId: string) => {
