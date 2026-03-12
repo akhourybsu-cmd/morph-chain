@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Loader2, Swords, LogIn, Bot } from 'lucide-react';
+import { Loader2, Swords, LogIn, Bot, UserPlus } from 'lucide-react';
 import { joinQueue, leaveQueue, createBotMatch } from '@/lib/morphcode/matchService';
 import { FriendsList } from './FriendsList';
 import { toast } from 'sonner';
@@ -14,6 +15,7 @@ interface MorphcodeLobbyProps {
 export const MorphcodeLobby = ({
   onMatchFound, isLoggedIn, onLoginRequired,
 }: MorphcodeLobbyProps) => {
+  const navigate = useNavigate();
   const [queuing, setQueuing] = useState(false);
   const [creatingBot, setCreatingBot] = useState(false);
 
@@ -86,7 +88,17 @@ export const MorphcodeLobby = ({
 
       {/* Friends section */}
       {isLoggedIn && !queuing && (
-        <FriendsList isLoggedIn={isLoggedIn} onChallengeMatch={onMatchFound} />
+        <>
+          <FriendsList isLoggedIn={isLoggedIn} onChallengeMatch={onMatchFound} />
+          <button
+            onClick={() => navigate('/profile?tab=friends')}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-inter transition-colors"
+            style={{ color: 'hsl(var(--code-accent))', background: 'hsl(var(--code-accent) / 0.08)' }}
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            Manage Friends
+          </button>
+        </>
       )}
 
       {!queuing && isLoggedIn && (

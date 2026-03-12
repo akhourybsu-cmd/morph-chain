@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { UserPlus, Check, X, Swords, Copy, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
@@ -14,6 +15,7 @@ interface FriendsListProps {
 }
 
 export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) => {
+  const navigate = useNavigate();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [challenges, setChallenges] = useState<IncomingChallenge[]>([]);
   const [myCode, setMyCode] = useState<string | null>(null);
@@ -313,7 +315,7 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
 
           {!loading && friends.length === 0 && challenges.length === 0 && (
             <p className="text-xs text-center py-2 font-inter" style={{ color: 'hsl(var(--code-text-muted))' }}>
-              Share your code to add friends
+              Share your code or <button onClick={() => navigate('/profile?tab=friends')} className="underline" style={{ color: 'hsl(var(--code-accent))' }}>manage friends</button> from your profile
             </p>
           )}
         </div>

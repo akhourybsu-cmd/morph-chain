@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Loader2, LogIn, Swords, Users, Bot } from 'lucide-react';
+import { Loader2, LogIn, Swords, Users, Bot, UserPlus } from 'lucide-react';
 import { challengeFriend, getPendingChallenges, joinClashMatchById, cancelClashMatch, createClashBotMatch } from '@/lib/clash/matchService';
 import { getFriends, type Friend } from '@/lib/social/friendsService';
 import { toast } from 'sonner';
@@ -26,6 +27,7 @@ export const ClashLobby = ({
   onMatchFound, isLoggedIn, onLoginRequired,
   onMatchCancelled, onMatchCreated,
 }: ClashLobbyProps) => {
+  const navigate = useNavigate();
   const [joining, setJoining] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [challenges, setChallenges] = useState<PendingChallenge[]>([]);
@@ -166,11 +168,21 @@ export const ClashLobby = ({
             border: '1px solid hsl(var(--clash-card-border))',
           }}
         >
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4" style={{ color: 'hsl(var(--clash-text-muted))' }} />
-            <p className="text-xs font-inter font-semibold uppercase tracking-widest" style={{ color: 'hsl(var(--clash-text-muted))' }}>
-              Friends
-            </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4" style={{ color: 'hsl(var(--clash-text-muted))' }} />
+              <p className="text-xs font-inter font-semibold uppercase tracking-widest" style={{ color: 'hsl(var(--clash-text-muted))' }}>
+                Friends
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/profile?tab=friends')}
+              className="flex items-center gap-1 text-[11px] font-inter transition-colors"
+              style={{ color: 'hsl(var(--clash-accent))' }}
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              Manage
+            </button>
           </div>
           {onlineFriends.map(f => (
             <div
@@ -223,21 +235,22 @@ export const ClashLobby = ({
 
       {/* Empty state */}
       {isLoggedIn && !hasFriends && challenges.length === 0 && (
-        <div
-          className="w-full rounded-xl p-6 text-center"
+        <button
+          onClick={() => navigate('/profile?tab=friends')}
+          className="w-full rounded-xl p-6 text-center transition-all hover:shadow-md active:scale-[0.98]"
           style={{
             background: 'hsl(var(--clash-card-bg))',
             border: '1px solid hsl(var(--clash-card-border))',
           }}
         >
-          <Users className="w-8 h-8 mx-auto mb-3" style={{ color: 'hsl(var(--clash-text-muted))' }} />
+          <UserPlus className="w-8 h-8 mx-auto mb-3" style={{ color: 'hsl(var(--clash-accent))' }} />
           <p className="font-playfair text-sm font-semibold mb-1" style={{ color: 'hsl(var(--clash-text-primary))' }}>
-            No friends yet
+            Add Friends
           </p>
           <p className="text-xs font-inter" style={{ color: 'hsl(var(--clash-text-muted))' }}>
-            Add friends from your profile to challenge them
+            Share your friend code & add others to challenge them
           </p>
-        </div>
+        </button>
       )}
 
       {/* Play vs Bot */}
