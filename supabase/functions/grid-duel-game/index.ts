@@ -130,19 +130,40 @@ function validatePath(coords: {row:number,col:number}[]): boolean {
   return true;
 }
 
-async function validateWord(word: string, supabaseUrl: string, serviceKey: string): Promise<boolean> {
+async function validateWord(word: string, adminClient: any): Promise<boolean> {
   try {
-    const resp = await fetch(`${supabaseUrl}/functions/v1/validate-word`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${serviceKey}`,
-      },
-      body: JSON.stringify({ word }),
-    });
-    if (!resp.ok) return false;
-    const data = await resp.json();
-    return data.valid === true;
+    const upper = word.toUpperCase();
+    
+    // Check banned
+    const { data: banned } = await adminClient
+      .from('admin_dictionary')
+      .select('is_banned')
+      .eq('word', upper)
+      .eq('is_banned', true)
+      .single();
+    if (banned) return false;
+
+    // Basic structure: needs vowel + consonant, no triple letters
+    const vowels = new Set(['A','E','I','O','U']);
+    const hasVowel = [...upper].some(c => vowels.has(c));
+    const hasConsonant = [...upper].some(c => !vowels.has(c));
+    if (!hasVowel || !hasConsonant) return false;
+    
+    const counts = new Map<string, number>();
+    for (const c of upper) {
+      counts.set(c, (counts.get(c) || 0) + 1);
+      if (counts.get(c)! >= 3) return false;
+    }
+
+    // Track usage
+    await adminClient.from('admin_dictionary').upsert({
+      word: upper,
+      word_length: upper.length,
+      frequency_score: 1,
+      last_seen: new Date().toISOString().split('T')[0],
+    }, { onConflict: 'word', ignoreDuplicates: false });
+
+    return true;
   } catch {
     return false;
   }
