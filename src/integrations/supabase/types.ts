@@ -407,6 +407,7 @@ export type Database = {
           total_word_length_b: number
           turn_deadline: string | null
           updated_at: string
+          used_words: Json
           winner_id: string | null
         }
         Insert: {
@@ -429,6 +430,7 @@ export type Database = {
           total_word_length_b?: number
           turn_deadline?: string | null
           updated_at?: string
+          used_words?: Json
           winner_id?: string | null
         }
         Update: {
@@ -451,6 +453,7 @@ export type Database = {
           total_word_length_b?: number
           turn_deadline?: string | null
           updated_at?: string
+          used_words?: Json
           winner_id?: string | null
         }
         Relationships: []
