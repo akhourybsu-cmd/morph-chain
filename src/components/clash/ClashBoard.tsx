@@ -1,8 +1,5 @@
 import { useClashStore, type Ownership } from '@/stores/clashStore';
 import { cn } from '@/lib/utils';
-import { Share2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
 
 interface ClashBoardProps {
