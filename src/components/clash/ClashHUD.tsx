@@ -88,14 +88,14 @@ export const ClashHUD = () => {
         )}
       </div>
 
-      {/* Turn indicator */}
       <div className="text-center">
         <span
-          className={`text-xs font-semibold uppercase tracking-widest ${isMyTurn ? 'animate-pulse' : ''}`}
-          style={{ color: isMyTurn ? 'hsl(var(--clash-accent))' : 'hsl(var(--clash-text-muted))' }}
+          className={`text-xs font-semibold uppercase tracking-widest ${isMyTurn && !isWaiting ? 'animate-pulse' : ''}`}
+          style={{ color: isWaiting ? 'hsl(var(--clash-text-muted))' : isMyTurn ? 'hsl(var(--clash-accent))' : 'hsl(var(--clash-text-muted))' }}
         >
           {match.status === 'completed'
             ? match.winner_id === userId ? '🏆 You Won!' : match.winner_id ? 'You Lost' : 'Draw'
+            : isWaiting ? 'Waiting for opponent'
             : isMyTurn ? 'Your Turn' : "Opponent's Turn"
           }
         </span>

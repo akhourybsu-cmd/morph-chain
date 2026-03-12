@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Link2, Loader2, X, LogIn, Share2, Swords, Users } from 'lucide-react';
+import { Link2, Loader2, LogIn, Swords, Users } from 'lucide-react';
 import { createClashMatch, joinClashByCode, cancelClashMatch, challengeFriend, getPendingChallenges } from '@/lib/clash/matchService';
 import { getFriends, type Friend } from '@/lib/social/friendsService';
 import { toast } from 'sonner';
@@ -26,22 +26,14 @@ interface PendingChallenge {
 
 export const ClashLobby = ({
   onMatchFound, isLoggedIn, onLoginRequired,
-  onMatchCancelled,
-  initialJoinCode,
-  onMatchCreated,
+  onMatchCancelled, initialJoinCode, onMatchCreated,
 }: ClashLobbyProps) => {
   const [inviteCode, setInviteCode] = useState(initialJoinCode || '');
   const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
-  const [createdCode, setCreatedCode] = useState<string | null>(null);
-  const [createdMatchId, setCreatedMatchId] = useState<string | null>(null);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [challenges, setChallenges] = useState<PendingChallenge[]>([]);
   const [challengingId, setChallengingId] = useState<string | null>(null);
-
-  const displayCode = createdCode || existingInviteCode;
-  const activeMatchId = createdMatchId || existingMatchId;
 
   // Load friends and pending challenges
   useEffect(() => {
@@ -52,7 +44,7 @@ export const ClashLobby = ({
 
   // Auto-join if initialJoinCode provided
   useEffect(() => {
-    if (initialJoinCode && isLoggedIn && !displayCode) {
+    if (initialJoinCode && isLoggedIn) {
       handleJoinWithCode(initialJoinCode);
     }
   }, [initialJoinCode, isLoggedIn]);
@@ -63,9 +55,9 @@ export const ClashLobby = ({
     const result = await createClashMatch();
     setCreating(false);
     if (result) {
-      setCreatedCode(result.inviteCode);
-      setCreatedMatchId(result.matchId);
-      toast.success('Match created! Share the code.');
+      toast.success('Match created!');
+      // Navigate directly to the board view for this pending match
+      onMatchCreated?.(result.matchId);
     } else {
       toast.error('Failed to create match');
     }
@@ -86,55 +78,13 @@ export const ClashLobby = ({
 
   const handleJoin = () => handleJoinWithCode(inviteCode);
 
-  const handleCancel = async () => {
-    if (!activeMatchId) return;
-    setCancelling(true);
-    const success = await cancelClashMatch(activeMatchId);
-    setCancelling(false);
-    if (success) {
-      setCreatedCode(null);
-      setCreatedMatchId(null);
-      onMatchCancelled?.();
-      toast('Match cancelled');
-    }
-  };
-
-  const handleShare = async () => {
-    if (!displayCode) return;
-    const url = `https://morph-games.lovable.app/clash?join=${displayCode}`;
-    const shareData = {
-      title: 'Morph Clash Challenge',
-      text: `I challenge you to a game of Morph Clash! Join with code: ${displayCode}`,
-      url,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch {
-        // User cancelled share
-      }
-    } else {
-      await navigator.clipboard.writeText(url);
-      toast.success('Link copied!');
-    }
-  };
-
-  const copyCode = () => {
-    if (displayCode) {
-      navigator.clipboard.writeText(displayCode);
-      toast.success('Code copied!');
-    }
-  };
-
   const handleChallengeFriend = async (friendId: string) => {
     setChallengingId(friendId);
     const result = await challengeFriend(friendId);
     setChallengingId(null);
     if (result) {
-      setCreatedCode(result.inviteCode);
-      setCreatedMatchId(result.matchId);
       toast.success('Challenge sent!');
+      onMatchCreated?.(result.matchId);
     } else {
       toast.error('Failed to create challenge');
     }
@@ -161,21 +111,19 @@ export const ClashLobby = ({
   const onlineFriends = friends.filter(f => f.isOnline);
 
   return (
-    <div className={`flex flex-col items-center gap-5 px-4 max-w-sm mx-auto ${displayCode ? 'min-h-[calc(100vh-3.5rem)] justify-center' : 'py-6'}`}>
+    <div className="flex flex-col items-center gap-5 px-4 max-w-sm mx-auto py-6">
       {/* Masthead */}
-      {!displayCode && (
-        <div className="text-center space-y-2 mb-1">
-          <p
-            className="font-playfair italic text-base tracking-wide"
-            style={{ color: 'hsl(var(--clash-text-secondary))' }}
-          >
-            Claim territory. Outsmart your rival.
-          </p>
-          <p className="text-xs" style={{ color: 'hsl(var(--clash-text-muted))' }}>
-            Async · 24h turns · 12 moves each
-          </p>
-        </div>
-      )}
+      <div className="text-center space-y-2 mb-1">
+        <p
+          className="font-playfair italic text-base tracking-wide"
+          style={{ color: 'hsl(var(--clash-text-secondary))' }}
+        >
+          Claim territory. Outsmart your rival.
+        </p>
+        <p className="text-xs" style={{ color: 'hsl(var(--clash-text-muted))' }}>
+          Async · 24h turns · 12 moves each
+        </p>
+      </div>
 
       {/* Sign-in prompt */}
       {!isLoggedIn && (
@@ -197,57 +145,8 @@ export const ClashLobby = ({
         </button>
       )}
 
-      {/* Waiting for opponent */}
-      {displayCode && (
-        <div
-          className="w-full rounded-xl p-6 text-center space-y-4 animate-in fade-in-0 slide-in-from-bottom-2"
-          style={{
-            background: 'hsl(var(--clash-card-bg))',
-            border: '1px solid hsl(var(--clash-accent) / 0.3)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.05)',
-          }}
-        >
-          <p className="text-xs font-inter uppercase tracking-widest" style={{ color: 'hsl(var(--clash-text-muted))' }}>
-            Share this code
-          </p>
-          <button
-            onClick={copyCode}
-            className="text-4xl font-mono font-bold tracking-[0.35em] transition-transform active:scale-95"
-            style={{ color: 'hsl(var(--clash-accent))' }}
-          >
-            {displayCode}
-          </button>
-          <p className="text-xs" style={{ color: 'hsl(var(--clash-text-muted))' }}>Tap to copy</p>
-
-          {/* Share button */}
-          <Button
-            onClick={handleShare}
-            size="sm"
-            className="gap-2 font-inter"
-            style={{ background: 'hsl(var(--clash-accent))', color: '#fff' }}
-          >
-            <Share2 className="w-4 h-4" />
-            Share Invite
-          </Button>
-
-          <div className="flex items-center justify-center gap-2 pt-1">
-            <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'hsl(var(--clash-accent))' }} />
-            <span className="text-xs font-inter" style={{ color: 'hsl(var(--clash-text-secondary))' }}>
-              Waiting for opponent…
-            </span>
-          </div>
-          <Button
-            variant="ghost" size="sm" onClick={handleCancel} disabled={cancelling}
-            className="gap-1 text-[hsl(var(--clash-text-muted))] hover:text-[hsl(var(--clash-error))]"
-          >
-            {cancelling ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" />}
-            Cancel
-          </Button>
-        </div>
-      )}
-
       {/* Pending Challenges */}
-      {!displayCode && isLoggedIn && challenges.length > 0 && (
+      {isLoggedIn && challenges.length > 0 && (
         <div
           className="w-full rounded-xl p-4 space-y-3 animate-in fade-in-0"
           style={{
@@ -297,7 +196,7 @@ export const ClashLobby = ({
       )}
 
       {/* Online Friends */}
-      {!displayCode && isLoggedIn && onlineFriends.length > 0 && (
+      {isLoggedIn && onlineFriends.length > 0 && (
         <div
           className="w-full rounded-xl p-4 space-y-3"
           style={{
@@ -338,7 +237,7 @@ export const ClashLobby = ({
       )}
 
       {/* Create / Join */}
-      {!displayCode && isLoggedIn && (
+      {isLoggedIn && (
         <>
           <button
             onClick={handleCreate}
