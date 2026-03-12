@@ -238,9 +238,3 @@ export async function skipClashTurn(matchId: string): Promise<boolean> {
 
   return !error && data?.success;
 }
-  const { data, error } = await supabase.functions.invoke('grid-duel-game', {
-    body: { action: 'skip_turn', match_id: matchId },
-  });
-
-  return !error && data?.success;
-}
