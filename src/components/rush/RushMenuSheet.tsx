@@ -5,7 +5,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Settings, Award, User } from "lucide-react";
+import { Settings, Award, User, HelpCircle, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { GamesNavigation } from "@/components/shared/GamesNavigation";
 import { AchievementGallery } from "@/components/chain/AchievementGallery";
