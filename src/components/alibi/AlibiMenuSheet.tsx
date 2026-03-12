@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { GamesNavigation } from '@/components/shared/GamesNavigation';
 import { useAlibiSettings } from '@/hooks/useAlibiSettings';
-import { Settings, User, ChevronDown } from 'lucide-react';
+import { Settings, User, ChevronDown, HelpCircle, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AlibiMenuSheetProps {
@@ -165,6 +165,40 @@ export function AlibiMenuSheet({ open, onOpenChange }: AlibiMenuSheetProps) {
               </div>
             </CollapsibleContent>
           </Collapsible>
+
+          <Separator style={{ background: 'hsl(var(--alibi-divider))' }} />
+
+          {/* Info Section */}
+          <div>
+            <h3 
+              className="text-xs font-semibold uppercase tracking-wider mb-3 px-2"
+              style={{ color: 'hsl(var(--alibi-text-muted))' }}
+            >
+              Info
+            </h3>
+            <div className="space-y-1">
+              <button
+                onClick={() => handleNavigate('/rules')}
+                className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+                style={{ color: 'hsl(var(--alibi-text-primary))' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--alibi-divider))'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <HelpCircle className="w-4 h-4" style={{ color: 'hsl(var(--alibi-accent))' }} />
+                <span className="text-sm">Rules</span>
+              </button>
+              <button
+                onClick={() => handleNavigate('/whats-new')}
+                className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+                style={{ color: 'hsl(var(--alibi-text-primary))' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'hsl(var(--alibi-divider))'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <Sparkles className="w-4 h-4" style={{ color: 'hsl(var(--alibi-accent))' }} />
+                <span className="text-sm">What's New</span>
+              </button>
+            </div>
+          </div>
         </div>
       </SheetContent>
     </Sheet>

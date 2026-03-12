@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { GamesNavigation } from '@/components/shared/GamesNavigation';
-import { User, BarChart3 } from 'lucide-react';
+import { User, BarChart3, HelpCircle, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface MeasuredMenuSheetProps {
@@ -96,6 +96,31 @@ export function MeasuredMenuSheet({ open, onOpenChange, onStatsClick }: Measured
               >
                 <User className="w-4 h-4 text-measured-accent" />
                 <span className="text-sm">{isLoggedIn ? 'My Account' : 'Sign In'}</span>
+              </button>
+            </div>
+          </div>
+
+          <Separator className="bg-measured-card-border" />
+
+          {/* Info Section */}
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider mb-3 px-2 text-measured-text-muted">
+              Info
+            </h3>
+            <div className="space-y-1">
+              <button
+                onClick={() => handleNavigate('/rules')}
+                className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2 text-measured-text-primary hover:bg-measured-page"
+              >
+                <HelpCircle className="w-4 h-4 text-measured-accent" />
+                <span className="text-sm">Rules</span>
+              </button>
+              <button
+                onClick={() => handleNavigate('/whats-new')}
+                className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2 text-measured-text-primary hover:bg-measured-page"
+              >
+                <Sparkles className="w-4 h-4 text-measured-accent" />
+                <span className="text-sm">What's New</span>
               </button>
             </div>
           </div>
