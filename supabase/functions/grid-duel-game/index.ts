@@ -469,7 +469,7 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: `"${word}" has already been played` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      const isValid = await validateWord(word, supabaseUrl, supabaseServiceKey);
+      const isValid = await validateWord(word, adminClient);
       if (!isValid) {
         return new Response(JSON.stringify({ error: `"${word}" is not a valid word` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
