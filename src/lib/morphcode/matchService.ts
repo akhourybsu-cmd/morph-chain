@@ -312,6 +312,7 @@ export async function createRematch(opponentId: string): Promise<{ matchId: stri
 // --- Player display name ---
 
 export async function getPlayerDisplayName(userId: string): Promise<string> {
+  if (isBotPlayer(userId)) return 'Bot';
   const { data } = await supabase
     .from('user_profiles')
     .select('display_name, default_initials')
