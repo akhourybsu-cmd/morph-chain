@@ -11,7 +11,7 @@ import { VersusScreen } from '@/components/morphcode/VersusScreen';
 import { XPBar } from '@/components/morphcode/XPBar';
 import {
   getActiveMatch, getCurrentRound, lockSequence, submitGuess,
-  createNextRound, cancelMatch, getPlayerStats, getPlayerDisplayName, recordMatchResult,
+  createNextRound, cancelMatch, getPlayerStats, getPlayerDisplayName,
   getOpponentSequence, createRematch, MorphcodePlayerStats,
 } from '@/lib/morphcode/matchService';
 import { updatePresence, setOffline } from '@/lib/social/friendsService';
@@ -36,7 +36,7 @@ const MorphCode = () => {
   const [versusData, setVersusData] = useState<VersusData | null>(null);
   const [oppSequence, setOppSequence] = useState<Symbol[] | null>(null);
   const hasShownVersusRef = useRef(false);
-  const statsRecordedRef = useRef<string | null>(null);
+  const statsRefreshedRef = useRef<string | null>(null);
   const loadingRef = useRef(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [myStats, setMyStats] = useState<MorphcodePlayerStats | null>(null);
@@ -71,16 +71,24 @@ const MorphCode = () => {
     if (activeMatch) {
       setMatch(activeMatch);
 
-      if (activeMatch.status === 'completed' && statsRecordedRef.current !== activeMatch.id) {
-        statsRecordedRef.current = activeMatch.id;
-        const result = activeMatch.winnerId === userId ? 'win' : activeMatch.winnerId === null ? 'draw' : 'loss';
-        await recordMatchResult(userId, result as 'win' | 'loss' | 'draw');
+      // Refresh stats once per completed match (server already recorded them)
+      if (activeMatch.status === 'completed' && statsRefreshedRef.current !== activeMatch.id) {
+        statsRefreshedRef.current = activeMatch.id;
         getPlayerStats(userId).then(setMyStats);
       }
 
       if (activeMatch.status === 'waiting') {
         setPhase('waiting');
       } else if (activeMatch.status === 'completed') {
+        // Bug fix: load the final round data so match-end shows real results
+        const currentRound = await getCurrentRound(activeMatch.id);
+        if (currentRound) {
+          setRound(currentRound);
+          if (currentRound.id) {
+            const seq = await getOpponentSequence(currentRound.id);
+            setOppSequence(seq);
+          }
+        }
         setPhase('match-end');
       } else {
         const currentRound = await getCurrentRound(activeMatch.id);
@@ -213,7 +221,7 @@ const MorphCode = () => {
       setMatch(null);
       setRound(null);
       hasShownVersusRef.current = false;
-      statsRecordedRef.current = null;
+      statsRefreshedRef.current = null;
       setOppSequence(null);
       setPhase('lobby');
       return;
@@ -233,7 +241,7 @@ const MorphCode = () => {
       setMatch(null);
       setRound(null);
       hasShownVersusRef.current = false;
-      statsRecordedRef.current = null;
+      statsRefreshedRef.current = null;
       setOppSequence(null);
       loadGameState();
     } else {
@@ -358,13 +366,14 @@ const MorphCode = () => {
 
         {phase === 'match-end' && match && userId && (
           <RoundResults
-            roundNumber={match.currentRound}
-            winnerId={match.winnerId}
+            roundNumber={round?.roundNumber || match.currentRound}
+            winnerId={round?.winnerId || null}
             myId={userId}
-            myGuessCount={0}
-            opponentGuessCount={0}
-            mySolved={false}
-            opponentSolved={false}
+            myGuessCount={round?.myGuessCount || 0}
+            opponentGuessCount={round?.opponentGuessCount || 0}
+            mySolved={round?.mySolved || false}
+            opponentSolved={round?.opponentSolved || false}
+            opponentSequence={oppSequence || undefined}
             onNextRound={handleNextRound}
             matchOver={true}
             matchWinnerId={match.winnerId}

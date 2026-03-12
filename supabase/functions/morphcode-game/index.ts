@@ -10,6 +10,22 @@ const MAX_GUESSES = 8;
 const MAX_ROUNDS = 5;
 const VALID_SYMBOLS = ['circle', 'triangle', 'wave', 'flame', 'eye', 'shard'];
 
+// XP constants (must match client types.ts)
+const XP_PER_LEVEL = 200;
+const XP_WIN = 100;
+const XP_LOSS = 25;
+const XP_SOLVE = 50; // draw
+
+function getLevelFromXP(xp: number): number {
+  return Math.floor(xp / XP_PER_LEVEL) + 1;
+}
+
+function getStreakMultiplier(streak: number): number {
+  if (streak >= 5) return 3;
+  if (streak >= 3) return 2;
+  return 1;
+}
+
 function calculateFeedback(guess: string[], sequence: string[]): { exact: number; shifted: number } {
   let exact = 0;
   const unmatchedGuess: (string | null)[] = [...guess];
@@ -50,16 +66,31 @@ function validateGuessSymbols(guess: string[]): string | null {
 async function recordStats(adminClient: any, userId: string, result: 'win' | 'loss' | 'draw') {
   const { data: current } = await adminClient
     .from('morphcode_stats')
-    .select('wins, losses, draws')
+    .select('wins, losses, draws, xp, level, current_streak')
     .eq('user_id', userId)
     .single();
 
-  const stats = current || { wins: 0, losses: 0, draws: 0 };
+  const stats = current || { wins: 0, losses: 0, draws: 0, xp: 0, level: 1, current_streak: 0 };
+
+  const newWins = stats.wins + (result === 'win' ? 1 : 0);
+  const newLosses = stats.losses + (result === 'loss' ? 1 : 0);
+  const newDraws = stats.draws + (result === 'draw' ? 1 : 0);
+  const newStreak = result === 'win' ? stats.current_streak + 1 : 0;
+
+  const baseXP = result === 'win' ? XP_WIN : result === 'loss' ? XP_LOSS : XP_SOLVE;
+  const multiplier = result === 'win' ? getStreakMultiplier(newStreak) : 1;
+  const xpGain = baseXP * multiplier;
+  const newXP = stats.xp + xpGain;
+  const newLevel = getLevelFromXP(newXP);
+
   await adminClient.from('morphcode_stats').upsert({
     user_id: userId,
-    wins: stats.wins + (result === 'win' ? 1 : 0),
-    losses: stats.losses + (result === 'loss' ? 1 : 0),
-    draws: stats.draws + (result === 'draw' ? 1 : 0),
+    wins: newWins,
+    losses: newLosses,
+    draws: newDraws,
+    xp: newXP,
+    level: newLevel,
+    current_streak: newStreak,
     updated_at: new Date().toISOString(),
   });
 }
@@ -190,22 +221,26 @@ Deno.serve(async (req) => {
       let roundEnded = false;
 
       if (isSolve) {
+        // I solved. If I'm ahead on guesses, give opponent an equal turn.
         if (guessNumber > opponentGuesses && !opponentSolved) {
           roundUpdate.current_turn = opponentId;
           roundUpdate.turn_started_at = new Date().toISOString();
         } else {
+          // Equal guesses or opponent already solved/done — round over
           roundEnded = true;
         }
       } else if (guessNumber >= MAX_GUESSES) {
-        if (opponentGuesses >= MAX_GUESSES || opponentSolved) {
+        // I maxed out without solving.
+        if (opponentSolved || opponentGuesses >= guessNumber) {
+          // Opponent already solved or has had equal turns — round over
           roundEnded = true;
-        } else if (guessNumber > opponentGuesses) {
+        } else {
+          // Opponent has fewer guesses — give them a turn
           roundUpdate.current_turn = opponentId;
           roundUpdate.turn_started_at = new Date().toISOString();
-        } else {
-          roundEnded = true;
         }
       } else {
+        // Normal turn switch
         roundUpdate.current_turn = opponentId;
         roundUpdate.turn_started_at = new Date().toISOString();
       }
@@ -251,31 +286,34 @@ Deno.serve(async (req) => {
           let matchWinner: string | null = null;
           if (newWinsA > newWinsB) matchWinner = match.player_a;
           else if (newWinsB > newWinsA) matchWinner = match.player_b;
-          // else draw (null winner)
 
           matchUpdate.status = 'completed';
           matchUpdate.winner_id = matchWinner;
           matchUpdate.completed_at = new Date().toISOString();
 
-          // Record stats server-side
           if (matchWinner) {
-            await recordStats(adminClient, matchWinner, 'win');
             const loserId = matchWinner === match.player_a ? match.player_b : match.player_a;
-            await recordStats(adminClient, loserId, 'loss');
+            await Promise.all([
+              recordStats(adminClient, matchWinner, 'win'),
+              recordStats(adminClient, loserId, 'loss'),
+            ]);
           } else {
-            await recordStats(adminClient, match.player_a, 'draw');
-            await recordStats(adminClient, match.player_b, 'draw');
+            await Promise.all([
+              recordStats(adminClient, match.player_a, 'draw'),
+              recordStats(adminClient, match.player_b, 'draw'),
+            ]);
           }
         } else if (matchCompleted) {
           const matchWinner = newWinsA >= match.rounds_to_win ? match.player_a : match.player_b;
+          const loserId = matchWinner === match.player_a ? match.player_b : match.player_a;
           matchUpdate.status = 'completed';
           matchUpdate.winner_id = matchWinner;
           matchUpdate.completed_at = new Date().toISOString();
 
-          // Record stats server-side
-          await recordStats(adminClient, matchWinner, 'win');
-          const loserId = matchWinner === match.player_a ? match.player_b : match.player_a;
-          await recordStats(adminClient, loserId, 'loss');
+          await Promise.all([
+            recordStats(adminClient, matchWinner, 'win'),
+            recordStats(adminClient, loserId, 'loss'),
+          ]);
         }
 
         await adminClient.from('morphcode_matches').update(matchUpdate).eq('id', round.match_id);
