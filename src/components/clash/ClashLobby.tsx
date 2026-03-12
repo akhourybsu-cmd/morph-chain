@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, LogIn, Swords, Users } from 'lucide-react';
-import { challengeFriend, getPendingChallenges, joinClashByCode, cancelClashMatch } from '@/lib/clash/matchService';
+import { challengeFriend, getPendingChallenges, joinClashMatchById, cancelClashMatch } from '@/lib/clash/matchService';
 import { getFriends, type Friend } from '@/lib/social/friendsService';
 import { toast } from 'sonner';
 
@@ -52,7 +52,7 @@ export const ClashLobby = ({
 
   const handleAcceptChallenge = async (challenge: PendingChallenge) => {
     setJoining(true);
-    const matchId = await joinClashByCode(challenge.inviteCode);
+    const matchId = await joinClashMatchById(challenge.matchId);
     setJoining(false);
     if (matchId) {
       onMatchFound(matchId);
