@@ -79,8 +79,7 @@ const MorphClash = () => {
   };
 
   const isMyTurn = match?.current_turn === userId;
-  const showBoard = match && (match.status === 'active' || match.status === 'completed');
-  const showWaiting = match?.status === 'waiting';
+  const showBoard = match && ['active', 'completed', 'waiting'].includes(match.status);
   const showLobby = !match || match.status === 'expired';
 
   // Tile size
@@ -136,10 +135,9 @@ const MorphClash = () => {
 
       {/* Main content */}
       <main className="flex-1 container mx-auto px-4 py-4 max-w-md overflow-y-auto">
-        {(showLobby || showWaiting) && (
+        {showLobby && (
           <>
-            {/* Active matches list */}
-            {!showWaiting && (activeMatches.length > 0 || completedMatches.length > 0) && (
+            {(activeMatches.length > 0 || completedMatches.length > 0) && (
               <div className="mb-4">
                 <ClashMatchList
                   matches={activeMatches}
@@ -154,10 +152,11 @@ const MorphClash = () => {
               onMatchFound={handleMatchFound}
               isLoggedIn={isLoggedIn}
               onLoginRequired={() => navigate('/login')}
-              existingInviteCode={showWaiting ? match?.invite_code : null}
-              existingMatchId={showWaiting ? match?.id : null}
               onMatchCancelled={() => { clearMatch(); refreshMatchList(); }}
               initialJoinCode={joinCode}
+              onMatchCreated={(matchId) => {
+                handleSelectMatch(matchId);
+              }}
             />
           </>
         )}
@@ -167,6 +166,17 @@ const MorphClash = () => {
             <ClashHUD />
             <ClashBoard isMyTurn={isMyTurn && match.status === 'active'} />
             {match.status === 'active' && <ClashActionBar isMyTurn={isMyTurn} />}
+            {match.status === 'waiting' && (
+              <div className="text-center">
+                <button
+                  onClick={() => { clearMatch(); refreshMatchList(); }}
+                  className="text-xs font-inter px-4 py-2 rounded-lg transition-colors"
+                  style={{ color: 'hsl(var(--clash-text-muted))' }}
+                >
+                  ← Back to lobby
+                </button>
+              </div>
+            )}
             {match.status === 'completed' && <ClashResults />}
           </div>
         )}

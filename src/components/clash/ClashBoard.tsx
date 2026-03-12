@@ -1,5 +1,8 @@
 import { useClashStore, type Ownership } from '@/stores/clashStore';
 import { cn } from '@/lib/utils';
+import { Share2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface ClashBoardProps {
   isMyTurn: boolean;
@@ -13,6 +16,7 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
   const grid = match.grid_state;
   const ownership = match.ownership;
   const isPlayerA = userId === match.player_a;
+  const isWaiting = match.status === 'waiting';
 
   const getOwnershipColor = (tileId: string): string => {
     const owner = ownership[tileId] as Ownership;
@@ -39,14 +43,72 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
   };
 
   const handleTileClick = (row: number, col: number) => {
-    if (!isMyTurn) return;
+    if (!isMyTurn || isWaiting) return;
     selectTile(row, col);
   };
 
   const selectedWord = selected.map(s => grid[s.row][s.col].char).join('');
 
+  const handleShare = async () => {
+    if (!match.invite_code) return;
+    const url = `https://morph-games.lovable.app/clash?join=${match.invite_code}`;
+    const shareData = {
+      title: 'Morph Clash Challenge',
+      text: `I challenge you to a game of Morph Clash! Join with code: ${match.invite_code}`,
+      url,
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch { /* cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success('Link copied!');
+    }
+  };
+
+  const copyCode = () => {
+    if (match.invite_code) {
+      navigator.clipboard.writeText(match.invite_code);
+      toast.success('Code copied!');
+    }
+  };
+
   return (
     <div className="flex flex-col items-center gap-4">
+      {/* Waiting banner */}
+      {isWaiting && match.invite_code && (
+        <div
+          className="w-full rounded-xl p-4 text-center space-y-3 animate-in fade-in-0"
+          style={{
+            background: 'hsl(var(--clash-card-bg))',
+            border: '1px solid hsl(var(--clash-accent) / 0.3)',
+          }}
+        >
+          <div className="flex items-center justify-center gap-2">
+            <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'hsl(var(--clash-accent))' }} />
+            <span className="text-xs font-inter" style={{ color: 'hsl(var(--clash-text-secondary))' }}>
+              Waiting for opponent…
+            </span>
+          </div>
+          <button
+            onClick={copyCode}
+            className="text-2xl font-mono font-bold tracking-[0.3em] transition-transform active:scale-95"
+            style={{ color: 'hsl(var(--clash-accent))' }}
+          >
+            {match.invite_code}
+          </button>
+          <p className="text-[10px]" style={{ color: 'hsl(var(--clash-text-muted))' }}>Tap code to copy</p>
+          <Button
+            onClick={handleShare}
+            size="sm"
+            className="gap-2 font-inter"
+            style={{ background: 'hsl(var(--clash-accent))', color: '#fff' }}
+          >
+            <Share2 className="w-4 h-4" />
+            Share Invite
+          </Button>
+        </div>
+      )}
+
       {/* Word preview */}
       <div className="h-8 flex items-center justify-center">
         {selected.length > 0 && (
@@ -71,19 +133,20 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
           row.map((tile, c) => {
             const isSelected = selected.some(s => s.row === r && s.col === c);
             const selIndex = selected.findIndex(s => s.row === r && s.col === c);
+            const interactive = isMyTurn && !isWaiting;
 
             return (
               <button
                 key={tile.id}
                 onClick={() => handleTileClick(r, c)}
-                disabled={!isMyTurn}
+                disabled={!interactive}
                 className={cn(
                   "relative rounded-xl font-inter font-bold text-xl flex items-center justify-center",
                   "transition-all duration-150 touch-manipulation",
                   "shadow-[0_2px_4px_rgba(0,0,0,0.06)]",
                   isSelected && "ring-2 ring-[hsl(var(--clash-accent))] z-10 scale-105",
-                  !isSelected && isMyTurn && "hover:-translate-y-px hover:shadow-md active:scale-95",
-                  !isMyTurn && "opacity-90 cursor-default"
+                  !isSelected && interactive && "hover:-translate-y-px hover:shadow-md active:scale-95",
+                  !interactive && "opacity-90 cursor-default"
                 )}
                 style={{
                   width: 'var(--clash-tile-size, 60px)',
