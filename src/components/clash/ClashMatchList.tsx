@@ -1,11 +1,14 @@
-import { Clock, Swords, Eye, Hourglass } from 'lucide-react';
-import type { ClashMatchSummary } from '@/lib/clash/matchService';
+import { useState } from 'react';
+import { Clock, Swords, Eye, Hourglass, X, Loader2 } from 'lucide-react';
+import { cancelClashMatch, type ClashMatchSummary } from '@/lib/clash/matchService';
+import { toast } from 'sonner';
 
 interface ClashMatchListProps {
   matches: ClashMatchSummary[];
   completedMatches: ClashMatchSummary[];
   userId: string | null;
   onSelectMatch: (matchId: string) => void;
+  onMatchCancelled?: () => void;
 }
 
 export const ClashMatchList = ({ matches, completedMatches, userId, onSelectMatch }: ClashMatchListProps) => {
