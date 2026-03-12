@@ -15,6 +15,7 @@ interface MorphcodeLobbyProps {
 export const MorphcodeLobby = ({
   onMatchFound, isLoggedIn, onLoginRequired,
 }: MorphcodeLobbyProps) => {
+  const navigate = useNavigate();
   const [queuing, setQueuing] = useState(false);
   const [creatingBot, setCreatingBot] = useState(false);
 
