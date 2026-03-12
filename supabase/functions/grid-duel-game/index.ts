@@ -268,10 +268,10 @@ function countTiles(ownership: Record<string, Ownership>): { a: number; b: numbe
 }
 
 // ─── Bot Word Finding ───
-function findBotWords(tiles: Tile[][], ownership: Record<string, Ownership>, usedWords: string[]): { path: {row:number,col:number}[]; word: string; score: number }[] {
+async function findBotWords(tiles: Tile[][], ownership: Record<string, Ownership>, usedWords: string[]): Promise<{ path: {row:number,col:number}[]; word: string; score: number }[]> {
   const candidates: { path: {row:number,col:number}[]; word: string; score: number }[] = [];
   const usedSet = new Set(usedWords.map(w => w.toUpperCase()));
-  const dictionary = loadTWL06();
+  const dictionary = await loadTWL06();
 
   function dfs(path: {row:number,col:number}[], visited: Set<string>) {
     if (path.length >= MIN_WORD_LENGTH && path.length <= 6) {
