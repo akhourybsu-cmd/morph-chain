@@ -8,6 +8,9 @@ export const ClashHUD = () => {
 
   const isPlayerA = userId === match?.player_a;
   const isWaiting = match?.status === 'waiting';
+  const opponentId = isPlayerA ? match?.player_b : match?.player_a;
+  const isBotMatch = isClashBotPlayer(opponentId ?? null);
+  const oppLabel = isBotMatch ? 'Bot' : 'Opp';
   const myTiles = isPlayerA ? match?.tiles_a ?? 0 : match?.tiles_b ?? 0;
   const oppTiles = isWaiting ? 0 : (isPlayerA ? match?.tiles_b ?? 0 : match?.tiles_a ?? 0);
   const myMoves = isPlayerA ? match?.moves_a ?? 0 : match?.moves_b ?? 0;
