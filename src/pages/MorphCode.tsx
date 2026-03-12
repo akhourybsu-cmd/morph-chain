@@ -350,6 +350,9 @@ const MorphCode = () => {
             onNextRound={handleNextRound}
             matchOver={match.status === 'completed'}
             matchWinnerId={match.winnerId}
+            onRematch={match.status === 'completed' ? handleRematch : undefined}
+            myWins={myStats?.wins || 0}
+            myStreak={myStats?.current_streak || 0}
           />
         )}
 
@@ -365,6 +368,9 @@ const MorphCode = () => {
             onNextRound={handleNextRound}
             matchOver={true}
             matchWinnerId={match.winnerId}
+            onRematch={handleRematch}
+            myWins={myStats?.wins || 0}
+            myStreak={myStats?.current_streak || 0}
           />
         )}
       </main>
