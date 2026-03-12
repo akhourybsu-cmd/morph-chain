@@ -14,6 +14,7 @@ import {
   getActiveMatch, getCurrentRound, lockSequence, submitGuess,
   createNextRound, cancelMatch, getPlayerStats, getPlayerDisplayName,
   getOpponentSequence, createRematch, MorphcodePlayerStats,
+  triggerBotGuess, isBotPlayer, BOT_UUID,
 } from '@/lib/morphcode/matchService';
 import { updatePresence, setOffline } from '@/lib/social/friendsService';
 import { MatchState, RoundState, Symbol } from '@/lib/morphcode/types';
@@ -122,6 +123,13 @@ const MorphCode = () => {
           setPhase(currentRound.mySequenceLocked ? 'waiting' : 'setup');
         } else if (currentRound?.status === 'active') {
           setPhase('playing');
+          // If it's a bot match and bot's turn, auto-trigger bot guess
+          if (activeMatch.playerB && isBotPlayer(activeMatch.playerB) && isBotPlayer(currentRound.currentTurn)) {
+            setTimeout(async () => {
+              await triggerBotGuess(currentRound.id);
+              loadGameState();
+            }, 1500);
+          }
         } else if (currentRound?.status === 'completed') {
           // Fetch opponent sequence for reveal
           if (currentRound.id) {
@@ -198,7 +206,21 @@ const MorphCode = () => {
   const handleLockSequence = async (sequence: Symbol[]) => {
     if (!round) return;
     const success = await lockSequence(round.id, sequence);
-    if (success) { toast.success('Sequence locked!'); loadGameState(); }
+    if (success) {
+      toast.success('Sequence locked!');
+      await loadGameState();
+
+      // For bot matches, if both locked and it's bot's turn, trigger bot guess
+      if (match && isBotPlayer(match.playerB)) {
+        const updatedRound = await getCurrentRound(match.id);
+        if (updatedRound && isBotPlayer(updatedRound.currentTurn) && updatedRound.status === 'active') {
+          setTimeout(async () => {
+            await triggerBotGuess(updatedRound.id);
+            loadGameState();
+          }, 1500);
+        }
+      }
+    }
     else { toast.error('Failed to lock sequence'); }
   };
 
@@ -210,7 +232,18 @@ const MorphCode = () => {
     if (result) {
       if (result.isSolve) { playCodeSolved(); toast.success('Solved! 🎉'); }
       else toast(`${result.exact} exact, ${result.shifted} shifted`);
-      loadGameState();
+      await loadGameState();
+
+      // Auto-trigger bot guess after a short delay if it's the bot's turn
+      if (match && isBotPlayer(match.playerB)) {
+        const updatedRound = await getCurrentRound(match.id);
+        if (updatedRound && isBotPlayer(updatedRound.currentTurn) && updatedRound.status === 'active') {
+          setTimeout(async () => {
+            await triggerBotGuess(updatedRound.id);
+            loadGameState();
+          }, 1500);
+        }
+      }
     } else {
       toast.error('Failed to submit guess');
     }

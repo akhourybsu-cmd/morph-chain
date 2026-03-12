@@ -395,6 +395,7 @@ export type Database = {
           grid_state: Json
           id: string
           invite_code: string | null
+          is_bot_match: boolean
           moves_a: number
           moves_b: number
           ownership: Json
@@ -418,6 +419,7 @@ export type Database = {
           grid_state?: Json
           id?: string
           invite_code?: string | null
+          is_bot_match?: boolean
           moves_a?: number
           moves_b?: number
           ownership?: Json
@@ -441,6 +443,7 @@ export type Database = {
           grid_state?: Json
           id?: string
           invite_code?: string | null
+          is_bot_match?: boolean
           moves_a?: number
           moves_b?: number
           ownership?: Json
@@ -1038,6 +1041,7 @@ export type Database = {
           current_round: number
           id: string
           invite_code: string | null
+          is_bot_match: boolean
           player_a: string
           player_b: string | null
           round_wins_a: number
@@ -1055,6 +1059,7 @@ export type Database = {
           current_round?: number
           id?: string
           invite_code?: string | null
+          is_bot_match?: boolean
           player_a: string
           player_b?: string | null
           round_wins_a?: number
@@ -1072,6 +1077,7 @@ export type Database = {
           current_round?: number
           id?: string
           invite_code?: string | null
+          is_bot_match?: boolean
           player_a?: string
           player_b?: string | null
           round_wins_a?: number
