@@ -9,6 +9,7 @@ const GRID_SIZE = 5;
 const MAX_MOVES_PER_PLAYER = 12;
 const DOMINATION_THRESHOLD = 18;
 const MIN_WORD_LENGTH = 4;
+const BOT_UUID = '00000000-0000-0000-0000-b07b07b07b07';
 
 // Seeded RNG (matches client)
 class SeededRandom {
@@ -167,7 +168,6 @@ function applyOwnership(
     } else if (current === player) {
       ownTilesUsed++;
     } else if (current === opponent) {
-      // Direct steal — flip to yours immediately
       newOwnership[id] = player;
       claimed.push(id);
     }
@@ -222,6 +222,60 @@ function countTiles(ownership: Record<string, Ownership>): { a: number; b: numbe
   return { a, b, neutral };
 }
 
+// ─── Bot Word Finding ───
+function findBotWords(tiles: Tile[][], ownership: Record<string, Ownership>, usedWords: string[]): { path: {row:number,col:number}[]; word: string; score: number }[] {
+  const candidates: { path: {row:number,col:number}[]; word: string; score: number }[] = [];
+  const usedSet = new Set(usedWords.map(w => w.toUpperCase()));
+
+  function dfs(path: {row:number,col:number}[], visited: Set<string>) {
+    if (path.length >= MIN_WORD_LENGTH && path.length <= 6) {
+      const word = path.map(c => tiles[c.row][c.col].char).join('');
+      if (!usedSet.has(word.toUpperCase())) {
+        // Score: prefer stealing opponent tiles, then neutral, then length
+        let score = 0;
+        for (const c of path) {
+          const id = `${c.row}-${c.col}`;
+          const own = ownership[id];
+          if (own === 'a') score += 3; // steal from player
+          else if (own === 'neutral') score += 1;
+          // own === 'b' means using own tile, no bonus
+        }
+        score += path.length * 0.5;
+        candidates.push({ path: [...path], word, score });
+      }
+    }
+    if (path.length >= 6) return; // max DFS depth
+
+    const last = path[path.length - 1];
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const nr = last.row + dr;
+        const nc = last.col + dc;
+        if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) continue;
+        const key = `${nr}-${nc}`;
+        if (visited.has(key)) continue;
+        visited.add(key);
+        path.push({ row: nr, col: nc });
+        dfs(path, visited);
+        path.pop();
+        visited.delete(key);
+      }
+    }
+  }
+
+  // Start DFS from every cell
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const visited = new Set<string>();
+      visited.add(`${r}-${c}`);
+      dfs([{ row: r, col: c }], visited);
+    }
+  }
+
+  return candidates;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -274,6 +328,66 @@ Deno.serve(async (req) => {
       }
 
       return new Response(JSON.stringify({ matchId: data.id, inviteCode: data.invite_code }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ─── CREATE BOT MATCH ───
+    if (action === 'create_bot_match') {
+      // Expire stale waiting matches
+      await adminClient.from('clash_matches')
+        .update({ status: 'expired', updated_at: new Date().toISOString() })
+        .eq('player_a', user.id)
+        .eq('status', 'waiting');
+
+      const seed = `clash-bot-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const gridState = generateGrid(seed);
+      const firstTurn = Math.random() < 0.5 ? user.id : BOT_UUID;
+
+      const { data, error } = await adminClient.from('clash_matches').insert({
+        player_a: user.id,
+        player_b: BOT_UUID,
+        grid_seed: seed,
+        grid_state: gridState.tiles,
+        ownership: gridState.ownership,
+        status: 'active',
+        current_turn: firstTurn,
+        turn_deadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        used_words: [],
+        is_bot_match: true,
+      }).select('id').single();
+
+      if (error || !data) {
+        return new Response(JSON.stringify({ error: 'Failed to create bot match' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // If bot goes first, play the bot's first move immediately
+      if (firstTurn === BOT_UUID) {
+        await executeBotMove(adminClient, data.id, supabaseUrl, supabaseServiceKey);
+      }
+
+      return new Response(JSON.stringify({ matchId: data.id }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ─── BOT MOVE ───
+    if (action === 'bot_move') {
+      const { match_id } = params;
+
+      const { data: match } = await adminClient
+        .from('clash_matches')
+        .select('*')
+        .eq('id', match_id)
+        .single();
+
+      if (!match || !match.is_bot_match || match.current_turn !== BOT_UUID || match.status !== 'active') {
+        return new Response(JSON.stringify({ error: 'Not bot turn or not bot match' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const result = await executeBotMove(adminClient, match_id, supabaseUrl, supabaseServiceKey);
+
+      return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -424,6 +538,8 @@ Deno.serve(async (req) => {
         tiles_b: counts.b,
         match_ended: matchEnded,
         winner_id: winnerId,
+        is_bot_match: !!match.is_bot_match,
+        bot_turn: !matchEnded && opponent === BOT_UUID,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -501,7 +617,14 @@ Deno.serve(async (req) => {
 
       await adminClient.from('clash_matches').update(matchUpdate).eq('id', match_id);
 
-      return new Response(JSON.stringify({ success: true, skipped: true, match_ended: matchEnded, winner_id: winnerId }), {
+      return new Response(JSON.stringify({
+        success: true,
+        skipped: true,
+        match_ended: matchEnded,
+        winner_id: winnerId,
+        is_bot_match: !!match.is_bot_match,
+        bot_turn: !matchEnded && opponent === BOT_UUID,
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -560,3 +683,158 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Internal error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
+
+// ─── Execute Bot Move (reusable) ───
+async function executeBotMove(
+  adminClient: any,
+  matchId: string,
+  supabaseUrl: string,
+  supabaseServiceKey: string
+): Promise<{ success: boolean; word?: string; skipped?: boolean; match_ended?: boolean }> {
+  const { data: match } = await adminClient
+    .from('clash_matches')
+    .select('*')
+    .eq('id', matchId)
+    .single();
+
+  if (!match || match.current_turn !== BOT_UUID || match.status !== 'active') {
+    return { success: false };
+  }
+
+  const gridTiles = match.grid_state as Tile[][];
+  const usedWords = (match.used_words as string[]) || [];
+  const botMoves = match.moves_b;
+
+  if (botMoves >= MAX_MOVES_PER_PLAYER) {
+    return { success: false };
+  }
+
+  // Find all possible words via DFS
+  const candidates = findBotWords(gridTiles, match.ownership as Record<string, Ownership>, usedWords);
+
+  // Validate top candidates against dictionary (batch check top 30 by score)
+  candidates.sort((a, b) => b.score - a.score);
+  const topCandidates = candidates.slice(0, 30);
+
+  let bestMove: { path: {row:number,col:number}[]; word: string } | null = null;
+
+  for (const cand of topCandidates) {
+    const isValid = await validateWord(cand.word, supabaseUrl, supabaseServiceKey);
+    if (isValid) {
+      bestMove = cand;
+      break;
+    }
+  }
+
+  if (!bestMove) {
+    // Skip turn if no valid word found
+    const newMovesB = botMoves + 1;
+    const newMovesA = match.moves_a;
+    let matchEnded = false;
+    let winnerId: string | null = null;
+
+    if (newMovesA >= MAX_MOVES_PER_PLAYER && newMovesB >= MAX_MOVES_PER_PLAYER) {
+      matchEnded = true;
+      const counts = countTiles(match.ownership as Record<string, Ownership>);
+      if (counts.a > counts.b) winnerId = match.player_a;
+      else if (counts.b > counts.a) winnerId = match.player_b;
+    }
+
+    const totalMoves = newMovesA + newMovesB;
+    await adminClient.from('clash_moves').insert({
+      match_id: matchId,
+      player_id: BOT_UUID,
+      move_number: totalMoves,
+      word: '[SKIP]',
+      tiles_used: [],
+      tiles_claimed: [],
+      bonus_claims: [],
+      grid_snapshot: match.grid_state,
+      ownership_snapshot: match.ownership,
+    });
+
+    const update: Record<string, unknown> = {
+      moves_b: newMovesB,
+      current_turn: matchEnded ? null : match.player_a,
+      turn_deadline: matchEnded ? null : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    if (matchEnded) {
+      update.status = 'completed';
+      update.winner_id = winnerId;
+      update.completed_at = new Date().toISOString();
+    }
+    await adminClient.from('clash_matches').update(update).eq('id', matchId);
+
+    return { success: true, skipped: true, match_ended: matchEnded };
+  }
+
+  // Execute the move
+  const { newOwnership, claimed, bonusClaims } = applyOwnership(
+    match.ownership as Record<string, Ownership>,
+    bestMove.path,
+    'b'
+  );
+
+  const rng = new SeededRandom(`${match.grid_seed}-move-${botMoves + 1}-b`);
+  const newTiles = morphAfterMove(gridTiles, bestMove.path, rng);
+
+  const counts = countTiles(newOwnership);
+  const newMovesA = match.moves_a;
+  const newMovesB = botMoves + 1;
+  const totalMoves = newMovesA + newMovesB;
+
+  await adminClient.from('clash_moves').insert({
+    match_id: matchId,
+    player_id: BOT_UUID,
+    move_number: totalMoves,
+    word: bestMove.word,
+    tiles_used: bestMove.path,
+    tiles_claimed: claimed,
+    bonus_claims: bonusClaims,
+    grid_snapshot: newTiles,
+    ownership_snapshot: newOwnership,
+  });
+
+  let matchEnded = false;
+  let winnerId: string | null = null;
+
+  if (counts.b >= DOMINATION_THRESHOLD) {
+    matchEnded = true;
+    winnerId = match.player_b;
+  } else if (counts.a >= DOMINATION_THRESHOLD) {
+    matchEnded = true;
+    winnerId = match.player_a;
+  } else if (counts.neutral === 0) {
+    matchEnded = true;
+    if (counts.a > counts.b) winnerId = match.player_a;
+    else if (counts.b > counts.a) winnerId = match.player_b;
+  } else if (newMovesA >= MAX_MOVES_PER_PLAYER && newMovesB >= MAX_MOVES_PER_PLAYER) {
+    matchEnded = true;
+    if (counts.a > counts.b) winnerId = match.player_a;
+    else if (counts.b > counts.a) winnerId = match.player_b;
+  }
+
+  const matchUpdate: Record<string, unknown> = {
+    grid_state: newTiles,
+    ownership: newOwnership,
+    tiles_a: counts.a,
+    tiles_b: counts.b,
+    moves_b: newMovesB,
+    total_word_length_b: match.total_word_length_b + bestMove.word.length,
+    current_turn: matchEnded ? null : match.player_a,
+    turn_deadline: matchEnded ? null : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    used_words: [...usedWords, bestMove.word.toUpperCase()],
+    updated_at: new Date().toISOString(),
+  };
+
+  if (matchEnded) {
+    matchUpdate.status = 'completed';
+    matchUpdate.winner_id = winnerId;
+    matchUpdate.completed_at = new Date().toISOString();
+  }
+
+  await adminClient.from('clash_matches').update(matchUpdate).eq('id', matchId);
+
+  return { success: true, word: bestMove.word, match_ended: matchEnded };
+}

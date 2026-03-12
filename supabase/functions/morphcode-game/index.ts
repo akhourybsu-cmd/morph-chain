@@ -9,6 +9,7 @@ const SLOTS = 4;
 const MAX_GUESSES = 8;
 const MAX_ROUNDS = 5;
 const VALID_SYMBOLS = ['circle', 'triangle', 'wave', 'flame', 'eye', 'shard'];
+const BOT_UUID = '00000000-0000-0000-0000-b07b07b07b07';
 
 // XP constants (must match client types.ts)
 const XP_PER_LEVEL = 200;
@@ -64,6 +65,9 @@ function validateGuessSymbols(guess: string[]): string | null {
 }
 
 async function recordStats(adminClient: any, userId: string, result: 'win' | 'loss' | 'draw') {
+  // Don't record stats for the bot
+  if (userId === BOT_UUID) return;
+
   const { data: current } = await adminClient
     .from('morphcode_stats')
     .select('wins, losses, draws, xp, level, current_streak')
@@ -95,6 +99,47 @@ async function recordStats(adminClient: any, userId: string, result: 'win' | 'lo
   });
 }
 
+// ─── Bot Guess Strategy ───
+function generateBotGuess(
+  previousGuesses: Array<{ guess: string[]; exact: number; shifted: number }>,
+  symbolPool: string[]
+): string[] {
+  // First guess: random 4 unique symbols from pool
+  if (previousGuesses.length === 0) {
+    const shuffled = [...symbolPool].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, SLOTS);
+  }
+
+  // Elimination strategy: track which symbols could be in the sequence
+  const possibleSymbols = new Set(symbolPool);
+  const confirmedPresent = new Set<string>();
+
+  for (const prev of previousGuesses) {
+    const totalHits = prev.exact + prev.shifted;
+    if (totalHits === 0) {
+      // None of these symbols are in the sequence
+      for (const s of prev.guess) {
+        possibleSymbols.delete(s);
+      }
+    } else {
+      // At least some are present
+      for (const s of prev.guess) {
+        confirmedPresent.add(s);
+      }
+    }
+  }
+
+  // Build guess from confirmed + possible symbols
+  const candidates = [...confirmedPresent];
+  for (const s of possibleSymbols) {
+    if (!confirmedPresent.has(s)) candidates.push(s);
+  }
+
+  // Shuffle and take 4
+  const shuffled = candidates.sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, SLOTS);
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -121,6 +166,215 @@ Deno.serve(async (req) => {
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     const { action, ...params } = await req.json();
 
+    // ─── CREATE BOT MATCH ───
+    if (action === 'create_bot_match') {
+      // Expire any stale waiting matches
+      await adminClient.from('morphcode_matches')
+        .update({ status: 'expired', updated_at: new Date().toISOString() })
+        .eq('player_a', user.id)
+        .eq('status', 'waiting');
+
+      const inviteCode = Math.random().toString(36).slice(2, 8).toUpperCase();
+      const firstGuesser = Math.random() < 0.5 ? user.id : BOT_UUID;
+
+      // Create match with bot as player_b, directly in setup
+      const { data: matchData, error: matchErr } = await adminClient.from('morphcode_matches').insert({
+        player_a: user.id,
+        player_b: BOT_UUID,
+        invite_code: inviteCode,
+        status: 'setup',
+        current_round: 1,
+        is_bot_match: true,
+      }).select('id').single();
+
+      if (matchErr || !matchData) {
+        return new Response(JSON.stringify({ error: 'Failed to create bot match' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Generate bot's random sequence (4 unique from pool)
+      const pool = [...VALID_SYMBOLS];
+      const botSequence: string[] = [];
+      while (botSequence.length < SLOTS) {
+        const idx = Math.floor(Math.random() * pool.length);
+        botSequence.push(pool.splice(idx, 1)[0]);
+      }
+
+      // Create round 1 with bot's sequence already locked
+      await adminClient.from('morphcode_rounds').insert({
+        match_id: matchData.id,
+        round_number: 1,
+        first_guesser: firstGuesser,
+        status: 'setup',
+        sequence_b: botSequence,
+        sequence_b_locked: true,
+      });
+
+      return new Response(JSON.stringify({ matchId: matchData.id }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ─── BOT GUESS ───
+    if (action === 'bot_guess') {
+      const { round_id } = params;
+
+      const { data: round } = await adminClient
+        .from('morphcode_rounds')
+        .select('*, morphcode_matches!inner(player_a, player_b, status, turn_time_seconds, round_wins_a, round_wins_b, rounds_to_win, is_bot_match)')
+        .eq('id', round_id)
+        .single();
+
+      if (!round) {
+        return new Response(JSON.stringify({ error: 'Round not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const matchData = (round as any).morphcode_matches;
+      if (!matchData.is_bot_match) {
+        return new Response(JSON.stringify({ error: 'Not a bot match' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      if (round.current_turn !== BOT_UUID) {
+        return new Response(JSON.stringify({ error: 'Not bot turn' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      if (round.status !== 'active') {
+        return new Response(JSON.stringify({ error: 'Round not active' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Bot is player_b, guessing player_a's sequence
+      const opponentSequence = round.sequence_a;
+      const botGuessCount = round.guesses_b;
+
+      if (!opponentSequence || botGuessCount >= MAX_GUESSES) {
+        return new Response(JSON.stringify({ error: 'Cannot guess' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Get previous bot guesses for strategy
+      const { data: prevGuesses } = await adminClient
+        .from('morphcode_guesses')
+        .select('guess, exact_count, shifted_count')
+        .eq('round_id', round_id)
+        .eq('player_id', BOT_UUID)
+        .order('guess_number', { ascending: true });
+
+      const history = (prevGuesses || []).map(g => ({
+        guess: g.guess as string[],
+        exact: g.exact_count,
+        shifted: g.shifted_count,
+      }));
+
+      const botGuess = generateBotGuess(history, round.symbol_pool);
+      const feedback = calculateFeedback(botGuess, opponentSequence);
+      const isSolve = feedback.exact === SLOTS;
+      const guessNumber = botGuessCount + 1;
+      const clampedTime = Math.floor(Math.random() * 8000) + 3000; // 3-11s fake think time
+
+      await adminClient.from('morphcode_guesses').insert({
+        round_id,
+        player_id: BOT_UUID,
+        guess_number: guessNumber,
+        guess: botGuess,
+        exact_count: feedback.exact,
+        shifted_count: feedback.shifted,
+        is_solve: isSolve,
+        time_taken_ms: clampedTime,
+      });
+
+      const roundUpdate: Record<string, unknown> = {
+        guesses_b: guessNumber,
+        solved_by_b: isSolve || round.solved_by_b,
+        time_used_b_ms: (round.time_used_b_ms || 0) + clampedTime,
+      };
+
+      const opponentGuesses = round.guesses_a;
+      const opponentSolved = round.solved_by_a;
+      let roundEnded = false;
+
+      if (isSolve) {
+        if (guessNumber > opponentGuesses && !opponentSolved) {
+          roundUpdate.current_turn = matchData.player_a;
+          roundUpdate.turn_started_at = new Date().toISOString();
+        } else {
+          roundEnded = true;
+        }
+      } else if (guessNumber >= MAX_GUESSES) {
+        if (opponentSolved || opponentGuesses >= guessNumber) {
+          roundEnded = true;
+        } else {
+          roundUpdate.current_turn = matchData.player_a;
+          roundUpdate.turn_started_at = new Date().toISOString();
+        }
+      } else {
+        roundUpdate.current_turn = matchData.player_a;
+        roundUpdate.turn_started_at = new Date().toISOString();
+      }
+
+      if (roundEnded) {
+        roundUpdate.status = 'completed';
+        roundUpdate.completed_at = new Date().toISOString();
+        roundUpdate.current_turn = null;
+
+        const finalSolvedA = round.solved_by_a;
+        const finalSolvedB = isSolve || round.solved_by_b;
+        const finalGuessesA = opponentGuesses;
+        const finalGuessesB = guessNumber;
+        const finalTimeA = round.time_used_a_ms || 0;
+        const finalTimeB = (round.time_used_b_ms || 0) + clampedTime;
+
+        let winnerId: string | null = null;
+        if (finalSolvedA && finalSolvedB) {
+          if (finalGuessesA < finalGuessesB) winnerId = matchData.player_a;
+          else if (finalGuessesB < finalGuessesA) winnerId = matchData.player_b;
+          else if (finalTimeA < finalTimeB) winnerId = matchData.player_a;
+          else if (finalTimeB < finalTimeA) winnerId = matchData.player_b;
+        } else if (finalSolvedA) {
+          winnerId = matchData.player_a;
+        } else if (finalSolvedB) {
+          winnerId = matchData.player_b;
+        }
+
+        roundUpdate.winner_id = winnerId;
+
+        const newWinsA = matchData.round_wins_a + (winnerId === matchData.player_a ? 1 : 0);
+        const newWinsB = matchData.round_wins_b + (winnerId === matchData.player_b ? 1 : 0);
+        const matchUpdate: Record<string, unknown> = {
+          round_wins_a: newWinsA,
+          round_wins_b: newWinsB,
+        };
+
+        const matchCompleted = newWinsA >= matchData.rounds_to_win || newWinsB >= matchData.rounds_to_win;
+
+        if (!matchCompleted && round.round_number >= MAX_ROUNDS) {
+          let matchWinner: string | null = null;
+          if (newWinsA > newWinsB) matchWinner = matchData.player_a;
+          else if (newWinsB > newWinsA) matchWinner = matchData.player_b;
+          matchUpdate.status = 'completed';
+          matchUpdate.winner_id = matchWinner;
+          matchUpdate.completed_at = new Date().toISOString();
+          await recordStats(adminClient, matchData.player_a, matchWinner === matchData.player_a ? 'win' : matchWinner ? 'loss' : 'draw');
+        } else if (matchCompleted) {
+          const matchWinner = newWinsA >= matchData.rounds_to_win ? matchData.player_a : matchData.player_b;
+          matchUpdate.status = 'completed';
+          matchUpdate.winner_id = matchWinner;
+          matchUpdate.completed_at = new Date().toISOString();
+          const playerResult = matchWinner === matchData.player_a ? 'win' : 'loss';
+          await recordStats(adminClient, matchData.player_a, playerResult);
+        }
+
+        await adminClient.from('morphcode_rounds').update(roundUpdate).eq('id', round_id);
+        await adminClient.from('morphcode_matches').update(matchUpdate).eq('id', round.match_id);
+      } else {
+        await adminClient.from('morphcode_rounds').update(roundUpdate).eq('id', round_id);
+      }
+
+      return new Response(JSON.stringify({
+        exact: feedback.exact,
+        shifted: feedback.shifted,
+        is_solve: isSolve,
+        round_ended: roundEnded,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     if (action === 'submit_guess') {
       const { round_id, guess, time_taken_ms } = params;
 
@@ -143,7 +397,7 @@ Deno.serve(async (req) => {
 
       const { data: round, error: roundErr } = await adminClient
         .from('morphcode_rounds')
-        .select('*, morphcode_matches!inner(player_a, player_b, status, turn_time_seconds, round_wins_a, round_wins_b, rounds_to_win)')
+        .select('*, morphcode_matches!inner(player_a, player_b, status, turn_time_seconds, round_wins_a, round_wins_b, rounds_to_win, is_bot_match)')
         .eq('id', round_id)
         .single();
 
@@ -245,6 +499,8 @@ Deno.serve(async (req) => {
         roundUpdate.turn_started_at = new Date().toISOString();
       }
 
+      const matchUpdate: Record<string, unknown> = {};
+
       if (roundEnded) {
         roundUpdate.status = 'completed';
         roundUpdate.completed_at = new Date().toISOString();
@@ -274,10 +530,8 @@ Deno.serve(async (req) => {
         // Update match scores
         const newWinsA = match.round_wins_a + (winnerId === match.player_a ? 1 : 0);
         const newWinsB = match.round_wins_b + (winnerId === match.player_b ? 1 : 0);
-        const matchUpdate: Record<string, unknown> = {
-          round_wins_a: newWinsA,
-          round_wins_b: newWinsB,
-        };
+        matchUpdate.round_wins_a = newWinsA;
+        matchUpdate.round_wins_b = newWinsB;
 
         const matchCompleted = newWinsA >= match.rounds_to_win || newWinsB >= match.rounds_to_win;
 
@@ -330,6 +584,8 @@ Deno.serve(async (req) => {
         shifted: feedback.shifted,
         is_solve: isSolve,
         round_ended: roundEnded,
+        is_bot_match: !!match.is_bot_match,
+        bot_turn: !roundEnded && roundUpdate.current_turn === BOT_UUID,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     } else if (action === 'lock_sequence') {
@@ -342,7 +598,7 @@ Deno.serve(async (req) => {
 
       const { data: round } = await adminClient
         .from('morphcode_rounds')
-        .select('*, morphcode_matches!inner(player_a, player_b)')
+        .select('*, morphcode_matches!inner(player_a, player_b, is_bot_match)')
         .eq('id', round_id)
         .single();
 
@@ -384,7 +640,12 @@ Deno.serve(async (req) => {
         await adminClient.from('morphcode_matches').update({ status: 'active' }).eq('id', round.match_id);
       }
 
-      return new Response(JSON.stringify({ success: true, both_locked: updated?.sequence_a_locked && updated?.sequence_b_locked }), {
+      return new Response(JSON.stringify({
+        success: true,
+        both_locked: updated?.sequence_a_locked && updated?.sequence_b_locked,
+        is_bot_match: !!matchData.is_bot_match,
+        bot_turn: updated?.sequence_a_locked && updated?.sequence_b_locked && updated?.first_guesser === BOT_UUID,
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
 
@@ -420,12 +681,27 @@ Deno.serve(async (req) => {
         ? matchData.player_b
         : matchData.player_a;
 
-      await adminClient.from('morphcode_rounds').insert({
+      // For bot matches, auto-lock bot's sequence
+      const isBotMatch = matchData.is_bot_match;
+      const roundInsert: Record<string, unknown> = {
         match_id,
         round_number: nextRoundNumber,
         first_guesser: nextFirstGuesser,
         status: 'setup',
-      });
+      };
+
+      if (isBotMatch) {
+        const pool = [...VALID_SYMBOLS];
+        const botSeq: string[] = [];
+        while (botSeq.length < SLOTS) {
+          const idx = Math.floor(Math.random() * pool.length);
+          botSeq.push(pool.splice(idx, 1)[0]);
+        }
+        roundInsert.sequence_b = botSeq;
+        roundInsert.sequence_b_locked = true;
+      }
+
+      await adminClient.from('morphcode_rounds').insert(roundInsert);
 
       await adminClient.from('morphcode_matches').update({
         current_round: nextRoundNumber,
