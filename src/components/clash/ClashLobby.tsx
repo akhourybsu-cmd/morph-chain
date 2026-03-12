@@ -69,6 +69,8 @@ export const ClashLobby = ({
   };
 
   const onlineFriends = friends.filter(f => f.isOnline);
+  const offlineFriends = friends.filter(f => !f.isOnline);
+  const hasFriends = friends.length > 0;
 
   return (
     <div className="flex flex-col items-center gap-5 px-4 max-w-sm mx-auto py-6">
@@ -155,8 +157,8 @@ export const ClashLobby = ({
         </div>
       )}
 
-      {/* Online Friends */}
-      {isLoggedIn && onlineFriends.length > 0 && (
+      {/* Friends */}
+      {isLoggedIn && hasFriends && (
         <div
           className="w-full rounded-xl p-4 space-y-3"
           style={{
@@ -167,7 +169,7 @@ export const ClashLobby = ({
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4" style={{ color: 'hsl(var(--clash-text-muted))' }} />
             <p className="text-xs font-inter font-semibold uppercase tracking-widest" style={{ color: 'hsl(var(--clash-text-muted))' }}>
-              Online Friends
+              Friends
             </p>
           </div>
           {onlineFriends.map(f => (
@@ -177,7 +179,7 @@ export const ClashLobby = ({
               style={{ background: 'hsl(var(--clash-page-bg))' }}
             >
               <div className="flex items-center gap-2 min-w-0">
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#22c55e' }} />
+                <span className="w-2 h-2 rounded-full flex-shrink-0 animate-pulse" style={{ background: '#22c55e' }} />
                 <p className="text-sm font-inter truncate" style={{ color: 'hsl(var(--clash-text-primary))' }}>
                   {f.displayName || 'Friend'}
                 </p>
@@ -193,11 +195,34 @@ export const ClashLobby = ({
               </Button>
             </div>
           ))}
+          {offlineFriends.map(f => (
+            <div
+              key={f.id}
+              className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg"
+              style={{ background: 'hsl(var(--clash-page-bg))' }}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'hsl(var(--clash-text-muted) / 0.4)' }} />
+                <p className="text-sm font-inter truncate" style={{ color: 'hsl(var(--clash-text-muted))' }}>
+                  {f.displayName || 'Friend'}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => handleChallengeFriend(f.friendUserId)}
+                disabled={challengingId === f.friendUserId}
+                className="text-xs font-inter px-3"
+                style={{ background: 'hsl(var(--clash-accent) / 0.1)', color: 'hsl(var(--clash-accent) / 0.7)' }}
+              >
+                {challengingId === f.friendUserId ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Challenge'}
+              </Button>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Empty state when logged in but no friends online and no challenges */}
-      {isLoggedIn && onlineFriends.length === 0 && challenges.length === 0 && (
+      {/* Empty state */}
+      {isLoggedIn && !hasFriends && challenges.length === 0 && (
         <div
           className="w-full rounded-xl p-6 text-center"
           style={{
@@ -207,7 +232,7 @@ export const ClashLobby = ({
         >
           <Users className="w-8 h-8 mx-auto mb-3" style={{ color: 'hsl(var(--clash-text-muted))' }} />
           <p className="font-playfair text-sm font-semibold mb-1" style={{ color: 'hsl(var(--clash-text-primary))' }}>
-            No friends online
+            No friends yet
           </p>
           <p className="text-xs font-inter" style={{ color: 'hsl(var(--clash-text-muted))' }}>
             Add friends from your profile to challenge them
