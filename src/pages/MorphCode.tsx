@@ -15,6 +15,7 @@ import {
 import { updatePresence, setOffline } from '@/lib/social/friendsService';
 import { MatchState, RoundState, Symbol } from '@/lib/morphcode/types';
 import { toast } from 'sonner';
+import { initMorphcodeAudio, playCodeSolved } from '@/lib/morphcode/audioManager';
 
 type GamePhase = 'lobby' | 'waiting' | 'versus' | 'setup' | 'playing' | 'round-end' | 'match-end';
 
