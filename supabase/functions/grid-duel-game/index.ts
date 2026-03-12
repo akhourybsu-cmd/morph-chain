@@ -13,27 +13,34 @@ const BOT_UUID = '00000000-0000-0000-0000-b07b07b07b07';
 
 // ─── TWL06 Dictionary ───
 let twl06Set: Set<string> | null = null;
+let twl06Loading: Promise<Set<string>> | null = null;
 
-function loadTWL06(): Set<string> {
+async function loadTWL06(): Promise<Set<string>> {
   if (twl06Set) return twl06Set;
-  try {
-    const filePath = new URL('./twl06.txt', import.meta.url).pathname;
-    const content = Deno.readTextFileSync(filePath);
-    twl06Set = new Set<string>();
-    const lines = content.split('\n');
-    for (let i = 0; i < lines.length; i++) {
-      const word = lines[i].trim().toUpperCase();
-      if (i === 0 && word.includes('TWL06')) continue;
-      if (!word || !/^[A-Z]+$/.test(word)) continue;
-      twl06Set.add(word);
+  if (twl06Loading) return twl06Loading;
+
+  twl06Loading = (async () => {
+    try {
+      const fileUrl = new URL('./twl06.txt', import.meta.url);
+      const content = await Deno.readTextFile(fileUrl);
+      twl06Set = new Set<string>();
+      const lines = content.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const word = lines[i].trim().toUpperCase();
+        if (i === 0 && word.includes('TWL06')) continue;
+        if (!word || !/^[A-Z]+$/.test(word)) continue;
+        twl06Set.add(word);
+      }
+      console.log(`TWL06 loaded: ${twl06Set.size} words`);
+      return twl06Set;
+    } catch (err) {
+      console.error('Failed to load TWL06:', err);
+      twl06Set = new Set();
+      return twl06Set;
     }
-    console.log(`TWL06 loaded: ${twl06Set.size} words`);
-    return twl06Set;
-  } catch (err) {
-    console.error('Failed to load TWL06:', err);
-    twl06Set = new Set();
-    return twl06Set;
-  }
+  })();
+
+  return twl06Loading;
 }
 
 // Seeded RNG (matches client)
@@ -160,7 +167,7 @@ async function validateWord(word: string, adminClient: any): Promise<boolean> {
     const upper = word.toUpperCase();
     
     // Check against TWL06 dictionary
-    const dictionary = loadTWL06();
+    const dictionary = await loadTWL06();
     if (!dictionary.has(upper)) return false;
 
     // Check banned in admin_dictionary
@@ -261,10 +268,10 @@ function countTiles(ownership: Record<string, Ownership>): { a: number; b: numbe
 }
 
 // ─── Bot Word Finding ───
-function findBotWords(tiles: Tile[][], ownership: Record<string, Ownership>, usedWords: string[]): { path: {row:number,col:number}[]; word: string; score: number }[] {
+async function findBotWords(tiles: Tile[][], ownership: Record<string, Ownership>, usedWords: string[]): Promise<{ path: {row:number,col:number}[]; word: string; score: number }[]> {
   const candidates: { path: {row:number,col:number}[]; word: string; score: number }[] = [];
   const usedSet = new Set(usedWords.map(w => w.toUpperCase()));
-  const dictionary = loadTWL06();
+  const dictionary = await loadTWL06();
 
   function dfs(path: {row:number,col:number}[], visited: Set<string>) {
     if (path.length >= MIN_WORD_LENGTH && path.length <= 6) {
@@ -747,7 +754,7 @@ async function executeBotMove(
   }
 
   // Find all possible words via DFS
-  const candidates = findBotWords(gridTiles, match.ownership as Record<string, Ownership>, usedWords);
+  const candidates = await findBotWords(gridTiles, match.ownership as Record<string, Ownership>, usedWords);
 
   // Validate top candidates against dictionary (batch check top 30 by score)
   candidates.sort((a, b) => b.score - a.score);
