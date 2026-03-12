@@ -65,6 +65,7 @@ const App = () => {
               <Route path="/alibi" element={<MorphAlibi />} />
               <Route path="/measured" element={<Measured />} />
               <Route path="/morphcode" element={<MorphCode />} />
+              <Route path="/clash" element={<MorphClash />} />
               <Route path="/rules" element={<Rules />} />
               <Route path="/kids" element={<Kids />} />
               <Route path="/press" element={<Press />} />

@@ -10,6 +10,7 @@ const games = [
   { id: 'chain', name: "Morph Chain", icon: Link2, path: "/chain", description: "Word ladder puzzle", isBeta: false },
   { id: 'grid', name: "Morph Grid", icon: Grid3X3, path: "/grid", description: "Daily 5×5 puzzle", isBeta: false },
   { id: 'morphcode', name: "Morph Code", icon: Swords, path: "/morphcode", description: "PvP deduction", isBeta: true },
+  { id: 'clash', name: "Morph Clash", icon: Shield, path: "/clash", description: "Territory control", isBeta: true },
 ];
 
 export const GamesNavigation = ({ currentGame, onNavigate }: GamesNavigationProps) => {

@@ -380,6 +380,25 @@ All colors MUST be HSL.
     --code-exact: 145 50% 50%;             /* Green - exact match */
     --code-shifted: 45 70% 55%;            /* Gold - shifted */
     --accent-code: 280 55% 65%;            /* Violet accent */
+    
+    /* Morph Clash Dark Mode */
+    --clash-page-bg: 216 22% 7%;
+    --clash-card-bg: 216 17% 11%;
+    --clash-card-border: 216 14% 17%;
+    --clash-divider: 213 16% 20%;
+    --clash-text-primary: 36 36% 92%;
+    --clash-text-secondary: 33 9% 75%;
+    --clash-text-muted: 33 7% 52%;
+    --clash-pill-bg: 216 15% 15%;
+    --clash-accent: 168 50% 55%;
+    --clash-success: 145 35% 57%;
+    --clash-error: 5 63% 67%;
+    --clash-player-mine: 210 45% 55%;
+    --clash-player-opponent: 0 50% 55%;
+    --clash-neutral: 216 14% 22%;
+    --clash-contested: 45 40% 45%;
+    --clash-tile-letter: 36 55% 95%;
+    --accent-clash: 168 50% 55%;
   }
   
   .light {

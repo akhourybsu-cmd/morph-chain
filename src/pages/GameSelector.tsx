@@ -205,6 +205,17 @@ const GameSelector = () => {
             badge="Beta"
             christmas={christmas}
           />
+
+          {/* Morph Clash - Territory */}
+          <GameCard
+            icon={Shield}
+            name="Morph Clash"
+            description="Async territory control word battle"
+            accent={accents.clash}
+            onClick={() => navigate('/clash')}
+            badge="New"
+            christmas={christmas}
+          />
         </div>
 
         {/* Daily Progress Tracker */}
