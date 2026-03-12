@@ -35,6 +35,7 @@ const MorphCode = () => {
   const statsRecordedRef = useRef<string | null>(null); // track which match ID we've recorded stats for
 
   useEffect(() => {
+    initMorphcodeAudio();
     supabase.auth.getUser().then(({ data: { user } }) => setUserId(user?.id || null));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUserId(session?.user?.id || null);
