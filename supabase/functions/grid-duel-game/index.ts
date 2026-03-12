@@ -159,7 +159,11 @@ async function validateWord(word: string, adminClient: any): Promise<boolean> {
   try {
     const upper = word.toUpperCase();
     
-    // Check banned
+    // Check against TWL06 dictionary
+    const dictionary = loadTWL06();
+    if (!dictionary.has(upper)) return false;
+
+    // Check banned in admin_dictionary
     const { data: banned } = await adminClient
       .from('admin_dictionary')
       .select('is_banned')
@@ -167,18 +171,6 @@ async function validateWord(word: string, adminClient: any): Promise<boolean> {
       .eq('is_banned', true)
       .single();
     if (banned) return false;
-
-    // Basic structure: needs vowel + consonant, no triple letters
-    const vowels = new Set(['A','E','I','O','U']);
-    const hasVowel = [...upper].some(c => vowels.has(c));
-    const hasConsonant = [...upper].some(c => !vowels.has(c));
-    if (!hasVowel || !hasConsonant) return false;
-    
-    const counts = new Map<string, number>();
-    for (const c of upper) {
-      counts.set(c, (counts.get(c) || 0) + 1);
-      if (counts.get(c)! >= 3) return false;
-    }
 
     // Track usage
     await adminClient.from('admin_dictionary').upsert({
