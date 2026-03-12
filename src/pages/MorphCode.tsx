@@ -276,11 +276,18 @@ const MorphCode = () => {
 
       <main className="flex-1 overflow-y-auto">
         {phase === 'lobby' && (
-          <MorphcodeLobby
-            onMatchFound={handleMatchFound}
-            isLoggedIn={!!userId}
-            onLoginRequired={() => navigate('/login')}
-          />
+          <>
+            {myStats && userId && (
+              <div className="px-4 pt-4 max-w-sm mx-auto">
+                <XPBar xp={myStats.xp} level={myStats.level} wins={myStats.wins} streak={myStats.current_streak} />
+              </div>
+            )}
+            <MorphcodeLobby
+              onMatchFound={handleMatchFound}
+              isLoggedIn={!!userId}
+              onLoginRequired={() => navigate('/login')}
+            />
+          </>
         )}
 
         {phase === 'waiting' && match?.status === 'waiting' && (
