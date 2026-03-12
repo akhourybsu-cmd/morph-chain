@@ -224,6 +224,23 @@ const MorphCode = () => {
     else toast.error('Failed to start next round');
   };
 
+  const handleRematch = async () => {
+    if (!match || !userId) return;
+    const opponentId = match.playerA === userId ? match.playerB : match.playerA;
+    if (!opponentId) return;
+    const result = await createRematch(opponentId);
+    if (result) {
+      setMatch(null);
+      setRound(null);
+      hasShownVersusRef.current = false;
+      statsRecordedRef.current = null;
+      setOppSequence(null);
+      loadGameState();
+    } else {
+      toast.error('Failed to create rematch');
+    }
+  };
+
   const getRoundInfo = () => {
     if (!match || !round) return undefined;
     return `Round ${round.roundNumber} • ${match.roundWinsA}–${match.roundWinsB}`;
