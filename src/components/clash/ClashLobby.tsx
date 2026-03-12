@@ -168,11 +168,21 @@ export const ClashLobby = ({
             border: '1px solid hsl(var(--clash-card-border))',
           }}
         >
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4" style={{ color: 'hsl(var(--clash-text-muted))' }} />
-            <p className="text-xs font-inter font-semibold uppercase tracking-widest" style={{ color: 'hsl(var(--clash-text-muted))' }}>
-              Friends
-            </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4" style={{ color: 'hsl(var(--clash-text-muted))' }} />
+              <p className="text-xs font-inter font-semibold uppercase tracking-widest" style={{ color: 'hsl(var(--clash-text-muted))' }}>
+                Friends
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/profile?tab=friends')}
+              className="flex items-center gap-1 text-[11px] font-inter transition-colors"
+              style={{ color: 'hsl(var(--clash-accent))' }}
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              Manage
+            </button>
           </div>
           {onlineFriends.map(f => (
             <div
