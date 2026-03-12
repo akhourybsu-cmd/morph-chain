@@ -6,10 +6,11 @@ export const ClashHUD = () => {
   const [timeLeft, setTimeLeft] = useState('');
 
   const isPlayerA = userId === match?.player_a;
+  const isWaiting = match?.status === 'waiting';
   const myTiles = isPlayerA ? match?.tiles_a ?? 0 : match?.tiles_b ?? 0;
-  const oppTiles = isPlayerA ? match?.tiles_b ?? 0 : match?.tiles_a ?? 0;
+  const oppTiles = isWaiting ? 0 : (isPlayerA ? match?.tiles_b ?? 0 : match?.tiles_a ?? 0);
   const myMoves = isPlayerA ? match?.moves_a ?? 0 : match?.moves_b ?? 0;
-  const oppMoves = isPlayerA ? match?.moves_b ?? 0 : match?.moves_a ?? 0;
+  const oppMoves = isWaiting ? 0 : (isPlayerA ? match?.moves_b ?? 0 : match?.moves_a ?? 0);
   const isMyTurn = match?.current_turn === userId;
 
   useEffect(() => {
