@@ -33,22 +33,8 @@ export async function joinClashByCode(code: string): Promise<string | null> {
   if (error) return null;
   return data as string;
 }
-  const { data: match } = await supabase
-    .from('clash_matches')
-    .select('id')
-    .eq('invite_code', code.toUpperCase())
-    .eq('status', 'waiting')
-    .single();
 
-  if (!match) return null;
 
-  const { data, error } = await supabase.rpc('join_clash_match', {
-    p_match_id: match.id,
-  });
-
-  if (error) return null;
-  return data as string;
-}
 
 export async function cancelClashMatch(matchId: string): Promise<boolean> {
   const { data, error } = await supabase.functions.invoke('grid-duel-game', {
