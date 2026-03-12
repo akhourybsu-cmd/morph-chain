@@ -161,10 +161,11 @@ const GameSelector = () => {
           </p>
           
           <p 
-            className="text-xs mt-2"
+            className="text-xs mt-2 flex items-center justify-center gap-2 flex-wrap"
             style={{ color: 'hsl(var(--home-text-muted))' }}
           >
-            {formattedDate} · Puzzle #{puzzle.puzzleIndex}
+            <span>{formattedDate} · Puzzle #{puzzle.puzzleIndex}</span>
+            <LivePlayerCount />
           </p>
         </div>
 
