@@ -26,8 +26,9 @@ interface PendingChallenge {
 
 export const ClashLobby = ({
   onMatchFound, isLoggedIn, onLoginRequired,
-  existingInviteCode, existingMatchId, onMatchCancelled,
+  onMatchCancelled,
   initialJoinCode,
+  onMatchCreated,
 }: ClashLobbyProps) => {
   const [inviteCode, setInviteCode] = useState(initialJoinCode || '');
   const [creating, setCreating] = useState(false);
