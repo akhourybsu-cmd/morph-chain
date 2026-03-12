@@ -338,6 +338,8 @@ export default {
         "badge-pulse": "badge-pulse 0.5s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
         "orb-travel": "orb-travel 0.45s ease-in forwards",
+        "page-enter": "page-enter-right 0.3s cubic-bezier(0.22,1,0.36,1) both",
+        "play-slide-in": "play-slide-in 0.2s ease-out both",
       },
     },
   },
