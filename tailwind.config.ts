@@ -288,6 +288,14 @@ export default {
           "0%": { opacity: "0", transform: "translateY(8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "page-enter-right": {
+          "0%": { opacity: "0", transform: "translateX(24px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
+        "play-slide-in": {
+          "0%": { opacity: "0", transform: "translateX(16px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
         "orb-travel": {
           "0%": { 
             transform: "translate(0, 0) scale(1)",

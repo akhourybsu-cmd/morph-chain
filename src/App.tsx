@@ -41,6 +41,7 @@ import MorphClash from "./pages/MorphClash";
 import WhatsNew from "./pages/WhatsNew";
 import { useVersionCheck } from "./hooks/useVersionCheck";
 import { SnowfallOverlay } from "./components/seasonal/SnowfallOverlay";
+import { PageTransition } from "./components/PageTransition";
 
 const queryClient = new QueryClient();
 
