@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Link2, Loader2, LogIn, Swords, Users } from 'lucide-react';
-import { createClashMatch, joinClashByCode, cancelClashMatch, challengeFriend, getPendingChallenges } from '@/lib/clash/matchService';
+import { Loader2, LogIn, Swords, Users } from 'lucide-react';
+import { challengeFriend, getPendingChallenges, joinClashByCode, cancelClashMatch } from '@/lib/clash/matchService';
 import { getFriends, type Friend } from '@/lib/social/friendsService';
 import { toast } from 'sonner';
 
@@ -11,7 +10,6 @@ interface ClashLobbyProps {
   isLoggedIn: boolean;
   onLoginRequired: () => void;
   onMatchCancelled?: () => void;
-  initialJoinCode?: string | null;
   onMatchCreated?: (matchId: string) => void;
 }
 
@@ -26,10 +24,8 @@ interface PendingChallenge {
 
 export const ClashLobby = ({
   onMatchFound, isLoggedIn, onLoginRequired,
-  onMatchCancelled, initialJoinCode, onMatchCreated,
+  onMatchCancelled, onMatchCreated,
 }: ClashLobbyProps) => {
-  const [inviteCode, setInviteCode] = useState(initialJoinCode || '');
-  const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [challenges, setChallenges] = useState<PendingChallenge[]>([]);
@@ -41,42 +37,6 @@ export const ClashLobby = ({
     getFriends().then(setFriends);
     getPendingChallenges().then(setChallenges);
   }, [isLoggedIn]);
-
-  // Auto-join if initialJoinCode provided
-  useEffect(() => {
-    if (initialJoinCode && isLoggedIn) {
-      handleJoinWithCode(initialJoinCode);
-    }
-  }, [initialJoinCode, isLoggedIn]);
-
-  const handleCreate = async () => {
-    if (!isLoggedIn) { onLoginRequired(); return; }
-    setCreating(true);
-    const result = await createClashMatch();
-    setCreating(false);
-    if (result) {
-      toast.success('Match created!');
-      // Navigate directly to the board view for this pending match
-      onMatchCreated?.(result.matchId);
-    } else {
-      toast.error('Failed to create match');
-    }
-  };
-
-  const handleJoinWithCode = async (code: string) => {
-    if (!isLoggedIn) { onLoginRequired(); return; }
-    if (!code.trim()) return;
-    setJoining(true);
-    const matchId = await joinClashByCode(code.trim());
-    setJoining(false);
-    if (matchId) {
-      onMatchFound(matchId);
-    } else {
-      toast.error('Match not found or already full');
-    }
-  };
-
-  const handleJoin = () => handleJoinWithCode(inviteCode);
 
   const handleChallengeFriend = async (friendId: string) => {
     setChallengingId(friendId);
@@ -236,69 +196,23 @@ export const ClashLobby = ({
         </div>
       )}
 
-      {/* Create / Join */}
-      {isLoggedIn && (
-        <>
-          <button
-            onClick={handleCreate}
-            disabled={creating}
-            className="w-full rounded-xl p-5 text-left transition-all hover:shadow-md active:scale-[0.98] disabled:opacity-60"
-            style={{
-              background: 'hsl(var(--clash-card-bg))',
-              border: '1px solid hsl(var(--clash-card-border))',
-            }}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'hsl(var(--clash-accent) / 0.1)' }}>
-                {creating
-                  ? <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'hsl(var(--clash-accent))' }} />
-                  : <Link2 className="w-5 h-5" style={{ color: 'hsl(var(--clash-accent))' }} />
-                }
-              </div>
-              <div>
-                <p className="font-playfair font-semibold text-[15px]" style={{ color: 'hsl(var(--clash-text-primary))' }}>
-                  Create Match
-                </p>
-                <p className="text-xs font-inter mt-0.5" style={{ color: 'hsl(var(--clash-text-muted))' }}>
-                  Get a code to share with a friend
-                </p>
-              </div>
-            </div>
-          </button>
-
-          <div
-            className="w-full rounded-xl p-5 space-y-3"
-            style={{
-              background: 'hsl(var(--clash-card-bg))',
-              border: '1px solid hsl(var(--clash-card-border))',
-            }}
-          >
-            <p className="text-xs font-inter uppercase tracking-widest" style={{ color: 'hsl(var(--clash-text-muted))' }}>
-              Join a match
-            </p>
-            <div className="flex gap-2">
-              <Input
-                value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                placeholder="Enter code…"
-                className="font-mono text-center text-lg tracking-widest uppercase bg-[hsl(var(--clash-page-bg))] border-[hsl(var(--clash-card-border))] text-[hsl(var(--clash-text-primary))] placeholder:text-[hsl(var(--clash-text-muted))]"
-                maxLength={6}
-              />
-              <Button
-                onClick={handleJoin}
-                disabled={joining || !inviteCode.trim()}
-                size="default"
-                className="px-5 font-inter"
-                style={{
-                  background: inviteCode.trim() ? 'hsl(var(--clash-accent))' : 'hsl(var(--clash-pill-bg))',
-                  color: inviteCode.trim() ? '#fff' : 'hsl(var(--clash-text-muted))',
-                }}
-              >
-                {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Join'}
-              </Button>
-            </div>
-          </div>
-        </>
+      {/* Empty state when logged in but no friends online and no challenges */}
+      {isLoggedIn && onlineFriends.length === 0 && challenges.length === 0 && (
+        <div
+          className="w-full rounded-xl p-6 text-center"
+          style={{
+            background: 'hsl(var(--clash-card-bg))',
+            border: '1px solid hsl(var(--clash-card-border))',
+          }}
+        >
+          <Users className="w-8 h-8 mx-auto mb-3" style={{ color: 'hsl(var(--clash-text-muted))' }} />
+          <p className="font-playfair text-sm font-semibold mb-1" style={{ color: 'hsl(var(--clash-text-primary))' }}>
+            No friends online
+          </p>
+          <p className="text-xs font-inter" style={{ color: 'hsl(var(--clash-text-muted))' }}>
+            Add friends from your profile to challenge them
+          </p>
+        </div>
       )}
     </div>
   );

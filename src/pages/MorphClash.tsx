@@ -143,7 +143,6 @@ const MorphClash = () => {
               isLoggedIn={isLoggedIn}
               onLoginRequired={() => navigate('/login')}
               onMatchCancelled={() => { clearMatch(); refreshMatchList(); }}
-              initialJoinCode={joinCode}
               onMatchCreated={(matchId) => {
                 handleSelectMatch(matchId);
               }}
