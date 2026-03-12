@@ -130,19 +130,40 @@ function validatePath(coords: {row:number,col:number}[]): boolean {
   return true;
 }
 
-async function validateWord(word: string, supabaseUrl: string, serviceKey: string): Promise<boolean> {
+async function validateWord(word: string, adminClient: any): Promise<boolean> {
   try {
-    const resp = await fetch(`${supabaseUrl}/functions/v1/validate-word`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${serviceKey}`,
-      },
-      body: JSON.stringify({ word }),
-    });
-    if (!resp.ok) return false;
-    const data = await resp.json();
-    return data.valid === true;
+    const upper = word.toUpperCase();
+    
+    // Check banned
+    const { data: banned } = await adminClient
+      .from('admin_dictionary')
+      .select('is_banned')
+      .eq('word', upper)
+      .eq('is_banned', true)
+      .single();
+    if (banned) return false;
+
+    // Basic structure: needs vowel + consonant, no triple letters
+    const vowels = new Set(['A','E','I','O','U']);
+    const hasVowel = [...upper].some(c => vowels.has(c));
+    const hasConsonant = [...upper].some(c => !vowels.has(c));
+    if (!hasVowel || !hasConsonant) return false;
+    
+    const counts = new Map<string, number>();
+    for (const c of upper) {
+      counts.set(c, (counts.get(c) || 0) + 1);
+      if (counts.get(c)! >= 3) return false;
+    }
+
+    // Track usage
+    await adminClient.from('admin_dictionary').upsert({
+      word: upper,
+      word_length: upper.length,
+      frequency_score: 1,
+      last_seen: new Date().toISOString().split('T')[0],
+    }, { onConflict: 'word', ignoreDuplicates: false });
+
+    return true;
   } catch {
     return false;
   }
@@ -363,7 +384,7 @@ Deno.serve(async (req) => {
 
       // If bot goes first, play the bot's first move immediately
       if (firstTurn === BOT_UUID) {
-        await executeBotMove(adminClient, data.id, supabaseUrl, supabaseServiceKey);
+        await executeBotMove(adminClient, data.id);
       }
 
       return new Response(JSON.stringify({ matchId: data.id }), {
@@ -385,7 +406,7 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Not bot turn or not bot match' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      const result = await executeBotMove(adminClient, match_id, supabaseUrl, supabaseServiceKey);
+      const result = await executeBotMove(adminClient, match_id);
 
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -448,7 +469,7 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: `"${word}" has already been played` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      const isValid = await validateWord(word, supabaseUrl, supabaseServiceKey);
+      const isValid = await validateWord(word, adminClient);
       if (!isValid) {
         return new Response(JSON.stringify({ error: `"${word}" is not a valid word` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
@@ -688,8 +709,6 @@ Deno.serve(async (req) => {
 async function executeBotMove(
   adminClient: any,
   matchId: string,
-  supabaseUrl: string,
-  supabaseServiceKey: string
 ): Promise<{ success: boolean; word?: string; skipped?: boolean; match_ended?: boolean }> {
   const { data: match } = await adminClient
     .from('clash_matches')
@@ -719,7 +738,7 @@ async function executeBotMove(
   let bestMove: { path: {row:number,col:number}[]; word: string } | null = null;
 
   for (const cand of topCandidates) {
-    const isValid = await validateWord(cand.word, supabaseUrl, supabaseServiceKey);
+    const isValid = await validateWord(cand.word, adminClient);
     if (isValid) {
       bestMove = cand;
       break;
