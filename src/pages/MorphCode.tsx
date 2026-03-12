@@ -199,7 +199,21 @@ const MorphCode = () => {
   const handleLockSequence = async (sequence: Symbol[]) => {
     if (!round) return;
     const success = await lockSequence(round.id, sequence);
-    if (success) { toast.success('Sequence locked!'); loadGameState(); }
+    if (success) {
+      toast.success('Sequence locked!');
+      await loadGameState();
+
+      // For bot matches, if both locked and it's bot's turn, trigger bot guess
+      if (match && isBotPlayer(match.playerB)) {
+        const updatedRound = await getCurrentRound(match.id);
+        if (updatedRound && isBotPlayer(updatedRound.currentTurn) && updatedRound.status === 'active') {
+          setTimeout(async () => {
+            await triggerBotGuess(updatedRound.id);
+            loadGameState();
+          }, 1500);
+        }
+      }
+    }
     else { toast.error('Failed to lock sequence'); }
   };
 
