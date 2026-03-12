@@ -15,6 +15,7 @@ interface FriendsListProps {
 }
 
 export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) => {
+  const navigate = useNavigate();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [challenges, setChallenges] = useState<IncomingChallenge[]>([]);
   const [myCode, setMyCode] = useState<string | null>(null);
