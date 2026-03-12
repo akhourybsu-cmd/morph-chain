@@ -5,6 +5,7 @@ import { UserPlus, Check, X, Swords, Copy, Loader2, ChevronDown, ChevronUp } fro
 import { Friend, getFriends, sendFriendRequest, acceptFriendRequest, removeFriend, getMyFriendCode, updatePresence } from '@/lib/morphcode/friendsService';
 import { challengeFriend, joinMatchById, getIncomingChallenges, declineChallenge, IncomingChallenge } from '@/lib/morphcode/matchService';
 import { toast } from 'sonner';
+import { playChallengeReceived } from '@/lib/morphcode/audioManager';
 
 interface FriendsListProps {
   isLoggedIn: boolean;
@@ -30,6 +31,10 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
     ]);
     setFriends(friendsList);
     setMyCode(code);
+    // Play sound if new challenges appeared
+    if (incomingChallenges.length > challenges.length) {
+      playChallengeReceived();
+    }
     setChallenges(incomingChallenges);
     setLoading(false);
   }, [isLoggedIn]);
@@ -169,7 +174,7 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
           {challenges.length > 0 && (
             <FriendsSection label="⚔ Challenges">
               {challenges.map(c => (
-                <div key={c.activityId} className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ background: 'hsl(var(--code-accent) / 0.08)', border: '1px solid hsl(var(--code-accent) / 0.2)' }}>
+                <div key={c.activityId} className="flex items-center justify-between py-2 px-2 md:px-3 rounded-lg animate-fade-in" style={{ background: 'hsl(var(--code-accent) / 0.08)', border: '1px solid hsl(var(--code-accent) / 0.2)' }}>
                   <div className="flex items-center gap-2">
                     <Swords className="w-4 h-4" style={{ color: 'hsl(var(--code-accent))' }} />
                     <span className="text-sm font-inter font-medium" style={{ color: 'hsl(var(--code-text-primary))' }}>
@@ -228,9 +233,9 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
                       {f.displayName || f.friendCode || 'Player'}
                     </span>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => handleChallenge(f.friendUserId)} className="h-7 text-xs gap-1 text-[hsl(var(--code-accent))]">
+                  <Button variant="ghost" size="sm" onClick={() => handleChallenge(f.friendUserId)} className="h-7 text-xs gap-1 px-2 md:px-3 text-[hsl(var(--code-accent))]">
                     <Swords className="w-3 h-3" />
-                    Challenge
+                    <span className="hidden md:inline">Challenge</span>
                   </Button>
                 </div>
               ))}

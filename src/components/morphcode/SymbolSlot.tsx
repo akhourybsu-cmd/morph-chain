@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Symbol, SYMBOL_DISPLAY } from '@/lib/morphcode/types';
 import { cn } from '@/lib/utils';
 
@@ -10,21 +11,22 @@ interface SymbolSlotProps {
   showLabel?: boolean;
 }
 
-// Prestige-friendly muted symbol colors (HSL values only)
-const PRESTIGE_COLORS: Record<Symbol, { bg: string; bgDark: string }> = {
-  circle:   { bg: '210 45% 88%', bgDark: '210 30% 30%' },
-  triangle: { bg: '45 55% 85%',  bgDark: '45 35% 32%' },
-  wave:     { bg: '180 40% 85%', bgDark: '180 25% 30%' },
-  flame:    { bg: '15 55% 87%',  bgDark: '15 35% 32%' },
-  eye:      { bg: '270 35% 87%', bgDark: '270 25% 32%' },
-  shard:    { bg: '330 40% 88%', bgDark: '330 25% 32%' },
-};
-
 export const SymbolSlot = ({ symbol, onClick, selected, disabled, size = 'md', showLabel }: SymbolSlotProps) => {
+  const [bounce, setBounce] = useState(false);
+
+  // Trigger bounce animation when symbol is placed
+  useEffect(() => {
+    if (symbol) {
+      setBounce(true);
+      const t = setTimeout(() => setBounce(false), 150);
+      return () => clearTimeout(t);
+    }
+  }, [symbol]);
+
   const sizeClasses = {
-    sm: 'w-10 h-10 text-lg',
-    md: 'w-14 h-14 text-2xl',
-    lg: 'w-16 h-16 text-3xl',
+    sm: 'w-9 h-9 text-base md:w-10 md:h-10 md:text-lg',
+    md: 'w-12 h-12 text-xl md:w-14 md:h-14 md:text-2xl',
+    lg: 'w-14 h-14 text-2xl md:w-16 md:h-16 md:text-3xl',
   };
 
   return (
@@ -36,6 +38,7 @@ export const SymbolSlot = ({ symbol, onClick, selected, disabled, size = 'md', s
         sizeClasses[size],
         selected && 'ring-2 ring-[hsl(var(--code-accent))] ring-offset-2 ring-offset-[hsl(var(--code-page-bg))]',
         disabled ? 'opacity-60 cursor-default' : 'cursor-pointer active:scale-90 hover:scale-105',
+        bounce && 'scale-110',
       )}
       style={{
         background: symbol
@@ -48,6 +51,7 @@ export const SymbolSlot = ({ symbol, onClick, selected, disabled, size = 'md', s
           ? 'hsl(var(--code-text-primary))'
           : 'hsl(var(--code-text-muted))',
         boxShadow: symbol ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+        transition: 'all 0.15s ease-out',
       }}
     >
       <span>{symbol ? SYMBOL_DISPLAY[symbol].emoji : '?'}</span>

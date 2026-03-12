@@ -15,6 +15,7 @@ import {
 import { updatePresence, setOffline } from '@/lib/social/friendsService';
 import { MatchState, RoundState, Symbol } from '@/lib/morphcode/types';
 import { toast } from 'sonner';
+import { initMorphcodeAudio, playCodeSolved } from '@/lib/morphcode/audioManager';
 
 type GamePhase = 'lobby' | 'waiting' | 'versus' | 'setup' | 'playing' | 'round-end' | 'match-end';
 
@@ -35,6 +36,7 @@ const MorphCode = () => {
   const statsRecordedRef = useRef<string | null>(null); // track which match ID we've recorded stats for
 
   useEffect(() => {
+    initMorphcodeAudio();
     supabase.auth.getUser().then(({ data: { user } }) => setUserId(user?.id || null));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUserId(session?.user?.id || null);
@@ -173,7 +175,7 @@ const MorphCode = () => {
     const timeTaken = Date.now() - turnStart;
     const result = await submitGuess(round.id, guess, timeTaken);
     if (result) {
-      if (result.isSolve) toast.success('Solved! 🎉');
+      if (result.isSolve) { playCodeSolved(); toast.success('Solved! 🎉'); }
       else toast(`${result.exact} exact, ${result.shifted} shifted`);
       loadGameState();
     } else {
