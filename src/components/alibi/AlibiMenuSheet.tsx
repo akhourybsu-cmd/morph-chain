@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { GamesNavigation } from '@/components/shared/GamesNavigation';
 import { useAlibiSettings } from '@/hooks/useAlibiSettings';
-import { Settings, User, ChevronDown } from 'lucide-react';
+import { Settings, User, ChevronDown, HelpCircle, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AlibiMenuSheetProps {
