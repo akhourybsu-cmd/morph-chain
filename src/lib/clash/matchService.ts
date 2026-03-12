@@ -37,19 +37,39 @@ export async function cancelClashMatch(matchId: string): Promise<boolean> {
 }
 
 export async function getMyActiveClashMatch(): Promise<string | null> {
+  const matches = await getMyActiveClashMatches();
+  return matches.length > 0 ? matches[0].id : null;
+}
+
+export interface ClashMatchSummary {
+  id: string;
+  status: string;
+  player_a: string;
+  player_b: string | null;
+  current_turn: string | null;
+  tiles_a: number;
+  tiles_b: number;
+  moves_a: number;
+  moves_b: number;
+  invite_code: string | null;
+  turn_deadline: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getMyActiveClashMatches(): Promise<ClashMatchSummary[]> {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!user) return [];
 
   const { data } = await supabase
     .from('clash_matches')
-    .select('id, status')
+    .select('id, status, player_a, player_b, current_turn, tiles_a, tiles_b, moves_a, moves_b, invite_code, turn_deadline, created_at, updated_at')
     .or(`player_a.eq.${user.id},player_b.eq.${user.id}`)
     .in('status', ['waiting', 'active'])
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
+    .order('updated_at', { ascending: false })
+    .limit(20);
 
-  return data?.id || null;
+  return (data as ClashMatchSummary[]) || [];
 }
 
 export async function getMyRecentCompletedMatch(): Promise<string | null> {
