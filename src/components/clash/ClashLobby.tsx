@@ -325,12 +325,12 @@ export const ClashLobby = ({
               </div>
               <Button
                 size="sm"
-                onClick={() => handleChallengeFriend(f.userId)}
-                disabled={challengingId === f.userId}
+                onClick={() => handleChallengeFriend(f.friendUserId)}
+                disabled={challengingId === f.friendUserId}
                 className="text-xs font-inter px-3"
                 style={{ background: 'hsl(var(--clash-accent) / 0.15)', color: 'hsl(var(--clash-accent))' }}
               >
-                {challengingId === f.userId ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Challenge'}
+                {challengingId === f.friendUserId ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Challenge'}
               </Button>
             </div>
           ))}
