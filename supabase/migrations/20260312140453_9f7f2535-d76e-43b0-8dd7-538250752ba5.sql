@@ -1,0 +1,1 @@
+ALTER TABLE public.clash_matches ADD COLUMN used_words jsonb NOT NULL DEFAULT '[]'::jsonb;
