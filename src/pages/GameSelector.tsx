@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { isChristmas } from "@/lib/seasonal/christmas";
 import { DailyProgressTracker } from "@/components/DailyProgressTracker";
 import { FriendActivityFeed } from "@/components/social/FriendActivityFeed";
+import { LivePlayerCount } from "@/components/LivePlayerCount";
 
 
 // Per-game accent colors (HSL values match CSS variables)
@@ -160,10 +161,11 @@ const GameSelector = () => {
           </p>
           
           <p 
-            className="text-xs mt-2"
+            className="text-xs mt-2 flex items-center justify-center gap-2 flex-wrap"
             style={{ color: 'hsl(var(--home-text-muted))' }}
           >
-            {formattedDate} · Puzzle #{puzzle.puzzleIndex}
+            <span>{formattedDate} · Puzzle #{puzzle.puzzleIndex}</span>
+            <LivePlayerCount />
           </p>
         </div>
 
