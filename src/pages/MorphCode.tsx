@@ -42,9 +42,13 @@ const MorphCode = () => {
 
   useEffect(() => {
     initMorphcodeAudio();
-    supabase.auth.getUser().then(({ data: { user } }) => setUserId(user?.id || null));
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUserId(user?.id || null);
+      if (user?.id) getPlayerStats(user.id).then(setMyStats);
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUserId(session?.user?.id || null);
+      if (session?.user?.id) getPlayerStats(session.user.id).then(setMyStats);
     });
     return () => subscription.unsubscribe();
   }, []);
