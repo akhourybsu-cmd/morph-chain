@@ -10,10 +10,9 @@ interface ClashLobbyProps {
   onMatchFound: (matchId: string) => void;
   isLoggedIn: boolean;
   onLoginRequired: () => void;
-  existingInviteCode?: string | null;
-  existingMatchId?: string | null;
   onMatchCancelled?: () => void;
   initialJoinCode?: string | null;
+  onMatchCreated?: (matchId: string) => void;
 }
 
 interface PendingChallenge {
