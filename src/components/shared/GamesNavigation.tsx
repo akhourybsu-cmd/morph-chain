@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Link2, Grid3X3, Swords } from "lucide-react";
+import { Link2, Grid3X3, Swords, Shield } from "lucide-react";
 
 interface GamesNavigationProps {
-  currentGame: 'chain' | 'grid' | 'rush' | 'arcade' | 'alibi' | 'measured' | 'morphcode';
+  currentGame: 'chain' | 'grid' | 'rush' | 'arcade' | 'alibi' | 'measured' | 'morphcode' | 'clash';
   onNavigate?: () => void;
 }
 
