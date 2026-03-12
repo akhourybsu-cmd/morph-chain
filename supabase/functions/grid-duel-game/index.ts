@@ -11,6 +11,31 @@ const DOMINATION_THRESHOLD = 18;
 const MIN_WORD_LENGTH = 4;
 const BOT_UUID = '00000000-0000-0000-0000-b07b07b07b07';
 
+// ─── TWL06 Dictionary ───
+let twl06Set: Set<string> | null = null;
+
+function loadTWL06(): Set<string> {
+  if (twl06Set) return twl06Set;
+  try {
+    const filePath = new URL('./twl06.txt', import.meta.url).pathname;
+    const content = Deno.readTextFileSync(filePath);
+    twl06Set = new Set<string>();
+    const lines = content.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const word = lines[i].trim().toUpperCase();
+      if (i === 0 && word.includes('TWL06')) continue;
+      if (!word || !/^[A-Z]+$/.test(word)) continue;
+      twl06Set.add(word);
+    }
+    console.log(`TWL06 loaded: ${twl06Set.size} words`);
+    return twl06Set;
+  } catch (err) {
+    console.error('Failed to load TWL06:', err);
+    twl06Set = new Set();
+    return twl06Set;
+  }
+}
+
 // Seeded RNG (matches client)
 class SeededRandom {
   private state: number;
@@ -134,7 +159,11 @@ async function validateWord(word: string, adminClient: any): Promise<boolean> {
   try {
     const upper = word.toUpperCase();
     
-    // Check banned
+    // Check against TWL06 dictionary
+    const dictionary = loadTWL06();
+    if (!dictionary.has(upper)) return false;
+
+    // Check banned in admin_dictionary
     const { data: banned } = await adminClient
       .from('admin_dictionary')
       .select('is_banned')
@@ -142,18 +171,6 @@ async function validateWord(word: string, adminClient: any): Promise<boolean> {
       .eq('is_banned', true)
       .single();
     if (banned) return false;
-
-    // Basic structure: needs vowel + consonant, no triple letters
-    const vowels = new Set(['A','E','I','O','U']);
-    const hasVowel = [...upper].some(c => vowels.has(c));
-    const hasConsonant = [...upper].some(c => !vowels.has(c));
-    if (!hasVowel || !hasConsonant) return false;
-    
-    const counts = new Map<string, number>();
-    for (const c of upper) {
-      counts.set(c, (counts.get(c) || 0) + 1);
-      if (counts.get(c)! >= 3) return false;
-    }
 
     // Track usage
     await adminClient.from('admin_dictionary').upsert({
@@ -247,11 +264,13 @@ function countTiles(ownership: Record<string, Ownership>): { a: number; b: numbe
 function findBotWords(tiles: Tile[][], ownership: Record<string, Ownership>, usedWords: string[]): { path: {row:number,col:number}[]; word: string; score: number }[] {
   const candidates: { path: {row:number,col:number}[]; word: string; score: number }[] = [];
   const usedSet = new Set(usedWords.map(w => w.toUpperCase()));
+  const dictionary = loadTWL06();
 
   function dfs(path: {row:number,col:number}[], visited: Set<string>) {
     if (path.length >= MIN_WORD_LENGTH && path.length <= 6) {
       const word = path.map(c => tiles[c.row][c.col].char).join('');
-      if (!usedSet.has(word.toUpperCase())) {
+      const upper = word.toUpperCase();
+      if (!usedSet.has(upper) && dictionary.has(upper)) {
         // Score: prefer stealing opponent tiles, then neutral, then length
         let score = 0;
         for (const c of path) {
@@ -259,13 +278,12 @@ function findBotWords(tiles: Tile[][], ownership: Record<string, Ownership>, use
           const own = ownership[id];
           if (own === 'a') score += 3; // steal from player
           else if (own === 'neutral') score += 1;
-          // own === 'b' means using own tile, no bonus
         }
         score += path.length * 0.5;
         candidates.push({ path: [...path], word, score });
       }
     }
-    if (path.length >= 6) return; // max DFS depth
+    if (path.length >= 6) return;
 
     const last = path[path.length - 1];
     for (let dr = -1; dr <= 1; dr++) {
