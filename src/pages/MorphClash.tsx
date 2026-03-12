@@ -20,6 +20,7 @@ const MorphClash = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeMatches, setActiveMatches] = useState<ClashMatchSummary[]>([]);
   const [completedMatches, setCompletedMatches] = useState<ClashMatchSummary[]>([]);
+  const [opponentNames, setOpponentNames] = useState<Record<string, string>>({});
   const { match, userId, loading, setUserId, loadMatch, subscribeToMatch, clearMatch } = useClashStore();
 
 
@@ -45,6 +46,28 @@ const MorphClash = () => {
     ]);
     setActiveMatches(active);
     setCompletedMatches(completed);
+
+    // Batch-fetch opponent display names
+    const allMatches = [...active, ...completed];
+    const currentUserId = userId;
+    if (!currentUserId) return;
+    const oppIds = new Set<string>();
+    for (const m of allMatches) {
+      const oppId = currentUserId === m.player_a ? m.player_b : m.player_a;
+      if (oppId && oppId !== currentUserId) oppIds.add(oppId);
+    }
+    if (oppIds.size === 0) return;
+    const { data: profiles } = await supabase
+      .from('user_profiles')
+      .select('user_id, display_name')
+      .in('user_id', Array.from(oppIds));
+    if (profiles) {
+      const names: Record<string, string> = {};
+      for (const p of profiles) {
+        if (p.display_name) names[p.user_id] = p.display_name;
+      }
+      setOpponentNames(names);
+    }
   };
 
   useEffect(() => {
@@ -133,6 +156,7 @@ const MorphClash = () => {
                   matches={activeMatches}
                   completedMatches={completedMatches}
                   userId={userId}
+                  opponentNames={opponentNames}
                   onSelectMatch={handleSelectMatch}
                   onMatchCancelled={refreshMatchList}
                 />

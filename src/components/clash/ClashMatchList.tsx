@@ -1,17 +1,18 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Clock, Swords, Eye, Hourglass, X, Loader2 } from 'lucide-react';
-import { cancelClashMatch, type ClashMatchSummary } from '@/lib/clash/matchService';
+import { cancelClashMatch, isClashBotPlayer, type ClashMatchSummary } from '@/lib/clash/matchService';
 import { toast } from 'sonner';
 
 interface ClashMatchListProps {
   matches: ClashMatchSummary[];
   completedMatches: ClashMatchSummary[];
   userId: string | null;
+  opponentNames: Record<string, string>;
   onSelectMatch: (matchId: string) => void;
   onMatchCancelled?: () => void;
 }
 
-export const ClashMatchList = ({ matches, completedMatches, userId, onSelectMatch, onMatchCancelled }: ClashMatchListProps) => {
+export const ClashMatchList = ({ matches, completedMatches, userId, opponentNames, onSelectMatch, onMatchCancelled }: ClashMatchListProps) => {
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   if (matches.length === 0 && completedMatches.length === 0) return null;
@@ -29,6 +30,11 @@ export const ClashMatchList = ({ matches, completedMatches, userId, onSelectMatc
     }
   };
 
+  const getOpponentId = (m: ClashMatchSummary) => {
+    if (!userId) return null;
+    return userId === m.player_a ? m.player_b : m.player_a;
+  };
+
   const getMatchLabel = (m: ClashMatchSummary) => {
     if (m.status === 'waiting') return 'Waiting for opponent';
     if (m.status === 'completed') {
@@ -39,7 +45,11 @@ export const ClashMatchList = ({ matches, completedMatches, userId, onSelectMatc
       return myTiles > oppTiles ? 'You won!' : 'You lost';
     }
     const isMyTurn = m.current_turn === userId;
-    return isMyTurn ? 'Your turn' : "Opponent's turn";
+    if (isMyTurn) return 'Your turn';
+    const oppId = getOpponentId(m);
+    if (oppId && isClashBotPlayer(oppId)) return "Bot's turn";
+    if (oppId && opponentNames[oppId]) return `${opponentNames[oppId]}'s turn`;
+    return "Opponent's turn";
   };
 
   const getTurnColor = (m: ClashMatchSummary) => {
@@ -58,7 +68,20 @@ export const ClashMatchList = ({ matches, completedMatches, userId, onSelectMatc
     return `${mins}m left`;
   };
 
-  const allMatches = [...matches, ...completedMatches];
+  // Sort: my turn first, then opponent's turn, then waiting
+  const sortPriority = (m: ClashMatchSummary): number => {
+    if (m.status === 'active' && m.current_turn === userId) return 0;
+    if (m.status === 'active') return 1;
+    if (m.status === 'waiting') return 2;
+    return 3; // completed
+  };
+
+  const allMatches = [...matches, ...completedMatches].sort((a, b) => {
+    const pa = sortPriority(a);
+    const pb = sortPriority(b);
+    if (pa !== pb) return pa - pb;
+    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+  });
 
   return (
     <div
@@ -93,6 +116,7 @@ export const ClashMatchList = ({ matches, completedMatches, userId, onSelectMatc
             style={{
               background: 'hsl(var(--clash-page-bg))',
               border: isMyTurn ? '1px solid hsl(var(--clash-accent) / 0.4)' : '1px solid transparent',
+              boxShadow: isMyTurn ? '0 0 8px hsl(var(--clash-accent) / 0.25)' : 'none',
             }}
           >
             {/* Turn indicator */}
