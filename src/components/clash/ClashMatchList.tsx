@@ -121,8 +121,19 @@ export const ClashMatchList = ({ matches, completedMatches, userId, onSelectMatc
               )}
             </div>
 
-            {/* Arrow */}
-            <span className="text-xs" style={{ color: 'hsl(var(--clash-text-muted))' }}>›</span>
+            {/* Cancel / Arrow */}
+            {m.status === 'waiting' && userId === m.player_a ? (
+              <button
+                onClick={(e) => handleCancel(e, m.id)}
+                disabled={cancellingId === m.id}
+                className="p-1 rounded-md transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                style={{ color: 'hsl(var(--clash-text-muted))' }}
+              >
+                {cancellingId === m.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+              </button>
+            ) : (
+              <span className="text-xs" style={{ color: 'hsl(var(--clash-text-muted))' }}>›</span>
+            )}
           </button>
         );
       })}
