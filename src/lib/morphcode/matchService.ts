@@ -52,40 +52,25 @@ export async function joinMatchByCode(code: string): Promise<string | null> {
   if (findErr || !match) return null;
   if (match.player_a === user.id) return null;
 
-  return await finalizeJoin(match.id, match.player_a, user.id);
+  return await finalizeJoin(match.id);
 }
 
 export async function joinMatchById(matchId: string): Promise<string | null> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: match, error: findErr } = await supabase
-    .from('morphcode_matches')
-    .select('id, player_a')
-    .eq('id', matchId)
-    .eq('status', 'waiting')
-    .single();
-
-  if (findErr || !match) return null;
-  if (match.player_a === user.id) return null;
-
-  return await finalizeJoin(match.id, match.player_a, user.id);
+  return await finalizeJoin(matchId);
 }
 
-async function finalizeJoin(matchId: string, playerA: string, playerB: string): Promise<string | null> {
-  const { error: updateErr } = await supabase
-    .from('morphcode_matches')
-    .update({ player_b: playerB, status: 'setup', current_round: 1 })
-    .eq('id', matchId);
-
-  if (updateErr) return null;
-
-  const firstGuesser = Math.random() < 0.5 ? playerA : playerB;
-  await supabase.from('morphcode_rounds').insert({
-    match_id: matchId, round_number: 1, first_guesser: firstGuesser, status: 'setup',
-  });
-
-  return matchId;
+async function finalizeJoin(matchId: string): Promise<string | null> {
+  try {
+    const { error } = await supabase.rpc('join_match', { p_match_id: matchId });
+    if (error) {
+      console.error('join_match RPC error:', error);
+      return null;
+    }
+    return matchId;
+  } catch (e) {
+    console.error('finalizeJoin error:', e);
+    return null;
+  }
 }
 
 export async function cancelMatch(matchId: string): Promise<boolean> {
@@ -101,11 +86,9 @@ export async function cancelMatch(matchId: string): Promise<boolean> {
   if (!match) return false;
 
   if (match.status === 'waiting') {
-    const { error } = await supabase
-      .from('morphcode_matches')
-      .update({ status: 'expired' })
-      .eq('id', matchId);
-    return !error;
+    // Use RPC to bypass RLS for non-owners too
+    const { data } = await supabase.rpc('expire_match', { p_match_id: matchId });
+    return !!data;
   }
 
   const { error } = await supabase
@@ -199,12 +182,9 @@ export async function getIncomingChallenges(): Promise<IncomingChallenge[]> {
 }
 
 export async function declineChallenge(matchId: string): Promise<boolean> {
-  // Just expire the match — the activity will stop showing since match is no longer 'waiting'
-  const { error } = await supabase
-    .from('morphcode_matches')
-    .update({ status: 'expired' })
-    .eq('id', matchId);
-  return !error;
+  // Use RPC to expire match (bypasses RLS)
+  const { data } = await supabase.rpc('expire_match', { p_match_id: matchId });
+  return !!data;
 }
 
 // --- Queue ---
@@ -314,6 +294,7 @@ export async function getActiveMatch(): Promise<MatchState | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
+  // First check for active/in-progress matches
   const { data } = await supabase
     .from('morphcode_matches')
     .select('*')
@@ -323,8 +304,28 @@ export async function getActiveMatch(): Promise<MatchState | null> {
     .limit(1)
     .single();
 
-  if (!data) return null;
+  // If no active match, check for recently completed ones (last 5 minutes)
+  if (!data) {
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const { data: completed } = await supabase
+      .from('morphcode_matches')
+      .select('*')
+      .or(`player_a.eq.${user.id},player_b.eq.${user.id}`)
+      .eq('status', 'completed')
+      .gte('completed_at', fiveMinAgo)
+      .order('completed_at', { ascending: false })
+      .limit(1)
+      .single();
 
+    if (!completed) return null;
+
+    return mapMatch(completed);
+  }
+
+  return mapMatch(data);
+}
+
+function mapMatch(data: any): MatchState {
   return {
     id: data.id,
     playerA: data.player_a,
