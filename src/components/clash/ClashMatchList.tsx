@@ -1,15 +1,33 @@
-import { Clock, Swords, Eye, Hourglass } from 'lucide-react';
-import type { ClashMatchSummary } from '@/lib/clash/matchService';
+import { useState } from 'react';
+import { Clock, Swords, Eye, Hourglass, X, Loader2 } from 'lucide-react';
+import { cancelClashMatch, type ClashMatchSummary } from '@/lib/clash/matchService';
+import { toast } from 'sonner';
 
 interface ClashMatchListProps {
   matches: ClashMatchSummary[];
   completedMatches: ClashMatchSummary[];
   userId: string | null;
   onSelectMatch: (matchId: string) => void;
+  onMatchCancelled?: () => void;
 }
 
-export const ClashMatchList = ({ matches, completedMatches, userId, onSelectMatch }: ClashMatchListProps) => {
+export const ClashMatchList = ({ matches, completedMatches, userId, onSelectMatch, onMatchCancelled }: ClashMatchListProps) => {
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
   if (matches.length === 0 && completedMatches.length === 0) return null;
+
+  const handleCancel = async (e: React.MouseEvent, matchId: string) => {
+    e.stopPropagation();
+    setCancellingId(matchId);
+    const success = await cancelClashMatch(matchId);
+    setCancellingId(null);
+    if (success) {
+      toast('Match cancelled');
+      onMatchCancelled?.();
+    } else {
+      toast.error('Failed to cancel match');
+    }
+  };
 
   const getMatchLabel = (m: ClashMatchSummary) => {
     if (m.status === 'waiting') return 'Waiting for opponent';
@@ -103,8 +121,19 @@ export const ClashMatchList = ({ matches, completedMatches, userId, onSelectMatc
               )}
             </div>
 
-            {/* Arrow */}
-            <span className="text-xs" style={{ color: 'hsl(var(--clash-text-muted))' }}>›</span>
+            {/* Cancel / Arrow */}
+            {m.status === 'waiting' && userId === m.player_a ? (
+              <button
+                onClick={(e) => handleCancel(e, m.id)}
+                disabled={cancellingId === m.id}
+                className="p-1 rounded-md transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                style={{ color: 'hsl(var(--clash-text-muted))' }}
+              >
+                {cancellingId === m.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+              </button>
+            ) : (
+              <span className="text-xs" style={{ color: 'hsl(var(--clash-text-muted))' }}>›</span>
+            )}
           </button>
         );
       })}
