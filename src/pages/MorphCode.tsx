@@ -38,6 +38,7 @@ const MorphCode = () => {
   const statsRecordedRef = useRef<string | null>(null);
   const loadingRef = useRef(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [myStats, setMyStats] = useState<MorphcodePlayerStats | null>(null);
 
   useEffect(() => {
     initMorphcodeAudio();
