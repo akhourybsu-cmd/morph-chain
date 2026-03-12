@@ -222,6 +222,16 @@ export const useClashStore = create<ClashState>((set, get) => ({
 
     set({ loading: false, selected: [] });
     await get().refreshMatch(match.id);
+
+    // Auto-trigger bot move after skip
+    const currentMatch = get().match;
+    if (currentMatch && currentMatch.is_bot_match && currentMatch.current_turn === CLASH_BOT_UUID && currentMatch.status === 'active') {
+      setTimeout(async () => {
+        await triggerClashBotMove(currentMatch.id);
+        get().refreshMatch(currentMatch.id);
+      }, 1500);
+    }
+
     return true;
   },
 
