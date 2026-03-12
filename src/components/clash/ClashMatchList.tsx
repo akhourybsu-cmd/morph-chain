@@ -11,8 +11,23 @@ interface ClashMatchListProps {
   onMatchCancelled?: () => void;
 }
 
-export const ClashMatchList = ({ matches, completedMatches, userId, onSelectMatch }: ClashMatchListProps) => {
+export const ClashMatchList = ({ matches, completedMatches, userId, onSelectMatch, onMatchCancelled }: ClashMatchListProps) => {
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
   if (matches.length === 0 && completedMatches.length === 0) return null;
+
+  const handleCancel = async (e: React.MouseEvent, matchId: string) => {
+    e.stopPropagation();
+    setCancellingId(matchId);
+    const success = await cancelClashMatch(matchId);
+    setCancellingId(null);
+    if (success) {
+      toast('Match cancelled');
+      onMatchCancelled?.();
+    } else {
+      toast.error('Failed to cancel match');
+    }
+  };
 
   const getMatchLabel = (m: ClashMatchSummary) => {
     if (m.status === 'waiting') return 'Waiting for opponent';
