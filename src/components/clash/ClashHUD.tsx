@@ -70,9 +70,11 @@ export const ClashHUD = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[10px] uppercase" style={{ color: 'hsl(var(--clash-text-muted))' }}>Opp</span>
+          <span className="text-[10px] uppercase" style={{ color: 'hsl(var(--clash-text-muted))' }}>
+            {isWaiting ? '…' : 'Opp'}
+          </span>
           <span className="text-sm font-semibold font-mono" style={{ color: 'hsl(var(--clash-text-primary))' }}>
-            {oppTiles}
+            {isWaiting ? '—' : oppTiles}
           </span>
           <div className="w-3 h-3 rounded-full" style={{ background: 'hsl(var(--clash-player-opponent))' }} />
         </div>
