@@ -73,9 +73,9 @@ const MorphCode = () => {
 
       if (activeMatch.status === 'completed' && statsRecordedRef.current !== activeMatch.id) {
         statsRecordedRef.current = activeMatch.id;
-        if (activeMatch.winnerId === userId) recordMatchResult(userId, 'win');
-        else if (activeMatch.winnerId === null) recordMatchResult(userId, 'draw');
-        else recordMatchResult(userId, 'loss');
+        const result = activeMatch.winnerId === userId ? 'win' : activeMatch.winnerId === null ? 'draw' : 'loss';
+        await recordMatchResult(userId, result as 'win' | 'loss' | 'draw');
+        getPlayerStats(userId).then(setMyStats);
       }
 
       if (activeMatch.status === 'waiting') {
