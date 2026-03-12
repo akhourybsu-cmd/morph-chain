@@ -316,10 +316,14 @@ Deno.serve(async (req) => {
           ]);
         }
 
-        await adminClient.from('morphcode_matches').update(matchUpdate).eq('id', round.match_id);
       }
 
+      // Write round update before match update so realtime listeners see consistent state
       await adminClient.from('morphcode_rounds').update(roundUpdate).eq('id', round_id);
+
+      if (roundEnded) {
+        await adminClient.from('morphcode_matches').update(matchUpdate).eq('id', round.match_id);
+      }
 
       return new Response(JSON.stringify({
         exact: feedback.exact,
