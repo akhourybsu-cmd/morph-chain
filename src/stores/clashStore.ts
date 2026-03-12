@@ -34,6 +34,12 @@ export interface ClashMatch {
   completed_at: string | null;
 }
 
+interface SubmitResult {
+  success: boolean;
+  error?: string;
+  word?: string;
+}
+
 interface ClashState {
   match: ClashMatch | null;
   selected: { row: number; col: number }[];
@@ -46,12 +52,14 @@ interface ClashState {
     bonusClaims: string[];
   } | null;
   channel: RealtimeChannel | null;
+  lastActionTime: number;
 
   setUserId: (id: string | null) => void;
   loadMatch: (matchId: string) => Promise<void>;
+  refreshMatch: (matchId: string) => Promise<void>;
   selectTile: (row: number, col: number) => void;
   clearSelection: () => void;
-  submitMove: () => Promise<boolean>;
+  submitMove: () => Promise<SubmitResult>;
   skipTurn: () => Promise<boolean>;
   forfeit: () => Promise<void>;
   subscribeToMatch: (matchId: string) => void;
@@ -72,9 +80,11 @@ export const useClashStore = create<ClashState>((set, get) => ({
   error: null,
   lastMoveResult: null,
   channel: null,
+  lastActionTime: 0,
 
   setUserId: (id) => set({ userId: id }),
 
+  // Full load — sets loading spinner, resets selection. Used for initial match open.
   loadMatch: async (matchId) => {
     set({ loading: true, error: null });
     const { data, error } = await supabase
@@ -92,6 +102,30 @@ export const useClashStore = create<ClashState>((set, get) => ({
       match: data as unknown as ClashMatch,
       loading: false,
       selected: [],
+    });
+  },
+
+  // Silent refresh — no loading spinner, preserves selection unless turn changed.
+  // Used by realtime and post-submit sync.
+  refreshMatch: async (matchId) => {
+    const { data, error } = await supabase
+      .from('clash_matches')
+      .select('*')
+      .eq('id', matchId)
+      .single();
+
+    if (error || !data) return;
+
+    const newMatch = data as unknown as ClashMatch;
+    const { match: currentMatch, selected } = get();
+
+    // Only clear selection if turn or status changed
+    const turnChanged = currentMatch?.current_turn !== newMatch.current_turn;
+    const statusChanged = currentMatch?.status !== newMatch.status;
+
+    set({
+      match: newMatch,
+      selected: (turnChanged || statusChanged) ? [] : selected,
     });
   },
 
@@ -115,11 +149,14 @@ export const useClashStore = create<ClashState>((set, get) => ({
 
   clearSelection: () => set({ selected: [] }),
 
-  submitMove: async () => {
+  submitMove: async (): Promise<SubmitResult> => {
     const { match, selected, userId } = get();
-    if (!match || !userId || selected.length < 4) return false;
+    if (!match || !userId || selected.length < 4) {
+      return { success: false, error: 'Invalid selection' };
+    }
 
-    set({ loading: true, error: null });
+    const word = selected.map(s => match.grid_state[s.row][s.col].char).join('');
+    set({ loading: true, error: null, lastActionTime: Date.now() });
 
     const { data, error } = await supabase.functions.invoke('grid-duel-game', {
       body: {
@@ -130,29 +167,38 @@ export const useClashStore = create<ClashState>((set, get) => ({
     });
 
     if (error || data?.error) {
-      set({ loading: false, error: data?.error || 'Submit failed' });
-      return false;
+      const errMsg = data?.error || 'Submit failed';
+      set({ loading: false, error: errMsg });
+      return { success: false, error: errMsg };
     }
+
+    // Optimistic: apply response data directly instead of re-fetching
+    const updatedMatch = data.match as ClashMatch | undefined;
 
     set({
       loading: false,
       selected: [],
       lastMoveResult: {
-        word: data.word,
-        claimed: data.claimed,
-        bonusClaims: data.bonus_claims,
+        word: data.word || word,
+        claimed: data.claimed || [],
+        bonusClaims: data.bonus_claims || [],
       },
+      ...(updatedMatch ? { match: updatedMatch } : {}),
     });
 
-    await get().loadMatch(match.id);
-    return true;
+    // If the edge function didn't return the full match, do a silent refresh
+    if (!updatedMatch) {
+      await get().refreshMatch(match.id);
+    }
+
+    return { success: true, word: data.word || word };
   },
 
   skipTurn: async () => {
     const { match } = get();
     if (!match) return false;
 
-    set({ loading: true, error: null });
+    set({ loading: true, error: null, lastActionTime: Date.now() });
 
     const { data, error } = await supabase.functions.invoke('grid-duel-game', {
       body: { action: 'skip_turn', match_id: match.id },
@@ -164,7 +210,7 @@ export const useClashStore = create<ClashState>((set, get) => ({
     }
 
     set({ loading: false, selected: [] });
-    await get().loadMatch(match.id);
+    await get().refreshMatch(match.id);
     return true;
   },
 
@@ -172,11 +218,12 @@ export const useClashStore = create<ClashState>((set, get) => ({
     const { match } = get();
     if (!match) return;
 
+    set({ lastActionTime: Date.now() });
     await supabase.functions.invoke('grid-duel-game', {
       body: { action: 'forfeit', match_id: match.id },
     });
 
-    await get().loadMatch(match.id);
+    await get().refreshMatch(match.id);
   },
 
   subscribeToMatch: (matchId) => {
@@ -193,9 +240,13 @@ export const useClashStore = create<ClashState>((set, get) => ({
         table: 'clash_matches',
         filter: `id=eq.${matchId}`,
       }, () => {
+        // Skip realtime refresh if we just did a user action within 800ms
+        const timeSinceAction = Date.now() - get().lastActionTime;
+        if (timeSinceAction < 800) return;
+
         if (debounceTimer) clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
-          get().loadMatch(matchId);
+          get().refreshMatch(matchId);
         }, 300);
       })
       .subscribe();
