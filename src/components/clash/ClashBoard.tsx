@@ -1,6 +1,7 @@
 import { useClashStore, type Ownership } from '@/stores/clashStore';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
+import { isClashBotPlayer } from '@/lib/clash/matchService';
 
 interface ClashBoardProps {
   isMyTurn: boolean;
