@@ -7,9 +7,9 @@ export const ALL_SYMBOLS: Symbol[] = ['circle', 'triangle', 'wave', 'flame', 'ey
 export const SYMBOL_DISPLAY: Record<Symbol, { emoji: string; label: string; color: string }> = {
   circle:   { emoji: '●', label: 'Circle',   color: 'hsl(210, 80%, 60%)' },
   triangle: { emoji: '▲', label: 'Triangle', color: 'hsl(45, 90%, 55%)' },
-  wave:     { emoji: '〰', label: 'Wave',     color: 'hsl(180, 70%, 50%)' },
-  flame:    { emoji: '🔥', label: 'Flame',    color: 'hsl(15, 90%, 55%)' },
-  eye:      { emoji: '👁', label: 'Eye',      color: 'hsl(270, 60%, 60%)' },
+  wave:     { emoji: '∿', label: 'Wave',     color: 'hsl(180, 70%, 50%)' },
+  flame:    { emoji: '✦', label: 'Flame',    color: 'hsl(15, 90%, 55%)' },
+  eye:      { emoji: '◉', label: 'Eye',      color: 'hsl(270, 60%, 60%)' },
   shard:    { emoji: '◆', label: 'Shard',    color: 'hsl(330, 70%, 55%)' },
 };
 

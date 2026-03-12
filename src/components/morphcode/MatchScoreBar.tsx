@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { MatchState } from '@/lib/morphcode/types';
-import { getPlayerStats, MorphcodePlayerStats } from '@/lib/morphcode/matchService';
+import { getPlayerStats, getPlayerDisplayName, MorphcodePlayerStats } from '@/lib/morphcode/matchService';
 
 interface MatchScoreBarProps {
   match: MatchState;
@@ -15,10 +15,14 @@ export const MatchScoreBar = ({ match, myId }: MatchScoreBarProps) => {
 
   const [myStats, setMyStats] = useState<MorphcodePlayerStats | null>(null);
   const [oppStats, setOppStats] = useState<MorphcodePlayerStats | null>(null);
+  const [oppName, setOppName] = useState<string>('Opp');
 
   useEffect(() => {
     getPlayerStats(myId).then(setMyStats);
-    if (opponentId) getPlayerStats(opponentId).then(setOppStats);
+    if (opponentId) {
+      getPlayerStats(opponentId).then(setOppStats);
+      getPlayerDisplayName(opponentId).then(setOppName);
+    }
   }, [myId, opponentId]);
 
   const formatRecord = (s: MorphcodePlayerStats | null) =>
@@ -26,7 +30,7 @@ export const MatchScoreBar = ({ match, myId }: MatchScoreBarProps) => {
 
   return (
     <div
-      className="flex items-center justify-center gap-6 py-2 px-4"
+      className="flex items-center justify-center gap-4 md:gap-6 py-2 px-3 md:px-4"
       style={{
         borderBottom: '1px solid hsl(var(--code-divider))',
         background: 'hsl(var(--code-page-bg))',
@@ -55,7 +59,9 @@ export const MatchScoreBar = ({ match, myId }: MatchScoreBarProps) => {
       </span>
 
       <div className="flex flex-col items-center gap-0.5">
-        <span className="text-xs font-medium" style={{ color: 'hsl(var(--code-text-muted))' }}>Opp</span>
+        <span className="text-xs font-medium truncate max-w-[5rem]" style={{ color: 'hsl(var(--code-text-muted))' }}>
+          {oppName}
+        </span>
         <div className="flex gap-1">
           {Array.from({ length: 2 }).map((_, i) => (
             <div
