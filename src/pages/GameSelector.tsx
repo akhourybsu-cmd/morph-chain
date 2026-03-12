@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { isChristmas } from "@/lib/seasonal/christmas";
 import { DailyProgressTracker } from "@/components/DailyProgressTracker";
 import { FriendActivityFeed } from "@/components/social/FriendActivityFeed";
+import { LivePlayerCount } from "@/components/LivePlayerCount";
 
 
 // Per-game accent colors (HSL values match CSS variables)
