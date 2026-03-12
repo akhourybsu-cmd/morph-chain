@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MorphcodeHeader } from '@/components/morphcode/MorphcodeHeader';
@@ -32,6 +32,7 @@ const MorphCode = () => {
   const [loading, setLoading] = useState(true);
   const [versusData, setVersusData] = useState<VersusData | null>(null);
   const [hasShownVersus, setHasShownVersus] = useState(false);
+  const statsRecordedRef = useRef<string | null>(null); // track which match ID we've recorded stats for
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUserId(user?.id || null));
@@ -57,6 +58,14 @@ const MorphCode = () => {
     if (activeMatch) {
       setMatch(activeMatch);
 
+      // Record stats immediately when we detect completion (not on button click)
+      if (activeMatch.status === 'completed' && statsRecordedRef.current !== activeMatch.id) {
+        statsRecordedRef.current = activeMatch.id;
+        if (activeMatch.winnerId === userId) recordMatchResult(userId, 'win');
+        else if (activeMatch.winnerId === null) recordMatchResult(userId, 'draw');
+        else recordMatchResult(userId, 'loss');
+      }
+
       if (activeMatch.status === 'waiting') {
         setPhase('waiting');
       } else if (activeMatch.status === 'completed') {
@@ -72,7 +81,6 @@ const MorphCode = () => {
           !hasShownVersus &&
           activeMatch.playerB
         ) {
-          // Load VS data
           const [nameA, nameB, statsA, statsB] = await Promise.all([
             getPlayerDisplayName(activeMatch.playerA),
             getPlayerDisplayName(activeMatch.playerB),
@@ -176,15 +184,11 @@ const MorphCode = () => {
   const handleNextRound = async () => {
     if (!match) return;
     if (match.status === 'completed') {
-      // Record stats
-      if (userId) {
-        if (match.winnerId === userId) await recordMatchResult(userId, 'win');
-        else if (match.winnerId === null) await recordMatchResult(userId, 'draw');
-        else await recordMatchResult(userId, 'loss');
-      }
+      // Stats already recorded in loadGameState, just go back to lobby
       setMatch(null);
       setRound(null);
       setHasShownVersus(false);
+      statsRecordedRef.current = null;
       setPhase('lobby');
       return;
     }

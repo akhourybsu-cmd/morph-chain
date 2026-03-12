@@ -7,6 +7,7 @@ const corsHeaders = {
 
 const SLOTS = 4;
 const MAX_GUESSES = 8;
+const MAX_ROUNDS = 5;
 const VALID_SYMBOLS = ['circle', 'triangle', 'wave', 'flame', 'eye', 'shard'];
 
 function calculateFeedback(guess: string[], sequence: string[]): { exact: number; shifted: number } {
@@ -46,6 +47,23 @@ function validateGuessSymbols(guess: string[]): string | null {
   return null;
 }
 
+async function recordStats(adminClient: any, userId: string, result: 'win' | 'loss' | 'draw') {
+  const { data: current } = await adminClient
+    .from('morphcode_stats')
+    .select('wins, losses, draws')
+    .eq('user_id', userId)
+    .single();
+
+  const stats = current || { wins: 0, losses: 0, draws: 0 };
+  await adminClient.from('morphcode_stats').upsert({
+    user_id: userId,
+    wins: stats.wins + (result === 'win' ? 1 : 0),
+    losses: stats.losses + (result === 'loss' ? 1 : 0),
+    draws: stats.draws + (result === 'draw' ? 1 : 0),
+    updated_at: new Date().toISOString(),
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -61,7 +79,6 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAnon = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-    // Verify user
     const userClient = createClient(supabaseUrl, supabaseAnon, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -70,21 +87,18 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Admin client for reading hidden sequences
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
-
     const { action, ...params } = await req.json();
 
     if (action === 'submit_guess') {
       const { round_id, guess, time_taken_ms } = params;
 
-      // Validate input
       const guessError = validateGuessSymbols(guess);
       if (guessError) {
         return new Response(JSON.stringify({ error: guessError }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Rate limiting: max 2 guesses per 5 seconds
+      // Rate limiting
       const { data: recentGuesses } = await adminClient
         .from('morphcode_guesses')
         .select('created_at')
@@ -96,10 +110,9 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Too many guesses too fast' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Get round with admin client (can see sequences)
       const { data: round, error: roundErr } = await adminClient
         .from('morphcode_rounds')
-        .select('*, morphcode_matches!inner(player_a, player_b, status, turn_time_seconds)')
+        .select('*, morphcode_matches!inner(player_a, player_b, status, turn_time_seconds, round_wins_a, round_wins_b, rounds_to_win)')
         .eq('id', round_id)
         .single();
 
@@ -109,25 +122,22 @@ Deno.serve(async (req) => {
 
       const match = (round as any).morphcode_matches;
 
-      // Verify player is in match
       if (user.id !== match.player_a && user.id !== match.player_b) {
         return new Response(JSON.stringify({ error: 'Not in this match' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Verify it's this player's turn
       if (round.current_turn !== user.id) {
         return new Response(JSON.stringify({ error: 'Not your turn' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Verify round is active
       if (round.status !== 'active') {
         return new Response(JSON.stringify({ error: 'Round not active' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Turn timeout enforcement: reject if turn_started_at + turn_time + 5s grace < now
+      // Turn timeout enforcement
       if (round.turn_started_at) {
         const turnStart = new Date(round.turn_started_at).getTime();
-        const turnLimit = (match.turn_time_seconds || 90) + 5; // 5s grace
+        const turnLimit = (match.turn_time_seconds || 90) + 5;
         if (Date.now() - turnStart > turnLimit * 1000) {
           return new Response(JSON.stringify({ error: 'Turn time expired' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
@@ -141,18 +151,15 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Opponent sequence not set' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Check max guesses
       if (myGuessCount >= MAX_GUESSES) {
         return new Response(JSON.stringify({ error: 'Max guesses reached' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Calculate feedback server-side
       const feedback = calculateFeedback(guess, opponentSequence);
       const isSolve = feedback.exact === SLOTS;
       const guessNumber = myGuessCount + 1;
       const clampedTime = Math.max(0, Math.min(time_taken_ms || 0, 120000));
 
-      // Insert guess
       await adminClient.from('morphcode_guesses').insert({
         round_id,
         player_id: user.id,
@@ -164,7 +171,6 @@ Deno.serve(async (req) => {
         time_taken_ms: clampedTime,
       });
 
-      // Build round update
       const roundUpdate: Record<string, unknown> = isPlayerA
         ? {
             guesses_a: guessNumber,
@@ -230,27 +236,49 @@ Deno.serve(async (req) => {
 
         roundUpdate.winner_id = winnerId;
 
-        // Update match
-        const { data: currentMatch } = await adminClient
-          .from('morphcode_matches')
-          .select('round_wins_a, round_wins_b, rounds_to_win')
-          .eq('id', round.match_id)
-          .single();
+        // Update match scores
+        const newWinsA = match.round_wins_a + (winnerId === match.player_a ? 1 : 0);
+        const newWinsB = match.round_wins_b + (winnerId === match.player_b ? 1 : 0);
+        const matchUpdate: Record<string, unknown> = {
+          round_wins_a: newWinsA,
+          round_wins_b: newWinsB,
+        };
 
-        if (currentMatch && winnerId) {
-          const newWinsA = currentMatch.round_wins_a + (winnerId === match.player_a ? 1 : 0);
-          const newWinsB = currentMatch.round_wins_b + (winnerId === match.player_b ? 1 : 0);
-          const matchUpdate: Record<string, unknown> = {
-            round_wins_a: newWinsA,
-            round_wins_b: newWinsB,
-          };
-          if (newWinsA >= currentMatch.rounds_to_win || newWinsB >= currentMatch.rounds_to_win) {
-            matchUpdate.status = 'completed';
-            matchUpdate.winner_id = newWinsA >= currentMatch.rounds_to_win ? match.player_a : match.player_b;
-            matchUpdate.completed_at = new Date().toISOString();
+        const matchCompleted = newWinsA >= match.rounds_to_win || newWinsB >= match.rounds_to_win;
+
+        // Max round cap: if we've hit MAX_ROUNDS without a winner, force completion
+        if (!matchCompleted && round.round_number >= MAX_ROUNDS) {
+          let matchWinner: string | null = null;
+          if (newWinsA > newWinsB) matchWinner = match.player_a;
+          else if (newWinsB > newWinsA) matchWinner = match.player_b;
+          // else draw (null winner)
+
+          matchUpdate.status = 'completed';
+          matchUpdate.winner_id = matchWinner;
+          matchUpdate.completed_at = new Date().toISOString();
+
+          // Record stats server-side
+          if (matchWinner) {
+            await recordStats(adminClient, matchWinner, 'win');
+            const loserId = matchWinner === match.player_a ? match.player_b : match.player_a;
+            await recordStats(adminClient, loserId, 'loss');
+          } else {
+            await recordStats(adminClient, match.player_a, 'draw');
+            await recordStats(adminClient, match.player_b, 'draw');
           }
-          await adminClient.from('morphcode_matches').update(matchUpdate).eq('id', round.match_id);
+        } else if (matchCompleted) {
+          const matchWinner = newWinsA >= match.rounds_to_win ? match.player_a : match.player_b;
+          matchUpdate.status = 'completed';
+          matchUpdate.winner_id = matchWinner;
+          matchUpdate.completed_at = new Date().toISOString();
+
+          // Record stats server-side
+          await recordStats(adminClient, matchWinner, 'win');
+          const loserId = matchWinner === match.player_a ? match.player_b : match.player_a;
+          await recordStats(adminClient, loserId, 'loss');
         }
+
+        await adminClient.from('morphcode_matches').update(matchUpdate).eq('id', round.match_id);
       }
 
       await adminClient.from('morphcode_rounds').update(roundUpdate).eq('id', round_id);
@@ -287,7 +315,6 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Not in this match' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Check not already locked
       const alreadyLocked = isPlayerA ? round.sequence_a_locked : round.sequence_b_locked;
       if (alreadyLocked) {
         return new Response(JSON.stringify({ error: 'Already locked' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -299,7 +326,6 @@ Deno.serve(async (req) => {
 
       await adminClient.from('morphcode_rounds').update(updateData).eq('id', round_id);
 
-      // Check if both locked
       const { data: updated } = await adminClient
         .from('morphcode_rounds')
         .select('sequence_a_locked, sequence_b_locked, first_guesser')
@@ -333,7 +359,7 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Match not available' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Get last round to alternate first guesser
+      // Enforce max round cap
       const { data: lastRound } = await adminClient
         .from('morphcode_rounds')
         .select('first_guesser, round_number')
@@ -343,6 +369,11 @@ Deno.serve(async (req) => {
         .single();
 
       const nextRoundNumber = (lastRound?.round_number || 0) + 1;
+
+      if (nextRoundNumber > MAX_ROUNDS) {
+        return new Response(JSON.stringify({ error: 'Max rounds reached' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
       const nextFirstGuesser = lastRound?.first_guesser === matchData.player_a
         ? matchData.player_b
         : matchData.player_a;
