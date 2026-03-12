@@ -1,5 +1,3 @@
-import { SLOTS } from '@/lib/morphcode/types';
-
 interface FeedbackPipsProps {
   exact: number;
   shifted: number;
@@ -7,33 +5,43 @@ interface FeedbackPipsProps {
 }
 
 export const FeedbackPips = ({ exact, shifted, animate }: FeedbackPipsProps) => {
-  const miss = SLOTS - exact - shifted;
-  const pips = [
-    ...Array(exact).fill('exact'),
-    ...Array(shifted).fill('shifted'),
-    ...Array(miss).fill('miss'),
-  ];
-
   return (
-    <div className="flex gap-1 items-center">
-      {pips.map((type, i) => (
+    <div
+      className={`flex items-center gap-1.5 ${animate ? 'animate-fade-in' : ''}`}
+    >
+      {exact > 0 && (
         <span
-          key={i}
-          className={`w-2.5 h-2.5 rounded-full ${animate ? 'animate-scale-in' : ''}`}
+          className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-bold font-mono"
           style={{
-            background:
-              type === 'exact' ? 'hsl(var(--code-exact))'
-              : type === 'shifted' ? 'hsl(var(--code-shifted))'
-              : 'hsl(var(--code-divider))',
-            boxShadow:
-              type === 'exact' ? '0 0 6px hsl(var(--code-exact) / 0.5)'
-              : type === 'shifted' ? '0 0 6px hsl(var(--code-shifted) / 0.5)'
-              : 'none',
-            animationDelay: animate ? `${i * 100}ms` : undefined,
-            animationFillMode: 'both',
+            background: 'hsl(var(--code-exact) / 0.15)',
+            color: 'hsl(var(--code-exact))',
           }}
-        />
-      ))}
+        >
+          {exact} ✓
+        </span>
+      )}
+      {shifted > 0 && (
+        <span
+          className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-bold font-mono"
+          style={{
+            background: 'hsl(var(--code-shifted) / 0.15)',
+            color: 'hsl(var(--code-shifted))',
+          }}
+        >
+          {shifted} ~
+        </span>
+      )}
+      {exact === 0 && shifted === 0 && (
+        <span
+          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono"
+          style={{
+            background: 'hsl(var(--code-divider) / 0.3)',
+            color: 'hsl(var(--code-text-muted))',
+          }}
+        >
+          0
+        </span>
+      )}
     </div>
   );
 };

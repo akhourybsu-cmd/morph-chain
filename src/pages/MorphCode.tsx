@@ -375,6 +375,7 @@ const MorphCode = () => {
             mySolved={round?.mySolved || false}
             opponentSolved={round?.opponentSolved || false}
             opponentSequence={oppSequence || undefined}
+            mySequence={round?.mySequence || undefined}
             onNextRound={handleNextRound}
             matchOver={true}
             matchWinnerId={match.winnerId}

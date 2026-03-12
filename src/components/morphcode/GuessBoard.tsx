@@ -166,7 +166,6 @@ export const GuessBoard = ({
                 onClick={() => handlePoolSelect(symbol)}
                 disabled={usedInDraft.has(symbol)}
                 size="sm"
-                showLabel
               />
             ))}
           </div>

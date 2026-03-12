@@ -88,7 +88,6 @@ export const SequenceBuilder = ({ symbolPool, onLock, locked }: SequenceBuilderP
               onClick={() => handlePoolSelect(symbol)}
               disabled={usedSymbols.has(symbol)}
               size="md"
-              showLabel
             />
           ))}
         </div>
