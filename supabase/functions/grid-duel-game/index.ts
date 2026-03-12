@@ -384,7 +384,7 @@ Deno.serve(async (req) => {
 
       // If bot goes first, play the bot's first move immediately
       if (firstTurn === BOT_UUID) {
-        await executeBotMove(adminClient, data.id, supabaseUrl, supabaseServiceKey);
+        await executeBotMove(adminClient, data.id);
       }
 
       return new Response(JSON.stringify({ matchId: data.id }), {
