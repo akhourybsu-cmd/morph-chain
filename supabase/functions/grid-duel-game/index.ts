@@ -264,11 +264,13 @@ function countTiles(ownership: Record<string, Ownership>): { a: number; b: numbe
 function findBotWords(tiles: Tile[][], ownership: Record<string, Ownership>, usedWords: string[]): { path: {row:number,col:number}[]; word: string; score: number }[] {
   const candidates: { path: {row:number,col:number}[]; word: string; score: number }[] = [];
   const usedSet = new Set(usedWords.map(w => w.toUpperCase()));
+  const dictionary = loadTWL06();
 
   function dfs(path: {row:number,col:number}[], visited: Set<string>) {
     if (path.length >= MIN_WORD_LENGTH && path.length <= 6) {
       const word = path.map(c => tiles[c.row][c.col].char).join('');
-      if (!usedSet.has(word.toUpperCase())) {
+      const upper = word.toUpperCase();
+      if (!usedSet.has(upper) && dictionary.has(upper)) {
         // Score: prefer stealing opponent tiles, then neutral, then length
         let score = 0;
         for (const c of path) {
@@ -276,13 +278,12 @@ function findBotWords(tiles: Tile[][], ownership: Record<string, Ownership>, use
           const own = ownership[id];
           if (own === 'a') score += 3; // steal from player
           else if (own === 'neutral') score += 1;
-          // own === 'b' means using own tile, no bonus
         }
         score += path.length * 0.5;
         candidates.push({ path: [...path], word, score });
       }
     }
-    if (path.length >= 6) return; // max DFS depth
+    if (path.length >= 6) return;
 
     const last = path[path.length - 1];
     for (let dr = -1; dr <= 1; dr++) {
