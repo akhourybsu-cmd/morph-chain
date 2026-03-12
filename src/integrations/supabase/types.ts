@@ -386,6 +386,125 @@ export type Database = {
         }
         Relationships: []
       }
+      clash_matches: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_turn: string | null
+          grid_seed: string
+          grid_state: Json
+          id: string
+          invite_code: string | null
+          moves_a: number
+          moves_b: number
+          ownership: Json
+          player_a: string
+          player_b: string | null
+          status: string
+          tiles_a: number
+          tiles_b: number
+          total_word_length_a: number
+          total_word_length_b: number
+          turn_deadline: string | null
+          updated_at: string
+          winner_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_turn?: string | null
+          grid_seed: string
+          grid_state?: Json
+          id?: string
+          invite_code?: string | null
+          moves_a?: number
+          moves_b?: number
+          ownership?: Json
+          player_a: string
+          player_b?: string | null
+          status?: string
+          tiles_a?: number
+          tiles_b?: number
+          total_word_length_a?: number
+          total_word_length_b?: number
+          turn_deadline?: string | null
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_turn?: string | null
+          grid_seed?: string
+          grid_state?: Json
+          id?: string
+          invite_code?: string | null
+          moves_a?: number
+          moves_b?: number
+          ownership?: Json
+          player_a?: string
+          player_b?: string | null
+          status?: string
+          tiles_a?: number
+          tiles_b?: number
+          total_word_length_a?: number
+          total_word_length_b?: number
+          turn_deadline?: string | null
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Relationships: []
+      }
+      clash_moves: {
+        Row: {
+          bonus_claims: Json
+          created_at: string
+          grid_snapshot: Json
+          id: string
+          match_id: string
+          move_number: number
+          ownership_snapshot: Json
+          player_id: string
+          tiles_claimed: Json
+          tiles_used: Json
+          word: string
+        }
+        Insert: {
+          bonus_claims?: Json
+          created_at?: string
+          grid_snapshot?: Json
+          id?: string
+          match_id: string
+          move_number: number
+          ownership_snapshot?: Json
+          player_id: string
+          tiles_claimed?: Json
+          tiles_used?: Json
+          word: string
+        }
+        Update: {
+          bonus_claims?: Json
+          created_at?: string
+          grid_snapshot?: Json
+          id?: string
+          match_id?: string
+          move_number?: number
+          ownership_snapshot?: Json
+          player_id?: string
+          tiles_claimed?: Json
+          tiles_used?: Json
+          word?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clash_moves_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "clash_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_flags: {
         Row: {
           description: string | null
@@ -1684,6 +1803,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      join_clash_match: { Args: { p_match_id: string }; Returns: string }
       join_match: { Args: { p_match_id: string }; Returns: string }
       recalculate_measured_category_usage: { Args: never; Returns: undefined }
     }

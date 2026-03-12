@@ -37,6 +37,7 @@ import Press from "./pages/Press";
 import Privacy from "./pages/Privacy";
 import ProfilePage from "./pages/ProfilePage";
 import MorphCode from "./pages/MorphCode";
+import MorphClash from "./pages/MorphClash";
 import WhatsNew from "./pages/WhatsNew";
 import { useVersionCheck } from "./hooks/useVersionCheck";
 import { SnowfallOverlay } from "./components/seasonal/SnowfallOverlay";
@@ -64,6 +65,7 @@ const App = () => {
               <Route path="/alibi" element={<MorphAlibi />} />
               <Route path="/measured" element={<Measured />} />
               <Route path="/morphcode" element={<MorphCode />} />
+              <Route path="/clash" element={<MorphClash />} />
               <Route path="/rules" element={<Rules />} />
               <Route path="/kids" element={<Kids />} />
               <Route path="/press" element={<Press />} />

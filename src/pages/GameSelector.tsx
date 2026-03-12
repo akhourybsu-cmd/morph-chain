@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { getDailyPuzzle } from "@/lib/gameLogic";
 import { formatInTimeZone } from "date-fns-tz";
-import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Grid3X3, Menu, ChevronRight, User, Snowflake, Gift, Swords } from "lucide-react";
+import { Facebook, Instagram, Linkedin, MessageSquare, Share2, Link2, Grid3X3, Menu, ChevronRight, User, Snowflake, Gift, Swords, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { SideMenu } from "@/components/layout/SideMenu";
 import { useState, useEffect } from "react";
@@ -20,6 +20,7 @@ const gameAccents = {
   alibi: "40 75% 50%",
   measured: "220 70% 50%",
   morphcode: "280 70% 55%",
+  clash: "168 65% 40%",
 };
 
 // Christmas accent colors
@@ -30,6 +31,7 @@ const christmasAccents = {
   alibi: "142 70% 45%",
   measured: "220 70% 50%",
   morphcode: "280 70% 55%",
+  clash: "168 50% 55%",
 };
 
 const GameSelector = () => {
@@ -201,6 +203,17 @@ const GameSelector = () => {
             accent={accents.morphcode}
             onClick={() => navigate('/morphcode')}
             badge="Beta"
+            christmas={christmas}
+          />
+
+          {/* Morph Clash - Territory */}
+          <GameCard
+            icon={Shield}
+            name="Morph Clash"
+            description="Async territory control word battle"
+            accent={accents.clash}
+            onClick={() => navigate('/clash')}
+            badge="New"
             christmas={christmas}
           />
         </div>

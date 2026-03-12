@@ -264,6 +264,25 @@ All colors MUST be HSL.
     --code-exact: 145 70% 45%;            /* Green - exact match */
     --code-shifted: 45 90% 50%;           /* Gold - shifted */
     --accent-code: 280 70% 55%;           /* Violet accent for home */
+    
+    /* Morph Clash Prestige Theme (Teal-Blue + Coral territory) */
+    --clash-page-bg: 39 32% 96%;            /* #F9F5ED paper background */
+    --clash-card-bg: 0 0% 100%;             /* #FFFFFF card background */
+    --clash-card-border: 37 20% 86%;        /* #E0D9CC card border */
+    --clash-divider: 37 14% 90%;            /* #E5E0D7 dividers */
+    --clash-text-primary: 0 0% 13%;         /* #222222 primary text */
+    --clash-text-secondary: 0 0% 40%;       /* #666666 secondary text */
+    --clash-text-muted: 33 6% 57%;          /* #9A9388 muted text */
+    --clash-pill-bg: 36 27% 92%;            /* #F1ECE3 pill background */
+    --clash-accent: 168 65% 40%;            /* Teal-green accent */
+    --clash-success: 145 50% 37%;           /* #2F8F5B green */
+    --clash-error: 3 52% 54%;              /* #C6534C red */
+    --clash-player-mine: 210 60% 70%;       /* Soft blue (your tiles) */
+    --clash-player-opponent: 0 60% 70%;     /* Soft coral (opponent tiles) */
+    --clash-neutral: 36 20% 88%;            /* Warm gray neutral */
+    --clash-contested: 45 50% 75%;          /* Amber contested */
+    --clash-tile-letter: 0 0% 13%;          /* Dark tile text */
+    --accent-clash: 168 65% 40%;            /* Teal accent for home */
   }
 
   /* NYT Prestige Dark Mode - Grid Page Colors */
@@ -361,6 +380,25 @@ All colors MUST be HSL.
     --code-exact: 145 50% 50%;             /* Green - exact match */
     --code-shifted: 45 70% 55%;            /* Gold - shifted */
     --accent-code: 280 55% 65%;            /* Violet accent */
+    
+    /* Morph Clash Dark Mode */
+    --clash-page-bg: 216 22% 7%;
+    --clash-card-bg: 216 17% 11%;
+    --clash-card-border: 216 14% 17%;
+    --clash-divider: 213 16% 20%;
+    --clash-text-primary: 36 36% 92%;
+    --clash-text-secondary: 33 9% 75%;
+    --clash-text-muted: 33 7% 52%;
+    --clash-pill-bg: 216 15% 15%;
+    --clash-accent: 168 50% 55%;
+    --clash-success: 145 35% 57%;
+    --clash-error: 5 63% 67%;
+    --clash-player-mine: 210 45% 55%;
+    --clash-player-opponent: 0 50% 55%;
+    --clash-neutral: 216 14% 22%;
+    --clash-contested: 45 40% 45%;
+    --clash-tile-letter: 36 55% 95%;
+    --accent-clash: 168 50% 55%;
   }
   
   .light {
