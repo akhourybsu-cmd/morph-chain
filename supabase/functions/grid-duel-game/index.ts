@@ -406,7 +406,7 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Not bot turn or not bot match' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      const result = await executeBotMove(adminClient, match_id, supabaseUrl, supabaseServiceKey);
+      const result = await executeBotMove(adminClient, match_id);
 
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
