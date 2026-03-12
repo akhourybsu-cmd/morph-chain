@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { GamesNavigation } from '@/components/shared/GamesNavigation';
-import { User, BarChart3 } from 'lucide-react';
+import { User, BarChart3, HelpCircle, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface MeasuredMenuSheetProps {
