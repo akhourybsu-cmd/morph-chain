@@ -86,7 +86,7 @@ export const ClashHUD = () => {
 
       {/* Moves + Timer */}
       <div className="flex items-center justify-between text-xs" style={{ color: 'hsl(var(--clash-text-muted))' }}>
-        <span>Moves: {myMoves}/12{!isWaiting && ` · Opp: ${oppMoves}/12`}</span>
+        <span>Moves: {myMoves}/12{!isWaiting && ` · ${oppLabel}: ${oppMoves}/12`}</span>
         {isMyTurn && timeLeft && (
           <span className="font-mono">⏱ {timeLeft}</span>
         )}
