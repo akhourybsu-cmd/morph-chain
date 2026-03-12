@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
+import { triggerClashBotMove, CLASH_BOT_UUID } from '@/lib/clash/matchService';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export type Ownership = 'neutral' | 'a' | 'b';
