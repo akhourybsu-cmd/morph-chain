@@ -21,7 +21,7 @@ const MorphClash = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeMatches, setActiveMatches] = useState<ClashMatchSummary[]>([]);
   const [completedMatches, setCompletedMatches] = useState<ClashMatchSummary[]>([]);
-  const { match, userId, setUserId, loadMatch, subscribeToMatch, clearMatch } = useClashStore();
+  const { match, userId, loading, setUserId, loadMatch, subscribeToMatch, clearMatch } = useClashStore();
 
   const joinCode = searchParams.get('join');
 
