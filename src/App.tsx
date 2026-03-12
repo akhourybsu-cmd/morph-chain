@@ -58,15 +58,15 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<GameSelector />} />
-              <Route path="/chain" element={<Index />} />
-              <Route path="/chain/archive" element={<ChainArchive />} />
-              <Route path="/grid" element={<MorphGrid />} />
-              <Route path="/grid/archive" element={<GridArchive />} />
-              <Route path="/rush" element={<MorphRush />} />
-              <Route path="/alibi" element={<MorphAlibi />} />
-              <Route path="/measured" element={<Measured />} />
-              <Route path="/morphcode" element={<MorphCode />} />
-              <Route path="/clash" element={<MorphClash />} />
+              <Route path="/chain" element={<PageTransition><Index /></PageTransition>} />
+              <Route path="/chain/archive" element={<PageTransition><ChainArchive /></PageTransition>} />
+              <Route path="/grid" element={<PageTransition><MorphGrid /></PageTransition>} />
+              <Route path="/grid/archive" element={<PageTransition><GridArchive /></PageTransition>} />
+              <Route path="/rush" element={<PageTransition><MorphRush /></PageTransition>} />
+              <Route path="/alibi" element={<PageTransition><MorphAlibi /></PageTransition>} />
+              <Route path="/measured" element={<PageTransition><Measured /></PageTransition>} />
+              <Route path="/morphcode" element={<PageTransition><MorphCode /></PageTransition>} />
+              <Route path="/clash" element={<PageTransition><MorphClash /></PageTransition>} />
               <Route path="/rules" element={<Rules />} />
               <Route path="/kids" element={<Kids />} />
               <Route path="/press" element={<Press />} />
