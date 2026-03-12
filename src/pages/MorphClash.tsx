@@ -16,7 +16,6 @@ import { PrestigeThemeToggle } from '@/components/shared/PrestigeThemeToggle';
 
 const MorphClash = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeMatches, setActiveMatches] = useState<ClashMatchSummary[]>([]);
