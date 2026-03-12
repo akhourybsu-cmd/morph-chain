@@ -1,9 +1,8 @@
-// Zustand store for Morph Clash — async head-to-head territory control
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
-export type Ownership = 'neutral' | 'a' | 'b' | 'contested';
+export type Ownership = 'neutral' | 'a' | 'b';
 
 export interface ClashTile {
   id: string;
@@ -30,6 +29,7 @@ export interface ClashMatch {
   total_word_length_b: number;
   turn_deadline: string | null;
   invite_code: string | null;
+  used_words: string[];
   created_at: string;
   completed_at: string | null;
 }
@@ -47,12 +47,12 @@ interface ClashState {
   } | null;
   channel: RealtimeChannel | null;
 
-  // Actions
   setUserId: (id: string | null) => void;
   loadMatch: (matchId: string) => Promise<void>;
   selectTile: (row: number, col: number) => void;
   clearSelection: () => void;
   submitMove: () => Promise<boolean>;
+  skipTurn: () => Promise<boolean>;
   forfeit: () => Promise<void>;
   subscribeToMatch: (matchId: string) => void;
   unsubscribe: () => void;
@@ -102,16 +102,12 @@ export const useClashStore = create<ClashState>((set, get) => ({
     const coord = { row, col };
     const last = selected[selected.length - 1];
 
-    // Undo last selection
     if (last && last.row === row && last.col === col) {
       set({ selected: selected.slice(0, -1) });
       return;
     }
 
-    // Already selected
     if (selected.some(s => s.row === row && s.col === col)) return;
-
-    // Check adjacency
     if (selected.length > 0 && !isAdjacent(last, coord)) return;
 
     set({ selected: [...selected, coord] });
@@ -148,7 +144,26 @@ export const useClashStore = create<ClashState>((set, get) => ({
       },
     });
 
-    // Reload match to get updated state
+    await get().loadMatch(match.id);
+    return true;
+  },
+
+  skipTurn: async () => {
+    const { match } = get();
+    if (!match) return false;
+
+    set({ loading: true, error: null });
+
+    const { data, error } = await supabase.functions.invoke('grid-duel-game', {
+      body: { action: 'skip_turn', match_id: match.id },
+    });
+
+    if (error || data?.error) {
+      set({ loading: false, error: data?.error || 'Skip failed' });
+      return false;
+    }
+
+    set({ loading: false, selected: [] });
     await get().loadMatch(match.id);
     return true;
   },

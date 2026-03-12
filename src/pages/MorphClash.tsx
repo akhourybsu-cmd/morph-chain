@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Menu, HelpCircle, User } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Menu, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useClashStore } from '@/stores/clashStore';
 import { getMyActiveClashMatch, getMyRecentCompletedMatch } from '@/lib/clash/matchService';
@@ -15,9 +15,20 @@ import { PrestigeThemeToggle } from '@/components/shared/PrestigeThemeToggle';
 
 const MorphClash = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { match, userId, setUserId, loadMatch, subscribeToMatch, clearMatch } = useClashStore();
+
+  // Read ?join=CODE from URL
+  const joinCode = searchParams.get('join');
+
+  // Clear join param after consuming it
+  useEffect(() => {
+    if (joinCode && match) {
+      setSearchParams({}, { replace: true });
+    }
+  }, [joinCode, match, setSearchParams]);
 
   // Auth listener
   useEffect(() => {
@@ -52,6 +63,8 @@ const MorphClash = () => {
   const handleMatchFound = (matchId: string) => {
     loadMatch(matchId);
     subscribeToMatch(matchId);
+    // Clear join param
+    if (joinCode) setSearchParams({}, { replace: true });
   };
 
   const isMyTurn = match?.current_turn === userId;
@@ -114,6 +127,7 @@ const MorphClash = () => {
             existingInviteCode={showWaiting ? match?.invite_code : null}
             existingMatchId={showWaiting ? match?.id : null}
             onMatchCancelled={clearMatch}
+            initialJoinCode={joinCode}
           />
         )}
 
@@ -125,6 +139,7 @@ const MorphClash = () => {
             existingInviteCode={match?.invite_code}
             existingMatchId={match?.id}
             onMatchCancelled={clearMatch}
+            initialJoinCode={null}
           />
         )}
 

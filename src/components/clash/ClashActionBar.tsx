@@ -1,6 +1,6 @@
 import { useClashStore } from '@/stores/clashStore';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send, RotateCcw, Flag } from 'lucide-react';
+import { Loader2, Send, RotateCcw, Flag, SkipForward } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
@@ -9,8 +9,9 @@ interface ClashActionBarProps {
 }
 
 export const ClashActionBar = ({ isMyTurn }: ClashActionBarProps) => {
-  const { selected, match, submitMove, clearSelection, forfeit, loading, error } = useClashStore();
+  const { selected, match, submitMove, skipTurn, clearSelection, forfeit, loading, error } = useClashStore();
   const [confirming, setConfirming] = useState(false);
+  const [skipping, setSkipping] = useState(false);
 
   if (!match || match.status !== 'active') return null;
 
@@ -29,6 +30,15 @@ export const ClashActionBar = ({ isMyTurn }: ClashActionBarProps) => {
     }
   };
 
+  const handleSkip = async () => {
+    setSkipping(true);
+    const success = await skipTurn();
+    setSkipping(false);
+    if (success) {
+      toast('Turn skipped (−1 move)');
+    }
+  };
+
   const handleForfeit = () => {
     if (!confirming) {
       setConfirming(true);
@@ -40,7 +50,7 @@ export const ClashActionBar = ({ isMyTurn }: ClashActionBarProps) => {
   };
 
   return (
-    <div className="flex items-center justify-center gap-3">
+    <div className="flex items-center justify-center gap-3 flex-wrap">
       {selected.length > 0 && (
         <Button
           variant="ghost" size="sm"
@@ -65,6 +75,18 @@ export const ClashActionBar = ({ isMyTurn }: ClashActionBarProps) => {
         {loading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
         Submit
       </Button>
+
+      {isMyTurn && selected.length === 0 && (
+        <Button
+          variant="ghost" size="sm"
+          onClick={handleSkip}
+          disabled={skipping || loading}
+          className="text-[hsl(var(--clash-text-muted))]"
+        >
+          {skipping ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <SkipForward className="w-3 h-3 mr-1" />}
+          Skip
+        </Button>
+      )}
 
       <Button
         variant="ghost" size="sm"

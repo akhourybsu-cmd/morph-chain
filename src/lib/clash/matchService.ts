@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { postActivity } from '@/lib/social/activityService';
 
 export async function createClashMatch(): Promise<{ matchId: string; inviteCode: string } | null> {
   const { data, error } = await supabase.functions.invoke('grid-duel-game', {
@@ -10,7 +11,6 @@ export async function createClashMatch(): Promise<{ matchId: string; inviteCode:
 }
 
 export async function joinClashByCode(code: string): Promise<string | null> {
-  // Find match by invite code
   const { data: match } = await supabase
     .from('clash_matches')
     .select('id')
@@ -20,7 +20,6 @@ export async function joinClashByCode(code: string): Promise<string | null> {
 
   if (!match) return null;
 
-  // Use RPC to join
   const { data, error } = await supabase.rpc('join_clash_match', {
     p_match_id: match.id,
   });
@@ -41,7 +40,6 @@ export async function getMyActiveClashMatch(): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  // Check for active or waiting matches
   const { data } = await supabase
     .from('clash_matches')
     .select('id, status')
@@ -71,4 +69,101 @@ export async function getMyRecentCompletedMatch(): Promise<string | null> {
     .single();
 
   return data?.id || null;
+}
+
+/**
+ * Challenge a friend directly — creates a match and posts a challenge activity
+ */
+export async function challengeFriend(friendUserId: string): Promise<{ matchId: string; inviteCode: string } | null> {
+  const result = await createClashMatch();
+  if (!result) return null;
+
+  // Post challenge activity so friend sees it
+  await postActivity('clash', 'challenge', {
+    matchId: result.matchId,
+    inviteCode: result.inviteCode,
+  });
+
+  return result;
+}
+
+/**
+ * Get pending clash challenges from friends
+ */
+export async function getPendingChallenges(): Promise<Array<{
+  activityId: string;
+  fromUserId: string;
+  fromName: string;
+  matchId: string;
+  inviteCode: string;
+  createdAt: string;
+}>> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  // Get friend activity of type 'challenge' for clash
+  const { data: activities } = await supabase
+    .from('app_activity')
+    .select('id, user_id, payload, created_at')
+    .eq('game', 'clash')
+    .eq('activity_type', 'challenge')
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  if (!activities || activities.length === 0) return [];
+
+  // Filter to only challenges where the match is still waiting
+  const results: Array<{
+    activityId: string;
+    fromUserId: string;
+    fromName: string;
+    matchId: string;
+    inviteCode: string;
+    createdAt: string;
+  }> = [];
+
+  for (const act of activities) {
+    if (act.user_id === user.id) continue; // Skip own challenges
+    const payload = act.payload as { matchId?: string; inviteCode?: string };
+    if (!payload.matchId) continue;
+
+    // Check if match is still waiting
+    const { data: match } = await supabase
+      .from('clash_matches')
+      .select('id, status, player_a')
+      .eq('id', payload.matchId)
+      .eq('status', 'waiting')
+      .single();
+
+    if (!match) continue;
+
+    // Get display name
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('display_name')
+      .eq('user_id', act.user_id)
+      .single();
+
+    results.push({
+      activityId: act.id,
+      fromUserId: act.user_id,
+      fromName: profile?.display_name || 'A friend',
+      matchId: payload.matchId,
+      inviteCode: payload.inviteCode || '',
+      createdAt: act.created_at,
+    });
+  }
+
+  return results;
+}
+
+/**
+ * Skip the current turn (costs 1 move)
+ */
+export async function skipClashTurn(matchId: string): Promise<boolean> {
+  const { data, error } = await supabase.functions.invoke('grid-duel-game', {
+    body: { action: 'skip_turn', match_id: matchId },
+  });
+
+  return !error && data?.success;
 }

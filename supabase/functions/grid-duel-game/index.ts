@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 const GRID_SIZE = 5;
-const MAX_MOVES_PER_PLAYER = 10;
+const MAX_MOVES_PER_PLAYER = 12;
 const DOMINATION_THRESHOLD = 18;
 const MIN_WORD_LENGTH = 4;
 
@@ -34,7 +34,6 @@ class SeededRandom {
   }
 }
 
-const VOWELS = ['A','E','I','O','U'];
 const VOWEL_POOL = ['A','A','A','E','E','E','E','E','I','I','I','O','O','O','U','U'];
 const CONSONANT_POOL = ['B','C','D','F','G','H','K','L','L','M','N','N','P','R','R','S','S','S','T','T','T','W','Y'];
 
@@ -46,11 +45,11 @@ interface Tile {
   col: number;
 }
 
-type Ownership = 'neutral' | 'a' | 'b' | 'contested';
+type Ownership = 'neutral' | 'a' | 'b';
 
 interface GridState {
   tiles: Tile[][];
-  ownership: Record<string, Ownership>; // tileId -> owner
+  ownership: Record<string, Ownership>;
 }
 
 function generateGrid(seed: string): GridState {
@@ -87,7 +86,6 @@ function morphAfterMove(tiles: Tile[][], usedCoords: {row:number,col:number}[], 
   const newTiles = tiles.map(row => row.map(t => ({...t})));
   const usedSet = new Set(usedCoords.map(c => `${c.row}-${c.col}`));
   
-  // Replace used tiles
   for (const coord of usedCoords) {
     const tile = newTiles[coord.row][coord.col];
     const isVowel = rng.next() < 0.4;
@@ -95,7 +93,6 @@ function morphAfterMove(tiles: Tile[][], usedCoords: {row:number,col:number}[], 
     tile.isVowel = isVowel;
   }
   
-  // Neighbor ripple
   for (const coord of usedCoords) {
     const dirs = [{row:-1,col:0},{row:1,col:0},{row:0,col:-1},{row:0,col:1}];
     for (const d of dirs) {
@@ -132,7 +129,6 @@ function validatePath(coords: {row:number,col:number}[]): boolean {
   return true;
 }
 
-// Simple word validation using edge function call to validate-word
 async function validateWord(word: string, supabaseUrl: string, serviceKey: string): Promise<boolean> {
   try {
     const resp = await fetch(`${supabaseUrl}/functions/v1/validate-word`, {
@@ -165,15 +161,14 @@ function applyOwnership(
     const id = `${coord.row}-${coord.col}`;
     const current = newOwnership[id];
     
-    if (current === 'neutral' || current === 'contested') {
+    if (current === 'neutral') {
       newOwnership[id] = player;
       claimed.push(id);
     } else if (current === player) {
-      // Reinforced — stays yours
       ownTilesUsed++;
     } else if (current === opponent) {
-      // Two-touch steal: flip to contested first
-      newOwnership[id] = 'contested';
+      // Direct steal — flip to yours immediately
+      newOwnership[id] = player;
       claimed.push(id);
     }
   }
@@ -217,15 +212,14 @@ function applyOwnership(
   return { newOwnership, claimed, bonusClaims };
 }
 
-function countTiles(ownership: Record<string, Ownership>): { a: number; b: number; neutral: number; contested: number } {
-  let a = 0, b = 0, neutral = 0, contested = 0;
+function countTiles(ownership: Record<string, Ownership>): { a: number; b: number; neutral: number } {
+  let a = 0, b = 0, neutral = 0;
   for (const v of Object.values(ownership)) {
     if (v === 'a') a++;
     else if (v === 'b') b++;
-    else if (v === 'neutral') neutral++;
-    else if (v === 'contested') contested++;
+    else neutral++;
   }
-  return { a, b, neutral, contested };
+  return { a, b, neutral };
 }
 
 Deno.serve(async (req) => {
@@ -256,7 +250,6 @@ Deno.serve(async (req) => {
 
     // ─── CREATE MATCH ───
     if (action === 'create_match') {
-      // Expire any existing waiting matches by this player
       await adminClient.from('clash_matches')
         .update({ status: 'expired', updated_at: new Date().toISOString() })
         .eq('player_a', user.id)
@@ -273,6 +266,7 @@ Deno.serve(async (req) => {
         ownership: gridState.ownership,
         invite_code: inviteCode,
         status: 'waiting',
+        used_words: [],
       }).select('id, invite_code').single();
 
       if (error) {
@@ -287,7 +281,6 @@ Deno.serve(async (req) => {
     // ─── SUBMIT MOVE ───
     if (action === 'submit_move') {
       const { match_id, tiles_used } = params;
-      // tiles_used: [{row, col}, ...]
 
       if (!Array.isArray(tiles_used) || tiles_used.length < MIN_WORD_LENGTH) {
         return new Response(JSON.stringify({ error: 'Word too short (min 4 letters)' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -315,9 +308,7 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Not your turn' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Check turn deadline
       if (match.turn_deadline && new Date(match.turn_deadline).getTime() < Date.now()) {
-        // Skip turn, switch to opponent
         const opponent = user.id === match.player_a ? match.player_b : match.player_a;
         await adminClient.from('clash_matches').update({
           current_turn: opponent,
@@ -334,17 +325,20 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Max moves reached' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Reconstruct word from grid
       const gridTiles = match.grid_state as Tile[][];
       const word = tiles_used.map((c: {row:number,col:number}) => gridTiles[c.row][c.col].char).join('');
 
-      // Validate word
+      // Check word reuse
+      const usedWords = (match.used_words as string[]) || [];
+      if (usedWords.includes(word.toUpperCase())) {
+        return new Response(JSON.stringify({ error: `"${word}" has already been played` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
       const isValid = await validateWord(word, supabaseUrl, supabaseServiceKey);
       if (!isValid) {
         return new Response(JSON.stringify({ error: `"${word}" is not a valid word` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Apply ownership changes
       const player = isPlayerA ? 'a' : 'b' as const;
       const { newOwnership, claimed, bonusClaims } = applyOwnership(
         match.ownership as Record<string, Ownership>,
@@ -352,17 +346,14 @@ Deno.serve(async (req) => {
         player
       );
 
-      // Morph grid
       const rng = new SeededRandom(`${match.grid_seed}-move-${myMoves + 1}-${player}`);
       const newTiles = morphAfterMove(gridTiles, tiles_used, rng);
 
-      // Count tiles
       const counts = countTiles(newOwnership);
       const newMovesA = isPlayerA ? match.moves_a + 1 : match.moves_a;
       const newMovesB = isPlayerA ? match.moves_b : match.moves_b + 1;
       const totalMoves = newMovesA + newMovesB;
 
-      // Record move
       await adminClient.from('clash_moves').insert({
         match_id,
         player_id: user.id,
@@ -375,31 +366,23 @@ Deno.serve(async (req) => {
         ownership_snapshot: newOwnership,
       });
 
-      // Check win conditions
       let matchEnded = false;
       let winnerId: string | null = null;
 
-      // Domination (18+ tiles)
       if (counts.a >= DOMINATION_THRESHOLD) {
         matchEnded = true;
         winnerId = match.player_a;
       } else if (counts.b >= DOMINATION_THRESHOLD) {
         matchEnded = true;
         winnerId = match.player_b;
-      }
-      // All tiles claimed (no neutral or contested)
-      else if (counts.neutral === 0 && counts.contested === 0) {
+      } else if (counts.neutral === 0) {
         matchEnded = true;
         if (counts.a > counts.b) winnerId = match.player_a;
         else if (counts.b > counts.a) winnerId = match.player_b;
-        // else draw — winnerId stays null
-      }
-      // Max moves exhausted
-      else if (newMovesA >= MAX_MOVES_PER_PLAYER && newMovesB >= MAX_MOVES_PER_PLAYER) {
+      } else if (newMovesA >= MAX_MOVES_PER_PLAYER && newMovesB >= MAX_MOVES_PER_PLAYER) {
         matchEnded = true;
         if (counts.a > counts.b) winnerId = match.player_a;
         else if (counts.b > counts.a) winnerId = match.player_b;
-        // Tiebreaker: total word length
         else {
           const twlA = isPlayerA ? (match.total_word_length_a + word.length) : match.total_word_length_a;
           const twlB = isPlayerA ? match.total_word_length_b : (match.total_word_length_b + word.length);
@@ -421,6 +404,7 @@ Deno.serve(async (req) => {
         total_word_length_b: isPlayerA ? match.total_word_length_b : match.total_word_length_b + word.length,
         current_turn: matchEnded ? null : opponent,
         turn_deadline: matchEnded ? null : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        used_words: [...usedWords, word.toUpperCase()],
         updated_at: new Date().toISOString(),
       };
 
@@ -441,6 +425,85 @@ Deno.serve(async (req) => {
         match_ended: matchEnded,
         winner_id: winnerId,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // ─── SKIP TURN ───
+    if (action === 'skip_turn') {
+      const { match_id } = params;
+
+      const { data: match, error: matchErr } = await adminClient
+        .from('clash_matches')
+        .select('*')
+        .eq('id', match_id)
+        .single();
+
+      if (matchErr || !match || match.status !== 'active') {
+        return new Response(JSON.stringify({ error: 'Match not active' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      if (match.current_turn !== user.id) {
+        return new Response(JSON.stringify({ error: 'Not your turn' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const isPlayerA = user.id === match.player_a;
+      const myMoves = isPlayerA ? match.moves_a : match.moves_b;
+
+      if (myMoves >= MAX_MOVES_PER_PLAYER) {
+        return new Response(JSON.stringify({ error: 'Max moves reached' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const newMovesA = isPlayerA ? match.moves_a + 1 : match.moves_a;
+      const newMovesB = isPlayerA ? match.moves_b : match.moves_b + 1;
+      const opponent = isPlayerA ? match.player_b : match.player_a;
+
+      // Check if match ends after skip
+      let matchEnded = false;
+      let winnerId: string | null = null;
+
+      if (newMovesA >= MAX_MOVES_PER_PLAYER && newMovesB >= MAX_MOVES_PER_PLAYER) {
+        matchEnded = true;
+        const counts = countTiles(match.ownership as Record<string, Ownership>);
+        if (counts.a > counts.b) winnerId = match.player_a;
+        else if (counts.b > counts.a) winnerId = match.player_b;
+        else {
+          if (match.total_word_length_a > match.total_word_length_b) winnerId = match.player_a;
+          else if (match.total_word_length_b > match.total_word_length_a) winnerId = match.player_b;
+        }
+      }
+
+      // Record skip as a move
+      const totalMoves = newMovesA + newMovesB;
+      await adminClient.from('clash_moves').insert({
+        match_id,
+        player_id: user.id,
+        move_number: totalMoves,
+        word: '[SKIP]',
+        tiles_used: [],
+        tiles_claimed: [],
+        bonus_claims: [],
+        grid_snapshot: match.grid_state,
+        ownership_snapshot: match.ownership,
+      });
+
+      const matchUpdate: Record<string, unknown> = {
+        moves_a: newMovesA,
+        moves_b: newMovesB,
+        current_turn: matchEnded ? null : opponent,
+        turn_deadline: matchEnded ? null : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      if (matchEnded) {
+        matchUpdate.status = 'completed';
+        matchUpdate.winner_id = winnerId;
+        matchUpdate.completed_at = new Date().toISOString();
+      }
+
+      await adminClient.from('clash_matches').update(matchUpdate).eq('id', match_id);
+
+      return new Response(JSON.stringify({ success: true, skipped: true, match_ended: matchEnded, winner_id: winnerId }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // ─── FORFEIT ───
