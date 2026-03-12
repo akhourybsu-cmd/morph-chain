@@ -75,7 +75,7 @@ export const ClashHUD = () => {
 
         <div className="flex items-center gap-2">
           <span className="text-[10px] uppercase" style={{ color: 'hsl(var(--clash-text-muted))' }}>
-            {isWaiting ? '…' : 'Opp'}
+            {isWaiting ? '…' : oppLabel}
           </span>
           <span className="text-sm font-semibold font-mono" style={{ color: 'hsl(var(--clash-text-primary))' }}>
             {isWaiting ? '—' : oppTiles}
