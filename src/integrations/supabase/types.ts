@@ -1634,6 +1634,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      expire_match: { Args: { p_match_id: string }; Returns: boolean }
       get_arcade_daily_leaderboard: {
         Args: { p_date: string; p_limit?: number }
         Returns: {
@@ -1674,6 +1675,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      join_match: { Args: { p_match_id: string }; Returns: string }
       recalculate_measured_category_usage: { Args: never; Returns: undefined }
     }
     Enums: {
