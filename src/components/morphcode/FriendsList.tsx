@@ -268,7 +268,7 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
 
           {/* Offline friends */}
           {offlineFriends.length > 0 && (
-            <FriendsSection label="Friends">
+            <FriendsSection label="Offline">
               {offlineFriends.map(f => (
                 <div key={f.id} className="flex items-center justify-between py-1.5">
                   <div className="flex items-center gap-2">
@@ -277,9 +277,15 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
                       {f.displayName || f.friendCode || 'Player'}
                     </span>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => handleRemove(f.id)} className="h-7 w-7 p-0 text-[hsl(var(--code-text-muted))]">
-                    <X className="w-3 h-3" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleChallenge(f.friendUserId)} className="h-7 text-xs gap-1 px-2 md:px-3 text-[hsl(var(--code-accent))] opacity-70">
+                      <Swords className="w-3 h-3" />
+                      <span className="hidden md:inline">Challenge</span>
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleRemove(f.id)} className="h-7 w-7 p-0 text-[hsl(var(--code-text-muted))]">
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </FriendsSection>
