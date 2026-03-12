@@ -174,7 +174,7 @@ export const FriendsList = ({ isLoggedIn, onChallengeMatch }: FriendsListProps) 
           {challenges.length > 0 && (
             <FriendsSection label="⚔ Challenges">
               {challenges.map(c => (
-                <div key={c.activityId} className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ background: 'hsl(var(--code-accent) / 0.08)', border: '1px solid hsl(var(--code-accent) / 0.2)' }}>
+                <div key={c.activityId} className="flex items-center justify-between py-2 px-2 md:px-3 rounded-lg animate-fade-in" style={{ background: 'hsl(var(--code-accent) / 0.08)', border: '1px solid hsl(var(--code-accent) / 0.2)' }}>
                   <div className="flex items-center gap-2">
                     <Swords className="w-4 h-4" style={{ color: 'hsl(var(--code-accent))' }} />
                     <span className="text-sm font-inter font-medium" style={{ color: 'hsl(var(--code-text-primary))' }}>
