@@ -100,7 +100,7 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
             className="text-xs font-inter uppercase tracking-widest"
             style={{ color: 'hsl(var(--clash-text-muted))' }}
           >
-            Waiting for opponent's move…
+            {isBotOpponent ? 'Bot is thinking…' : "Waiting for opponent's move…"}
           </span>
         ) : null}
       </div>

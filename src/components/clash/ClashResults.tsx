@@ -1,6 +1,7 @@
 import { useClashStore } from '@/stores/clashStore';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { isClashBotPlayer } from '@/lib/clash/matchService';
 
 export const ClashResults = () => {
   const { match, userId, clearMatch } = useClashStore();
