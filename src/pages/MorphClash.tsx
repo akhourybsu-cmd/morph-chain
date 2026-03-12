@@ -161,6 +161,20 @@ const MorphClash = () => {
           </>
         )}
 
+      {/* Loading skeleton */}
+        {!match && loading && (
+          <div className="space-y-4 animate-pulse">
+            <div className="rounded-xl h-28" style={{ background: 'hsl(var(--clash-card-bg))' }} />
+            <div className="flex justify-center">
+              <div className="grid grid-cols-5 gap-1.5">
+                {Array.from({ length: 25 }).map((_, i) => (
+                  <div key={i} className="rounded-xl" style={{ width: 'var(--clash-tile-size, 60px)', height: 'var(--clash-tile-size, 60px)', background: 'hsl(var(--clash-neutral))' }} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {showBoard && (
           <div className="space-y-4">
             <ClashHUD />

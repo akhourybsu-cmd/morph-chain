@@ -1,6 +1,6 @@
 import { useClashStore } from '@/stores/clashStore';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send, RotateCcw, Flag, SkipForward } from 'lucide-react';
+import { Loader2, Send, RotateCcw, Flag, SkipForward, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
@@ -9,9 +9,10 @@ interface ClashActionBarProps {
 }
 
 export const ClashActionBar = ({ isMyTurn }: ClashActionBarProps) => {
-  const { selected, match, submitMove, skipTurn, clearSelection, forfeit, loading, error } = useClashStore();
+  const { selected, match, submitMove, skipTurn, clearSelection, forfeit, loading } = useClashStore();
   const [confirming, setConfirming] = useState(false);
   const [skipping, setSkipping] = useState(false);
+  const [lockedIn, setLockedIn] = useState(false);
 
   if (!match || match.status !== 'active') return null;
 
@@ -22,11 +23,13 @@ export const ClashActionBar = ({ isMyTurn }: ClashActionBarProps) => {
   const canSubmit = isMyTurn && selected.length >= 4;
 
   const handleSubmit = async () => {
-    const success = await submitMove();
-    if (success) {
-      toast.success(`"${word}" claimed!`);
-    } else if (error) {
-      toast.error(error);
+    const result = await submitMove();
+    if (result.success) {
+      setLockedIn(true);
+      toast.success(`"${result.word}" claimed!`);
+      setTimeout(() => setLockedIn(false), 1200);
+    } else if (result.error) {
+      toast.error(result.error);
     }
   };
 
@@ -64,19 +67,28 @@ export const ClashActionBar = ({ isMyTurn }: ClashActionBarProps) => {
 
       <Button
         onClick={handleSubmit}
-        disabled={!canSubmit || loading}
+        disabled={!canSubmit || loading || lockedIn}
         size="default"
-        className="px-6 font-inter font-semibold"
+        className="px-6 font-inter font-semibold transition-all duration-200"
         style={{
-          background: canSubmit ? 'hsl(var(--clash-accent))' : 'hsl(var(--clash-pill-bg))',
-          color: canSubmit ? '#fff' : 'hsl(var(--clash-text-muted))',
+          background: lockedIn
+            ? 'hsl(142 71% 45%)'
+            : canSubmit ? 'hsl(var(--clash-accent))' : 'hsl(var(--clash-pill-bg))',
+          color: canSubmit || lockedIn ? '#fff' : 'hsl(var(--clash-text-muted))',
+          transform: lockedIn ? 'scale(1.05)' : undefined,
         }}
       >
-        {loading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
-        Submit
+        {lockedIn ? (
+          <Check className="w-4 h-4 mr-1" />
+        ) : loading ? (
+          <Loader2 className="w-4 h-4 animate-spin mr-1" />
+        ) : (
+          <Send className="w-4 h-4 mr-1" />
+        )}
+        {lockedIn ? 'Locked In!' : 'Submit'}
       </Button>
 
-      {isMyTurn && selected.length === 0 && (
+      {isMyTurn && selected.length === 0 && !lockedIn && (
         <Button
           variant="ghost" size="sm"
           onClick={handleSkip}

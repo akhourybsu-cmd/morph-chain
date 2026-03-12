@@ -3,13 +3,28 @@ import { cn } from '@/lib/utils';
 import { Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useEffect, useState } from 'react';
 
 interface ClashBoardProps {
   isMyTurn: boolean;
 }
 
 export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
-  const { match, selected, userId, selectTile } = useClashStore();
+  const { match, selected, userId, selectTile, lastMoveResult } = useClashStore();
+  const [recentlyClaimed, setRecentlyClaimed] = useState<Set<string>>(new Set());
+
+  // Animate recently claimed tiles
+  useEffect(() => {
+    if (lastMoveResult?.claimed && lastMoveResult.claimed.length > 0) {
+      const allClaimed = new Set([
+        ...lastMoveResult.claimed,
+        ...(lastMoveResult.bonusClaims || []),
+      ]);
+      setRecentlyClaimed(allClaimed);
+      const timer = setTimeout(() => setRecentlyClaimed(new Set()), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [lastMoveResult]);
 
   if (!match) return null;
 
@@ -72,6 +87,8 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
     }
   };
 
+  const showNotYourTurn = match.status === 'active' && !isMyTurn && !isWaiting;
+
   return (
     <div className="flex flex-col items-center gap-4">
       {/* Waiting banner */}
@@ -111,19 +128,26 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
 
       {/* Word preview */}
       <div className="h-8 flex items-center justify-center">
-        {selected.length > 0 && (
+        {selected.length > 0 ? (
           <span
             className="font-mono text-xl font-bold tracking-widest uppercase"
             style={{ color: selected.length >= 4 ? 'hsl(var(--clash-accent))' : 'hsl(var(--clash-text-muted))' }}
           >
             {selectedWord}
           </span>
-        )}
+        ) : showNotYourTurn ? (
+          <span
+            className="text-xs font-inter uppercase tracking-widest"
+            style={{ color: 'hsl(var(--clash-text-muted))' }}
+          >
+            Waiting for opponent's move…
+          </span>
+        ) : null}
       </div>
 
       {/* Grid */}
       <div
-        className="grid gap-1.5"
+        className="grid gap-1.5 relative"
         style={{
           gridTemplateColumns: `repeat(5, var(--clash-tile-size, 60px))`,
           gridTemplateRows: `repeat(5, var(--clash-tile-size, 60px))`,
@@ -134,6 +158,7 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
             const isSelected = selected.some(s => s.row === r && s.col === c);
             const selIndex = selected.findIndex(s => s.row === r && s.col === c);
             const interactive = isMyTurn && !isWaiting;
+            const justClaimed = recentlyClaimed.has(tile.id);
 
             return (
               <button
@@ -142,11 +167,12 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
                 disabled={!interactive}
                 className={cn(
                   "relative rounded-xl font-inter font-bold text-xl flex items-center justify-center",
-                  "transition-all duration-150 touch-manipulation",
+                  "transition-all duration-200 touch-manipulation",
                   "shadow-[0_2px_4px_rgba(0,0,0,0.06)]",
                   isSelected && "ring-2 ring-[hsl(var(--clash-accent))] z-10 scale-105",
                   !isSelected && interactive && "hover:-translate-y-px hover:shadow-md active:scale-95",
-                  !interactive && "opacity-90 cursor-default"
+                  !interactive && "cursor-default",
+                  justClaimed && "animate-pulse scale-110 z-10",
                 )}
                 style={{
                   width: 'var(--clash-tile-size, 60px)',
@@ -155,6 +181,7 @@ export const ClashBoard = ({ isMyTurn }: ClashBoardProps) => {
                   border: `2px solid ${getOwnershipBorderColor(tile.id)}`,
                   color: 'hsl(var(--clash-tile-letter))',
                   letterSpacing: '0.05em',
+                  opacity: showNotYourTurn ? 0.75 : 1,
                 }}
               >
                 <span className="relative z-10 uppercase select-none">{tile.char}</span>

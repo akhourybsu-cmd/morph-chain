@@ -32,7 +32,7 @@ export const ClashMenuSheet = ({ open, onClose }: ClashMenuSheetProps) => {
           <SheetTitle className="sr-only">Menu</SheetTitle>
         </SheetHeader>
         <div className="px-4 space-y-6">
-          <GamesNavigation currentGame="morphcode" onNavigate={onClose} />
+          <GamesNavigation currentGame="clash" onNavigate={onClose} />
           
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider mb-3 px-2" style={{ color: 'hsl(var(--clash-text-muted))' }}>
