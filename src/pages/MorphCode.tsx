@@ -123,6 +123,13 @@ const MorphCode = () => {
           setPhase(currentRound.mySequenceLocked ? 'waiting' : 'setup');
         } else if (currentRound?.status === 'active') {
           setPhase('playing');
+          // If it's a bot match and bot's turn, auto-trigger bot guess
+          if (activeMatch.playerB && isBotPlayer(activeMatch.playerB) && isBotPlayer(currentRound.currentTurn)) {
+            setTimeout(async () => {
+              await triggerBotGuess(currentRound.id);
+              loadGameState();
+            }, 1500);
+          }
         } else if (currentRound?.status === 'completed') {
           // Fetch opponent sequence for reveal
           if (currentRound.id) {
