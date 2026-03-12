@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Menu, User } from 'lucide-react';
+import { Menu, User, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useClashStore } from '@/stores/clashStore';
-import { getMyActiveClashMatch, getMyRecentCompletedMatch } from '@/lib/clash/matchService';
+import { getMyActiveClashMatches, getMyRecentCompletedMatches, type ClashMatchSummary } from '@/lib/clash/matchService';
 import { ClashLogo } from '@/components/clash/ClashLogo';
 import { ClashLobby } from '@/components/clash/ClashLobby';
+import { ClashMatchList } from '@/components/clash/ClashMatchList';
 import { ClashBoard } from '@/components/clash/ClashBoard';
 import { ClashHUD } from '@/components/clash/ClashHUD';
 import { ClashResults } from '@/components/clash/ClashResults';
@@ -18,12 +19,13 @@ const MorphClash = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [activeMatches, setActiveMatches] = useState<ClashMatchSummary[]>([]);
+  const [completedMatches, setCompletedMatches] = useState<ClashMatchSummary[]>([]);
   const { match, userId, setUserId, loadMatch, subscribeToMatch, clearMatch } = useClashStore();
 
-  // Read ?join=CODE from URL
   const joinCode = searchParams.get('join');
 
-  // Clear join param after consuming it
+  // Clear join param after consuming
   useEffect(() => {
     if (joinCode && match) {
       setSearchParams({}, { replace: true });
@@ -43,36 +45,45 @@ const MorphClash = () => {
     return () => subscription.unsubscribe();
   }, [setUserId]);
 
-  // Auto-load active match
+  // Load all active matches for the lobby
+  const refreshMatchList = async () => {
+    if (!isLoggedIn) return;
+    const [active, completed] = await Promise.all([
+      getMyActiveClashMatches(),
+      getMyRecentCompletedMatches(),
+    ]);
+    setActiveMatches(active);
+    setCompletedMatches(completed);
+  };
+
   useEffect(() => {
-    if (!isLoggedIn || match) return;
-    (async () => {
-      const activeId = await getMyActiveClashMatch();
-      if (activeId) {
-        loadMatch(activeId);
-        subscribeToMatch(activeId);
-        return;
-      }
-      const recentId = await getMyRecentCompletedMatch();
-      if (recentId) {
-        loadMatch(recentId);
-      }
-    })();
-  }, [isLoggedIn, match, loadMatch, subscribeToMatch]);
+    if (isLoggedIn && !match) {
+      refreshMatchList();
+    }
+  }, [isLoggedIn, match]);
 
   const handleMatchFound = (matchId: string) => {
     loadMatch(matchId);
     subscribeToMatch(matchId);
-    // Clear join param
     if (joinCode) setSearchParams({}, { replace: true });
   };
 
+  const handleSelectMatch = (matchId: string) => {
+    loadMatch(matchId);
+    subscribeToMatch(matchId);
+  };
+
+  const handleBackToLobby = () => {
+    clearMatch();
+    refreshMatchList();
+  };
+
   const isMyTurn = match?.current_turn === userId;
-  const showLobby = !match || match.status === 'expired';
   const showBoard = match && (match.status === 'active' || match.status === 'completed');
   const showWaiting = match?.status === 'waiting';
+  const showLobby = !match || match.status === 'expired';
 
-  // Calculate tile size based on viewport
+  // Tile size
   useEffect(() => {
     const updateSize = () => {
       const vw = window.innerWidth;
@@ -86,22 +97,28 @@ const MorphClash = () => {
   }, []);
 
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ background: 'hsl(var(--clash-page-bg))' }}
-    >
+    <div className="min-h-screen flex flex-col" style={{ background: 'hsl(var(--clash-page-bg))' }}>
       {/* Header */}
       <header
         className="h-14 flex items-center justify-between px-4"
         style={{ borderBottom: '1px solid hsl(var(--clash-card-border))' }}
       >
         <div className="flex items-center gap-1 flex-1">
-          <button
-            onClick={() => setMenuOpen(true)}
-            className="p-1.5 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10"
-          >
-            <Menu className="w-5 h-5" style={{ color: 'hsl(var(--clash-text-muted))' }} />
-          </button>
+          {match ? (
+            <button
+              onClick={handleBackToLobby}
+              className="p-1.5 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+            >
+              <ArrowLeft className="w-5 h-5" style={{ color: 'hsl(var(--clash-text-muted))' }} />
+            </button>
+          ) : (
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="p-1.5 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+            >
+              <Menu className="w-5 h-5" style={{ color: 'hsl(var(--clash-text-muted))' }} />
+            </button>
+          )}
           <PrestigeThemeToggle colorVar="--clash-text-muted" />
         </div>
 
@@ -119,28 +136,30 @@ const MorphClash = () => {
 
       {/* Main content */}
       <main className="flex-1 container mx-auto px-4 py-4 max-w-md overflow-y-auto">
-        {showLobby && (
-          <ClashLobby
-            onMatchFound={handleMatchFound}
-            isLoggedIn={isLoggedIn}
-            onLoginRequired={() => navigate('/login')}
-            existingInviteCode={showWaiting ? match?.invite_code : null}
-            existingMatchId={showWaiting ? match?.id : null}
-            onMatchCancelled={clearMatch}
-            initialJoinCode={joinCode}
-          />
-        )}
+        {(showLobby || showWaiting) && (
+          <>
+            {/* Active matches list */}
+            {!showWaiting && (activeMatches.length > 0 || completedMatches.length > 0) && (
+              <div className="mb-4">
+                <ClashMatchList
+                  matches={activeMatches}
+                  completedMatches={completedMatches}
+                  userId={userId}
+                  onSelectMatch={handleSelectMatch}
+                />
+              </div>
+            )}
 
-        {showWaiting && (
-          <ClashLobby
-            onMatchFound={handleMatchFound}
-            isLoggedIn={isLoggedIn}
-            onLoginRequired={() => navigate('/login')}
-            existingInviteCode={match?.invite_code}
-            existingMatchId={match?.id}
-            onMatchCancelled={clearMatch}
-            initialJoinCode={null}
-          />
+            <ClashLobby
+              onMatchFound={handleMatchFound}
+              isLoggedIn={isLoggedIn}
+              onLoginRequired={() => navigate('/login')}
+              existingInviteCode={showWaiting ? match?.invite_code : null}
+              existingMatchId={showWaiting ? match?.id : null}
+              onMatchCancelled={() => { clearMatch(); refreshMatchList(); }}
+              initialJoinCode={joinCode}
+            />
+          </>
         )}
 
         {showBoard && (
