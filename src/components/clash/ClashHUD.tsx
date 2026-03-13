@@ -1,10 +1,12 @@
 import { useClashStore } from '@/stores/clashStore';
 import { useEffect, useState } from 'react';
 import { isClashBotPlayer } from '@/lib/clash/matchService';
+import { supabase } from '@/integrations/supabase/client';
 
 export const ClashHUD = () => {
-  const { match, userId } = useClashStore();
+  const { match, userId, lastMoveResult } = useClashStore();
   const [timeLeft, setTimeLeft] = useState('');
+  const [lastMove, setLastMove] = useState<{ word: string; player_id: string } | null>(null);
 
   const isPlayerA = userId === match?.player_a;
   const isWaiting = match?.status === 'waiting';
@@ -32,6 +34,29 @@ export const ClashHUD = () => {
     const interval = setInterval(update, 60000);
     return () => clearInterval(interval);
   }, [match?.turn_deadline]);
+
+  // Fetch latest move from DB
+  useEffect(() => {
+    if (!match?.id) return;
+    const fetchLastMove = async () => {
+      const { data } = await supabase
+        .from('clash_moves')
+        .select('word, player_id')
+        .eq('match_id', match.id)
+        .order('move_number', { ascending: false })
+        .limit(1)
+        .single();
+      if (data) setLastMove(data);
+    };
+    fetchLastMove();
+  }, [match?.id, match?.moves_a, match?.moves_b]);
+
+  // Derive display word: prefer optimistic lastMoveResult, fall back to DB
+  const displayWord = lastMoveResult?.word || lastMove?.word;
+  const displayPlayerId = lastMoveResult ? userId : lastMove?.player_id;
+  const isMyWord = displayPlayerId === userId;
+  const wordLabel = isMyWord ? 'You' : isBotMatch ? 'Bot' : 'Opp';
+  const wordColor = isMyWord ? 'hsl(var(--clash-player-mine))' : 'hsl(var(--clash-player-opponent))';
 
   if (!match) return null;
 
@@ -92,7 +117,7 @@ export const ClashHUD = () => {
         )}
       </div>
 
-      <div className="text-center">
+      <div className="text-center space-y-1">
         <span
           className={`text-xs font-semibold uppercase tracking-widest ${isMyTurn && !isWaiting ? 'animate-pulse' : ''}`}
           style={{ color: isWaiting ? 'hsl(var(--clash-text-muted))' : isMyTurn ? 'hsl(var(--clash-accent))' : 'hsl(var(--clash-text-muted))' }}
@@ -103,6 +128,15 @@ export const ClashHUD = () => {
             : isMyTurn ? 'Your Turn' : isBotMatch ? "Bot's Turn" : "Opponent's Turn"
           }
         </span>
+        {displayWord && !isWaiting && (
+          <div className="text-[11px] font-inter" style={{ color: 'hsl(var(--clash-text-muted))' }}>
+            Last word:{' '}
+            <span className="font-mono font-semibold uppercase" style={{ color: wordColor }}>
+              {displayWord}
+            </span>
+            <span className="ml-1 opacity-60">({wordLabel})</span>
+          </div>
+        )}
       </div>
     </div>
   );
