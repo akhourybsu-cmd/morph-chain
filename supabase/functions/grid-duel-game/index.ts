@@ -15,6 +15,9 @@ const BOT_UUID = '00000000-0000-0000-0000-b07b07b07b07';
 let twl06Set: Set<string> | null = null;
 let twl06Loading: Promise<Set<string>> | null = null;
 
+// Pre-warm dictionary at module level (starts loading during cold start)
+const _preWarm = loadTWL06();
+
 async function loadTWL06(): Promise<Set<string>> {
   if (twl06Set) return twl06Set;
   if (twl06Loading) return twl06Loading;
@@ -577,6 +580,13 @@ Deno.serve(async (req) => {
 
       await adminClient.from('clash_matches').update(matchUpdate).eq('id', match_id);
 
+      // Re-fetch the full updated match to return to client
+      const { data: updatedMatch } = await adminClient
+        .from('clash_matches')
+        .select('*')
+        .eq('id', match_id)
+        .single();
+
       return new Response(JSON.stringify({
         word,
         claimed,
@@ -587,6 +597,7 @@ Deno.serve(async (req) => {
         winner_id: winnerId,
         is_bot_match: !!match.is_bot_match,
         bot_turn: !matchEnded && opponent === BOT_UUID,
+        match: updatedMatch || undefined,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -664,6 +675,13 @@ Deno.serve(async (req) => {
 
       await adminClient.from('clash_matches').update(matchUpdate).eq('id', match_id);
 
+      // Re-fetch the full updated match
+      const { data: updatedMatch } = await adminClient
+        .from('clash_matches')
+        .select('*')
+        .eq('id', match_id)
+        .single();
+
       return new Response(JSON.stringify({
         success: true,
         skipped: true,
@@ -671,6 +689,7 @@ Deno.serve(async (req) => {
         winner_id: winnerId,
         is_bot_match: !!match.is_bot_match,
         bot_turn: !matchEnded && opponent === BOT_UUID,
+        match: updatedMatch || undefined,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -704,7 +723,14 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString(),
       }).eq('id', match_id);
 
-      return new Response(JSON.stringify({ success: true, winner_id: winnerId }), {
+      // Re-fetch the full updated match
+      const { data: updatedMatch } = await adminClient
+        .from('clash_matches')
+        .select('*')
+        .eq('id', match_id)
+        .single();
+
+      return new Response(JSON.stringify({ success: true, winner_id: winnerId, match: updatedMatch || undefined }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

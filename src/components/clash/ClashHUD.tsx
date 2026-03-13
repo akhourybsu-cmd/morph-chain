@@ -1,12 +1,10 @@
 import { useClashStore } from '@/stores/clashStore';
 import { useEffect, useState } from 'react';
 import { isClashBotPlayer } from '@/lib/clash/matchService';
-import { supabase } from '@/integrations/supabase/client';
 
 export const ClashHUD = () => {
-  const { match, userId, lastMoveResult } = useClashStore();
+  const { match, userId, lastMoveResult, lastPlayedWord } = useClashStore();
   const [timeLeft, setTimeLeft] = useState('');
-  const [lastMove, setLastMove] = useState<{ word: string; player_id: string } | null>(null);
 
   const isPlayerA = userId === match?.player_a;
   const isWaiting = match?.status === 'waiting';
@@ -35,25 +33,9 @@ export const ClashHUD = () => {
     return () => clearInterval(interval);
   }, [match?.turn_deadline]);
 
-  // Fetch latest move from DB
-  useEffect(() => {
-    if (!match?.id) return;
-    const fetchLastMove = async () => {
-      const { data } = await supabase
-        .from('clash_moves')
-        .select('word, player_id')
-        .eq('match_id', match.id)
-        .order('move_number', { ascending: false })
-        .limit(1)
-        .single();
-      if (data) setLastMove(data);
-    };
-    fetchLastMove();
-  }, [match?.id, match?.moves_a, match?.moves_b]);
-
-  // Derive display word: prefer optimistic lastMoveResult, fall back to DB
-  const displayWord = lastMoveResult?.word || lastMove?.word;
-  const displayPlayerId = lastMoveResult ? userId : lastMove?.player_id;
+  // Derive display word: prefer optimistic lastMoveResult, fall back to store's lastPlayedWord
+  const displayWord = lastMoveResult?.word || lastPlayedWord?.word;
+  const displayPlayerId = lastMoveResult ? userId : lastPlayedWord?.player_id;
   const isMyWord = displayPlayerId === userId;
   const wordLabel = isMyWord ? 'You' : isBotMatch ? 'Bot' : 'Opp';
   const wordColor = isMyWord ? 'hsl(var(--clash-player-mine))' : 'hsl(var(--clash-player-opponent))';
