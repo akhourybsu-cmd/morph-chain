@@ -723,7 +723,14 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString(),
       }).eq('id', match_id);
 
-      return new Response(JSON.stringify({ success: true, winner_id: winnerId }), {
+      // Re-fetch the full updated match
+      const { data: updatedMatch } = await adminClient
+        .from('clash_matches')
+        .select('*')
+        .eq('id', match_id)
+        .single();
+
+      return new Response(JSON.stringify({ success: true, winner_id: winnerId, match: updatedMatch || undefined }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
