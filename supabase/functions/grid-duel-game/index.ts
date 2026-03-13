@@ -580,6 +580,13 @@ Deno.serve(async (req) => {
 
       await adminClient.from('clash_matches').update(matchUpdate).eq('id', match_id);
 
+      // Re-fetch the full updated match to return to client
+      const { data: updatedMatch } = await adminClient
+        .from('clash_matches')
+        .select('*')
+        .eq('id', match_id)
+        .single();
+
       return new Response(JSON.stringify({
         word,
         claimed,
@@ -590,6 +597,7 @@ Deno.serve(async (req) => {
         winner_id: winnerId,
         is_bot_match: !!match.is_bot_match,
         bot_turn: !matchEnded && opponent === BOT_UUID,
+        match: updatedMatch || undefined,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
