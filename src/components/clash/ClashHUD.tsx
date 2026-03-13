@@ -117,7 +117,7 @@ export const ClashHUD = () => {
         )}
       </div>
 
-      <div className="text-center">
+      <div className="text-center space-y-1">
         <span
           className={`text-xs font-semibold uppercase tracking-widest ${isMyTurn && !isWaiting ? 'animate-pulse' : ''}`}
           style={{ color: isWaiting ? 'hsl(var(--clash-text-muted))' : isMyTurn ? 'hsl(var(--clash-accent))' : 'hsl(var(--clash-text-muted))' }}
@@ -128,6 +128,15 @@ export const ClashHUD = () => {
             : isMyTurn ? 'Your Turn' : isBotMatch ? "Bot's Turn" : "Opponent's Turn"
           }
         </span>
+        {displayWord && !isWaiting && (
+          <div className="text-[11px] font-inter" style={{ color: 'hsl(var(--clash-text-muted))' }}>
+            Last word:{' '}
+            <span className="font-mono font-semibold uppercase" style={{ color: wordColor }}>
+              {displayWord}
+            </span>
+            <span className="ml-1 opacity-60">({wordLabel})</span>
+          </div>
+        )}
       </div>
     </div>
   );
