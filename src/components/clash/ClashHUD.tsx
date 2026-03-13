@@ -4,8 +4,9 @@ import { isClashBotPlayer } from '@/lib/clash/matchService';
 import { supabase } from '@/integrations/supabase/client';
 
 export const ClashHUD = () => {
-  const { match, userId } = useClashStore();
+  const { match, userId, lastMoveResult } = useClashStore();
   const [timeLeft, setTimeLeft] = useState('');
+  const [lastMove, setLastMove] = useState<{ word: string; player_id: string } | null>(null);
 
   const isPlayerA = userId === match?.player_a;
   const isWaiting = match?.status === 'waiting';
