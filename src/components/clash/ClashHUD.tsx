@@ -1,6 +1,7 @@
 import { useClashStore } from '@/stores/clashStore';
 import { useEffect, useState } from 'react';
 import { isClashBotPlayer } from '@/lib/clash/matchService';
+import { supabase } from '@/integrations/supabase/client';
 
 export const ClashHUD = () => {
   const { match, userId } = useClashStore();
