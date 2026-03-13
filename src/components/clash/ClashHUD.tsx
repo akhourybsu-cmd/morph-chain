@@ -35,6 +35,29 @@ export const ClashHUD = () => {
     return () => clearInterval(interval);
   }, [match?.turn_deadline]);
 
+  // Fetch latest move from DB
+  useEffect(() => {
+    if (!match?.id) return;
+    const fetchLastMove = async () => {
+      const { data } = await supabase
+        .from('clash_moves')
+        .select('word, player_id')
+        .eq('match_id', match.id)
+        .order('move_number', { ascending: false })
+        .limit(1)
+        .single();
+      if (data) setLastMove(data);
+    };
+    fetchLastMove();
+  }, [match?.id, match?.moves_a, match?.moves_b]);
+
+  // Derive display word: prefer optimistic lastMoveResult, fall back to DB
+  const displayWord = lastMoveResult?.word || lastMove?.word;
+  const displayPlayerId = lastMoveResult ? userId : lastMove?.player_id;
+  const isMyWord = displayPlayerId === userId;
+  const wordLabel = isMyWord ? 'You' : isBotMatch ? 'Bot' : 'Opp';
+  const wordColor = isMyWord ? 'hsl(var(--clash-player-mine))' : 'hsl(var(--clash-player-opponent))';
+
   if (!match) return null;
 
   return (
