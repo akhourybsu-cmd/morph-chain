@@ -15,6 +15,9 @@ const BOT_UUID = '00000000-0000-0000-0000-b07b07b07b07';
 let twl06Set: Set<string> | null = null;
 let twl06Loading: Promise<Set<string>> | null = null;
 
+// Pre-warm dictionary at module level (starts loading during cold start)
+const _preWarm = loadTWL06();
+
 async function loadTWL06(): Promise<Set<string>> {
   if (twl06Set) return twl06Set;
   if (twl06Loading) return twl06Loading;
