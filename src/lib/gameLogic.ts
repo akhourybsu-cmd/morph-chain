@@ -132,6 +132,45 @@ export const getDailyPuzzle = (wordLength: 4 | 5 = 4): Puzzle & { puzzleIndex: n
   };
 };
 
+// Returns a random curated puzzle that isn't today's daily (by index).
+// Safe to call multiple times — each call picks a fresh random index.
+export const getPracticePuzzle = (
+  wordLength: 4 | 5,
+  excludeIndex?: number
+): Puzzle & { puzzleIndex: number } => {
+  const curatedPuzzles = wordLength === 4 ? CURATED_4L_PUZZLES : CURATED_5L_PUZZLES;
+  const wordSet = wordLength === 4 ? VALID_WORDS_4 : VALID_WORDS_5;
+
+  let idx: number;
+  let attempts = 0;
+  do {
+    idx = Math.floor(Math.random() * curatedPuzzles.length);
+    attempts++;
+  } while (idx === excludeIndex && attempts < 20);
+
+  const p = curatedPuzzles[idx];
+  const minDist =
+    p.minDist ||
+    calculateMinDistance(p.start, p.goal, wordSet) ||
+    (wordLength === 4 ? 4 : 5);
+  const moveBonus = 4;
+  const maxMoves = Math.min(14, Math.max(10, minDist + moveBonus));
+
+  const timezone = "America/New_York";
+  const nowNY = toZonedTime(new Date(), timezone);
+  const today = formatInTimeZone(nowNY, timezone, "yyyy-MM-dd");
+
+  return {
+    date: today,
+    startWord: p.start,
+    goalWord: p.goal,
+    wordLength,
+    maxMoves,
+    minDistance: minDist,
+    puzzleIndex: idx,
+  };
+};
+
 export const isValidWord = (word: string, wordLength: number = 4): boolean => {
   const upperWord = word.toUpperCase();
   if (wordLength === 4) return VALID_WORDS_4.has(upperWord);

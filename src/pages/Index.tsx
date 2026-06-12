@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useChainSettings } from "@/hooks/useChainSettings";
 import {
   getDailyPuzzle,
+  getPracticePuzzle,
   isValidWord,
   isOneLetterDifferent,
   isTwoLettersDifferent,
@@ -93,6 +94,10 @@ const Index = () => {
   const [achievementQueue, setAchievementQueue] = useState<string[]>([]);
   const [currentAchievement, setCurrentAchievement] = useState<string | null>(null);
   const gameStartTime = useRef<number>(Date.now());
+
+  // Practice mode
+  const [isPractice, setIsPractice] = useState(false);
+  const dailyPuzzleRef = useRef<typeof puzzle | null>(null);
 
   // Double Swap power-up for 5L only - earned after 3 consecutive single-letter moves
   const [doubleSwapUsed, setDoubleSwapUsed] = useState(false);
@@ -309,19 +314,39 @@ const Index = () => {
         setGameWon(true);
         setShowCelebration(true);
         if (audioSettings.soundEnabled) playWin();
-        
+
         const timeElapsedSeconds = Math.floor((Date.now() - gameStartTime.current) / 1000);
         const hadWorseMove = updatedMoves.some(m => m.isWorse);
-        
+
         const currentStats = loadStats();
         const lengthKey = puzzle.wordLength as 4 | 5;
         const newTotalWins = currentStats.overall.won + 1;
         const newStreak = currentStats.byLength[lengthKey].currentStreak + 1;
-        
+
         const otherLength = puzzle.wordLength === 4 ? 5 : 4;
         const otherState = loadGameState(otherLength);
         const wonBothToday = otherState?.date === puzzle.date && otherState?.won === true;
-        
+
+        const par = puzzle.minDistance + 2;
+        const isUnderPar = updatedMoves.length < par;
+        const isClutch = updatedMoves.length === puzzle.maxMoves;
+        const now = new Date();
+        const hourOfDay = now.getHours();
+        const dayOfWeek = now.getDay();
+
+        // Merge newly-used words into extended stats
+        const newWords = updatedMoves.map(m => m.to);
+        const ext = currentStats.extended;
+        const updatedUnique = Array.from(new Set([...ext.uniqueWordsUsed, ...newWords]));
+        const updatedUnderPar = ext.totalUnderPar + (isUnderPar ? 1 : 0);
+        const updatedSpeedSolves = ext.totalSpeedSolves + (timeElapsedSeconds < 60 ? 1 : 0);
+        const updatedClutchWins = ext.clutchWins + (isClutch ? 1 : 0);
+        const updatedHardStreak = settings.hardMode
+          ? ext.hardModeStreak + 1
+          : ext.hardModeStreak;
+        const updatedWonSaturday = ext.wonOnSaturday || dayOfWeek === 6;
+        const updatedWonSunday = ext.wonOnSunday || dayOfWeek === 0;
+
         const achievementContext: ChainAchievementContext = {
           won: true,
           movesUsed: updatedMoves.length,
@@ -334,64 +359,105 @@ const Index = () => {
           wonBothToday,
           timeElapsedSeconds,
           hadWorseMove,
+          totalUnderPar: updatedUnderPar,
+          totalSpeedSolves: updatedSpeedSolves,
+          clutchWins: updatedClutchWins,
+          uniqueWordsUsed: updatedUnique.length,
+          hardModeStreak: updatedHardStreak,
+          hourOfDay,
+          wonOnSaturday: updatedWonSaturday,
+          wonOnSunday: updatedWonSunday,
+          usedPalindrome: checkForPalindrome(updatedMoves),
+          onlyChangedVowels: checkOnlyVowelChanges(updatedMoves),
+          onlyChangedConsonants: checkOnlyConsonantChanges(updatedMoves),
         };
-        
+
         const earnedAchievements = checkChainAchievements(achievementContext);
         const alreadyUnlocked = getChainAchievements();
         const newAchievements = getNewChainAchievements(earnedAchievements, alreadyUnlocked);
-        
+
         if (newAchievements.length > 0) {
           saveChainAchievements(newAchievements);
           setAchievementQueue(newAchievements);
         }
-        
-        updateStats(true, updatedMoves.length);
-        saveGameState({
-          date: puzzle.date,
-          wordLength: puzzle.wordLength,
-          moves: updatedMoves.map((m) => ({
-            from: m.from,
-            to: m.to,
-            timestamp: m.timestamp.toISOString(),
-          })),
-          completed: true,
-          won: true,
-        });
-        saveSessionToSupabase(
-          puzzle.date,
-          puzzle.wordLength,
-          updatedMoves,
-          true,
-          true,
-          0,
-          invalidGuessCount
-        );
+
+        if (!isPractice) {
+          updateStats(true, updatedMoves.length, {
+            extendedUpdate: {
+              uniqueWordsUsed: updatedUnique,
+              totalUnderPar: updatedUnderPar,
+              totalSpeedSolves: updatedSpeedSolves,
+              clutchWins: updatedClutchWins,
+              hardModeStreak: updatedHardStreak,
+              wonOnSaturday: updatedWonSaturday,
+              wonOnSunday: updatedWonSunday,
+            },
+          });
+          saveGameState({
+            date: puzzle.date,
+            wordLength: puzzle.wordLength,
+            moves: updatedMoves.map((m) => ({
+              from: m.from,
+              to: m.to,
+              timestamp: m.timestamp.toISOString(),
+            })),
+            completed: true,
+            won: true,
+          });
+          saveSessionToSupabase(
+            puzzle.date,
+            puzzle.wordLength,
+            updatedMoves,
+            true,
+            true,
+            0,
+            invalidGuessCount
+          );
+        } else {
+          // Practice: only persist uniqueWordsUsed so vocabulary tracking stays accurate
+          const practiceStats = loadStats();
+          const practiceExt = practiceStats.extended;
+          practiceStats.extended = {
+            ...practiceExt,
+            uniqueWordsUsed: Array.from(new Set([...practiceExt.uniqueWordsUsed, ...newWords])),
+          };
+          saveStats(practiceStats);
+        }
       } else if (updatedMoves.length >= puzzle.maxMoves) {
         setGameCompleted(true);
         setGameWon(false);
         if (audioSettings.soundEnabled) playLose();
-        updateStats(false, updatedMoves.length);
-        saveGameState({
-          date: puzzle.date,
-          wordLength: puzzle.wordLength,
-          moves: updatedMoves.map((m) => ({
-            from: m.from,
-            to: m.to,
-            timestamp: m.timestamp.toISOString(),
-          })),
-          completed: true,
-          won: false,
-        });
-        saveSessionToSupabase(
-          puzzle.date,
-          puzzle.wordLength,
-          updatedMoves,
-          true,
-          false,
-          0,
-          invalidGuessCount
-        );
-      } else {
+
+        if (!isPractice) {
+          // Hard mode streak resets on loss
+          if (settings.hardMode) {
+            const lossStats = loadStats();
+            lossStats.extended.hardModeStreak = 0;
+            saveStats(lossStats);
+          }
+          updateStats(false, updatedMoves.length);
+          saveGameState({
+            date: puzzle.date,
+            wordLength: puzzle.wordLength,
+            moves: updatedMoves.map((m) => ({
+              from: m.from,
+              to: m.to,
+              timestamp: m.timestamp.toISOString(),
+            })),
+            completed: true,
+            won: false,
+          });
+          saveSessionToSupabase(
+            puzzle.date,
+            puzzle.wordLength,
+            updatedMoves,
+            true,
+            false,
+            0,
+            invalidGuessCount
+          );
+        }
+      } else if (!isPractice) {
         saveGameState({
           date: puzzle.date,
           wordLength: puzzle.wordLength,
@@ -458,8 +524,15 @@ const Index = () => {
     return letters;
   }, [moves]);
 
-  const updateStats = (won: boolean, movesCount: number) => {
+  const updateStats = (
+    won: boolean,
+    movesCount: number,
+    opts?: { extendedUpdate?: Partial<import("@/lib/storage").ExtendedStats> }
+  ) => {
     const newStats = { ...stats };
+    if (opts?.extendedUpdate) {
+      newStats.extended = { ...newStats.extended, ...opts.extendedUpdate };
+    }
     const lengthKey = puzzle.wordLength as 4 | 5;
     
     newStats.overall.played += 1;
@@ -510,7 +583,105 @@ const Index = () => {
     });
   };
 
-  // Removed: handlePlayAgain function - users should use archive instead
+  const startPractice = () => {
+    // Save current daily puzzle before overwriting state
+    if (!isPractice) dailyPuzzleRef.current = puzzle;
+
+    const practicePuzzle = getPracticePuzzle(selectedLength, puzzle.puzzleIndex);
+    setPuzzle(practicePuzzle);
+    setMoves([]);
+    setCurrentWord(practicePuzzle.startWord);
+    setUsedWords(new Set([practicePuzzle.startWord]));
+    setGameCompleted(false);
+    setGameWon(false);
+    setError("");
+    setCurrentInput("");
+    setDoubleSwapUsed(false);
+    setConsecutiveSingleSwaps(0);
+    setShowCelebration(false);
+    gameStartTime.current = Date.now();
+    setIsPractice(true);
+  };
+
+  const backToDaily = () => {
+    const daily = dailyPuzzleRef.current || getDailyPuzzle(selectedLength);
+    setPuzzle(daily);
+
+    const savedState = loadGameState(selectedLength);
+    const isValidSaved =
+      savedState &&
+      savedState.date === daily.date &&
+      savedState.wordLength === selectedLength;
+
+    if (isValidSaved) {
+      const restoredMoves: Move[] = savedState.moves.map((m, i) => {
+        const moveDistance = calculateDistance(m.to, daily.goalWord);
+        const prevDistance = calculateDistance(m.from, daily.goalWord);
+        return {
+          id: `move-${i}`,
+          from: m.from,
+          to: m.to,
+          hints: getHints(m.to, daily.goalWord),
+          closerToGoal: moveDistance < prevDistance,
+          isComplete: m.to === daily.goalWord,
+          isWorse: moveDistance > prevDistance,
+          timestamp: new Date(m.timestamp),
+        };
+      });
+      setMoves(restoredMoves);
+      setCurrentWord(savedState.moves[savedState.moves.length - 1]?.to || daily.startWord);
+      setUsedWords(new Set([daily.startWord, ...savedState.moves.map(m => m.to)]));
+      setGameCompleted(savedState.completed);
+      setGameWon(savedState.won);
+    } else {
+      setMoves([]);
+      setCurrentWord(daily.startWord);
+      setUsedWords(new Set([daily.startWord]));
+      setGameCompleted(false);
+      setGameWon(false);
+    }
+
+    setError("");
+    setCurrentInput("");
+    setDoubleSwapUsed(false);
+    setConsecutiveSingleSwaps(0);
+    setShowCelebration(false);
+    gameStartTime.current = Date.now();
+    setIsPractice(false);
+  };
+
+  const VOWELS = new Set('AEIOU');
+
+  const checkOnlyVowelChanges = (moves: Move[]): boolean => {
+    if (moves.length === 0) return false;
+    for (const move of moves) {
+      for (let i = 0; i < move.from.length; i++) {
+        if (move.from[i] !== move.to[i]) {
+          if (!VOWELS.has(move.from[i]) || !VOWELS.has(move.to[i])) return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  const checkOnlyConsonantChanges = (moves: Move[]): boolean => {
+    if (moves.length === 0) return false;
+    for (const move of moves) {
+      for (let i = 0; i < move.from.length; i++) {
+        if (move.from[i] !== move.to[i]) {
+          if (VOWELS.has(move.from[i]) || VOWELS.has(move.to[i])) return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  const checkForPalindrome = (moves: Move[]): boolean => {
+    return moves.some(m => {
+      const w = m.to;
+      return w === w.split('').reverse().join('');
+    });
+  };
 
   // Handle achievement queue
   useEffect(() => {
@@ -651,6 +822,7 @@ const Index = () => {
           goalWord={puzzle.goalWord}
           movesUsed={moves.length}
           maxMoves={puzzle.maxMoves}
+          isPractice={isPractice}
         />
 
         {!gameCompleted && moves.length === 0 && (
@@ -700,6 +872,9 @@ const Index = () => {
             minDistance={puzzle.minDistance}
             shareText={shareText}
             streak={stats.byLength[selectedLength].currentStreak}
+            isPractice={isPractice}
+            onPractice={startPractice}
+            onBackToDaily={isPractice ? backToDaily : undefined}
           />
         )}
         

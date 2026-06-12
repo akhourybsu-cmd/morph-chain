@@ -3,6 +3,7 @@ interface ChainPuzzleDisplayProps {
   goalWord: string;
   movesUsed: number;
   maxMoves: number;
+  isPractice?: boolean;
 }
 
 export const ChainPuzzleDisplay = ({
@@ -10,6 +11,7 @@ export const ChainPuzzleDisplay = ({
   goalWord,
   movesUsed,
   maxMoves,
+  isPractice,
 }: ChainPuzzleDisplayProps) => {
   return (
     <div className="px-[var(--chain-h-padding,16px)] py-4 md:py-6">
@@ -65,6 +67,13 @@ export const ChainPuzzleDisplay = ({
       <p className="text-center mt-3 text-xs text-[hsl(var(--chain-text-muted))]">
         Moves: {movesUsed} / {maxMoves}
       </p>
+
+      {/* Practice badge */}
+      {isPractice && (
+        <p className="text-center mt-1 text-[10px] uppercase tracking-widest text-[hsl(var(--chain-accent)/0.7)]">
+          Practice Round
+        </p>
+      )}
     </div>
   );
 };

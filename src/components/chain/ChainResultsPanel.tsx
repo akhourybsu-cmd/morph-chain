@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Share, Copy, Archive } from "lucide-react";
+import { Share, Copy, Archive, RefreshCw, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ShareToFriendsButton } from "@/components/social/ShareToFriendsButton";
@@ -12,6 +12,9 @@ interface ChainResultsPanelProps {
   minDistance: number;
   shareText: string;
   streak?: number;
+  isPractice?: boolean;
+  onPractice?: () => void;
+  onBackToDaily?: () => void;
 }
 
 export const ChainResultsPanel = ({
@@ -20,6 +23,9 @@ export const ChainResultsPanel = ({
   minDistance,
   shareText,
   streak,
+  isPractice,
+  onPractice,
+  onBackToDaily,
 }: ChainResultsPanelProps) => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -149,18 +155,53 @@ export const ChainResultsPanel = ({
           accentVar="--chain-accent"
         />
 
-        {/* Archive Access */}
-        <div className="pt-2 border-t border-[hsl(var(--chain-divider))]">
-          <p className="text-xs text-[hsl(var(--chain-text-muted))] mb-2">Want to play more?</p>
-          <button
-            onClick={handleArchiveClick}
-            className="flex items-center justify-center gap-2 text-sm text-[hsl(var(--chain-accent))] hover:text-[hsl(var(--chain-text-primary))] transition-colors"
-          >
-            <Archive className="h-4 w-4" />
-            Access the Archive
-          </button>
-          {!isAuthenticated && (
-            <p className="text-xs text-[hsl(var(--chain-text-muted))] mt-1">(Sign in required)</p>
+        {/* Practice / Archive actions */}
+        <div className="pt-2 border-t border-[hsl(var(--chain-divider))] space-y-2">
+          <p className="text-xs text-[hsl(var(--chain-text-muted))]">Want to play more?</p>
+
+          {isPractice ? (
+            <>
+              {onPractice && (
+                <button
+                  onClick={onPractice}
+                  className="chain-button chain-button-primary w-full px-4 py-2 text-sm font-medium flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Play Again
+                </button>
+              )}
+              {onBackToDaily && (
+                <button
+                  onClick={onBackToDaily}
+                  className="flex items-center justify-center gap-2 text-sm text-[hsl(var(--chain-accent))] hover:text-[hsl(var(--chain-text-primary))] transition-colors"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Daily
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {onPractice && (
+                <button
+                  onClick={onPractice}
+                  className="chain-button chain-button-primary w-full px-4 py-2 text-sm font-medium flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Practice Round
+                </button>
+              )}
+              <button
+                onClick={handleArchiveClick}
+                className="flex items-center justify-center gap-2 text-sm text-[hsl(var(--chain-accent))] hover:text-[hsl(var(--chain-text-primary))] transition-colors"
+              >
+                <Archive className="h-4 w-4" />
+                Access the Archive
+              </button>
+              {!isAuthenticated && (
+                <p className="text-xs text-[hsl(var(--chain-text-muted))]">(Archive requires sign in)</p>
+              )}
+            </>
           )}
         </div>
       </div>

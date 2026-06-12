@@ -20,6 +20,17 @@ export interface GameStats {
     5: LengthStats;
   };
   lastPlayedDate?: string;
+  extended: ExtendedStats;
+}
+
+export interface ExtendedStats {
+  totalUnderPar: number;
+  totalSpeedSolves: number;   // puzzles solved in <60s
+  clutchWins: number;         // won on the last available move
+  uniqueWordsUsed: string[];  // all unique intermediate words across all sessions
+  hardModeStreak: number;     // consecutive hard-mode wins
+  wonOnSaturday: boolean;
+  wonOnSunday: boolean;
 }
 
 export interface GameSettings {
@@ -73,29 +84,42 @@ const createEmptyLengthStats = (): LengthStats => ({
   distribution: Array(12).fill(0),
 });
 
+const createEmptyExtendedStats = (): ExtendedStats => ({
+  totalUnderPar: 0,
+  totalSpeedSolves: 0,
+  clutchWins: 0,
+  uniqueWordsUsed: [],
+  hardModeStreak: 0,
+  wonOnSaturday: false,
+  wonOnSunday: false,
+});
+
 export const loadStats = (): GameStats => {
   checkVersionAndReset();
-  
+
+  const empty = (): GameStats => ({
+    overall: {
+      played: 0,
+      won: 0,
+      currentStreak: 0,
+      maxStreak: 0,
+      distribution: Array(12).fill(0),
+      hardModeStreak: 0,
+    },
+    byLength: {
+      4: createEmptyLengthStats(),
+      5: createEmptyLengthStats(),
+    },
+    extended: createEmptyExtendedStats(),
+  });
+
   try {
     const stored = localStorage.getItem(STATS_KEY);
-    if (!stored) {
-      return {
-        overall: {
-          played: 0,
-          won: 0,
-          currentStreak: 0,
-          maxStreak: 0,
-          distribution: Array(12).fill(0),
-          hardModeStreak: 0,
-        },
-        byLength: {
-          4: createEmptyLengthStats(),
-          5: createEmptyLengthStats(),
-        },
-      };
-    }
+    if (!stored) return empty();
+
     const parsed = JSON.parse(stored);
-    // Migrate old stats format to new format
+
+    // Migrate old flat stats format
     if (!parsed.byLength) {
       return {
         overall: {
@@ -111,28 +135,19 @@ export const loadStats = (): GameStats => {
           5: createEmptyLengthStats(),
         },
         lastPlayedDate: parsed.lastPlayedDate,
+        extended: createEmptyExtendedStats(),
       };
     }
+
     // Remove 6L if present from old data
-    if (parsed.byLength && parsed.byLength[6]) {
-      delete parsed.byLength[6];
-    }
+    if (parsed.byLength?.[6]) delete parsed.byLength[6];
+
+    // Backfill extended if missing (users upgrading from older version)
+    if (!parsed.extended) parsed.extended = createEmptyExtendedStats();
+
     return parsed;
   } catch {
-    return {
-      overall: {
-        played: 0,
-        won: 0,
-        currentStreak: 0,
-        maxStreak: 0,
-        distribution: Array(12).fill(0),
-        hardModeStreak: 0,
-      },
-      byLength: {
-        4: createEmptyLengthStats(),
-        5: createEmptyLengthStats(),
-      },
-    };
+    return empty();
   }
 };
 

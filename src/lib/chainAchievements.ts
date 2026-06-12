@@ -388,7 +388,8 @@ export interface ChainAchievementContext {
   clutchWins?: number;
   uniqueWordsUsed?: number;
   hourOfDay?: number;
-  dayOfWeek?: number;
+  wonOnSaturday?: boolean;
+  wonOnSunday?: boolean;
   usedPalindrome?: boolean;
   onlyChangedVowels?: boolean;
   onlyChangedConsonants?: boolean;
@@ -404,11 +405,12 @@ export const checkChainAchievements = (context: ChainAchievementContext): string
     earned.push('first_win');
   }
 
-  if (context.totalWins === 1 && context.wordLength === 4) {
+  // Track first win per word length independently (not tied to overall totalWins)
+  if (context.wordLength === 4) {
     earned.push('first_4l_win');
   }
 
-  if (context.totalWins === 1 && context.wordLength === 5) {
+  if (context.wordLength === 5) {
     earned.push('first_5l_win');
   }
 
@@ -530,8 +532,12 @@ export const checkChainAchievements = (context: ChainAchievementContext): string
     earned.push('night_owl');
   }
 
-  // Weekend warrior (0 = Sunday, 6 = Saturday)
-  if (context.dayOfWeek === 0 || context.dayOfWeek === 6) {
+  if (context.hardMode && context.wonBothToday) {
+    earned.push('hard_mode_both');
+  }
+
+  // Weekend warrior — must have won on both Saturday AND Sunday
+  if (context.wonOnSaturday && context.wonOnSunday) {
     earned.push('weekend_warrior');
   }
 
