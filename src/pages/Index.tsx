@@ -23,7 +23,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useChainSettings } from "@/hooks/useChainSettings";
 import {
   getDailyPuzzle,
+  getDailyPuzzleAsync,
   getPracticePuzzle,
+  precomputePuzzleDistances,
   isValidWord,
   isOneLetterDifferent,
   isTwoLettersDifferent,
@@ -31,6 +33,7 @@ import {
   calculateDistance,
   generateShareText,
   hasValidNextMove,
+  type ShareMoveFlag,
 } from "@/lib/gameLogic";
 import {
   loadStats,
@@ -182,16 +185,57 @@ const Index = () => {
     setConsecutiveSingleSwaps(0);
   };
 
-  // Load saved game state on mount
+  // Load saved game state on mount + pre-warm BFS distance cache
   useEffect(() => {
     handleLengthChange(selectedLength);
-    
+    // Pre-warm BFS so the first move is instant (runs in the background
+    // before the player submits anything)
+    const p = getDailyPuzzle(selectedLength);
+    precomputePuzzleDistances(p.goalWord, selectedLength);
+
     const hasSeenHelp = localStorage.getItem("morphchain_seen_help");
     if (!hasSeenHelp) {
       setHelpOpen(true);
       localStorage.setItem("morphchain_seen_help", "true");
     }
   }, []);
+
+  // Async vault load — upgrades the puzzle from curated fallback to vault
+  // puzzle when available, but never interrupts a game already in progress.
+  useEffect(() => {
+    let cancelled = false;
+    if (isPractice) return;
+
+    getDailyPuzzleAsync(selectedLength)
+      .then(vaultPuzzle => {
+        if (cancelled) return;
+        setPuzzle(prev => {
+          // If vault returned the same puzzle, nothing to do
+          if (
+            vaultPuzzle.startWord === prev.startWord &&
+            vaultPuzzle.goalWord === prev.goalWord
+          ) return prev;
+
+          // Vault has a different puzzle — only switch if the player hasn't
+          // started (or their saved state doesn't match the current puzzle)
+          const savedState = loadGameState(selectedLength);
+          const savedMatchesCurated =
+            savedState?.moves?.[0]?.from === prev.startWord;
+
+          if (savedMatchesCurated) {
+            // Player has progress on the curated puzzle — leave them alone
+            return prev;
+          }
+
+          // Safe to switch; pre-warm BFS for the new goal
+          precomputePuzzleDistances(vaultPuzzle.goalWord, selectedLength);
+          return vaultPuzzle;
+        });
+      })
+      .catch(() => { /* vault unavailable — curated fallback already showing */ });
+
+    return () => { cancelled = true; };
+  }, [selectedLength, isPractice]);
 
   const submitGuess = (word: string) => {
     const wordToSubmit = word;
@@ -255,11 +299,16 @@ const Index = () => {
         return;
       }
 
-      // Proactive dead-end check BEFORE committing the move
+      // Proactive dead-end check BEFORE committing the move.
+      // Compute the double-swap state as it will be AFTER this move lands,
+      // so the next-move check uses the correct availability flag.
       const wouldBeUsedWords = new Set([...usedWords, wordToSubmit]);
-      const canUseTwoLetters = selectedLength === 5 && !doubleSwapUsed && !(isTwoDiff && doubleSwapReady);
-      const wouldHaveNextMove = wordToSubmit === puzzle.goalWord || 
-        (moves.length + 1 >= puzzle.maxMoves) || 
+      const nextDoubleSwapUsed = doubleSwapUsed || (isTwoDiff && doubleSwapReady);
+      const nextConsecutive = isOneDiff ? consecutiveSingleSwaps + 1 : 0;
+      const nextDoubleSwapReady = selectedLength === 5 && nextConsecutive >= 3 && !nextDoubleSwapUsed;
+      const canUseTwoLetters = nextDoubleSwapReady;
+      const wouldHaveNextMove = wordToSubmit === puzzle.goalWord ||
+        (moves.length + 1 >= puzzle.maxMoves) ||
         hasValidNextMove(wordToSubmit, wouldBeUsedWords, puzzle.wordLength, canUseTwoLetters);
       
       if (!wouldHaveNextMove) {
@@ -588,6 +637,7 @@ const Index = () => {
     if (!isPractice) dailyPuzzleRef.current = puzzle;
 
     const practicePuzzle = getPracticePuzzle(selectedLength, puzzle.puzzleIndex);
+    precomputePuzzleDistances(practicePuzzle.goalWord, selectedLength);
     setPuzzle(practicePuzzle);
     setMoves([]);
     setCurrentWord(practicePuzzle.startWord);
@@ -765,22 +815,26 @@ const Index = () => {
     return "empty";
   };
 
-  const shareText = useMemo(() => 
-    moves.length > 0 
-      ? generateShareText(
-          puzzle.date,
-          moves.length,
-          gameWon,
-          puzzle.wordLength,
-          moves.map((m) => m.hints),
-          puzzle.maxMoves,
-          puzzle.puzzleIndex || 0,
-          puzzle.minDistance,
-          stats.byLength[selectedLength].currentStreak
-        )
-      : "",
-    [moves.length, gameWon, puzzle.date, puzzle.wordLength, puzzle.maxMoves, puzzle.puzzleIndex, puzzle.minDistance, stats.byLength, selectedLength, moves]
-  );
+  const shareText = useMemo(() => {
+    if (moves.length === 0) return "";
+    const flags: ShareMoveFlag[] = moves.map(m => ({
+      closerToGoal: m.closerToGoal,
+      isComplete: m.isComplete,
+      isWorse: m.isWorse,
+    }));
+    return generateShareText(
+      puzzle.date,
+      moves.length,
+      gameWon,
+      puzzle.wordLength,
+      moves.map((m) => m.hints),
+      puzzle.maxMoves,
+      puzzle.puzzleIndex || 0,
+      puzzle.minDistance,
+      stats.byLength[selectedLength].currentStreak,
+      flags,
+    );
+  }, [moves, gameWon, puzzle.date, puzzle.wordLength, puzzle.maxMoves, puzzle.puzzleIndex, puzzle.minDistance, stats.byLength, selectedLength]);
 
   const lengthStatuses = useMemo(() => ({
     4: getLengthStatus(4),

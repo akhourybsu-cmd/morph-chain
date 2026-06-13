@@ -105,23 +105,10 @@ export function morphGrid(
 }
 
 function applyBalancingCorrections(grid: Tile[][], rng: SeededRandom): void {
-  const currentVowels = countVowels(grid);
-  
-  // Vowel ratio guard
-  if (currentVowels < MIN_VOWELS_GLOBAL) {
-    // Add vowels by flipping low-impact consonants
-    const needed = MIN_VOWELS_GLOBAL - currentVowels;
-    flipToVowels(grid, needed, rng);
-  } else if (currentVowels > MAX_VOWELS_GLOBAL) {
-    // Remove vowels by flipping low-impact vowels to consonants
-    const needed = currentVowels - MAX_VOWELS_GLOBAL;
-    flipToConsonants(grid, needed, rng);
-  }
-  
   // Row/column safety: ensure no vowel-free lines
   ensureRowsHaveVowels(grid, rng);
   ensureColumnsHaveVowels(grid, rng);
-  
+
   // Break any runs of 3+ consecutive vowels
   breakVowelRuns(grid, rng);
 }
@@ -221,57 +208,45 @@ function ensureColumnsHaveVowels(grid: Tile[][], rng: SeededRandom): void {
 }
 
 function breakVowelRuns(grid: Tile[][], rng: SeededRandom): void {
+  // Break a detected run by flipping every (MAX_VOWEL_RUN+1)th tile,
+  // ensuring no group of MAX_VOWEL_RUN+1 consecutive vowels survives.
+  const breakRun = (coords: { row: number; col: number }[], runStart: number, runLength: number) => {
+    let i = MAX_VOWEL_RUN; // first flip at runStart + MAX_VOWEL_RUN
+    while (i < runLength) {
+      const { row, col } = coords[runStart + i];
+      grid[row][col].char = rng.choice(LETTER_WEIGHTS.consonants);
+      grid[row][col].isVowel = false;
+      i += MAX_VOWEL_RUN + 1;
+    }
+  };
+
   // Check horizontal runs
   for (let row = 0; row < GRID_SIZE; row++) {
-    let runStart = -1;
-    let runLength = 0;
-    
-    for (let col = 0; col < GRID_SIZE; col++) {
-      if (grid[row][col].isVowel) {
+    const coords = Array.from({ length: GRID_SIZE }, (_, col) => ({ row, col }));
+    let runStart = -1, runLength = 0;
+    for (let col = 0; col <= GRID_SIZE; col++) {
+      if (col < GRID_SIZE && grid[row][col].isVowel) {
         if (runStart === -1) runStart = col;
         runLength++;
-      } else {
-        if (runLength > MAX_VOWEL_RUN && runStart !== -1) {
-          const flipCol = runStart + Math.floor(runLength / 2);
-          grid[row][flipCol].char = rng.choice(LETTER_WEIGHTS.consonants);
-          grid[row][flipCol].isVowel = false;
-        }
-        runStart = -1;
-        runLength = 0;
+      } else if (runStart !== -1) {
+        if (runLength > MAX_VOWEL_RUN) breakRun(coords, runStart, runLength);
+        runStart = -1; runLength = 0;
       }
-    }
-    
-    if (runLength > MAX_VOWEL_RUN && runStart !== -1) {
-      const flipCol = runStart + Math.floor(runLength / 2);
-      grid[row][flipCol].char = rng.choice(LETTER_WEIGHTS.consonants);
-      grid[row][flipCol].isVowel = false;
     }
   }
-  
+
   // Check vertical runs
   for (let col = 0; col < GRID_SIZE; col++) {
-    let runStart = -1;
-    let runLength = 0;
-    
-    for (let row = 0; row < GRID_SIZE; row++) {
-      if (grid[row][col].isVowel) {
+    const coords = Array.from({ length: GRID_SIZE }, (_, row) => ({ row, col }));
+    let runStart = -1, runLength = 0;
+    for (let row = 0; row <= GRID_SIZE; row++) {
+      if (row < GRID_SIZE && grid[row][col].isVowel) {
         if (runStart === -1) runStart = row;
         runLength++;
-      } else {
-        if (runLength > MAX_VOWEL_RUN && runStart !== -1) {
-          const flipRow = runStart + Math.floor(runLength / 2);
-          grid[flipRow][col].char = rng.choice(LETTER_WEIGHTS.consonants);
-          grid[flipRow][col].isVowel = false;
-        }
-        runStart = -1;
-        runLength = 0;
+      } else if (runStart !== -1) {
+        if (runLength > MAX_VOWEL_RUN) breakRun(coords, runStart, runLength);
+        runStart = -1; runLength = 0;
       }
-    }
-    
-    if (runLength > MAX_VOWEL_RUN && runStart !== -1) {
-      const flipRow = runStart + Math.floor(runLength / 2);
-      grid[flipRow][col].char = rng.choice(LETTER_WEIGHTS.consonants);
-      grid[flipRow][col].isVowel = false;
     }
   }
 }
@@ -325,7 +300,10 @@ export function morphPowerRow(
   
   for (let col = 0; col < 5; col++) {
     const tile = newGrid[rowIndex][col];
-    if (!tile.isPower) { // Don't morph the power tile itself again
+    if (tile.isPower) {
+      // Consume the power tile — clear the flag so it doesn't trigger again
+      tile.isPower = false;
+    } else {
       tile.char = getRandomLetter(rng.next() < 0.4, rng);
       tile.isVowel = isVowelChar(tile.char);
       tile.morphCount = 0;

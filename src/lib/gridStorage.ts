@@ -14,6 +14,7 @@ export interface GridLBEntry {
   timeToCompleteMs?: number;
   completedAt: string;
   deviceAlias?: string;
+  score?: number;
 }
 
 export interface MedalCounts {
@@ -306,6 +307,7 @@ export const recordGridWin = (payload: {
   moves: number;
   wordsUsed: number;
   timeToCompleteMs?: number;
+  score?: number;
 }): void => {
   try {
     const stats = loadGridStats();
@@ -403,6 +405,7 @@ export const recordGridWin = (payload: {
       timeToCompleteMs: payload.timeToCompleteMs,
       completedAt: new Date().toISOString(),
       deviceAlias: alias || undefined,
+      score: payload.score,
     });
   } catch (e) {
     console.error('Error recording Grid win:', e);
@@ -454,6 +457,7 @@ export interface GridGameState {
   startTime: number;
   isEnded?: boolean;
   isWin?: boolean;
+  score?: number;
 }
 
 export const saveGridGameState = (state: GridGameState): void => {

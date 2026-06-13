@@ -15,12 +15,14 @@ export interface VaultPuzzle {
 // Cache for loaded puzzles
 const puzzleCache = new Map<string, VaultPuzzle>();
 
-// Get the puzzle index for a given date (days since epoch)
+// Get the puzzle index for a given date (days since game launch).
+// Uses the same launch date as getDailyPuzzle() so vault and curated
+// fallback serve puzzles from the same position in their respective lists.
 function getPuzzleIndexForDate(date: Date): number {
-  const epoch = new Date('2024-01-01');
-  const diffTime = date.getTime() - epoch.getTime();
+  const launchDate = new Date('2025-10-06T00:00:00');
+  const diffTime = date.getTime() - launchDate.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays;
+  return Math.max(0, diffDays); // clamp — no negative indices before launch
 }
 
 // Load puzzle from vault or fallback to curated

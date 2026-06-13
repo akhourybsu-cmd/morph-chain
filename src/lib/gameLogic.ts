@@ -200,31 +200,101 @@ export const isTwoLettersDifferent = (word1: string, word2: string): boolean => 
   return differences === 2;
 };
 
+/**
+ * Wordle-style per-letter hints with correct multi-letter handling.
+ *
+ * Two-pass algorithm:
+ *  Pass 1 — mark exact matches ("match"), count remaining unmatched goal letters.
+ *  Pass 2 — for non-matched positions, mark "present" only while unused goal
+ *            copies remain; extras get "miss".
+ *
+ * Fixes the double-letter bug where e.g. goal=KEEP, attempt=KEEK would
+ * incorrectly mark the trailing K as "present" (the K is already matched at [0]).
+ */
 export const getHints = (attempt: string, goal: string): TileState[] => {
-  const hints: TileState[] = [];
-  const goalLetters = goal.split("");
-  const attemptLetters = attempt.split("");
-  
-  for (let i = 0; i < attemptLetters.length; i++) {
-    if (attemptLetters[i] === goalLetters[i]) {
-      hints.push("match");
-    } else if (goalLetters.includes(attemptLetters[i])) {
-      hints.push("present");
+  const hints = new Array<TileState>(attempt.length).fill("miss");
+  const unusedGoalLetters = new Map<string, number>();
+
+  // Pass 1: exact matches
+  for (let i = 0; i < attempt.length; i++) {
+    if (attempt[i] === goal[i]) {
+      hints[i] = "match";
     } else {
-      hints.push("miss");
+      unusedGoalLetters.set(goal[i], (unusedGoalLetters.get(goal[i]) ?? 0) + 1);
     }
   }
-  
+
+  // Pass 2: present (non-exact) matches, consume available goal copies
+  for (let i = 0; i < attempt.length; i++) {
+    if (hints[i] === "match") continue;
+    const available = unusedGoalLetters.get(attempt[i]) ?? 0;
+    if (available > 0) {
+      hints[i] = "present";
+      unusedGoalLetters.set(attempt[i], available - 1);
+    }
+  }
+
   return hints;
 };
 
-export const calculateDistance = (word: string, goal: string): number => {
-  // Simple Hamming distance for now
-  let distance = 0;
-  for (let i = 0; i < word.length; i++) {
-    if (word[i] !== goal[i]) distance++;
+// ---------------------------------------------------------------------------
+// BFS distance cache — keyed by `${wordLength}-${goalWord}`
+// Stores exact graph distance (min word-ladder steps) from every reachable
+// word to the goal.  Built lazily on first move, then O(1) lookups.
+// ---------------------------------------------------------------------------
+const bfsDistanceCache = new Map<string, Map<string, number>>();
+
+function buildBFSDistanceMap(goal: string, wordSet: Set<string>): Map<string, number> {
+  const distances = new Map<string, number>();
+  distances.set(goal, 0);
+  const queue: string[] = [goal];
+  const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  while (queue.length > 0) {
+    const word = queue.shift()!;
+    const dist = distances.get(word)!;
+    for (let i = 0; i < word.length; i++) {
+      for (const letter of LETTERS) {
+        if (letter === word[i]) continue;
+        const neighbor = word.substring(0, i) + letter + word.substring(i + 1);
+        if (wordSet.has(neighbor) && !distances.has(neighbor)) {
+          distances.set(neighbor, dist + 1);
+          queue.push(neighbor);
+        }
+      }
+    }
   }
-  return distance;
+  return distances;
+}
+
+/**
+ * Pre-warm the BFS distance cache for a puzzle's goal word.
+ * Call this when a new puzzle loads so the first move is instant.
+ */
+export const precomputePuzzleDistances = (goal: string, wordLength: 4 | 5): void => {
+  const wordSet = wordLength === 4 ? VALID_WORDS_4 : VALID_WORDS_5;
+  const cacheKey = `${wordLength}-${goal}`;
+  if (!bfsDistanceCache.has(cacheKey)) {
+    bfsDistanceCache.set(cacheKey, buildBFSDistanceMap(goal, wordSet));
+  }
+};
+
+/**
+ * True word-ladder graph distance from `word` to `goal`.
+ * Returns Infinity when there is no valid path (disconnected graph component).
+ * Replaces the old Hamming-distance heuristic which was directionally wrong.
+ */
+export const calculateDistance = (word: string, goal: string): number => {
+  if (word === goal) return 0;
+  const wordLength = word.length as 4 | 5;
+  const wordSet = wordLength === 4 ? VALID_WORDS_4 : VALID_WORDS_5;
+  const cacheKey = `${wordLength}-${goal}`;
+
+  if (!bfsDistanceCache.has(cacheKey)) {
+    bfsDistanceCache.set(cacheKey, buildBFSDistanceMap(goal, wordSet));
+  }
+
+  return bfsDistanceCache.get(cacheKey)!.get(word) ?? Infinity;
 };
 
 export const hasValidNextMove = (
@@ -273,18 +343,36 @@ export const hasValidNextMove = (
   return false;
 };
 
-// Direction indicators for share text
+/** Per-move direction flags passed from the live game state into share text. */
+export interface ShareMoveFlag {
+  closerToGoal: boolean;
+  isComplete: boolean;
+  isWorse: boolean;
+}
+
+/**
+ * Direction indicator for one move in the share text.
+ * Prefers the stored BFS-based game flags when supplied; falls back to a
+ * hint match-count heuristic so old call-sites without flags still work.
+ */
 const getDirectionIndicator = (
+  flag: ShareMoveFlag | undefined,
   currentHints: TileState[],
   prevHints: TileState[] | null,
   isWin: boolean
 ): string => {
   if (isWin) return "✓";
-  
-  // Count matches in current vs previous
+
+  if (flag) {
+    if (flag.isComplete) return "✓";
+    if (flag.closerToGoal) return "↑";
+    if (flag.isWorse) return "↓";
+    return "↔";
+  }
+
+  // Fallback: hint match-count delta (used when moveFlags not provided)
   const currentMatches = currentHints.filter(h => h === "match").length;
   const prevMatches = prevHints ? prevHints.filter(h => h === "match").length : 0;
-  
   if (currentMatches > prevMatches) return "↑";
   if (currentMatches < prevMatches) return "↓";
   return "↔";
@@ -299,32 +387,33 @@ export const generateShareText = (
   maxMoves: number,
   puzzleIndex: number,
   minDistance?: number,
-  streak?: number
+  streak?: number,
+  moveFlags?: ShareMoveFlag[]
 ): string => {
   const emojiMap: Record<TileState, string> = {
     match: "🟩",
     present: "🟧",
     miss: "⬛",
   };
-  
+
   // Format date as "October 6, 2025" in NY timezone
   const timezone = "America/New_York";
   const formattedDate = formatInTimeZone(new Date(), timezone, 'MMMM d, yyyy');
-  
+
   // Header line per spec
   const header = `Morph Chain #${puzzleIndex + 1} – ${formattedDate} (${wordLength}-letter)`;
-  
+
   // Build per-move lines with hints and direction indicators
   const moveLines: string[] = [];
-  
+
   for (let i = 0; i < moveHints.length; i++) {
     const hints = moveHints[i];
     const prevHints = i > 0 ? moveHints[i - 1] : null;
     const isWin = i === moveHints.length - 1 && won;
-    
+
     const hintEmojis = hints.map(h => emojiMap[h]).join("");
-    const direction = getDirectionIndicator(hints, prevHints, isWin);
-    
+    const direction = getDirectionIndicator(moveFlags?.[i], hints, prevHints, isWin);
+
     moveLines.push(`${hintEmojis} ${direction}`);
   }
   

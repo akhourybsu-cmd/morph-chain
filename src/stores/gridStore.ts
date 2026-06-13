@@ -4,6 +4,7 @@ import { Tile } from '@/lib/grid/gridGenerator';
 import { generateDailyGrid } from '@/lib/grid/gridGenerator';
 import { SeededRandom } from '@/lib/grid/seededRNG';
 import { morphGrid, morphPowerRow } from '@/lib/grid/morphMechanics';
+import { calculateWordScore } from '@/lib/grid/scoring';
 import { isValidWord } from '@/lib/grid/dictionary';
 import { recordGridPlayStart, recordGridSubmit, recordGridWin, recordGridLoss, saveGridGameState, loadGridGameState, clearGridGameState, type SubmittedWord } from '@/lib/gridStorage';
 import { checkGridAchievements, saveGridAchievements, getGridAchievements, getNewGridAchievements, updateTieredProgress, loadTieredProgress, type GridAchievementContext } from '@/lib/gridAchievements';
@@ -38,6 +39,7 @@ interface GridState {
   usedPowerTile: boolean;
   usedCorner: boolean;
   usedDiagonal: boolean;
+  score: number;
   newAchievements: string[];
   
   // Actions
@@ -73,6 +75,7 @@ export const useGridStore = create<GridState>((set, get) => ({
   usedPowerTile: false,
   usedCorner: false,
   usedDiagonal: false,
+  score: 0,
   newAchievements: [],
   
   initializeGame: (date: string) => {
@@ -98,10 +101,11 @@ export const useGridStore = create<GridState>((set, get) => ({
           morphCount: savedState.morphCount,
           stabilizationCount: savedState.stabilizationCount,
           startTime: savedState.startTime,
+          score: savedState.score ?? 0,
         });
         return;
       }
-      
+
       // Restore from saved state
       const rng = new SeededRandom(date + '-morph');
       set({
@@ -118,6 +122,7 @@ export const useGridStore = create<GridState>((set, get) => ({
         morphCount: savedState.morphCount,
         stabilizationCount: savedState.stabilizationCount,
         startTime: savedState.startTime,
+        score: savedState.score ?? 0,
       });
       console.log('Restored Grid game state for', date);
     } else {
@@ -186,7 +191,7 @@ export const useGridStore = create<GridState>((set, get) => ({
   },
   
   submitWord: () => {
-    const { selected, grid, rng, submittedWords, morphCount, stabilizationCount, isEnded, moves, usedPowerTile, usedCorner, usedDiagonal, dailySeed, startTime } = get();
+    const { selected, grid, rng, submittedWords, morphCount, stabilizationCount, isEnded, moves, usedPowerTile, usedCorner, usedDiagonal, score, dailySeed, startTime } = get();
     
     // Prevent submissions after game ends
     if (isEnded) {
@@ -203,25 +208,22 @@ export const useGridStore = create<GridState>((set, get) => ({
       return false;
     }
     
-    // Track corner usage (any corner tile used)
-    const firstTile = selected[0];
-    const newUsedCorner = usedCorner || (
-      (firstTile.row === 0 || firstTile.row === 4) && 
-      (firstTile.col === 0 || firstTile.col === 4)
+    // Track corner usage (any tile in the word is a corner)
+    const newUsedCorner = usedCorner || selected.some(t =>
+      (t.row === 0 || t.row === 4) && (t.col === 0 || t.col === 4)
     );
-    
-    // Track diagonal-only word (all connections are diagonal)
-    let isDiagonalOnly = selected.length > 1;
-    for (let i = 1; i < selected.length && isDiagonalOnly; i++) {
+
+    // Track diagonal usage (any adjacent pair in the word is diagonal)
+    let hasDiagonalConnection = false;
+    for (let i = 1; i < selected.length; i++) {
       const prev = selected[i - 1];
       const curr = selected[i];
-      const rowDiff = Math.abs(prev.row - curr.row);
-      const colDiff = Math.abs(prev.col - curr.col);
-      if (rowDiff !== 1 || colDiff !== 1) {
-        isDiagonalOnly = false;
+      if (Math.abs(prev.row - curr.row) === 1 && Math.abs(prev.col - curr.col) === 1) {
+        hasDiagonalConnection = true;
+        break;
       }
     }
-    const newUsedDiagonal = usedDiagonal || isDiagonalOnly;
+    const newUsedDiagonal = usedDiagonal || (selected.length > 1 && hasDiagonalConnection);
     
     // Step 1: Advance progress for all used tiles
     const newGrid = grid.map(row => row.map(tile => {
@@ -242,6 +244,12 @@ export const useGridStore = create<GridState>((set, get) => ({
     // Step 3: Check for power tile usage
     const hasPowerTile = selected.some(t => t.isPower);
     const newUsedPowerTile = usedPowerTile || hasPowerTile;
+
+    // Calculate score for this word
+    const rippleCount = countPotentialMutations(grid, usedCoords);
+    const wordScore = calculateWordScore(word, selected, rippleCount, hasPowerTile);
+    const newScore = score + wordScore.total;
+
     if (hasPowerTile) {
       const powerTile = selected.find(t => t.isPower);
       if (powerTile) {
@@ -374,6 +382,7 @@ export const useGridStore = create<GridState>((set, get) => ({
       usedPowerTile: newUsedPowerTile,
       usedCorner: newUsedCorner,
       usedDiagonal: newUsedDiagonal,
+      score: newScore,
       newAchievements,
       lastSubmission: {
         wordLength,
@@ -396,7 +405,8 @@ export const useGridStore = create<GridState>((set, get) => ({
       stabilizationCount: newStabilizationCount,
       startTime: currentState.startTime || Date.now(),
       isEnded: gameEnded,
-      isWin: isWin
+      isWin: isWin,
+      score: newScore,
     });
     
     // Record win or loss
@@ -409,6 +419,7 @@ export const useGridStore = create<GridState>((set, get) => ({
         moves: state.moves,
         wordsUsed: state.submittedWords.length,
         timeToCompleteMs: timeToComplete,
+        score: state.score,
       });
       
       // Store entry ID for leaderboard highlighting
