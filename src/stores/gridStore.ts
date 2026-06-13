@@ -14,7 +14,9 @@ import { startActiveSession, updateSessionActivity, completeActiveSession } from
 const MAX_MOVES = 20;
 
 interface LastSubmission {
+  word: string;
   wordLength: number;
+  wordScore: number;
   usedTileIds: string[];
   upgradedTileIds: string[];
   timestamp: number;
@@ -385,7 +387,9 @@ export const useGridStore = create<GridState>((set, get) => ({
       score: newScore,
       newAchievements,
       lastSubmission: {
+        word,
         wordLength,
+        wordScore: wordScore.total,
         usedTileIds,
         upgradedTileIds,
         timestamp: Date.now()

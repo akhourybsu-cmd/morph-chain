@@ -193,6 +193,17 @@ export default {
           "50%": { transform: "translateY(0) scale(1.05)", opacity: "1" },
           "100%": { transform: "translateY(0) scale(1)", opacity: "1" },
         },
+        "achievement-slide-down": {
+          "0%": { transform: "translateX(-50%) translateY(-20px)", opacity: "0" },
+          "65%": { transform: "translateX(-50%) translateY(4px)", opacity: "1" },
+          "100%": { transform: "translateX(-50%) translateY(0)", opacity: "1" },
+        },
+        "score-float": {
+          "0%":   { transform: "scale(0.75) translateY(0px)",   opacity: "0" },
+          "18%":  { transform: "scale(1.08) translateY(-6px)",  opacity: "1" },
+          "42%":  { transform: "scale(1)   translateY(-12px)",  opacity: "1" },
+          "100%": { transform: "scale(0.85) translateY(-60px)", opacity: "0" },
+        },
         "confetti": {
           "0%": { transform: "translateY(0) rotate(0deg)", opacity: "1" },
           "100%": { transform: "translateY(-100px) rotate(360deg)", opacity: "0" },
@@ -328,6 +339,8 @@ export default {
         "breathe": "breathe 2s ease-in-out infinite",
         "charge-fill": "charge-fill 0.3s ease-out forwards",
         "achievement-pop": "achievement-pop 0.4s ease-out",
+        "achievement-slide-down": "achievement-slide-down 0.38s cubic-bezier(0.22,1,0.36,1) forwards",
+        "score-float": "score-float 900ms ease-out forwards",
         "confetti": "confetti 1s ease-out forwards",
         "confetti-fall": "confetti-fall 2s ease-out forwards",
         "tile-pop-small": "tile-pop-small 0.2s ease-out",

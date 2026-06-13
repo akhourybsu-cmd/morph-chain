@@ -1,32 +1,32 @@
 import { useEffect, useState } from 'react';
 import { useGridStore } from '@/stores/gridStore';
-import { cn } from '@/lib/utils';
 
 type Phase = 'pop' | 'done';
 
 export const WordCelebration = () => {
   const { lastSubmission, clearLastSubmission, setHighlightTrackerLength } = useGridStore();
   const [phase, setPhase] = useState<Phase>('done');
-  const [wordLength, setWordLength] = useState(0);
+  const [word, setWord] = useState('');
+  const [wordScore, setWordScore] = useState(0);
   const [upgradedCount, setUpgradedCount] = useState(0);
 
   useEffect(() => {
     if (lastSubmission) {
-      setWordLength(lastSubmission.wordLength);
+      setWord(lastSubmission.word ?? '');
+      setWordScore(lastSubmission.wordScore ?? 0);
       setUpgradedCount(lastSubmission.upgradedTileIds.length);
       setPhase('pop');
 
-      // Quick celebration then done
+      // Match the 900ms score-float animation duration
       const doneTimer = setTimeout(() => {
         setPhase('done');
         setHighlightTrackerLength(lastSubmission.wordLength);
         clearLastSubmission();
-      }, 600);
+      }, 900);
 
-      // Clear tracker highlight after pulse
       const clearHighlightTimer = setTimeout(() => {
         setHighlightTrackerLength(null);
-      }, 1100);
+      }, 1400);
 
       return () => {
         clearTimeout(doneTimer);
@@ -37,44 +37,28 @@ export const WordCelebration = () => {
 
   if (phase === 'done') return null;
 
-  // NYT Prestige: subtle, elegant celebration
-  const getIntensityStyles = () => {
-    if (wordLength >= 6) return {
-      size: 'text-3xl md:text-4xl',
-    };
-    if (wordLength >= 5) return {
-      size: 'text-2xl md:text-3xl',
-    };
-    return {
-      size: 'text-xl md:text-2xl',
-    };
-  };
-
-  const intensity = getIntensityStyles();
-
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
-      {/* Main score display - NYT style: clean, elegant */}
-      {phase === 'pop' && (
-        <div
-          className={cn(
-            "flex flex-col items-center gap-2 font-inter font-bold text-[hsl(var(--grid-accent))] animate-score-pop-subtle",
-            intensity.size
-          )}
-        >
-          {/* Score text */}
-          <span className="relative">
-            +{wordLength}
-          </span>
+    // absolute inset-0 scopes the popup to the page column (max-w-xl),
+    // not the full viewport. The page container must have position:relative.
+    <div className="absolute inset-0 pointer-events-none z-50 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-1 animate-score-float">
+        {/* Word played */}
+        <span className="text-2xl md:text-3xl font-inter font-bold tracking-widest text-[hsl(var(--grid-text-primary))] uppercase drop-shadow-sm">
+          {word}
+        </span>
 
-          {/* Cascade bonus badge - subtle */}
-          {upgradedCount > 0 && (
-            <div className="text-sm font-semibold text-[hsl(var(--grid-success))] animate-fade-in">
-              +{upgradedCount} tile{upgradedCount > 1 ? 's' : ''} upgraded
-            </div>
-          )}
-        </div>
-      )}
+        {/* Points earned */}
+        <span className="text-lg md:text-xl font-inter font-semibold text-[hsl(var(--grid-accent))]">
+          +{wordScore} pts
+        </span>
+
+        {/* Cascade upgrade bonus */}
+        {upgradedCount > 0 && (
+          <span className="text-sm font-medium text-[hsl(var(--grid-success))]">
+            ✦ {upgradedCount} tile{upgradedCount > 1 ? 's' : ''} upgraded
+          </span>
+        )}
+      </div>
     </div>
   );
 };
